@@ -13,5 +13,8 @@ const CandidateRouter = Router();
 // Get the candidates based on the provided query parameter
 CandidateRouter.get("/", candidateController.getCandidates);
 
+// Create candidates based on the provided query parameter
+CandidateRouter.post("/", candidateController.createCandidate);
+
 // Export the "CandidateRouter"
 export default CandidateRouter;
