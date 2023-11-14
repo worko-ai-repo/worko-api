@@ -3,13 +3,9 @@ import express, { Express, Request, Response, NextFunction } from "express";
 import serverless from "serverless-http";
 import cors from "cors";
 
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
 // Import the routes from the `services`
-import routes from "./services";
-import { errorHandler } from "./shared/utils/error-handler.util";
+import routes from "./router";
+import { errorHandler } from "./utils/error-handler.util";
 
 class App {
   /**
@@ -34,9 +30,6 @@ class App {
     this.registerMiddleWares();
     this.registerAppRoutes();
     this.registerErrorHandlingRoutes();
-    this.app.on("beforeExit", () => {
-      prisma.$disconnect();
-    });
   }
 
   /**
@@ -51,7 +44,7 @@ class App {
    *
    * This method intialises the "logger" library which can be used to "log" messages, warnings, errors, etc instead of using build in "console.log."
    */
-  initialiseLogger() {}
+  initialiseLogger() {} 
 
   /**
    * Register Middlewares

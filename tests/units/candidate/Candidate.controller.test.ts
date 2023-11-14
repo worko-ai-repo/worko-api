@@ -5,7 +5,7 @@ import request from "supertest";
 import express, { Express } from "express";
 
 // Import the CandidateRouter
-import CandidateRouter from "../../../src/services/candidate/routers/Candidate.router";
+import CandidateRouter from "./../../../src/routers/Candidate.router";
 
 // Create a new Express app and mount the CandidateController
 const app: Express = express(); // Create a new Express.js application instance

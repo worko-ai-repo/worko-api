@@ -1,24 +1,22 @@
 // Load npm packages
 import { NextFunction, Request, Response } from "express";
 
-// Load the local packages
-import CandidateBaseController from "./CandidateBase.controller";
-
-//Load the local dtos
+// Load the local dtos
 import { CandidateDTO } from "../dtos/Candidate.dto";
 
-//Load the local schema
+// Load the local schema
 import { CreateCandidateSchema } from "../schemas/User.schema";
 
-//Load the shared service
-import UserService from "../../../shared/services/User.service";
+// Load the shared service
+import BaseController from "./Base.controller";
+import UserService from "../services/User.service";
 
 /**
  * CandidateController
  *
  * Class to perform related/relevent action/activities related to the "candidate" table.
  */
-class CandidateController extends CandidateBaseController {
+class CandidateController extends BaseController {
   /**
    * getCandidates
    *
