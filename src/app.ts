@@ -44,7 +44,7 @@ class App {
    *
    * This method intialises the "logger" library which can be used to "log" messages, warnings, errors, etc instead of using build in "console.log."
    */
-  initialiseLogger() {} 
+  initialiseLogger() {}
 
   /**
    * Register Middlewares
@@ -110,4 +110,7 @@ class App {
   }
 }
 
-export const handler = serverless(new App().app);
+// export const handler = serverless(new App().app);
+// Only works on 3000 regardless of what I set environment port to or how I set [value] in app.set('port', [value]).
+new App().app.listen(3000);
+// app.listen(3000);
