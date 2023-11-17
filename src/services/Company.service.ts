@@ -1,18 +1,20 @@
-import DB_CONSTANTS from "../db/DB.constants";
-import CompanyModel from "../daos/Company.dao";
+// import { DB_CONSTANTS } from "../db/DB.constants";
+import {
+  CompanyModel,
+  COMPANY_CONSTANTS,
+  AddCompanyModel,
+} from "../daos/Company.dao";
 import UlidService from "../services/Ulid.service";
-import { CompanyDTO } from "../dtos/Company.dto";
+import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
 
 class CompanyService {
   constructor() {}
 
   async createNewCompany(companyDto: CompanyDTO) {
     try {
-      companyDto.PK = DB_CONSTANTS.COMPANY_PK;
-      companyDto.SK = DB_CONSTANTS.COMPANY_SK_INIT + UlidService.getUlidId();
-      console.log("Before");
+      companyDto.PK = COMPANY_CONSTANTS.PK;
+      companyDto.SK = COMPANY_CONSTANTS.SK_INIT + UlidService.getUlidId();
       const result = await CompanyModel.create(companyDto);
-      console.log("After");
       console.log(result);
     } catch (error) {
       throw error;
@@ -21,7 +23,28 @@ class CompanyService {
 
   async getCompanyList() {
     try {
-      return CompanyModel.query("PK").eq(DB_CONSTANTS.COMPANY_PK).exec();
+      return CompanyModel.query("PK").eq(COMPANY_CONSTANTS.PK).exec();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async AddCompany(addCompanyDTO: AddCompanyDTO) {
+    try {
+      addCompanyDTO.PK = COMPANY_CONSTANTS.REQUEST_PK;
+      addCompanyDTO.SK = COMPANY_CONSTANTS.SK_INIT + UlidService.getUlidId();
+      const result = await AddCompanyModel.create(addCompanyDTO);
+      console.log(result);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getRequestedCompanies() {
+    try {
+      return AddCompanyModel.query("PK")
+        .eq(COMPANY_CONSTANTS.REQUEST_PK)
+        .exec();
     } catch (error) {
       throw error;
     }

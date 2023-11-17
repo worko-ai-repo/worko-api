@@ -11,3 +11,29 @@ export interface CompanyDTO extends WorkoDTO {
   linkedIn: String;
   logoUrl: String;
 }
+
+interface CompanyObject {
+  name: String;
+  industry?: String;
+  teamSize?: Number;
+  carrierPage?: String;
+  linkedIn?: String;
+  logoUrl?: String;
+}
+
+export enum UserType {
+  EMP = "EMP",
+  CAND = "CAND",
+}
+
+export enum Status {
+  NEW = "new",
+  APPROVED = "approved",
+  DENIED = "denied",
+}
+
+export interface AddCompanyDTO extends WorkoDTO {
+  userType: UserType;
+  companyDetail: Partial<CompanyObject>;
+  status: Status;
+}

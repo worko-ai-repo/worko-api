@@ -1,3 +1,5 @@
+import * as dynamoose from "dynamoose";
+
 const DB_CONSTANTS = {
   WORKO_TABLE_NAME: "worko",
   WORKO_PK_SK: {
@@ -8,14 +10,28 @@ const DB_CONSTANTS = {
     create: false,
     waitForActive: false,
     saveUnknown: true,
-    timestamps: true,
   },
   WORKO_MODEL_TABLE_OPTIONS: {
     tableName: "worko",
   },
-  COMPANY_MODEL: "Company",
-  COMPANY_PK: "COMPANY#",
-  COMPANY_SK_INIT: "ID#",
 };
 
-export default DB_CONSTANTS;
+const DBSchema = new dynamoose.Schema(
+  {
+    ...DB_CONSTANTS.WORKO_PK_SK,
+    createdAt: {
+      type: Date,
+      default: new Date(),
+      required: true,
+    },
+    updatedAt: {
+      type: Date,
+      default: new Date(),
+      required: true,
+    },
+  },
+  {
+    ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,
+  }
+);
+export { DB_CONSTANTS, DBSchema };
