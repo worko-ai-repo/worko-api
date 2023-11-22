@@ -8,7 +8,7 @@ const subcriptionController = new SubscriptionController();
 // Route to hold the routes (CRUD, etc) related to "subscription" table
 const SubscriptionRouter = Router();
 
-SubscriptionRouter.post("/add", subcriptionController.addSubscription);
+SubscriptionRouter.post("/add/:email", subcriptionController.addSubscription);
 SubscriptionRouter.get("/list", subcriptionController.getSubcriptionList);
 
 export default SubscriptionRouter;

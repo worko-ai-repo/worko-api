@@ -56,10 +56,9 @@ class CandidateController extends BaseController {
 
       // If validation is successful, proceed with candidate creation logic
       try {
-        const createdCandidate = await UserService.createUser(inputData);
-
+        // const createdCandidate = await UserService.createUser(inputData);
         // Return a success response
-        res.status(201).json(createdCandidate);
+        // res.status(201).json(createdCandidate);
       } catch (error) {
         next(error);
       }

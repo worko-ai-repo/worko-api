@@ -6,6 +6,7 @@ import {
 } from "../daos/Subscription.dao";
 import UlidService from "../services/Ulid.service";
 import SubscriptionDTO from "../dtos/Subscription.dto";
+import { USER_CONSTANTS, UserModel } from "../daos/User.dao";
 
 class SubscriptionService {
   constructor() {}
@@ -22,31 +23,33 @@ class SubscriptionService {
   //   }
   // }
 
-  async createNewSubscription(subscriptionDto: SubscriptionDTO) {
+  async createNewSubscription(subscriptionDto: SubscriptionDTO, email: string) {
     try {
-      subscriptionDto.PK = SUBSCRIPTION_CONSTANTS.PK;
+      subscriptionDto.PK = USER_CONSTANTS.PK + "#" + email;
 
       // Determine the subscription type and set the SK accordingly
-      if (subscriptionDto.UserType === SUBSCRIPTION_CONSTANTS.TYPES.CANDIDATE) {
-        subscriptionDto.SK =
-          SUBSCRIPTION_CONSTANTS.SK_INIT +
-          SUBSCRIPTION_CONSTANTS.TYPES.CANDIDATE +
-          "#" +
-          UlidService.getUlidId();
-      } else if (
-        subscriptionDto.UserType === SUBSCRIPTION_CONSTANTS.TYPES.EMPLOYEE
-      ) {
-        subscriptionDto.SK =
-          SUBSCRIPTION_CONSTANTS.SK_INIT +
-          SUBSCRIPTION_CONSTANTS.TYPES.EMPLOYEE +
-          "#" +
-          UlidService.getUlidId();
-      } else {
-        // Handle invalid userType or provide a default behavior
-        throw new Error("Invalid userType");
-      }
+      // if (subscriptionDto.UserType === SUBSCRIPTION_CONSTANTS.TYPES.CANDIDATE) {
+      //   subscriptionDto.SK =
+      //     SUBSCRIPTION_CONSTANTS.SK_INIT +
+      //     SUBSCRIPTION_CONSTANTS.TYPES.CANDIDATE +
+      //     "#" +
+      //     UlidService.getUlidId();
+      // } else if (
+      //   subscriptionDto.UserType === SUBSCRIPTION_CONSTANTS.TYPES.EMPLOYEE
+      // ) {
+      //   subscriptionDto.SK =
+      //     SUBSCRIPTION_CONSTANTS.SK_INIT +
+      //     SUBSCRIPTION_CONSTANTS.TYPES.EMPLOYEE +
+      //     "#" +
+      //     UlidService.getUlidId();
+      // } else {
+      //   // Handle invalid userType or provide a default behavior
+      //   throw new Error("Invalid userType");
+      // }
+      subscriptionDto.SK = SUBSCRIPTION_CONSTANTS.SK;
+      console.log(subscriptionDto);
 
-      const result = await SubscriptionModel.create(subscriptionDto);
+      const result = await UserModel.update(subscriptionDto);
       console.log(result);
     } catch (error) {
       throw error;
@@ -55,7 +58,7 @@ class SubscriptionService {
 
   async getSubscriptionList() {
     try {
-      return SubscriptionModel.query("PK").eq(SUBSCRIPTION_CONSTANTS.PK).exec();
+      // return SubscriptionModel.query("PK").eq(SUBSCRIPTION_CONSTANTS.PK).exec();
     } catch (error) {
       throw error;
     }

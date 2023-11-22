@@ -5,6 +5,7 @@ import { Router } from "express";
 import CandidateRouter from "./routers/Candidate.router";
 import CompanyRouter from "./routers/Company.router";
 import SubscriptionRouter from "./routers/Subscription.router";
+import UserRouter from "./routers/User.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -15,5 +16,7 @@ router.use("/candidate", CandidateRouter);
 router.use("/company", CompanyRouter);
 
 router.use("/subscription", SubscriptionRouter);
+
+router.use("/user", UserRouter);
 // Export the router
 export default router;

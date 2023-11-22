@@ -5,7 +5,7 @@ import { DB_CONSTANTS, DBSchema } from "../db/DB.constants";
 // Subscription related constants here
 const SUBSCRIPTION_CONSTANTS = {
   MODEL: "Subscription",
-  PK: "SUBS#",
+  SK: "SUBS#",
   SK_INIT: "TYPE#",
   TYPES: {
     CANDIDATE: "CAND",

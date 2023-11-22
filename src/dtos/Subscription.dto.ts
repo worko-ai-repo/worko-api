@@ -1,7 +1,15 @@
 import { WorkoDTO } from "./Worko.dto";
-export default interface SubscriptionDTO extends WorkoDTO {
+
+interface SubsList {
   name: String;
-  amount: Number;
   duration: Number;
-  UserType: string;
+  amount: Number;
+}
+
+export default interface SubscriptionDTO extends WorkoDTO {
+  subList: Partial<SubsList>;
+  // name: String;
+  // amount: Number;
+  // duration: Number;
+  // UserType: string;
 }
