@@ -9,6 +9,6 @@ const subcriptionController = new SubscriptionController();
 const SubscriptionRouter = Router();
 
 SubscriptionRouter.post("/add/:email", subcriptionController.addSubscription);
-SubscriptionRouter.get("/list", subcriptionController.getSubcriptionList);
+// SubscriptionRouter.get("/list", subcriptionController.getSubcriptionList);
 
 export default SubscriptionRouter;

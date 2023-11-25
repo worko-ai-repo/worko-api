@@ -5,7 +5,7 @@ import CompanyService from "../services/Company.service";
 class CompanyController {
   createCompany = async (req: Request, res: Response, next: NextFunction) => {
     const companyDto: CompanyDTO = req.body;
-    const createdCompany = await CompanyService.createNewCompany(companyDto);
+    const createdCompany = await CompanyService.addNewCompany(companyDto);
 
     res.status(201).json(createdCompany);
   };

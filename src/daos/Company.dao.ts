@@ -1,89 +1,80 @@
 import * as dynamoose from "dynamoose";
 import Worko from "../db/Dynamoose.config";
 import { DB_CONSTANTS, DBSchema } from "../db/DB.constants";
-
-// Common function to create a DynamoDB table with a model
-// const createTableWithModel = (modelName, model, tableName) => {
-//   const createdModel = dynamoose.model(modelName, model);
-//   return new dynamoose.Table(tableName, [createdModel]);
-// };
+import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
+import UlidService from "../services/Ulid.service";
 
 // Company related constants here
 const COMPANY_CONSTANTS = {
   MODEL: "Company",
   PK: "COMPANY#",
-  SK_INIT: "ID#",
-  REQUEST_PK: "REQUEST#COMP#",
+  SK_INIT: "ID#{companyId}",
+  REQUEST_PK: "RQST#COMP#",
+  REQUEST_SK: "ID#{requestId}",
   REQUEST_MODEL: "RequestCompany",
 };
 
 // Strongly typed model
-export class CompanyDao extends Worko {
+class CompanyDao extends Worko {
   "name": String;
   "industry": String;
   "teamSize": Number;
   "carrierPage": String;
   "linkedIn": String;
   "logoUrl": String;
+
+  static CompanyModel = dynamoose.model(COMPANY_CONSTANTS.MODEL, [DBSchema]);
+  static CompanyTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
+    CompanyDao.CompanyModel,
+  ]);
+
+  static AddCompanyModel = dynamoose.model(COMPANY_CONSTANTS.REQUEST_MODEL, [
+    DBSchema,
+  ]);
+  static AddCompanyTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
+    CompanyDao.AddCompanyModel,
+  ]);
+
+  static async companyList() {
+    try {
+      return CompanyDao.CompanyModel.query("PK")
+        .eq(COMPANY_CONSTANTS.PK)
+        .exec();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async requestedCompany() {
+    try {
+      return CompanyDao.AddCompanyModel.query("PK")
+        .eq(COMPANY_CONSTANTS.REQUEST_PK)
+        .exec();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async add(companyDto: CompanyDTO) {
+    try {
+      companyDto.PK = COMPANY_CONSTANTS.PK;
+      companyDto.SK = COMPANY_CONSTANTS.SK_INIT + UlidService.getUlidId();
+      return CompanyDao.CompanyModel.create(companyDto);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async request(addCompanyDto: AddCompanyDTO) {
+    try {
+      addCompanyDto.PK = COMPANY_CONSTANTS.REQUEST_PK;
+      addCompanyDto.SK = COMPANY_CONSTANTS.SK_INIT + UlidService.getUlidId();
+      return CompanyDao.AddCompanyModel.create(addCompanyDto);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
-const CompanyModel = dynamoose.model(COMPANY_CONSTANTS.MODEL, [DBSchema]);
-const Table = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-  CompanyModel,
-]);
-
-const AddCompanyModel = dynamoose.model(COMPANY_CONSTANTS.REQUEST_MODEL, [
-  DBSchema,
-]);
-const table2 = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-  AddCompanyModel,
-]);
-
-export { CompanyModel, AddCompanyModel, COMPANY_CONSTANTS };
-
-// import { DB_CONSTANTS, DBSchema } from "../db/DB.constants";
-// import { CompanyDTO } from "../dtos/Company.dto";
-// import * as dynamoose from "dynamoose";
-
-// const CompanyModel = dynamoose.model(
-//   DB_CONSTANTS.WORKO_TABLE_NAME,
-//   DBSchema
-// );
-
-// class CompanyDAO {
-//   static async createCompany(companyDTO: CompanyDTO): Promise<void> {
-//     const newCompany = new CompanyModel({
-//       PK: companyDTO.id,
-//       SK: companyDTO.id,
-//       createdAt: new Date(),
-//       updatedAt: new Date(),
-//       ...companyDTO,
-//     });
-
-//     await newCompany.save();
-//   }
-
-//   static async getCompanyById(companyId: string): Promise<CompanyDTO | null> {
-//     const result = await CompanyModel.get({ PK: companyId, SK: companyId });
-
-//     if (!result) {
-//       return null;
-//     }
-
-//     return {
-//       id: result.PK,
-//       name: result.name,
-//       industry: result.industry,
-//       teamSize: result.teamSize,
-//       carrierPage: result.carrierPage,
-//       linkedIn: result.linkedIn,
-//       logoUrl: result.logoUrl,
-//       createdAt: result.createdAt,
-//       updatedAt: result.updatedAt,
-//     };
-//   }
-
-//   // Add other methods as needed (update, delete, query, etc.)
-// }
-
-// export { CompanyDAO };
+// Export only the CompanyDao class
+export default CompanyDao;
