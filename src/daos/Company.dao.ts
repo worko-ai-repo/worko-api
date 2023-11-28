@@ -1,6 +1,7 @@
 import * as dynamoose from "dynamoose";
 import Worko from "../db/Dynamoose.config";
-import { DB_CONSTANTS, DBSchema } from "../db/DB.constants";
+import { DB_CONSTANTS } from "../db/DB.constants";
+import { DBBaseSchema } from "../db/models/Base.model";
 import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
 import UlidService from "../services/Ulid.service";
 
@@ -23,13 +24,15 @@ class CompanyDao extends Worko {
   "linkedIn": String;
   "logoUrl": String;
 
-  static CompanyModel = dynamoose.model(COMPANY_CONSTANTS.MODEL, [DBSchema]);
+  static CompanyModel = dynamoose.model(COMPANY_CONSTANTS.MODEL, [
+    DBBaseSchema,
+  ]);
   static CompanyTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
     CompanyDao.CompanyModel,
   ]);
 
   static AddCompanyModel = dynamoose.model(COMPANY_CONSTANTS.REQUEST_MODEL, [
-    DBSchema,
+    DBBaseSchema,
   ]);
   static AddCompanyTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
     CompanyDao.AddCompanyModel,

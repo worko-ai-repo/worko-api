@@ -1,21 +1,25 @@
 // UserDetailsModel.ts
-import { DB_CONSTANTS, DBSchema } from "../DB.constants";
+import { DB_CONSTANTS } from "../DB.constants";
+import { DBBaseSchema } from "./Base.model";
 import * as dynamoose from "dynamoose";
 
 const UserDetailsSchema = new dynamoose.Schema(
   {
-    ...DBSchema.attributes, // Use the attributes property from DBSchema
-    firstName: {
+    ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
+    status: {
       type: String,
       required: true,
     },
-    lastName: {
+    company: {
       type: String,
       required: true,
     },
-    emailList: {
-      type: Set, // Use Set for storing a list of emails
-      schema: [String], // Specify the type of elements in the set
+    GSI1PK: {
+      type: String,
+      required: true,
+    },
+    GSI1SK: {
+      type: String,
       required: true,
     },
     // Add other user-specific attributes here
@@ -25,8 +29,8 @@ const UserDetailsSchema = new dynamoose.Schema(
   }
 );
 
-const UserModel = dynamoose.model("User", UserDetailsSchema);
+const UserReqModel = dynamoose.model("User", UserDetailsSchema);
 const UserTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-  UserModel,
+  UserReqModel,
 ]);
-export { UserModel, UserTable };
+export { UserReqModel, UserTable };

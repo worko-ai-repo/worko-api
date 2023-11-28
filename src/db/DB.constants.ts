@@ -1,5 +1,3 @@
-import * as dynamoose from "dynamoose";
-
 const DB_CONSTANTS = {
   WORKO_TABLE_NAME: "worko",
   WORKO_PK_SK: {
@@ -16,22 +14,4 @@ const DB_CONSTANTS = {
   },
 };
 
-const DBSchema = new dynamoose.Schema(
-  {
-    ...DB_CONSTANTS.WORKO_PK_SK,
-    createdAt: {
-      type: Date,
-      default: new Date(),
-      required: true,
-    },
-    updatedAt: {
-      type: Date,
-      default: new Date(),
-      required: true,
-    },
-  },
-  {
-    ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,
-  }
-);
-export { DB_CONSTANTS, DBSchema };
+export { DB_CONSTANTS };

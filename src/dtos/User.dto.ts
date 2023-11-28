@@ -1,20 +1,12 @@
-import { WorkoDTO } from "./Worko.dto";
-
-// export interface UserLinkedinSignUpDTO extends WorkoDTO {
-//   email: string;
-//   name: string;
-//   role: string;
-// }
+import { WorkoDTO, WorkoDTOWithGSI } from "./Worko.dto";
 
 export interface UserLinkedinSignUpDTO extends WorkoDTO {
   firstName: string;
   lastName: string;
-  emailList: string[];
+  emailList: { [key: string]: string };
 }
 
-export interface UserReferralRequestDTO extends WorkoDTO {
+export interface UserReferralRequestDTO extends WorkoDTOWithGSI {
   status: string;
   company: string;
-  GSI1PK: string;
-  GSI1SK: string;
 }

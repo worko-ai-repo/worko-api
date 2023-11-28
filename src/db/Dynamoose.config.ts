@@ -24,7 +24,7 @@ const ddb = new dynamoose.aws.ddb.DynamoDB({
 dynamoose.aws.ddb.set(ddb);
 
 // dynamoose.aws.ddb.local();
-
+//@todo make sure to remove below classes and referencess before commiting the code
 class Timestamps {
   "createdAt": String; //this will be taken care by dynamoose
   "updatedAt": String; //this will be taken care by dynamoose

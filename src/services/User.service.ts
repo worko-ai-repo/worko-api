@@ -1,4 +1,7 @@
-import UserDao from "../daos/User.dao";
+// import UserDao from "../daos/User.dao";
+import UserdetailDao from "../daos/Userdetail.dao";
+import UserreferralDao from "../daos/Userreferral.dao";
+import UsersubscriptionDao from "../daos/Usersubscription.dao";
 import {
   UserLinkedinSignUpDTO,
   UserReferralRequestDTO,
@@ -12,7 +15,7 @@ class UserService {
    */
   async getUserByEmail(email: string) {
     try {
-      return UserDao.fullDetails(email);
+      return UserdetailDao.getUserDetails(email);
     } catch (error) {
       console.log("Error -> ", error);
       throw error;
@@ -26,7 +29,7 @@ class UserService {
    */
   async getsubscriptionDetails(email: string) {
     try {
-      return UserDao.subscriptionDetails(email);
+      return UsersubscriptionDao.subscriptionDetails(email);
     } catch (error) {
       console.log("Error -> ", error);
       throw error;
@@ -38,7 +41,7 @@ class UserService {
    */
   async addUser(userSignUpDTO: UserLinkedinSignUpDTO, email: string) {
     try {
-      UserDao.add(userSignUpDTO, email);
+      UserdetailDao.add(userSignUpDTO, email);
     } catch (error) {
       throw error;
     }
@@ -53,7 +56,7 @@ class UserService {
     email: string
   ) {
     try {
-      UserDao.requestReferral(referralRequest, email);
+      UserreferralDao.requestReferral(referralRequest, email);
     } catch (error) {
       throw error;
     }

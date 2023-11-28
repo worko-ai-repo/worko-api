@@ -1,123 +1,140 @@
-import * as dynamoose from "dynamoose";
-import Worko from "../db/Dynamoose.config";
-import { DB_CONSTANTS, DBSchema } from "../db/DB.constants";
-import SubscriptionDTO from "../dtos/Subscription.dto";
-import {
-  UserLinkedinSignUpDTO,
-  UserReferralRequestDTO,
-} from "../dtos/User.dto";
-import UlidService from "../services/Ulid.service";
-import { UserModel } from "../db/models/UserDetailsModel";
-import { UserReqModel } from "../db/models/UserRequestModel";
-// Subscription related constants here
-const USER_CONSTANTS = {
-  MODEL: "User",
-  PK: "USR#EML#{primaryEmail}",
-
-  // Sort key prefixes
-  SK_ID: "ID#{uuid}",
-  SK_ROLE: "ROLE#",
-  SK_TYPE: "TYPE#",
-  SK_SKILL: "SKILL#",
-  SK_SUBS: "SUBS#",
-  SK_EMAILS: "EMAILS#",
-  SK_REFERRAL: "REF#ID#{reqId}",
-};
+//npm import
+import BaseDao from "./Base.dao";
 
 // Strongly typed model for Subscription
-class UserDao extends Worko {
+class UserDao extends BaseDao {
   // "name": String;
   // "amount": Number;
   // "duration": Number;
-  static UserModel = dynamoose.model(USER_CONSTANTS.MODEL, DBSchema);
-
-  static UserTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-    UserDao.UserModel,
-  ]);
-
+  // User related constants here
+  // private USER_CONSTANTS = {
+  //   MODEL: "User",
+  //   PK: "USR#EML#{primaryEmail}",
+  //   // Sort key prefixes
+  //   SK_ID: "ID#{uuid}",
+  //   SK_ROLE: "ROLE#",
+  //   SK_TYPE: "TYPE#",
+  //   SK_SKILL: "SKILL#",
+  //   SK_SUBS: "SUBS#CAND#ID#{subsId}",
+  //   SK_EMAILS: "EMAILS#",
+  //   SK_REFERRAL: "REF#ID#{reqId}",
+  // };
+  // userDao = new UserDao();
+  // UserModel = dynamoose.model(this.USER_CONSTANTS.MODEL, DBSchema);
+  // UserTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
+  //   this.userDao.UserModel,
+  // ]);
   /**
    *
    * @param email
    * @returns
    */
-  static async fullDetails(email: string) {
+  /* async fullDetails(email: string) {
     try {
-      const PK = USER_CONSTANTS.PK.replace("{primaryEmail}", email);
+      // console.log("here i n DAo", this.USER_CONSTANTS.PK);
+      const PK = this.USER_CONSTANTS.PK.strtr({
+        "{primaryEmail}": email,
+      });
       console.log("Before", PK);
-      return this.UserModel.query("PK").eq(PK).exec();
+      const res = await UserDetailsModel.query("PK").eq(PK).exec();
+      console.log(res);
+      return res;
     } catch (error) {
+      console.error("Error in fullDetails:", error);
       throw error;
     }
-  }
-
+  } */
   /**
    *
    * @param email
    * @returns
    */
-  static async subscriptionDetails(email: string) {
+  /* async subscriptionDetails(email: string) {
     try {
-      const PK = USER_CONSTANTS.PK.replace("{primaryEmail}", email);
-      const SK = USER_CONSTANTS.SK_SUBS;
+      const PK = this.USER_CONSTANTS.PK.strtr({
+        "{primaryEmail}": email,
+      });
+      // const SK = this.USER_CONSTANTS.SK_SUBS;
+      const SK = this.USER_CONSTANTS.SK_SUBS.strtr({
+        "ID#{subsId}": "",
+      });
 
-      return this.UserModel.query({
+      return UserSubModel.query({
         PK,
         SK,
       }).exec();
     } catch (error) {
+      console.log(error);
       throw error;
     }
-  }
-
+  } */
   /**
    *
    * @param userSignUpDTO
    */
-  static async add(userSignUpDTO: UserLinkedinSignUpDTO, email: string) {
+  /* async add(userSignUpDTO: UserLinkedinSignUpDTO, email: string) {
     try {
-      userSignUpDTO.PK = USER_CONSTANTS.PK.replace("{primaryEmail}", email);
-      userSignUpDTO.SK = USER_CONSTANTS.SK_ID.replace(
-        "{uuid}",
-        UlidService.getUlidId()
-      );
+      userSignUpDTO.PK = this.USER_CONSTANTS.PK.strtr({
+        "{primaryEmail}": email,
+      });
+      userSignUpDTO.SK = this.USER_CONSTANTS.SK_ID.strtr({
+        "{uuid}": UlidService.getUlidId(),
+      });
       console.log(userSignUpDTO);
-      UserModel.create(userSignUpDTO);
+      await UserDetailsModel.create(userSignUpDTO);
     } catch (error) {
+      console.log("Addd user -> ", error);
       throw error;
     }
-  }
-
+  } */
   /**
    *
    * @param subscriptionDto
    * @param email
    */
-  static async addSubscription(
-    subscriptionDto: SubscriptionDTO,
-    email: string
-  ) {
+  /* async addSubscription(subscriptionDto: SubscriptionDTO, email: string) {
     try {
-      subscriptionDto.PK = USER_CONSTANTS.PK.replace("{primaryEmail}", email);
-      subscriptionDto.SK = USER_CONSTANTS.SK_SUBS;
+      subscriptionDto.PK = this.USER_CONSTANTS.PK.replace(
+        "{primaryEmail}",
+        email
+      );
+      subscriptionDto.SK = this.USER_CONSTANTS.SK_SUBS.replace(
+        "{subsId}",
+        UlidService.getUlidId()
+      );
+      subscriptionDto.GSI1PK = this.USER_CONSTANTS.SK_SUBS.replace(
+        "ID#(subsId}",
+        ""
+      );
+      subscriptionDto.GSI1SK = this.USER_CONSTANTS.PK.replace(
+        "{primaryEmail}",
+        email
+      );
+      const timestamp = Date.now();
+      subscriptionDto.expiryDate = new Date(timestamp);
+      subscriptionDto.purchaseDate = new Date(timestamp);
       console.log(subscriptionDto);
-      this.UserModel.create(subscriptionDto);
+      await UserSubModel.create(subscriptionDto);
     } catch (error) {
+      console.log(error);
       throw error;
     }
-  }
-
+  } */
   /**
    *
    * @param referralRequest
    * @param email
    */
-  static async requestReferral(
+  /* async requestReferral(
     referralRequest: UserReferralRequestDTO,
     email: string
   ) {
     try {
-      referralRequest.PK = USER_CONSTANTS.PK.replace("{primaryEmail}", email);
-      referralRequest.SK = USER_CONSTANTS.SK_REFERRAL.replace(
+      referralRequest.PK = this.USER_CONSTANTS.PK.replace(
+        "{primaryEmail}",
+        email
+      );
+      referralRequest.SK = this.USER_CONSTANTS.SK_REFERRAL.replace(
         "{reqId}",
         UlidService.getUlidId()
       );
@@ -131,7 +148,7 @@ class UserDao extends Worko {
     } catch (error) {
       throw error;
     }
-  }
+  } */
 }
 
-export default UserDao;
+export default new UserDao();

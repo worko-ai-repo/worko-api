@@ -1,15 +1,22 @@
-import { WorkoDTO } from "./Worko.dto";
+import { WorkoDTO, WorkoDTOWithGSI } from "./Worko.dto";
 
-interface SubsList {
-  name: String;
-  duration: Number;
+// interface SubsList {
+//   name: String;
+//   duration: Number;
+//   amount: Number;
+// }
+
+// export default interface SubscriptionDTO extends WorkoDTO {
+//   subList: Partial<SubsList>;
+//   // name: String;
+//   // amount: Number;
+//   // duration: Number;
+//   // UserType: string;
+// }
+
+export default interface SubscriptionDTO extends WorkoDTOWithGSI {
   amount: Number;
-}
-
-export default interface SubscriptionDTO extends WorkoDTO {
-  subList: Partial<SubsList>;
-  // name: String;
-  // amount: Number;
-  // duration: Number;
-  // UserType: string;
+  status: String;
+  expiryDate: Date;
+  purchaseDate: Date;
 }
