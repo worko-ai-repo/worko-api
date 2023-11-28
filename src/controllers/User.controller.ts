@@ -4,6 +4,7 @@ import {
   UserLinkedinSignUpDTO,
   UserReferralRequestDTO,
 } from "../dtos/User.dto";
+import { UserLinkedinSignUpDTOValidation } from "../schemas/User.schema";
 
 class UserController {
   /**
@@ -45,6 +46,15 @@ class UserController {
     // const companyDto: CompanyDTO = req.body;
     // const createdCompany = await CompanyService.createNewCompany(companyDto);
     const userSingUpDto: UserLinkedinSignUpDTO = req.body;
+    const { error } = UserLinkedinSignUpDTOValidation.validate(userSingUpDto, {
+      abortEarly: false,
+    });
+
+    if (error) {
+      return res.status(400).json({
+        message: "Validation error",
+      });
+    }
     const email = req.params.email;
     const newUser = await UserService.addUser(userSingUpDto, email);
     res.status(201).json(newUser);

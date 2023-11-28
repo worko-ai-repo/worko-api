@@ -3,7 +3,10 @@ import UlidService from "../services/Ulid.service";
 import { UserReferralRequestDTO } from "../dtos/User.dto";
 import BaseDao from "./Base.dao";
 
-class UserReferralDao extends BaseDao {
+class UserReferralDao implements BaseDao {
+  modelName = "user";
+  partitianKey = "USR#EML#{primaryEmail}";
+  sortKeys = { SK_REFERRAL: "REF#ID#{reqId}" };
   /**
    *
    * @param referralRequest
@@ -14,11 +17,8 @@ class UserReferralDao extends BaseDao {
     email: string
   ) {
     try {
-      referralRequest.PK = this.USER_CONSTANTS.PK.replace(
-        "{primaryEmail}",
-        email
-      );
-      referralRequest.SK = this.USER_CONSTANTS.SK_REFERRAL.replace(
+      referralRequest.PK = this.partitianKey.replace("{primaryEmail}", email);
+      referralRequest.SK = this.sortKeys.SK_REFERRAL.replace(
         "{reqId}",
         UlidService.getUlidId()
       );

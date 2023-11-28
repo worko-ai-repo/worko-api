@@ -3,7 +3,10 @@ import UlidService from "../services/Ulid.service";
 import { UserSubModel } from "../db/models/UserSubscription.model";
 import BaseDao from "./Base.dao";
 
-class UserSubscriptionDao extends BaseDao {
+class UserSubscriptionDao implements BaseDao {
+  modelName = "user";
+  partitianKey = "USR#EML#{primaryEmail}";
+  sortKeys = { SK_SUBS: "SUBS#CAND#ID#{subsId}" };
   /**
    *
    * @param email
@@ -11,11 +14,11 @@ class UserSubscriptionDao extends BaseDao {
    */
   async subscriptionDetails(email: string) {
     try {
-      const PK = this.USER_CONSTANTS.PK.strtr({
+      const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
       // const SK = this.USER_CONSTANTS.SK_SUBS;
-      const SK = this.USER_CONSTANTS.SK_SUBS.strtr({
+      const SK = this.sortKeys.SK_SUBS.strtr({
         "ID#{subsId}": "",
       });
 
@@ -36,19 +39,13 @@ class UserSubscriptionDao extends BaseDao {
    */
   async addSubscription(subscriptionDto: SubscriptionDTO, email: string) {
     try {
-      subscriptionDto.PK = this.USER_CONSTANTS.PK.replace(
-        "{primaryEmail}",
-        email
-      );
-      subscriptionDto.SK = this.USER_CONSTANTS.SK_SUBS.replace(
+      subscriptionDto.PK = this.partitianKey.replace("{primaryEmail}", email);
+      subscriptionDto.SK = this.sortKeys.SK_SUBS.replace(
         "{subsId}",
         UlidService.getUlidId()
       );
-      subscriptionDto.GSI1PK = this.USER_CONSTANTS.SK_SUBS.replace(
-        "ID#(subsId}",
-        ""
-      );
-      subscriptionDto.GSI1SK = this.USER_CONSTANTS.PK.replace(
+      subscriptionDto.GSI1PK = this.sortKeys.SK_SUBS.replace("ID#(subsId}", "");
+      subscriptionDto.GSI1SK = this.partitianKey.replace(
         "{primaryEmail}",
         email
       );

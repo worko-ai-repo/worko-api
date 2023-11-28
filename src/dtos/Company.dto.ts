@@ -4,21 +4,21 @@ import { WorkoDTO } from "./Worko.dto";
 
 // It defines the structure of the data that can be sent or received when working with candidates.
 export interface CompanyDTO extends WorkoDTO {
+  name: string;
+  industry: string;
+  teamSize: number;
+  carrierPage: string;
+  linkedIn: string;
+  logoUrl: string;
+}
+
+interface CompanyObject {
   name: String;
   industry: String;
   teamSize: Number;
   carrierPage: String;
   linkedIn: String;
   logoUrl: String;
-}
-
-interface CompanyObject {
-  name: String;
-  industry?: String;
-  teamSize?: Number;
-  carrierPage?: String;
-  linkedIn?: String;
-  logoUrl?: String;
 }
 
 export enum UserType {

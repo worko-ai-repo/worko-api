@@ -1,4 +1,6 @@
 import CompanyDao from "../daos/Company.dao";
+import CompanyDetailDao from "../daos/CompanyDetail.dao";
+import CompanyRequestDao from "../daos/CompanyRequest.dao";
 import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
 
 class CompanyService {
@@ -14,7 +16,7 @@ class CompanyService {
 
   async getRequestedCompanies() {
     try {
-      return CompanyDao.requestedCompany();
+      return CompanyRequestDao.requestedCompany();
     } catch (error) {
       throw error;
     }
@@ -22,7 +24,7 @@ class CompanyService {
 
   async addNewCompany(companyDto: CompanyDTO) {
     try {
-      const result = await CompanyDao.add(companyDto);
+      const result = CompanyDetailDao.add(companyDto);
       console.log(result);
     } catch (error) {
       throw error;
@@ -31,7 +33,7 @@ class CompanyService {
 
   async AddCompany(addCompanyDTO: AddCompanyDTO) {
     try {
-      const result = await CompanyDao.request(addCompanyDTO);
+      const result = await CompanyRequestDao.request(addCompanyDTO);
       console.log(result);
     } catch (error) {
       throw error;

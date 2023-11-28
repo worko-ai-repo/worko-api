@@ -2,7 +2,10 @@
 import BaseDao from "./Base.dao";
 
 // Strongly typed model for Subscription
-class UserDao extends BaseDao {
+class UserDao implements BaseDao {
+  modelName = "user";
+  partitianKey = "";
+  sortKeys = {};
   // "name": String;
   // "amount": Number;
   // "duration": Number;

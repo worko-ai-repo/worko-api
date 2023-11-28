@@ -3,7 +3,10 @@ import UlidService from "../services/Ulid.service";
 import { UserLinkedinSignUpDTO } from "../dtos/User.dto";
 import BaseDao from "./Base.dao";
 
-class UserDetailDao extends BaseDao {
+class UserDetailDao implements BaseDao {
+  modelName = "user";
+  partitianKey = "USR#EML#{primaryEmail}";
+  sortKeys = { SK_ID: "ID#{uuid}" };
   /**
    *
    * @param email
@@ -14,7 +17,7 @@ class UserDetailDao extends BaseDao {
       // const PK = this.USER_CONSTANTS.PK.strtr({
       //   "{primaryEmail}": email,
       // });
-      const PK = this.USER_CONSTANTS.PK.replace("{primaryEmail}", email);
+      const PK = this.partitianKey.replace("{primaryEmail}", email);
       console.log("PK -> ", PK);
       const res = await UserDetailsModel.query("PK").eq(PK).exec();
       console.log(res);
@@ -34,14 +37,11 @@ class UserDetailDao extends BaseDao {
       /* userSignUpDTO.PK = this.USER_CONSTANTS.PK.strtr({
         "{primaryEmail}": email,
       }); */
-      userSignUpDTO.PK = this.USER_CONSTANTS.PK.replace(
-        "{primaryEmail}",
-        email
-      );
+      userSignUpDTO.PK = this.partitianKey.replace("{primaryEmail}", email);
       /* userSignUpDTO.SK = this.USER_CONSTANTS.SK_ID.strtr({
         "{uuid}": UlidService.getUlidId(),
       }); */
-      userSignUpDTO.SK = this.USER_CONSTANTS.SK_ID.replace(
+      userSignUpDTO.SK = this.sortKeys.SK_ID.replace(
         "{uuid}",
         UlidService.getUlidId()
       );
