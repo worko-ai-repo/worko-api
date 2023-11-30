@@ -1,38 +1,59 @@
-import { UserReqModel } from "../db/models/UserRequest.model";
-import UlidService from "../services/Ulid.service";
-import { UserReferralRequestDTO } from "../dtos/User.dto";
+//Load the base dao
 import BaseDao from "./Base.dao";
 
+//Load the local model
+import { UserReqModel } from "../db/models/UserRequest.model";
+
+//Load the local dtos
+import { UserReferralRequestDTO } from "../dtos/User.dto";
+
+//Load UlidService for generating ULID IDs
+import UlidService from "../services/Ulid.service";
+
+// Class definition for UserReferralDao implementing the BaseDao interface
 class UserReferralDao implements BaseDao {
-  modelName = "user";
-  partitianKey = "USR#EML#{primaryEmail}";
-  sortKeys = { SK_REFERRAL: "REF#ID#{reqId}" };
+  modelName = "user"; // The model name used for user referrals
+  partitianKey = "USR#EML#{primaryEmail}"; // Partition key format for user referrals
+  sortKeys = { SK_REFERRAL: "REF#ID#{reqId}" }; // Sort key format for user referrals
+
   /**
+   * Request a user referral by creating a new entry in the database.
    *
-   * @param referralRequest
-   * @param email
+   * @param referralRequest - The UserReferralRequestDTO containing referral request details.
+   * @param email - The email associated with the referral request.
    */
   async requestReferral(
     referralRequest: UserReferralRequestDTO,
     email: string
   ) {
     try {
+      // Set PK (Partition Key) in the referral request by replacing the placeholder with the email
       referralRequest.PK = this.partitianKey.replace("{primaryEmail}", email);
+
+      // Set SK (Sort Key) in the referral request by replacing the placeholder with a generated ULID
       referralRequest.SK = this.sortKeys.SK_REFERRAL.replace(
         "{reqId}",
         UlidService.getUlidId()
       );
-      // Splitting referralRequest.SK into two parts based on '#' delimiter
+
+      // Splitting referralRequest.SK into three parts using '#' delimiter
       const [refPrefix, refId, refNum] = referralRequest.SK.split("#");
-      // Assigning values to GSI1PK and GSI1SK
+
+      // Assigning values to GSI1PK and GSI1SK for Global Secondary Index 1
       referralRequest.GSI1PK = `${refPrefix}#`;
       referralRequest.GSI1SK = `${refId}#${refNum}`;
+
+      // Log the referral request details
       console.log(referralRequest);
-      UserReqModel.create(referralRequest);
+
+      // Create a new entry in the UserReqModel (database model) with the referral request data
+      await UserReqModel.create(referralRequest);
     } catch (error) {
+      // Throw any encountered errors
       throw error;
     }
   }
 }
 
+// Export a new instance of UserReferralDao
 export default new UserReferralDao();

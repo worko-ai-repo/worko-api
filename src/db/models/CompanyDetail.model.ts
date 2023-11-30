@@ -1,10 +1,12 @@
+// Load the npm packages
 import * as dynamoose from "dynamoose";
 
-// Local
+// Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
 import { DBBaseSchema } from "./Base.model";
-import { model, BaseDbDto } from "./Base.model";
+import { dbModel, BaseDbDto } from "./Base.model";
 
+// Declaring a class 'CompanyDetailsDbDto' that extends 'BaseDbDto' with specific properties for company details
 class CompanyDetailsDbDto extends BaseDbDto {
   name!: string;
   industry!: string;
@@ -14,6 +16,7 @@ class CompanyDetailsDbDto extends BaseDbDto {
   logoUrl!: string;
 }
 
+// Creating a DynamoDB schema for the 'Company' model with specified attributes and their types
 const CompanySchema = new dynamoose.Schema(
   {
     ...DBBaseSchema.attributes,
@@ -47,10 +50,12 @@ const CompanySchema = new dynamoose.Schema(
   }
 );
 
+// Creating a DynamoDB model 'CompanyDetailModel' based on the 'CompanySchema' and registering it with the database model
 const CompanyDetailModel = dynamoose.model<CompanyDetailsDbDto>(
   "CompanyDetail",
   CompanySchema
 );
-model.registerModel(CompanyDetailModel);
+dbModel.registerModel(CompanyDetailModel);
 
+// Exporting the 'CompanyDetailModel' for external usage
 export { CompanyDetailModel };

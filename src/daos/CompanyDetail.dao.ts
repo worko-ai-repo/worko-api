@@ -1,37 +1,44 @@
-import { CompanyDetailModel } from "../db/models/CompanyDetail.model";
-import { CompanyDTO } from "../dtos/Company.dto";
-import UlidService from "../services/Ulid.service";
+//Load the base dao
 import BaseDao from "./Base.dao";
 
+//Load the local models
+import { CompanyDetailModel } from "../db/models/CompanyDetail.model";
+
+//Load the local dtos
+import { CompanyDTO } from "../dtos/Company.dto";
+
+//Load UlidService for generating ULID IDs
+import UlidService from "../services/Ulid.service";
+
+// DAO class for handling Company details
 class CompanyDetailDao implements BaseDao {
-  modelName = "Company";
-  partitianKey = "COMP#";
-  sortKeys = { SK_INIT: "ID#{companyId}" };
+  modelName = "Company"; // Model name for Company
+  partitianKey = "COMP#"; // Partition key for Company
+  sortKeys = { SK_INIT: "ID#{companyId}" }; // Sort keys for Company
 
-  "name": String;
-  "industry": String;
-  "teamSize": Number;
-  "carrierPage": String;
-  "linkedIn": String;
-  "logoUrl": String;
-
+  /**
+   *
+   * Add a company based on provided DTO
+   *
+   * @param companyDto
+   */
   async add(companyDto: CompanyDTO) {
     try {
-      companyDto.PK = this.partitianKey;
-      // companyDto.SK = this.sortKeys.SK_INIT + UlidService.getUlidId();
+      companyDto.PK = this.partitianKey; // Set partition key in DTO
+      // Generate a unique ID using UlidService and update the sort key in DTO
       companyDto.SK = this.sortKeys.SK_INIT.replace(
         "{companyId}",
         UlidService.getUlidId()
       );
-      console.log(companyDto);
-      const res = await CompanyDetailModel.create(companyDto);
-      console.log(res);
+      console.log(companyDto); // Log the company DTO
+      const res = await CompanyDetailModel.create(companyDto); // Create a new CompanyDetailModel entry
+      console.log(res); // Log the result of the creation process
     } catch (error) {
-      console.log(error);
-      throw error;
+      console.log(error); // Log any errors that occur during the process
+      throw error; // Throw the error for handling at a higher level
     }
   }
 }
 
-// Export only the CompanyDao class
+// Export an instance of the CompanyDetailDao class
 export default new CompanyDetailDao();

@@ -19,10 +19,12 @@ model.registerModel(CompanyModel);
 
 export { CompanyModel }; */
 
-// Import necessary modules
+// Load the npm packages
 import * as dynamoose from "dynamoose";
+
+// Load the local model constants and base model functionalities
 import { DBBaseSchema } from "./Base.model";
-import { model, BaseDbDto } from "./Base.model";
+import { dbModel, BaseDbDto } from "./Base.model";
 import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the CompanyDetailsDbDto class
@@ -76,7 +78,7 @@ const CompanyModel = dynamoose.model<CompanyDetailsDbDto>(
 );
 
 // Register the model using the model object
-model.registerModel(CompanyModel);
+dbModel.registerModel(CompanyModel);
 
 // Export the CompanyDetailModel
 export { CompanyModel };

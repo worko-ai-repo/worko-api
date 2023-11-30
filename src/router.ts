@@ -4,8 +4,9 @@ import { Router } from "express";
 // Load local packages
 import CandidateRouter from "./routers/Candidate.router";
 import CompanyRouter from "./routers/Company.router";
-import SubscriptionRouter from "./routers/Subscription.router";
 import UserRouter from "./routers/User.router";
+import UserReferralRouter from "./routers/UserReferral.router";
+import UserSubscriptionRouter from "./routers/UserSubscription.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -13,10 +14,17 @@ const router = Router();
 // Regitser the "Candidate" routers
 router.use("/candidate", CandidateRouter);
 
+// Regitser the "Company" routers
 router.use("/company", CompanyRouter);
 
-router.use("/subscription", SubscriptionRouter);
-
+// Regitser the "User CRUD" routers
 router.use("/user", UserRouter);
+
+// Regitser the "User Referral" routers
+router.use("/user", UserReferralRouter);
+
+// Regitser the "User Subscription" routers
+router.use("/user", UserSubscriptionRouter);
+
 // Export the router
 export default router;

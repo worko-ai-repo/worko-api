@@ -5,11 +5,11 @@ import { NextFunction, Request, Response } from "express";
 import { CandidateDTO } from "../dtos/Candidate.dto";
 
 // Load the local schema
-import { CreateCandidateSchema } from "../schemas/User.schema";
+// import { CreateCandidateSchema } from "../schemas/User.schema";
 
 // Load the shared service
 import BaseController from "./Base.controller";
-import UserService from "../services/User.service";
+// import UserService from "../services/User.service";
 
 /**
  * CandidateController
@@ -46,13 +46,13 @@ class CandidateController extends BaseController {
       const inputData: CandidateDTO = req.body; // Extract data from the request body
 
       // Validate the input data against the schema
-      const { error, value } = CreateCandidateSchema.validate(inputData, {
+      /* const { error, value } = CreateCandidateSchema.validate(inputData, {
         abortEarly: false,
       });
 
       if (error) {
         return res.status(400).json({ error: error.details[0].message });
-      }
+      } */
 
       // If validation is successful, proceed with candidate creation logic
       try {

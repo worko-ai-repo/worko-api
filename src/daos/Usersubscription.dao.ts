@@ -1,16 +1,26 @@
-import SubscriptionDTO from "../dtos/Subscription.dto";
-import UlidService from "../services/Ulid.service";
-import { UserSubModel } from "../db/models/UserSubscription.model";
+//Load the base dao
 import BaseDao from "./Base.dao";
 
+//Load the local model
+import { UserSubModel } from "../db/models/UserSubscription.model";
+
+//Load the local dtos
+import SubscriptionDTO from "../dtos/Subscription.dto";
+
+//Load UlidService for generating ULID IDs
+import UlidService from "../services/Ulid.service";
+
+// Class definition for UserSubscriptionDao implementing BaseDao
 class UserSubscriptionDao implements BaseDao {
   modelName = "user";
   partitianKey = "USR#EML#{primaryEmail}";
   sortKeys = { SK_SUBS: "SUBS#CAND#ID#{subsId}" };
+
   /**
+   * Fetches subscription details based on user email
    *
-   * @param email
-   * @returns
+   * @param email - Email used to fetch subscription details
+   * @returns Promise of subscription details
    */
   async subscriptionDetails(email: string) {
     try {
@@ -33,9 +43,10 @@ class UserSubscriptionDao implements BaseDao {
   }
 
   /**
+   * Adds a subscription using SubscriptionDTO and email
    *
-   * @param subscriptionDto
-   * @param email
+   * @param subscriptionDto - Subscription data to be added
+   * @param email - Email associated with the subscription
    */
   async addSubscription(subscriptionDto: SubscriptionDTO, email: string) {
     try {
@@ -61,4 +72,5 @@ class UserSubscriptionDao implements BaseDao {
   }
 }
 
+// Export an instance of UserSubscriptionDao
 export default new UserSubscriptionDao();

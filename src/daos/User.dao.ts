@@ -1,4 +1,4 @@
-//npm import
+//Load the base dao
 import BaseDao from "./Base.dao";
 
 // Strongly typed model for Subscription

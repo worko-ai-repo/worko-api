@@ -1,18 +1,19 @@
-// Import necessary modules
+// Load the npm packages
 import * as dynamoose from "dynamoose";
 
-// Local
+// Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
 import { DBBaseSchema } from "./Base.model";
-import { model, BaseDbDto } from "./Base.model";
+import { dbModel, BaseDbDto } from "./Base.model";
 
+// Define the structure for Company Request Database Data Transfer Object (DTO)
 class CompanyRequestDbDto extends BaseDbDto {
   UserType!: string;
-  companyDetail!: Record<string, any>; // Use Record<string, any> for map-like structure
+  companyDetail!: Record<string, any>; // Utilizing Record<string, any> for a map-like structure
   status!: string;
 }
 
-// Define the Company Schema with additional attributes
+// Define the Company Schema including additional attributes
 const CompanySchema = new dynamoose.Schema(
   {
     ...DBBaseSchema.attributes,
@@ -34,8 +35,10 @@ const CompanySchema = new dynamoose.Schema(
   }
 );
 
-// Create the Company Model
+// Create the Company Model using the defined Schema
 const CompanyRequestModel = dynamoose.model("CompanyRequest", CompanySchema);
-model.registerModel(CompanyRequestModel);
+// Register the Company Request Model
+dbModel.registerModel(CompanyRequestModel);
 
+// Export the Company Request Model for external use
 export { CompanyRequestModel };

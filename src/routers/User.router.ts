@@ -1,17 +1,25 @@
 // Load the npm packages
 import { Router } from "express";
+
+// Load local packages
 import UserController from "../controllers/User.controller";
 
+// Create instance of the "UserController" class to read the methods/functions from the same.
 const userController = new UserController();
 
+// Route to hold the routes (CRUD, etc) related to "user" table
 const UserRouter = Router();
 
-UserRouter.get("/:email", userController.getUserByEmail);
+// Create user based on the provided query parameter
+UserRouter.post("/:id", userController.createUser);
 
-UserRouter.get("/subs/:email", userController.getsubscriptionDetailsByEmail);
+// Get the user based on the provided query parameter
+UserRouter.get("/:id", userController.getUserById);
 
-UserRouter.post("/signup/:email", userController.addNewUser);
+// UserRouter.put("/:id",userController.updateUser);
 
-UserRouter.post("/send/referral/:email", userController.newReferralRequest);
+// UserRouter.delete("/:id",userController.deleteUser);
+
+// UserRouter.get("/",userController.getUser);
 
 export default UserRouter;

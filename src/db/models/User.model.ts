@@ -1,10 +1,12 @@
+// Load the npm packages
 import * as dynamoose from "dynamoose";
 
-//Local
+// Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
 import { DBBaseSchema } from "./Base.model";
-import { model } from "./Base.model";
+import { dbModel } from "./Base.model";
 
+// Define the schema for the User model using DynamoDB
 const UserSchema = new dynamoose.Schema(
   {
     ...DBBaseSchema.attributes,
@@ -14,11 +16,15 @@ const UserSchema = new dynamoose.Schema(
   }
 );
 
+// Create the UserModel using the defined schema
 // const UserModel = model.createDbModel("User", UserSchema);
 const UserModel = dynamoose.model("User", UserSchema);
-model.registerModel(UserModel);
-// const WorkoTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-//   UserModel,
-// ]);
 
+// Register the UserModel within the database model
+/* const WorkoTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
+  UserModel,
+]); */
+dbModel.registerModel(UserModel);
+
+// Export the UserModel
 export { UserModel };

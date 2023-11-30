@@ -1,39 +1,31 @@
+//Load the base dao
 import BaseDao from "./Base.dao";
+
+//Load the local model
 import { CompanyModel } from "../db/models/Company.model";
 
 // Strongly typed model
 class CompanyDao implements BaseDao {
-  modelName = "Company";
-  partitianKey = "COMP#";
-  sortKeys = {};
+  // Define properties for the CompanyDao class
+  modelName = "Company"; // Define the model name
+  partitianKey = "COMP#"; // Define the partition key
+  sortKeys = {}; // Define sort keys (currently empty)
 
-  "name": String;
-  "industry": String;
-  "teamSize": Number;
-  "carrierPage": String;
-  "linkedIn": String;
-  "logoUrl": String;
-
-  /* CompanyModel = dynamoose.model(COMPANY_CONSTANTS.MODEL, [DBBaseSchema]);
-  CompanyTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-    CompanyDao.CompanyModel,
-  ]);
-
-  AddCompanyModel = dynamoose.model(COMPANY_CONSTANTS.REQUEST_MODEL, [
-    DBBaseSchema,
-  ]);
-  AddCompanyTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-    CompanyDao.AddCompanyModel,
-  ]); */
-
+  /**
+   * Fetches a list of companies
+   *
+   * @returns {Promise<Array>} An array of companies
+   */
   async companyList() {
     try {
+      // Queries the CompanyModel to retrieve companies based on the partition key
       return CompanyModel.query("PK").eq(this.partitianKey).exec();
     } catch (error) {
+      // Throws an error if there's an issue with the query
       throw error;
     }
   }
 }
 
-// Export only the CompanyDao class
+// Export only the CompanyDao class instance
 export default new CompanyDao();

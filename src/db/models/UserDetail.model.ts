@@ -1,14 +1,18 @@
-// UserDetailsModel.ts
-import { DB_CONSTANTS } from "../DB.constants";
+// Load the npm packages
 import * as dynamoose from "dynamoose";
-import { BaseDbDto, DBBaseSchema, model } from "./Base.model";
 
+// Load the local model constants and base model functionalities
+import { BaseDbDto, DBBaseSchema, dbModel } from "./Base.model";
+import { DB_CONSTANTS } from "../DB.constants";
+
+// Define the structure for User Details Database Data Transfer Object (DTO)
 class UserDetailsDbDto extends BaseDbDto {
   firstName!: string;
   lastName!: string;
   emailList!: { [key: string]: string };
 }
 
+// Define the schema for the User Details model using DynamoDB
 const UserDetailsSchema = new dynamoose.Schema(
   {
     ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
@@ -24,29 +28,20 @@ const UserDetailsSchema = new dynamoose.Schema(
       type: Object,
       required: true,
     },
-    // emailList: {
-    //   type: Object,
-    //   schema: {
-    //     work: {
-    //       type: String,
-    //       required: true,
-    //     },
-    //   },
-    //   required: true,
-    // },
-    // Add other user-specific attributes here
   },
   {
     ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,
   }
 );
 
+// Create the UserDetailsModel using the defined schema
 const UserDetailsModel = dynamoose.model<UserDetailsDbDto>(
   "UserDetails",
   UserDetailsSchema
-); //  <UserDetailsDbDto>
-model.registerModel(UserDetailsModel);
-// const WorkoTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-//   UserDetailsModel,
-// ]);
+);
+
+// Register the UserDetailsModel within the database model
+dbModel.registerModel(UserDetailsModel);
+
+// Export the UserDetailsModel
 export { UserDetailsModel };
