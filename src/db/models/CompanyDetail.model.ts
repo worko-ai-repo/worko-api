@@ -7,7 +7,7 @@ import { DBBaseSchema } from "./Base.model";
 import { dbModel, BaseDbDto } from "./Base.model";
 
 // Declaring a class 'CompanyDetailsDbDto' that extends 'BaseDbDto' with specific properties for company details
-class CompanyDetailsDbDto extends BaseDbDto {
+class DbCompanyDetailDto extends BaseDbDto {
   name!: string;
   industry!: string;
   teamSize!: number;
@@ -51,7 +51,7 @@ const CompanySchema = new dynamoose.Schema(
 );
 
 // Creating a DynamoDB model 'CompanyDetailModel' based on the 'CompanySchema' and registering it with the database model
-const CompanyDetailModel = dynamoose.model<CompanyDetailsDbDto>(
+const CompanyDetailModel = dynamoose.model<DbCompanyDetailDto>(
   "CompanyDetail",
   CompanySchema
 );

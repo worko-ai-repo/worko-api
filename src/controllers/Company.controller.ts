@@ -27,10 +27,14 @@ class CompanyController {
    * @param {NextFunction} next
    */
   createCompany = async (req: Request, res: Response, next: NextFunction) => {
-    const companyDto: CompanyDTO = req.body;
-    const createdCompany = await CompanyService.addNewCompany(companyDto);
+    try {
+      const companyDto: CompanyDTO = req.body;
+      const createdCompany = await CompanyService.addNewCompany(companyDto);
 
-    res.status(HttpStatusCode.CREATED_201).json(createdCompany);
+      res.status(HttpStatusCode.CREATED_201).json(createdCompany);
+    } catch (error) {
+      throw error;
+    }
   };
 
   /**
@@ -43,9 +47,13 @@ class CompanyController {
    * @param {NextFunction} next
    */
   getCompanyList = async (req: Request, res: Response, next: NextFunction) => {
-    const companyList = await CompanyService.getCompanyList();
+    try {
+      const companyList = await CompanyService.getCompanyList();
 
-    res.status(HttpStatusCode.OK_200).json(companyList);
+      res.status(HttpStatusCode.OK_200).json(companyList);
+    } catch (error) {
+      throw error;
+    }
   };
 
   /**
@@ -60,10 +68,13 @@ class CompanyController {
    * @param {NextFunction} next
    */
   requestCompany = async (req: Request, res: Response, next: NextFunction) => {
-    console.log("controller");
-    const addCompanyDto: AddCompanyDTO = req.body;
-    const addCompany = await CompanyService.requestNewCompany(addCompanyDto);
-    res.status(HttpStatusCode.CREATED_201).json(addCompany);
+    try {
+      const addCompanyDto: AddCompanyDTO = req.body;
+      const addCompany = await CompanyService.requestNewCompany(addCompanyDto);
+      res.status(HttpStatusCode.CREATED_201).json(addCompany);
+    } catch (error) {
+      throw error;
+    }
   };
 
   /**
@@ -81,9 +92,13 @@ class CompanyController {
     res: Response,
     next: NextFunction
   ) => {
-    const companyList = await CompanyService.getRequestedCompanies();
+    try {
+      const companyList = await CompanyService.getRequestedCompanies();
 
-    res.status(HttpStatusCode.OK_200).json(companyList);
+      res.status(HttpStatusCode.OK_200).json(companyList);
+    } catch (error) {
+      throw error;
+    }
   };
 }
 

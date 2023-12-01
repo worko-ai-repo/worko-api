@@ -5,7 +5,7 @@ import * as dynamoose from "dynamoose";
 import { DB_CONSTANTS } from "../DB.constants";
 import { DBBaseSchema, dbModel } from "./Base.model";
 
-const UserDetailsSchema = new dynamoose.Schema(
+const UserRequestSchema = new dynamoose.Schema(
   {
     ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
     status: {
@@ -31,13 +31,13 @@ const UserDetailsSchema = new dynamoose.Schema(
   }
 );
 
-// Create the UserReqModel using the defined schema
-const UserReqModel = dynamoose.model("User", UserDetailsSchema);
+// Create the UserRequestModel using the defined schema
+const UserRequestModel = dynamoose.model("UserRequest", UserRequestSchema);
 
-// Register the UserReqModel within the database model
+// Register the UserRequestModel within the database model
 const UserTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-  UserReqModel,
+  UserRequestModel,
 ]);
 
-// Export the UserReqModel
-export { UserReqModel, UserTable };
+// Export the UserRequestModel
+export { UserRequestModel, UserTable };

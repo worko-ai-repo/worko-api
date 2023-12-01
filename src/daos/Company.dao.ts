@@ -28,4 +28,6 @@ class CompanyDao implements BaseDao {
 }
 
 // Export only the CompanyDao class instance
-export default new CompanyDao();
+const companyDao = new CompanyDao();
+
+export default companyDao;

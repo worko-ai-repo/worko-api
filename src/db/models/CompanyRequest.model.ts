@@ -7,7 +7,7 @@ import { DBBaseSchema } from "./Base.model";
 import { dbModel, BaseDbDto } from "./Base.model";
 
 // Define the structure for Company Request Database Data Transfer Object (DTO)
-class CompanyRequestDbDto extends BaseDbDto {
+class DbCompanyRequestDto extends BaseDbDto {
   UserType!: string;
   companyDetail!: Record<string, any>; // Utilizing Record<string, any> for a map-like structure
   status!: string;
@@ -36,7 +36,10 @@ const CompanySchema = new dynamoose.Schema(
 );
 
 // Create the Company Model using the defined Schema
-const CompanyRequestModel = dynamoose.model("CompanyRequest", CompanySchema);
+const CompanyRequestModel = dynamoose.model<DbCompanyRequestDto>(
+  "CompanyRequest",
+  CompanySchema
+);
 // Register the Company Request Model
 dbModel.registerModel(CompanyRequestModel);
 

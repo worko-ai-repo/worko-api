@@ -26,13 +26,11 @@ class CompanyDetailDao implements BaseDao {
     try {
       companyDto.PK = this.partitianKey; // Set partition key in DTO
       // Generate a unique ID using UlidService and update the sort key in DTO
-      companyDto.SK = this.sortKeys.SK_INIT.replace(
-        "{companyId}",
-        UlidService.getUlidId()
-      );
+      companyDto.SK = this.sortKeys.SK_INIT.strtr({
+        "{companyId}": UlidService.getUlidId(),
+      });
       console.log(companyDto); // Log the company DTO
-      const res = await CompanyDetailModel.create(companyDto); // Create a new CompanyDetailModel entry
-      console.log(res); // Log the result of the creation process
+      return CompanyDetailModel.create(companyDto); // Create a new CompanyDetailModel entry
     } catch (error) {
       console.log(error); // Log any errors that occur during the process
       throw error; // Throw the error for handling at a higher level
@@ -41,4 +39,6 @@ class CompanyDetailDao implements BaseDao {
 }
 
 // Export an instance of the CompanyDetailDao class
-export default new CompanyDetailDao();
+const companyDetailDao = new CompanyDetailDao();
+
+export default companyDetailDao;

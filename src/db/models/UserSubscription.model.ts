@@ -6,7 +6,7 @@ import { DB_CONSTANTS } from "../DB.constants";
 import { BaseDbDto, DBBaseSchema, dbModel } from "./Base.model";
 
 // Define the structure for User Subscription Database Data Transfer Object (DTO)
-class UserSubsDbDto extends BaseDbDto {
+class DbUserSubsDto extends BaseDbDto {
   amount!: Number;
   status!: String;
   expiryDate!: Date;
@@ -50,7 +50,7 @@ const UserSubscriptionSchema = new dynamoose.Schema(
 );
 
 // Create the UserSubModel using the defined schema
-const UserSubModel = dynamoose.model<UserSubsDbDto>(
+const UserSubModel = dynamoose.model<DbUserSubsDto>(
   "UserSubs",
   UserSubscriptionSchema
 );

@@ -2,7 +2,7 @@
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { UserDetailsModel } from "../db/models/UserDetail.model";
+import { UserDetailModel } from "../db/models/UserDetail.model";
 
 //Load the local dtos
 import { UserLinkedinSignUpDTO } from "../dtos/User.dto";
@@ -23,14 +23,11 @@ class UserDetailDao implements BaseDao {
    */
   async getUserDetails(email: string) {
     try {
-      /* const PK = this.partitianKey.strtr({
+      const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
-      }); */
-      const PK = this.partitianKey.replace("{primaryEmail}", email);
+      });
       console.log("PK -> ", PK);
-      const res = await UserDetailsModel.query("PK").eq(PK).exec();
-      console.log(res);
-      return res;
+      return UserDetailModel.query("PK").eq(PK).exec();
     } catch (error) {
       console.error("Error in getUserDetails:", error);
       throw error;
@@ -48,16 +45,11 @@ class UserDetailDao implements BaseDao {
       userSignUpDTO.PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
-      // userSignUpDTO.PK = this.partitianKey.replace("{primaryEmail}", email);
-      /* userSignUpDTO.SK = this.USER_CONSTANTS.SK_ID.strtr({
+      userSignUpDTO.SK = this.sortKeys.SK_ID.strtr({
         "{uuid}": UlidService.getUlidId(),
-      }); */
-      userSignUpDTO.SK = this.sortKeys.SK_ID.replace(
-        "{uuid}",
-        UlidService.getUlidId()
-      );
-      console.log(userSignUpDTO);
-      await UserDetailsModel.create(userSignUpDTO);
+      });
+      console.log("userSignUpDTO: ", userSignUpDTO);
+      return UserDetailModel.create(userSignUpDTO);
     } catch (error) {
       console.log("Addd user -> ", error);
       throw error;

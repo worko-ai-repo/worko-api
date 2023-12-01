@@ -4,6 +4,7 @@ import serverless from "serverless-http";
 import cors from "cors";
 
 // Import the routes from the `services`
+import "./extensions/string.extension";
 import routes from "./router";
 import { errorHandler } from "./utils/error-handler.util";
 

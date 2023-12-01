@@ -12,8 +12,8 @@ import * as dynamoose from "dynamoose";
 
 const ddb = new dynamoose.aws.ddb.DynamoDB({
   credentials: {
-    accessKeyId: "xg5rz",
-    secretAccessKey: "tfazj",
+    accessKeyId: "dntwrl",
+    secretAccessKey: "l3q7zk",
   },
   region: "local",
 });

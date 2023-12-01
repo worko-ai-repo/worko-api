@@ -30,26 +30,30 @@ class UserReferralController {
    * @param {NextFunction} next
    */
   createReferral = async (req: Request, res: Response, next: NextFunction) => {
-    const referralRequest: UserReferralRequestDTO = req.body;
-    const { error } = UserReferralRequestDTOValidation.validate(
-      referralRequest,
-      { abortEarly: false }
-    );
-    if (error) {
-      return res.status(HttpStatusCode.BAD_REQUEST_400).json({
-        error: "Validation Error",
-        details: error.details.map((detail) => ({
-          message: detail.message,
-          path: detail.path,
-        })),
-      });
+    try {
+      const referralRequest: UserReferralRequestDTO = req.body;
+      const { error } = UserReferralRequestDTOValidation.validate(
+        referralRequest,
+        { abortEarly: false }
+      );
+      if (error) {
+        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
+          error: "Validation Error",
+          details: error.details.map((detail) => ({
+            message: detail.message,
+            path: detail.path,
+          })),
+        });
+      }
+      const email = req.params.id;
+      const newreferral = await UserService.referralRequest(
+        referralRequest,
+        email
+      );
+      res.status(HttpStatusCode.OK_200).json(newreferral);
+    } catch (error) {
+      throw error;
     }
-    const email = req.params.id;
-    const newreferral = await UserService.referralRequest(
-      referralRequest,
-      email
-    );
-    res.status(HttpStatusCode.OK_200).json(newreferral);
   };
 }
 

@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import SubscriptionDTO from "../dtos/Subscription.dto";
 
 // Load the local schema
-import { SubscriptionSchema } from "../schemas/Subscription.schema";
+import { SubscriptionDTOValidation } from "../schemas/Subscription.schema";
 
 // Load the shared service
 import SubscriptionService from "../services/Subscription.service";
@@ -34,9 +34,13 @@ class UserSubscriptionController {
     res: Response,
     next: NextFunction
   ) => {
-    const email = req.params.id;
-    const result = await UserService.getsubscriptionDetails(email);
-    res.status(HttpStatusCode.OK_200).json(result);
+    try {
+      const email = req.params.id;
+      const result = await UserService.getsubscriptionDetails(email);
+      res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error) {
+      throw error;
+    }
   };
 
   /**
@@ -58,11 +62,14 @@ class UserSubscriptionController {
   ) => {
     try {
       const subscriptionDto: SubscriptionDTO = req.body;
-      const email = req.params.email;
+      const email = req.params.id;
 
-      const { error, value } = SubscriptionSchema.validate(subscriptionDto, {
-        abortEarly: false, // Do not abort on the first validation error
-      });
+      const { error, value } = SubscriptionDTOValidation.validate(
+        subscriptionDto,
+        {
+          abortEarly: false, // Do not abort on the first validation error
+        }
+      );
 
       if (error) {
         // If there are validation errors, send a 400 Bad Request response with the error details

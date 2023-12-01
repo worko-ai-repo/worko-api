@@ -1,7 +1,7 @@
 // Load the local daos
-import CompanyDao from "../daos/Company.dao";
-import CompanyDetailDao from "../daos/CompanyDetail.dao";
-import CompanyRequestDao from "../daos/CompanyRequest.dao";
+import companyDao from "../daos/Company.dao";
+import companyDetailDao from "../daos/CompanyDetail.dao";
+import companyRequestDao from "../daos/CompanyRequest.dao";
 
 // Load the local dto
 import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
@@ -20,7 +20,7 @@ class CompanyService {
    */
   async getCompanyList() {
     try {
-      return CompanyDao.companyList();
+      return companyDao.companyList();
     } catch (error) {
       throw error;
     }
@@ -34,7 +34,7 @@ class CompanyService {
    */
   async getRequestedCompanies() {
     try {
-      return CompanyRequestDao.requestedCompany();
+      return companyRequestDao.requestedCompany();
     } catch (error) {
       throw error;
     }
@@ -48,7 +48,7 @@ class CompanyService {
    */
   async addNewCompany(companyDto: CompanyDTO) {
     try {
-      const result = CompanyDetailDao.add(companyDto);
+      const result = companyDetailDao.add(companyDto);
       console.log(result);
     } catch (error) {
       throw error;
@@ -63,7 +63,7 @@ class CompanyService {
    */
   async requestNewCompany(addCompanyDTO: AddCompanyDTO) {
     try {
-      const result = await CompanyRequestDao.request(addCompanyDTO);
+      const result = await companyRequestDao.request(addCompanyDTO);
       console.log(result);
     } catch (error) {
       throw error;

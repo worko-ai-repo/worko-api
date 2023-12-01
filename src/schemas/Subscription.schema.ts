@@ -28,5 +28,20 @@ const SubscriptionSchema = Joi.object({
   }),
 });
 
+const SubscriptionDTOValidation = Joi.object({
+  amount: Joi.number().required().messages({
+    "any.required": "Amount is required.",
+    "number.base": "Amount must be a number.",
+  }),
+  status: Joi.string()
+    .valid("active", "inactive", "cancelled")
+    .required()
+    .messages({
+      "any.required": "Status is required.",
+      "string.base": "Status must be a string.",
+      "any.only": 'Status must be one of "active", "inactive", or "cancelled".',
+    }),
+});
+
 // Export the SubscriptionSchema for use in other parts of the application.
-export { SubscriptionSchema };
+export { SubscriptionSchema, SubscriptionDTOValidation };

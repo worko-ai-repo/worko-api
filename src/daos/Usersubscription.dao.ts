@@ -50,21 +50,21 @@ class UserSubscriptionDao implements BaseDao {
    */
   async addSubscription(subscriptionDto: SubscriptionDTO, email: string) {
     try {
-      subscriptionDto.PK = this.partitianKey.replace("{primaryEmail}", email);
-      subscriptionDto.SK = this.sortKeys.SK_SUBS.replace(
-        "{subsId}",
-        UlidService.getUlidId()
-      );
-      subscriptionDto.GSI1PK = this.sortKeys.SK_SUBS.replace("ID#(subsId}", "");
-      subscriptionDto.GSI1SK = this.partitianKey.replace(
-        "{primaryEmail}",
-        email
-      );
+      subscriptionDto.PK = this.partitianKey.strtr({ "{primaryEmail}": email });
+      subscriptionDto.SK = this.sortKeys.SK_SUBS.strtr({
+        "{subsId}": UlidService.getUlidId(),
+      });
+      subscriptionDto.GSI1PK = this.sortKeys.SK_SUBS.strtr({
+        "ID#(subsId}": "",
+      });
+      subscriptionDto.GSI1SK = this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      });
       const timestamp = Date.now();
       subscriptionDto.expiryDate = new Date(timestamp);
       subscriptionDto.purchaseDate = new Date(timestamp);
-      console.log(subscriptionDto);
-      await UserSubModel.create(subscriptionDto);
+      console.log("ubcriptionDto: ", subscriptionDto);
+      return UserSubModel.create(subscriptionDto);
     } catch (error) {
       console.log(error);
       throw error;
@@ -73,4 +73,6 @@ class UserSubscriptionDao implements BaseDao {
 }
 
 // Export an instance of UserSubscriptionDao
-export default new UserSubscriptionDao();
+const userSubscriptionDao = new UserSubscriptionDao();
+
+export default userSubscriptionDao;

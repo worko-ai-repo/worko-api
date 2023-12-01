@@ -6,14 +6,14 @@ import { BaseDbDto, DBBaseSchema, dbModel } from "./Base.model";
 import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the structure for User Details Database Data Transfer Object (DTO)
-class UserDetailsDbDto extends BaseDbDto {
+class DbUserDetailDto extends BaseDbDto {
   firstName!: string;
   lastName!: string;
   emailList!: { [key: string]: string };
 }
 
 // Define the schema for the User Details model using DynamoDB
-const UserDetailsSchema = new dynamoose.Schema(
+const UserDetailSchema = new dynamoose.Schema(
   {
     ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
     firstName: {
@@ -35,13 +35,13 @@ const UserDetailsSchema = new dynamoose.Schema(
 );
 
 // Create the UserDetailsModel using the defined schema
-const UserDetailsModel = dynamoose.model<UserDetailsDbDto>(
-  "UserDetails",
-  UserDetailsSchema
+const UserDetailModel = dynamoose.model<DbUserDetailDto>(
+  "UserDetail",
+  UserDetailSchema
 );
 
 // Register the UserDetailsModel within the database model
-dbModel.registerModel(UserDetailsModel);
+dbModel.registerModel(UserDetailModel);
 
 // Export the UserDetailsModel
-export { UserDetailsModel };
+export { UserDetailModel };

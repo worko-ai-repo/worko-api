@@ -29,10 +29,13 @@ class UserController {
    * @param {NextFunction} next
    */
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
-    const email = req.params.id;
-    console.log(email, "working");
-    const result = await UserService.getUserByEmail(email);
-    res.status(HttpStatusCode.OK_200).json(result);
+    try {
+      const email = req.params.id;
+      const result = await UserService.getUserByEmail(email);
+      res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error) {
+      throw error;
+    }
   };
 
   /**
@@ -46,25 +49,32 @@ class UserController {
    * @param {NextFunction} next
    */
   createUser = async (req: Request, res: Response, next: NextFunction) => {
-    // const companyDto: CompanyDTO = req.body;
-    // const createdCompany = await CompanyService.createNewCompany(companyDto);
-    const userSingUpDto: UserLinkedinSignUpDTO = req.body;
-    const { error } = UserLinkedinSignUpDTOValidation.validate(userSingUpDto, {
-      abortEarly: false,
-    });
+    try {
+      // const companyDto: CompanyDTO = req.body;
+      // const createdCompany = await CompanyService.createNewCompany(companyDto);
+      const userSingUpDto: UserLinkedinSignUpDTO = req.body;
+      const { error } = UserLinkedinSignUpDTOValidation.validate(
+        userSingUpDto,
+        {
+          abortEarly: false,
+        }
+      );
 
-    if (error) {
-      return res.status(HttpStatusCode.BAD_REQUEST_400).json({
-        error: "Validation Error",
-        details: error.details.map((detail) => ({
-          message: detail.message,
-          path: detail.path,
-        })),
-      });
+      if (error) {
+        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
+          error: "Validation Error",
+          details: error.details.map((detail) => ({
+            message: detail.message,
+            path: detail.path,
+          })),
+        });
+      }
+      const email = req.params.id;
+      const newUser = await UserService.addUser(userSingUpDto, email);
+      res.status(HttpStatusCode.CREATED_201).json(newUser);
+    } catch (error) {
+      throw error;
     }
-    const email = req.params.id;
-    const newUser = await UserService.addUser(userSingUpDto, email);
-    res.status(HttpStatusCode.CREATED_201).json(newUser);
   };
 }
 

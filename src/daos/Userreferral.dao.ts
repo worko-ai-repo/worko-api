@@ -2,7 +2,7 @@
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { UserReqModel } from "../db/models/UserRequest.model";
+import { UserRequestModel } from "../db/models/UserRequest.model";
 
 //Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
@@ -28,13 +28,14 @@ class UserReferralDao implements BaseDao {
   ) {
     try {
       // Set PK (Partition Key) in the referral request by replacing the placeholder with the email
-      referralRequest.PK = this.partitianKey.replace("{primaryEmail}", email);
+      referralRequest.PK = this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      });
 
       // Set SK (Sort Key) in the referral request by replacing the placeholder with a generated ULID
-      referralRequest.SK = this.sortKeys.SK_REFERRAL.replace(
-        "{reqId}",
-        UlidService.getUlidId()
-      );
+      referralRequest.SK = this.sortKeys.SK_REFERRAL.strtr({
+        "{reqId}": UlidService.getUlidId(),
+      });
 
       // Splitting referralRequest.SK into three parts using '#' delimiter
       const [refPrefix, refId, refNum] = referralRequest.SK.split("#");
@@ -47,7 +48,7 @@ class UserReferralDao implements BaseDao {
       console.log(referralRequest);
 
       // Create a new entry in the UserReqModel (database model) with the referral request data
-      await UserReqModel.create(referralRequest);
+      return UserRequestModel.create(referralRequest);
     } catch (error) {
       // Throw any encountered errors
       throw error;
@@ -56,4 +57,6 @@ class UserReferralDao implements BaseDao {
 }
 
 // Export a new instance of UserReferralDao
-export default new UserReferralDao();
+const userReferralDao = new UserReferralDao();
+
+export default userReferralDao;

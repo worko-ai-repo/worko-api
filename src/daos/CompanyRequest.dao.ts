@@ -37,9 +37,10 @@ class CompanyRequestDao implements BaseDao {
   async request(addCompanyDto: AddCompanyDTO) {
     try {
       addCompanyDto.PK = this.partitianKey; // Set partition key in the DTO
-      addCompanyDto.SK = this.sortKeys.REQUEST_SK.replace(
-        "{requestId}",
-        UlidService.getUlidId() // Generate a ULID-based request ID and set in the DTO
+      addCompanyDto.SK = this.sortKeys.REQUEST_SK.strtr(
+        {
+          "{requestId}": UlidService.getUlidId(),
+        } // Generate a ULID-based request ID and set in the DTO
       );
       return CompanyRequestModel.create(addCompanyDto); // Create a new company request based on DTO
     } catch (error) {
@@ -49,4 +50,6 @@ class CompanyRequestDao implements BaseDao {
 }
 
 // Export only the CompanyRequestDao instance as the default export
-export default new CompanyRequestDao();
+const companyRequestDao = new CompanyRequestDao();
+
+export default companyRequestDao;

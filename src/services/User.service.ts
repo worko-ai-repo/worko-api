@@ -1,7 +1,7 @@
 // Load the local daos
 import userDetailDao from "../daos/UserDetail.dao";
-import UserreferralDao from "../daos/Userreferral.dao";
-import UsersubscriptionDao from "../daos/Usersubscription.dao";
+import userSubscriptionDao from "../daos/UserSubscription.dao";
+import userReferralDao from "../daos/UserReferral.dao";
 
 // Load the local dtos
 import {
@@ -36,7 +36,7 @@ class UserService {
    */
   async getsubscriptionDetails(email: string) {
     try {
-      return UsersubscriptionDao.subscriptionDetails(email);
+      return userSubscriptionDao.subscriptionDetails(email);
     } catch (error) {
       console.log("Error -> ", error);
       throw error;
@@ -68,7 +68,7 @@ class UserService {
     email: string
   ) {
     try {
-      UserreferralDao.requestReferral(referralRequest, email);
+      userReferralDao.requestReferral(referralRequest, email);
     } catch (error) {
       throw error;
     }
