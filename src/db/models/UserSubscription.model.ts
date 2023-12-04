@@ -3,7 +3,7 @@ import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
-import { BaseDbDto, DBBaseSchema, dbModel } from "./Base.model";
+import { BaseDbDto, dbModel } from "./Base.model";
 
 // Define the structure for User Subscription Database Data Transfer Object (DTO)
 class DbUserSubsDto extends BaseDbDto {
@@ -17,7 +17,7 @@ class DbUserSubsDto extends BaseDbDto {
 
 const UserSubscriptionSchema = new dynamoose.Schema(
   {
-    ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
+    ...DB_CONSTANTS.WORKO_PK_SK,
     amount: {
       type: Number,
       required: true,

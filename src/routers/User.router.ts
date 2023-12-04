@@ -11,7 +11,7 @@ const userController = new UserController();
 const UserRouter = Router();
 
 // Create user based on the provided query parameter
-UserRouter.post("/:id", userController.createUser);
+UserRouter.post("/signup", userController.createUser);
 
 // Get the user based on the provided query parameter
 UserRouter.get("/:id", userController.getUserById);

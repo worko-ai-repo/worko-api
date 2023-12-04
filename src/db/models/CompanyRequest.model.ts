@@ -3,7 +3,6 @@ import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
-import { DBBaseSchema } from "./Base.model";
 import { dbModel, BaseDbDto } from "./Base.model";
 
 // Define the structure for Company Request Database Data Transfer Object (DTO)
@@ -16,7 +15,7 @@ class DbCompanyRequestDto extends BaseDbDto {
 // Define the Company Schema including additional attributes
 const CompanySchema = new dynamoose.Schema(
   {
-    ...DBBaseSchema.attributes,
+    ...DB_CONSTANTS.WORKO_PK_SK,
     UserType: {
       type: String,
       required: true,

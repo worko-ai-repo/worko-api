@@ -3,13 +3,12 @@ import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
-import { DBBaseSchema } from "./Base.model";
 import { dbModel } from "./Base.model";
 
 // Define the schema for the User model using DynamoDB
 const UserSchema = new dynamoose.Schema(
   {
-    ...DBBaseSchema.attributes,
+    ...DB_CONSTANTS.WORKO_PK_SK,
   },
   {
     ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,

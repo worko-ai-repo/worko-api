@@ -2,30 +2,61 @@
 import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
-import { BaseDbDto, DBBaseSchema, dbModel } from "./Base.model";
+import { BaseDbDto, dbModel } from "./Base.model";
 import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the structure for User Details Database Data Transfer Object (DTO)
 class DbUserDetailDto extends BaseDbDto {
-  firstName!: string;
-  lastName!: string;
+  name!: string;
   emailList!: { [key: string]: string };
+  number!: number;
+  linkedinUrl!: string;
+  isEmailVerified!: boolean;
+  isNumberVerified!: boolean;
+  ECTC!: number;
+  YOE!: number;
+  CV!: string;
 }
 
 // Define the schema for the User Details model using DynamoDB
 const UserDetailSchema = new dynamoose.Schema(
   {
-    ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
-    firstName: {
-      type: String,
-      required: true,
-    },
-    lastName: {
+    // ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
+    ...DB_CONSTANTS.WORKO_PK_SK,
+    name: {
       type: String,
       required: true,
     },
     emailList: {
       type: Object,
+      required: true,
+    },
+    number: {
+      type: Number,
+      required: true,
+    },
+    linkedinUrl: {
+      type: String,
+      required: true,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      required: true,
+    },
+    isNumberVerified: {
+      type: Boolean,
+      required: true,
+    },
+    ECTC: {
+      type: Number,
+      required: true,
+    },
+    YOE: {
+      type: Number,
+      required: true,
+    },
+    CV: {
+      type: String,
       required: true,
     },
   },
@@ -35,10 +66,9 @@ const UserDetailSchema = new dynamoose.Schema(
 );
 
 // Create the UserDetailsModel using the defined schema
-const UserDetailModel = dynamoose.model<DbUserDetailDto>(
-  "UserDetail",
-  UserDetailSchema
-);
+const UserDetailModel = dynamoose.model<DbUserDetailDto>("UserDetail", [
+  UserDetailSchema,
+]);
 
 // Register the UserDetailsModel within the database model
 dbModel.registerModel(UserDetailModel);

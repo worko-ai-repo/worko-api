@@ -16,6 +16,7 @@ const DB_CONSTANTS = {
     create: false,
     waitForActive: false,
     saveUnknown: true,
+    timestamps: true,
   },
   WORKO_MODEL_TABLE_OPTIONS: {
     // Table options for the 'worko' model

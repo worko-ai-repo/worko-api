@@ -26,7 +26,6 @@ class UserDetailDao implements BaseDao {
       const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
-      console.log("PK -> ", PK);
       return UserDetailModel.query("PK").eq(PK).exec();
     } catch (error) {
       console.error("Error in getUserDetails:", error);
@@ -40,15 +39,16 @@ class UserDetailDao implements BaseDao {
    * @param userSignUpDTO - User sign-up data transfer object
    * @param email - Email address of the user
    */
-  async add(userSignUpDTO: UserLinkedinSignUpDTO, email: string) {
+  async add(userSignUpDTO: UserLinkedinSignUpDTO) {
     try {
       userSignUpDTO.PK = this.partitianKey.strtr({
-        "{primaryEmail}": email,
+        "{primaryEmail}": userSignUpDTO.emailList.primary,
       });
       userSignUpDTO.SK = this.sortKeys.SK_ID.strtr({
         "{uuid}": UlidService.getUlidId(),
       });
-      console.log("userSignUpDTO: ", userSignUpDTO);
+      userSignUpDTO.isEmailVerified = false;
+      userSignUpDTO.isNumberVerified = false;
       return UserDetailModel.create(userSignUpDTO);
     } catch (error) {
       console.log("Addd user -> ", error);

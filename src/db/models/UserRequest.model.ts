@@ -3,11 +3,11 @@ import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
-import { DBBaseSchema, dbModel } from "./Base.model";
+import { dbModel } from "./Base.model";
 
 const UserRequestSchema = new dynamoose.Schema(
   {
-    ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
+    ...DB_CONSTANTS.WORKO_PK_SK,
     status: {
       type: String,
       required: true,
@@ -35,9 +35,10 @@ const UserRequestSchema = new dynamoose.Schema(
 const UserRequestModel = dynamoose.model("UserRequest", UserRequestSchema);
 
 // Register the UserRequestModel within the database model
-const UserTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
+/* const UserTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
   UserRequestModel,
-]);
+]); */
+dbModel.registerModel(UserRequestModel);
 
 // Export the UserRequestModel
-export { UserRequestModel, UserTable };
+export { UserRequestModel };

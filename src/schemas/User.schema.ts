@@ -1,16 +1,8 @@
-// // Import the Joi library
 import Joi from "joi";
 
 export const UserLinkedinSignUpDTOValidation = Joi.object({
-  // Assuming WorkoDTO has its own validation or properties
-  // ...
-
-  firstName: Joi.string().required().messages({
-    "any.required": "First name is required",
-  }),
-
-  lastName: Joi.string().required().messages({
-    "any.required": "Last name is required",
+  name: Joi.string().required().messages({
+    "any.required": "Name is required",
   }),
 
   emailList: Joi.object()
@@ -21,4 +13,24 @@ export const UserLinkedinSignUpDTOValidation = Joi.object({
       "object.pattern.any": "Invalid email format in the email list",
       "any.required": "Email list is required",
     }),
+
+  number: Joi.number().required().messages({
+    "any.required": "Number is required",
+  }),
+
+  linkedinUrl: Joi.string().required().messages({
+    "any.required": "LinkedIn URL is required",
+  }),
+
+  ECTC: Joi.number().required().messages({
+    "any.required": "ECTC is required",
+  }),
+
+  YOE: Joi.number().required().messages({
+    "any.required": "YOE is required",
+  }),
+
+  CV: Joi.string().required().messages({
+    "any.required": "CV is required",
+  }),
 });

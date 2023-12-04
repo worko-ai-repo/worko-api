@@ -49,9 +49,9 @@ class UserService {
    * @param userSignUpDTO - Details of the user to be added
    * @param email - Email of the user
    */
-  async addUser(userSignUpDTO: UserLinkedinSignUpDTO, email: string) {
+  async addUser(userSignUpDTO: UserLinkedinSignUpDTO) {
     try {
-      userDetailDao.add(userSignUpDTO, email);
+      userDetailDao.add(userSignUpDTO);
     } catch (error) {
       throw error;
     }

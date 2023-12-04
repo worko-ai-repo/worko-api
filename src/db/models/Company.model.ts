@@ -1,13 +1,12 @@
-/* import * as dynamoose from "dynamoose";
+import * as dynamoose from "dynamoose";
 
 //Local
 import { DB_CONSTANTS } from "../DB.constants";
-import { DBBaseSchema } from "./Base.model";
 import { dbModel } from "./Base.model";
 
 const CompanySchema = new dynamoose.Schema(
   {
-    ...DBBaseSchema.attributes,
+    ...DB_CONSTANTS.WORKO_PK_SK,
   },
   {
     ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,
@@ -17,10 +16,10 @@ const CompanySchema = new dynamoose.Schema(
 const CompanyModel = dynamoose.model("Company", CompanySchema);
 dbModel.registerModel(CompanyModel);
 
-export { CompanyModel }; */
+export { CompanyModel };
 
 // Load the npm packages
-import * as dynamoose from "dynamoose";
+/* import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DBBaseSchema } from "./Base.model";
@@ -40,7 +39,7 @@ class CompanyDetailsDbDto extends BaseDbDto {
 // Define the CompanySchema with the correct attributes
 const CompanySchema = new dynamoose.Schema(
   {
-    ...DBBaseSchema.attributes,
+    ...DB_CONSTANTS.WORKO_PK_SK,
     name: {
       type: String,
       required: true,
@@ -81,4 +80,4 @@ const CompanyModel = dynamoose.model<CompanyDetailsDbDto>(
 dbModel.registerModel(CompanyModel);
 
 // Export the CompanyDetailModel
-export { CompanyModel };
+export { CompanyModel }; */

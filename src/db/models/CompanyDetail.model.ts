@@ -3,7 +3,6 @@ import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
-import { DBBaseSchema } from "./Base.model";
 import { dbModel, BaseDbDto } from "./Base.model";
 
 // Declaring a class 'CompanyDetailsDbDto' that extends 'BaseDbDto' with specific properties for company details
@@ -19,7 +18,7 @@ class DbCompanyDetailDto extends BaseDbDto {
 // Creating a DynamoDB schema for the 'Company' model with specified attributes and their types
 const CompanySchema = new dynamoose.Schema(
   {
-    ...DBBaseSchema.attributes,
+    ...DB_CONSTANTS.WORKO_PK_SK,
     name: {
       type: String,
       required: true,

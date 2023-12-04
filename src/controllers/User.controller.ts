@@ -32,8 +32,16 @@ class UserController {
     try {
       const email = req.params.id;
       const result = await UserService.getUserByEmail(email);
+      if (result.count == 0) {
+        throw new Error("User not found");
+      }
       res.status(HttpStatusCode.OK_200).json(result);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "User not found") {
+        res
+          .status(HttpStatusCode.NOT_FOUND_404)
+          .json({ error: "User not found. Please check the email." });
+      }
       throw error;
     }
   };
@@ -69,8 +77,7 @@ class UserController {
           })),
         });
       }
-      const email = req.params.id;
-      const newUser = await UserService.addUser(userSingUpDto, email);
+      const newUser = await UserService.addUser(userSingUpDto);
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
       throw error;

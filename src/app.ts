@@ -7,6 +7,7 @@ import cors from "cors";
 import "./extensions/string.extension";
 import routes from "./router";
 import { errorHandler } from "./utils/error-handler.util";
+import DynamooseConfig from "./db/Dynamoose.config";
 
 class App {
   /**
@@ -38,7 +39,9 @@ class App {
    *
    * This method define some of the globals required in the application.
    */
-  defineGlobals(): void {}
+  defineGlobals(): void {
+    new DynamooseConfig();
+  }
 
   /**
    * Initialise Logger
