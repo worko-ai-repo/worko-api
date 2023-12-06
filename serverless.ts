@@ -11,8 +11,22 @@ const serverlessConfiguration: AWS = {
   provider: {
     name: "aws",
     runtime: "nodejs18.x",
-    stage: "local",
+    stage: "dev",
     region: "ap-south-1", // Should be dynamically set
+    iamRoleStatements:[
+      {
+        Effect: "Allow",
+        Action:[
+          "dynamodb:DescribeTable",
+          "dynamodb:Query",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem"
+        ],
+        Resource: "arn:aws:dynamodb:ap-south-1:*:table/worko",
+
+      }
+    ],
     environment: {},
   },
   functions: {
