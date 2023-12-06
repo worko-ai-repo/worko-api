@@ -52,7 +52,10 @@ class UserReferralController {
       );
       res.status(HttpStatusCode.OK_200).json(newreferral);
     } catch (error) {
-      throw error;
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
     }
   };
 }

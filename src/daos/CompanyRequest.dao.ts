@@ -5,7 +5,7 @@ import BaseDao from "./Base.dao";
 import { CompanyRequestModel } from "../db/models/CompanyRequest.model";
 
 //Load the local dtos
-import { AddCompanyDTO } from "../dtos/Company.dto";
+import { AddCompanyDTO, Status, UserType } from "../dtos/Company.dto";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
@@ -42,6 +42,7 @@ class CompanyRequestDao implements BaseDao {
           "{requestId}": UlidService.getUlidId(),
         } // Generate a ULID-based request ID and set in the DTO
       );
+      addCompanyDto.status = Status.NEW;
       return CompanyRequestModel.create(addCompanyDto); // Create a new company request based on DTO
     } catch (error) {
       throw error;

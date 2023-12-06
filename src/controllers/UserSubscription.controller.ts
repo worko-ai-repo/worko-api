@@ -39,7 +39,10 @@ class UserSubscriptionController {
       const result = await UserService.getsubscriptionDetails(email);
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error) {
-      throw error;
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
     }
   };
 
@@ -88,7 +91,10 @@ class UserSubscriptionController {
       );
       res.status(HttpStatusCode.CREATED_201).json(addSubscription);
     } catch (error) {
-      throw error;
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
     }
   };
 }

@@ -30,19 +30,33 @@ class UserController {
    */
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Extract email from request parameters
       const email = req.params.id;
+
+      // Call the UserService to get user by email
       const result = await UserService.getUserByEmail(email);
-      if (result.count == 0) {
+
+      // Check if user not found
+      if (result.count === 0) {
+        // If user not found, throw a specific error
         throw new Error("User not found");
       }
+
+      // Send successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error: any) {
+      // Handle errors
+
+      // Check if the error is due to user not found
       if (error.message === "User not found") {
+        // If user not found, send a 404 response with an informative error message
         res
           .status(HttpStatusCode.NOT_FOUND_404)
           .json({ error: "User not found. Please check the email." });
+      } else {
+        // If it's another type of error, pass it to the next error handler
+        next(error);
       }
-      throw error;
     }
   };
 
@@ -80,7 +94,10 @@ class UserController {
       const newUser = await UserService.addUser(userSingUpDto);
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
-      throw error;
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
     }
   };
 }

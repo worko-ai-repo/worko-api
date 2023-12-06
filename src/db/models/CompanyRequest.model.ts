@@ -7,7 +7,7 @@ import { dbModel, BaseDbDto } from "./Base.model";
 
 // Define the structure for Company Request Database Data Transfer Object (DTO)
 class DbCompanyRequestDto extends BaseDbDto {
-  UserType!: string;
+  userType!: string;
   companyDetail!: Record<string, any>; // Utilizing Record<string, any> for a map-like structure
   status!: string;
 }
@@ -16,13 +16,13 @@ class DbCompanyRequestDto extends BaseDbDto {
 const CompanySchema = new dynamoose.Schema(
   {
     ...DB_CONSTANTS.WORKO_PK_SK,
-    UserType: {
+    userType: {
       type: String,
       required: true,
     },
     companyDetail: {
       type: Object,
-      required: true,
+      required: false,
     },
     status: {
       type: String,

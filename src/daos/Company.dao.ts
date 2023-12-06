@@ -18,8 +18,21 @@ class CompanyDao implements BaseDao {
    */
   async companyList() {
     try {
+      // Define the attributes you want to include in the result
+      const attributesToInclude = [
+        "name",
+        "teamSize",
+        "SK",
+        "industry",
+        "linkedIn",
+        "logoUrl",
+        "carrierPage",
+      ];
       // Queries the CompanyModel to retrieve companies based on the partition key
-      return CompanyModel.query("PK").eq(this.partitianKey).exec();
+      return CompanyModel.query("PK")
+        .eq(this.partitianKey)
+        .attributes(attributesToInclude)
+        .exec();
     } catch (error) {
       // Throws an error if there's an issue with the query
       throw error;

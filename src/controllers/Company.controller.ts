@@ -7,6 +7,12 @@ import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
 // Load the shared service
 import CompanyService from "../services/Company.service";
 
+// Load the local schema
+import {
+  CompanyDTOValidation,
+  CompanyRequestDTOValidation,
+} from "../schemas/Company.schema";
+
 //Load local util statuscode
 import HttpStatusCode from "../utils/http-codes.util";
 
@@ -28,12 +34,38 @@ class CompanyController {
    */
   createCompany = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Extract company data from the request body
       const companyDto: CompanyDTO = req.body;
+
+      // Validate the incoming company data using the defined validation schema in CompanyDTOValidation
+      const { error } = CompanyDTOValidation.validate(companyDto, {
+        abortEarly: false,
+      });
+
+      // Check if validation resulted in errors
+      if (error) {
+        // If validation errors are present, respond with a 400 Bad Request status
+        // Include a meaningful error message and details about each validation error
+        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
+          error: "Validation Error",
+          details: error.details.map((detail) => ({
+            // Include the error message and the path in the data structure
+            message: detail.message,
+            path: detail.path,
+          })),
+        });
+      }
+
+      // Call the CompanyService to add a new company
       const createdCompany = await CompanyService.addNewCompany(companyDto);
 
+      // Send successful response with the created company data
       res.status(HttpStatusCode.CREATED_201).json(createdCompany);
     } catch (error) {
-      throw error;
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
     }
   };
 
@@ -48,11 +80,30 @@ class CompanyController {
    */
   getCompanyList = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Call the CompanyService to get company list
       const companyList = await CompanyService.getCompanyList();
 
+      // Check if company not found
+      if (companyList.count == 0) {
+        // If company list not found, throw a specific error
+        throw new Error("Company List not found");
+      }
+
+      // Send successful response with company list data
       res.status(HttpStatusCode.OK_200).json(companyList);
-    } catch (error) {
-      throw error;
+    } catch (error: any) {
+      // Handle errors
+
+      // Check if the error is due to Company List not found
+      if (error.message === "Company List not found") {
+        // If Company List not found, send a 404 response with an informative error message
+        res
+          .status(HttpStatusCode.NOT_FOUND_404)
+          .json({ error: "Company List not found." });
+      } else {
+        // If it's another type of error, pass it to the next error handler
+        next(error);
+      }
     }
   };
 
@@ -70,9 +121,34 @@ class CompanyController {
   requestCompany = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const addCompanyDto: AddCompanyDTO = req.body;
+
+      // Validate the incoming company data using the defined validation schema in CompanyRequestDTOValidation
+      const { error } = CompanyRequestDTOValidation.validate(addCompanyDto, {
+        abortEarly: false,
+      });
+
+      // Check if validation resulted in errors
+      if (error) {
+        // If validation errors are present, respond with a 400 Bad Request status
+        // Include a meaningful error message and details about each validation error
+        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
+          error: "Validation Error",
+          details: error.details.map((detail) => ({
+            // Include the error message and the path in the data structure
+            message: detail.message,
+            path: detail.path,
+          })),
+        });
+      }
+
       const addCompany = await CompanyService.requestNewCompany(addCompanyDto);
+
       res.status(HttpStatusCode.CREATED_201).json(addCompany);
     } catch (error) {
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
       throw error;
     }
   };
@@ -97,7 +173,10 @@ class CompanyController {
 
       res.status(HttpStatusCode.OK_200).json(companyList);
     } catch (error) {
-      throw error;
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
     }
   };
 }
