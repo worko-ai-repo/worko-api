@@ -88,27 +88,13 @@ class CompanyController {
       const companyList = await CompanyService.getCompanyList();
 
       console.log("companyList: ", companyList);
-      // Check if company not found
-      if (companyList.count == 0) {
-        // If company list not found, throw a specific error
-        throw new Error("Company List not found");
-      }
 
       // Send successful response with company list data
       res.status(HttpStatusCode.OK_200).json(companyList);
     } catch (error: any) {
       // Handle errors
-
-      // Check if the error is due to Company List not found
-      if (error.message === "Company List not found") {
-        // If Company List not found, send a 404 response with an informative error message
-        res
-          .status(HttpStatusCode.NOT_FOUND_404)
-          .json({ error: "Company List not found." });
-      } else {
-        // If it's another type of error, pass it to the next error handler
-        next(error);
-      }
+      // If it's another type of error, pass it to the next error handler
+      next(error);
     }
   };
 

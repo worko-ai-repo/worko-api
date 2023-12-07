@@ -1,0 +1,63 @@
+// Load the npm packages
+import * as dynamoose from "dynamoose";
+
+// Load the local model constants and base model functionalities
+import { BaseDbDto, dbModel } from "./Base.model";
+import { DB_CONSTANTS } from "../DB.constants";
+
+// Define the structure for User Experience Database Data Transfer Object (DTO)
+class DbUserExperienceDto extends BaseDbDto {
+  department!: string;
+  designation!: String;
+  startedMonth!: number;
+  endedMonth!: number;
+  startedYear!: number;
+  endedYear!: number;
+}
+
+// Define the schema for the User Experience model using DynamoDB
+const UserExperienceSchema = new dynamoose.Schema(
+  {
+    // ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
+    ...DB_CONSTANTS.WORKO_PK_SK,
+    department: {
+      type: String,
+      required: true,
+    },
+    designation: {
+      type: String,
+      required: true,
+    },
+    startedMonth: {
+      type: Number, // Assuming it's a number
+      required: false,
+    },
+    endedMonth: {
+      type: Number, // Assuming it's a number
+      required: false,
+    },
+    startedYear: {
+      type: Number, // Assuming it's a number
+      required: false,
+    },
+    endedYear: {
+      type: Number, // Assuming it's a number
+      required: false,
+    },
+  },
+  {
+    ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,
+  }
+);
+
+// Create the UserExperiencesModel using the defined schema
+const UserExperienceModel = dynamoose.model<DbUserExperienceDto>(
+  "UserExperience",
+  [UserExperienceSchema]
+);
+
+// Register the UserExperienceModel within the database model
+dbModel.registerModel(UserExperienceModel);
+
+// Export the UserExperienceModel
+export { UserExperienceModel };

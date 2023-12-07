@@ -2,16 +2,25 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import { UserDetailResponseDto, UserLinkedinSignUpDTO } from "../dtos/User.dto";
+import {
+  UserDetailResponseDto,
+  UserEmployeeSignUpDTO,
+  UserLinkedinSignUpDTO,
+} from "../dtos/User.dto";
 
 // Load the local schema
-import { UserLinkedinSignUpDTOValidation } from "../schemas/User.schema";
+import {
+  UserLinkedinSignUpDTOValidation,
+  userEmployeeSignUpDTOValidation,
+} from "../schemas/User.schema";
 
 // Load the shared service
 import UserService from "../services/User.service";
-
+import UserEmailService from "../services/UserEmail.service";
+import UserExperienceService from "../services/UserExperience.service";
 //Load local util statuscode
 import HttpStatusCode from "../utils/http-codes.util";
+import { UserType } from "../dtos/Company.dto";
 
 /**
  * UserController
@@ -90,7 +99,64 @@ class UserController {
           })),
         });
       }
-      const newUser = await UserService.addUser(userSingUpDto);
+      const userType = UserType.CAND;
+      const newUser = await UserService.addUser(userSingUpDto, userType);
+      res.status(HttpStatusCode.CREATED_201).json(newUser);
+    } catch (error) {
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
+    }
+  };
+
+  /**
+   * createUser
+   *
+   * Create a new user based on the provided input data. Validates the input data
+   * and, if successful, proceeds with the user creation logic.
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  createEmployee = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userSingUpDto: UserEmployeeSignUpDTO = req.body;
+
+      const { error } = userEmployeeSignUpDTOValidation.validate(
+        userSingUpDto,
+        {
+          abortEarly: false,
+        }
+      );
+
+      if (error) {
+        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
+          error: "Validation Error",
+          details: error.details.map((detail) => ({
+            message: detail.message,
+            path: detail.path,
+          })),
+        });
+      }
+
+      const email = userSingUpDto.email;
+      const {
+        companyName,
+        companyEmailId,
+        department,
+        designation,
+        ...copyUserSignUpDTO
+      } = userSingUpDto;
+      const userType = UserType.EMP;
+      const newUser = await UserService.addUser(copyUserSignUpDTO, userType);
+      await UserEmailService.createEmailt(email, companyName, companyEmailId);
+      await UserExperienceService.createExperience(
+        email,
+        department,
+        designation
+      );
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
       // Handle errors
@@ -122,6 +188,33 @@ class UserController {
     } catch (error) {
       // Handle errors
 
+      // Pass the error to the next error handler
+      next(error);
+    }
+  };
+
+  /**
+   *
+   * updateUserResume
+   *
+   * Updated the CV of the user
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  updateUserResume = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const resume = req.body;
+      const email = req.params.email;
+      const update = await UserService.updateUserCV(email, resume);
+      res.status(HttpStatusCode.OK_200).json(update);
+    } catch (error) {
+      // Handle errors
       // Pass the error to the next error handler
       next(error);
     }

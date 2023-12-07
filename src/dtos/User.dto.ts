@@ -3,9 +3,9 @@ export interface UserLinkedinSignUpDTO {
   email: string;
   number: number;
   linkedinUrl: string;
-  ECTC: number;
+  ECTC?: number;
   YOE: number;
-  CV: string;
+  CV?: string;
 }
 
 export interface UserReferralRequestDTO {
@@ -19,4 +19,16 @@ export interface UserDetailResponseDto {
   isEmailVerified: boolean;
   isNumberVerified: boolean;
   isSubscribed: boolean;
+}
+
+export interface UserEmployeeSignUpDTO {
+  name: string;
+  email: string;
+  number: number;
+  linkedinUrl: string;
+  YOE: number;
+  companyName: string;
+  companyEmailId: string;
+  department: string;
+  designation: string;
 }

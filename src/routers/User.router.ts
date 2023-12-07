@@ -14,13 +14,16 @@ const UserRouter = Router();
 UserRouter.post("/register/candidate", userController.createCandidate);
 
 // Create employee based on the provided query parameter
-UserRouter.post("/register/employee", userController.createCandidate);
+UserRouter.post("/register/employee", userController.createEmployee);
 
 // Get the user based on the provided query parameter
 UserRouter.get("/:id", userController.getUserById);
 
 //Update the verification status of user email based on the provided query parameter
 UserRouter.patch("/verify/:email", userController.updateEmailVerifyStatus);
+
+//Update the cv of user based on the provided query parameter
+UserRouter.patch("/cv/:email", userController.updateEmailVerifyStatus);
 
 // UserRouter.put("/:id",userController.updateUser);
 

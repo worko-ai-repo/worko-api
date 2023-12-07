@@ -39,8 +39,11 @@ class UserDetailDao implements BaseDao {
    * @param userSignUpDTO - User sign-up data transfer object
    * @param email - Email address of the user
    */
-  async add(userSignUpDTO: UserLinkedinSignUpDTO) {
+  async add(userSignUpDTO: UserLinkedinSignUpDTO, userType: string) {
     try {
+      if (!userSignUpDTO.CV) {
+        userSignUpDTO.CV = "";
+      }
       const { email, ...copyUserSignUpDTO } = userSignUpDTO;
       const emailList = { primary: email };
       const newUserSignUpDTO = {
@@ -55,7 +58,7 @@ class UserDetailDao implements BaseDao {
         isEmailVerified: false,
         isNumberVerified: false,
         isSubscribed: false,
-        userType: ["CAND"],
+        userType: [userType],
       };
       return UserDetailModel.create(newUserSignUpDTO);
     } catch (error) {
@@ -105,6 +108,38 @@ class UserDetailDao implements BaseDao {
     } catch (error) {
       console.log("Update email verification -> ", error);
       throw error;
+    }
+  }
+
+  async updateCv(email: string, resume: string) {
+    try {
+      const PK = this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      });
+
+      const users = await UserDetailModel.query("PK").eq(PK).exec();
+
+      console.log("USERS: ", users);
+
+      if (users && users.length > 0) {
+        const user = users[0];
+
+        // Check if user object is defined
+        if (user) {
+          /* await UserDetailModel.update(
+            { PK: user.PK, SK: user.SK },
+            { CV: resume }
+          ); */
+        } else {
+          // Handle the case where user is undefined
+          throw new Error("User not found");
+        }
+      } else {
+        // Handle the case where users array is empty
+        throw new Error("User not found");
+      }
+    } catch (error) {
+      console.log("error CV: ", error);
     }
   }
 }

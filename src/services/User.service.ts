@@ -49,9 +49,9 @@ class UserService {
    * @param userSignUpDTO - Details of the user to be added
    * @param email - Email of the user
    */
-  async addUser(userSignUpDTO: UserLinkedinSignUpDTO) {
+  async addUser(userSignUpDTO: UserLinkedinSignUpDTO, userType: string) {
     try {
-      userDetailDao.add(userSignUpDTO);
+      userDetailDao.add(userSignUpDTO, userType);
     } catch (error) {
       throw error;
     }
@@ -82,6 +82,21 @@ class UserService {
   async verifyEmail(email: string) {
     try {
       userDetailDao.updateEmailVerify(email);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   *
+   * updateUserCV
+   *
+   * @param email
+   * @param resume
+   */
+  async updateUserCV(email: string, resume: string) {
+    try {
+      userDetailDao.updateCv(email, resume);
     } catch (error) {
       throw error;
     }
