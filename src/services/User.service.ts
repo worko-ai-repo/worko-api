@@ -1,7 +1,7 @@
 // Load the local daos
-import userDetailDao from "../daos/Userdetail.dao";
-import userSubscriptionDao from "../daos/Usersubscription.dao";
-import userReferralDao from "../daos/Userreferral.dao";
+import userDetailDao from "../daos/UserDetail.dao";
+import userReferralDao from "../daos/UserReferral.dao";
+import userSubscriptionDao from "../daos/UserSubscription.dao";
 
 // Load the local dtos
 import {
