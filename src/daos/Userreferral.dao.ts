@@ -27,28 +27,30 @@ class UserReferralDao implements BaseDao {
     email: string
   ) {
     try {
-      // Set PK (Partition Key) in the referral request by replacing the placeholder with the email
-      referralRequest.PK = this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      });
-
-      // Set SK (Sort Key) in the referral request by replacing the placeholder with a generated ULID
-      referralRequest.SK = this.sortKeys.SK_REFERRAL.strtr({
+      const SK = this.sortKeys.SK_REFERRAL.strtr({
         "{reqId}": UlidService.getUlidId(),
       });
-
       // Splitting referralRequest.SK into three parts using '#' delimiter
-      const [refPrefix, refId, refNum] = referralRequest.SK.split("#");
+      const [refPrefix, refId, refNum] = SK.split("#");
 
       // Assigning values to GSI1PK and GSI1SK for Global Secondary Index 1
-      referralRequest.GSI1PK = `${refPrefix}#`;
-      referralRequest.GSI1SK = `${refId}#${refNum}`;
+      const GSI1PK = `${refPrefix}#`;
+      const GSI1SK = `${refId}#${refNum}`;
 
+      const newReferralRequest = {
+        PK: this.partitianKey.strtr({
+          "{primaryEmail}": email,
+        }),
+        SK: SK,
+        GSI1PK: GSI1PK,
+        GSI1SK: GSI1SK,
+        ...referralRequest,
+      };
       // Log the referral request details
-      console.log(referralRequest);
+      console.log(newReferralRequest);
 
       // Create a new entry in the UserReqModel (database model) with the referral request data
-      return UserRequestModel.create(referralRequest);
+      return UserRequestModel.create(newReferralRequest);
     } catch (error) {
       // Throw any encountered errors
       throw error;

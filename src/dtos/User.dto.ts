@@ -1,18 +1,22 @@
-import { WorkoDTO, WorkoDTOWithGSI } from "./Worko.dto";
-
-export interface UserLinkedinSignUpDTO extends WorkoDTO {
+export interface UserLinkedinSignUpDTO {
   name: string;
-  emailList: { [key: string]: string };
+  email: string;
   number: number;
   linkedinUrl: string;
-  isEmailVerified: boolean;
-  isNumberVerified: boolean;
   ECTC: number;
   YOE: number;
   CV: string;
 }
 
-export interface UserReferralRequestDTO extends WorkoDTOWithGSI {
+export interface UserReferralRequestDTO {
   status: string;
   company: string;
+}
+
+export interface UserDetailResponseDto {
+  name: string;
+  email: string;
+  isEmailVerified: boolean;
+  isNumberVerified: boolean;
+  isSubscribed: boolean;
 }

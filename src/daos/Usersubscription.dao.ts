@@ -50,21 +50,26 @@ class UserSubscriptionDao implements BaseDao {
    */
   async addSubscription(subscriptionDto: SubscriptionDTO, email: string) {
     try {
-      subscriptionDto.PK = this.partitianKey.strtr({ "{primaryEmail}": email });
-      subscriptionDto.SK = this.sortKeys.SK_SUBS.strtr({
-        "{subsId}": UlidService.getUlidId(),
-      });
-      subscriptionDto.GSI1PK = this.sortKeys.SK_SUBS.strtr({
-        "ID#(subsId}": "",
-      });
-      subscriptionDto.GSI1SK = this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      });
       const timestamp = Date.now();
       subscriptionDto.expiryDate = new Date(timestamp);
       subscriptionDto.purchaseDate = new Date(timestamp);
-      console.log("ubcriptionDto: ", subscriptionDto);
-      return UserSubModel.create(subscriptionDto);
+
+      const newSubscriptionDto = {
+        PK: this.partitianKey.strtr({ "{primaryEmail}": email }),
+        SK: this.sortKeys.SK_SUBS.strtr({
+          "{subsId}": UlidService.getUlidId(),
+        }),
+        GSI1PK: this.sortKeys.SK_SUBS.strtr({
+          "ID#(subsId}": "",
+        }),
+        GSI1SK: this.partitianKey.strtr({
+          "{primaryEmail}": email,
+        }),
+        ...subscriptionDto,
+      };
+
+      console.log("newSubscriptionDto: ", newSubscriptionDto);
+      return UserSubModel.create(newSubscriptionDto);
     } catch (error) {
       console.log(error);
       throw error;

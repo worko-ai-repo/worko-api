@@ -1,7 +1,7 @@
 // Load the local daos
-import userDetailDao from "../daos/Userdetail.dao";
-import userSubscriptionDao from "../daos/Usersubscription.dao";
-import userReferralDao from "../daos/Userreferral.dao";
+import userDetailDao from "../daos/UserDetail.dao";
+import userSubscriptionDao from "../daos/UserSubscription.dao";
+import userReferralDao from "../daos/UserReferral.dao";
 
 // Load the local dtos
 import {
@@ -69,6 +69,19 @@ class UserService {
   ) {
     try {
       userReferralDao.requestReferral(referralRequest, email);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * EmailVerified
+   *
+   * @param email - Email of the user making the request
+   */
+  async verifyEmail(email: string) {
+    try {
+      userDetailDao.updateEmailVerify(email);
     } catch (error) {
       throw error;
     }

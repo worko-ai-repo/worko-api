@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import { UserLinkedinSignUpDTO } from "../dtos/User.dto";
+import { UserDetailResponseDto, UserLinkedinSignUpDTO } from "../dtos/User.dto";
 
 // Load the local schema
 import { UserLinkedinSignUpDTOValidation } from "../schemas/User.schema";
@@ -41,7 +41,6 @@ class UserController {
         // If user not found, throw a specific error
         throw new Error("User not found");
       }
-
       // Send successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error: any) {
@@ -70,7 +69,7 @@ class UserController {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  createUser = async (req: Request, res: Response, next: NextFunction) => {
+  createCandidate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // const companyDto: CompanyDTO = req.body;
       // const createdCompany = await CompanyService.createNewCompany(companyDto);
@@ -93,6 +92,33 @@ class UserController {
       }
       const newUser = await UserService.addUser(userSingUpDto);
       res.status(HttpStatusCode.CREATED_201).json(newUser);
+    } catch (error) {
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
+    }
+  };
+
+  /**
+   *
+   * updateEmailVerifyStatus
+   *
+   * Updated the email verification status of the user
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  updateEmailVerifyStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const email = req.params.email;
+      const verify = await UserService.verifyEmail(email);
+      res.status(HttpStatusCode.OK_200).json(verify);
     } catch (error) {
       // Handle errors
 

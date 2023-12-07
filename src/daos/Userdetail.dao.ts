@@ -41,17 +41,69 @@ class UserDetailDao implements BaseDao {
    */
   async add(userSignUpDTO: UserLinkedinSignUpDTO) {
     try {
-      userSignUpDTO.PK = this.partitianKey.strtr({
-        "{primaryEmail}": userSignUpDTO.emailList.primary,
-      });
-      userSignUpDTO.SK = this.sortKeys.SK_ID.strtr({
-        "{uuid}": UlidService.getUlidId(),
-      });
-      userSignUpDTO.isEmailVerified = false;
-      userSignUpDTO.isNumberVerified = false;
-      return UserDetailModel.create(userSignUpDTO);
+      const { email, ...copyUserSignUpDTO } = userSignUpDTO;
+      const emailList = { primary: email };
+      const newUserSignUpDTO = {
+        PK: this.partitianKey.strtr({
+          "{primaryEmail}": email,
+        }),
+        SK: this.sortKeys.SK_ID.strtr({
+          "{uuid}": UlidService.getUlidId(),
+        }),
+        ...copyUserSignUpDTO,
+        emailList: emailList,
+        isEmailVerified: false,
+        isNumberVerified: false,
+        isSubscribed: false,
+        userType: ["CAND"],
+      };
+      return UserDetailModel.create(newUserSignUpDTO);
     } catch (error) {
       console.log("Addd user -> ", error);
+      throw error;
+    }
+  }
+
+  /**
+   *
+   * @param email
+   * @returns
+   */
+  async updateEmailVerify(email: string) {
+    try {
+      const PK = this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      });
+
+      const SK = this.sortKeys.SK_ID.strtr({
+        "{uuid}": "",
+      });
+
+      const users = await UserDetailModel.query("PK").eq(PK).exec();
+
+      console.log("USERS: ", users);
+
+      if (users && users.length > 0) {
+        const user = users[0];
+
+        // Check if user object is defined
+        if (user) {
+          // Update the isEmailVerified field to true
+          // Update the isEmailVerified field to true
+          await UserDetailModel.update(
+            { PK: user.PK, SK: user.SK },
+            { isEmailVerified: true }
+          );
+        } else {
+          // Handle the case where user is undefined
+          throw new Error("User not found");
+        }
+      } else {
+        // Handle the case where users array is empty
+        throw new Error("User not found");
+      }
+    } catch (error) {
+      console.log("Update email verification -> ", error);
       throw error;
     }
   }

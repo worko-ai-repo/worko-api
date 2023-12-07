@@ -5,14 +5,10 @@ export const UserLinkedinSignUpDTOValidation = Joi.object({
     "any.required": "Name is required",
   }),
 
-  emailList: Joi.object()
-    .pattern(/.*/, Joi.string().email().required())
-    .required()
-    .messages({
-      "object.base": "Email list must be an object",
-      "object.pattern.any": "Invalid email format in the email list",
-      "any.required": "Email list is required",
-    }),
+  email: Joi.string().email().required().messages({
+    "string.email": "Invalid email format",
+    "any.required": "Email is required",
+  }),
 
   number: Joi.number().required().messages({
     "any.required": "Number is required",
@@ -30,7 +26,7 @@ export const UserLinkedinSignUpDTOValidation = Joi.object({
     "any.required": "YOE is required",
   }),
 
-  CV: Joi.string().required().messages({
+  CV: Joi.string().optional().messages({
     "any.required": "CV is required",
   }),
 });

@@ -1,5 +1,3 @@
-import { WorkoDTO, WorkoDTOWithGSI } from "./Worko.dto";
-
 // interface SubsList {
 //   name: String;
 //   duration: Number;
@@ -14,7 +12,7 @@ import { WorkoDTO, WorkoDTOWithGSI } from "./Worko.dto";
 //   // UserType: string;
 // }
 
-export default interface SubscriptionDTO extends WorkoDTOWithGSI {
+export default interface SubscriptionDTO {
   amount: Number;
   status: String;
   expiryDate: Date;

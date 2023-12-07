@@ -24,13 +24,15 @@ class CompanyDetailDao implements BaseDao {
    */
   async add(companyDto: CompanyDTO) {
     try {
-      companyDto.PK = this.partitianKey; // Set partition key in DTO
-      // Generate a unique ID using UlidService and update the sort key in DTO
-      companyDto.SK = this.sortKeys.SK_INIT.strtr({
-        "{companyId}": UlidService.getUlidId(),
-      });
-      console.log(companyDto); // Log the company DTO
-      return CompanyDetailModel.create(companyDto); // Create a new CompanyDetailModel entry
+      const newCompanyDto = {
+        PK: this.partitianKey,
+        SK: this.sortKeys.SK_INIT.strtr({
+          "{companyId}": UlidService.getUlidId(),
+        }),
+        ...companyDto,
+      };
+      console.log(newCompanyDto); // Log the company DTO
+      return CompanyDetailModel.create(newCompanyDto); // Create a new CompanyDetailModel entry
     } catch (error) {
       console.log(error); // Log any errors that occur during the process
       throw error; // Throw the error for handling at a higher level

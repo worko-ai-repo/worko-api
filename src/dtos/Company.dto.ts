@@ -1,9 +1,5 @@
-// This interface represents a Data Transfer Object (DTO) for a Candidate.
-
-import { WorkoDTO } from "./Worko.dto";
-
 // It defines the structure of the data that can be sent or received when working with candidates.
-export interface CompanyDTO extends WorkoDTO {
+export interface CompanyDTO {
   name: string;
   industry: string;
   teamSize: number;
@@ -32,8 +28,23 @@ export enum Status {
   DENIED = "denied",
 }
 
-export interface AddCompanyDTO extends WorkoDTO {
+export interface AddCompanyDTO {
   userType: UserType;
   companyDetail: Partial<CompanyObject>;
   status: Status;
+}
+
+interface Company {
+  teamSize: number;
+  SK: string;
+  name: string;
+  industry: string;
+  linkedIn: string;
+  logoUrl: string;
+  carrierPage: string;
+}
+
+export interface CompanyListResponseDto {
+  companies: Company[];
+  count: number;
 }

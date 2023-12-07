@@ -36,14 +36,17 @@ class CompanyRequestDao implements BaseDao {
    */
   async request(addCompanyDto: AddCompanyDTO) {
     try {
-      addCompanyDto.PK = this.partitianKey; // Set partition key in the DTO
-      addCompanyDto.SK = this.sortKeys.REQUEST_SK.strtr(
-        {
-          "{requestId}": UlidService.getUlidId(),
-        } // Generate a ULID-based request ID and set in the DTO
-      );
       addCompanyDto.status = Status.NEW;
-      return CompanyRequestModel.create(addCompanyDto); // Create a new company request based on DTO
+      const newAddCompanyDto = {
+        PK: this.partitianKey,
+        SK: this.sortKeys.REQUEST_SK.strtr(
+          {
+            "{requestId}": UlidService.getUlidId(),
+          } // Generate a ULID-based request ID and set in the DTO
+        ),
+        ...addCompanyDto,
+      };
+      return CompanyRequestModel.create(newAddCompanyDto); // Create a new company request based on DTO
     } catch (error) {
       throw error;
     }

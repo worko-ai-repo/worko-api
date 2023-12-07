@@ -2,7 +2,11 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
+import {
+  CompanyDTO,
+  AddCompanyDTO,
+  CompanyListResponseDto,
+} from "../dtos/Company.dto";
 
 // Load the shared service
 import CompanyService from "../services/Company.service";
@@ -83,6 +87,7 @@ class CompanyController {
       // Call the CompanyService to get company list
       const companyList = await CompanyService.getCompanyList();
 
+      console.log("companyList: ", companyList);
       // Check if company not found
       if (companyList.count == 0) {
         // If company list not found, throw a specific error

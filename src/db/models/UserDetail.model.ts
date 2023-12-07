@@ -10,9 +10,11 @@ class DbUserDetailDto extends BaseDbDto {
   name!: string;
   emailList!: { [key: string]: string };
   number!: number;
+  userType!: string[];
   linkedinUrl!: string;
   isEmailVerified!: boolean;
   isNumberVerified!: boolean;
+  isSubscribed!: boolean;
   ECTC!: number;
   YOE!: number;
   CV!: string;
@@ -35,6 +37,11 @@ const UserDetailSchema = new dynamoose.Schema(
       type: Number,
       required: true,
     },
+    userType: {
+      type: Set,
+      schema: [String],
+      required: true,
+    },
     linkedinUrl: {
       type: String,
       required: true,
@@ -47,9 +54,13 @@ const UserDetailSchema = new dynamoose.Schema(
       type: Boolean,
       required: true,
     },
+    isSubscribed: {
+      type: Boolean,
+      required: true,
+    },
     ECTC: {
       type: Number,
-      required: true,
+      required: false,
     },
     YOE: {
       type: Number,
@@ -57,7 +68,7 @@ const UserDetailSchema = new dynamoose.Schema(
     },
     CV: {
       type: String,
-      required: true,
+      required: false,
     },
   },
   {
