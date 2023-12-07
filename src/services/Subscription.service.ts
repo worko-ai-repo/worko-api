@@ -1,5 +1,5 @@
 // Load the local daos
-import UsersubscriptionDao from "../daos/UserSubscription.dao";
+import UsersubscriptionDao from "../daos/Usersubscription.dao";
 
 // Load the local dtos
 import SubscriptionDTO from "../dtos/Subscription.dto";
