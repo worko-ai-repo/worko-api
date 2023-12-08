@@ -3,15 +3,20 @@ import type { AWS } from "@serverless/typescript";
 const serverlessConfiguration: AWS = {
   service: "worko-api",
   frameworkVersion: "^3.30.1",
+  useDotenv: true,
   package: {
     excludeDevDependencies: true,
   },
-  plugins: ["serverless-offline", "serverless-webpack"],
+  plugins: [
+    "serverless-offline",
+    "serverless-dotenv-plugin",
+    "serverless-webpack",
+  ],
   custom: {},
   provider: {
     name: "aws",
     runtime: "nodejs18.x",
-    stage: "dev",
+    stage: process.env.APP_SLS_STAGE,
     region: "ap-south-1", // Should be dynamically set
     iamRoleStatements:[
       {
