@@ -182,7 +182,7 @@ class UserController {
     next: NextFunction
   ) => {
     try {
-      const email = req.params.email;
+      const email = req.params.id;
       const verify = await UserService.verifyEmail(email);
       res.status(HttpStatusCode.OK_200).json(verify);
     } catch (error) {
@@ -209,8 +209,8 @@ class UserController {
     next: NextFunction
   ) => {
     try {
-      const resume = req.body;
-      const email = req.params.email;
+      const resume = req.body.resume;
+      const email = req.params.id;
       const update = await UserService.updateUserCV(email, resume);
       res.status(HttpStatusCode.OK_200).json(update);
     } catch (error) {

@@ -2,7 +2,7 @@
 import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
-import { BaseDbDto, dbModel } from "./Base.model";
+import { BaseDbDto } from "./Base.model";
 import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the structure for User Experience Database Data Transfer Object (DTO)
@@ -55,9 +55,6 @@ const UserExperienceModel = dynamoose.model<DbUserExperienceDto>(
   "UserExperience",
   [UserExperienceSchema]
 );
-
-// Register the UserExperienceModel within the database model
-dbModel.registerModel(UserExperienceModel);
 
 // Export the UserExperienceModel
 export { UserExperienceModel };

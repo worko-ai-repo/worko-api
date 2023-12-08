@@ -33,6 +33,23 @@ class UserDetailDao implements BaseDao {
     }
   }
 
+  async getUserDetailSK(email: string) {
+    try {
+      const PK = this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      });
+      const user = await UserDetailModel.query("PK")
+        .eq(PK)
+        .where("SK")
+        .beginsWith("ID#")
+        .exec();
+      return user[0].SK;
+    } catch (error) {
+      console.error("Error in getUserDetailSK:", error);
+      throw error;
+    }
+  }
+
   /**
    * Adds a new user by creating a user sign-up DTO and saving it.
    *
@@ -72,74 +89,30 @@ class UserDetailDao implements BaseDao {
    * @param email
    * @returns
    */
-  async updateEmailVerify(email: string) {
+  async updateEmailVerify(SK: String, email: string) {
     try {
       const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
-
-      const SK = this.sortKeys.SK_ID.strtr({
-        "{uuid}": "",
-      });
-
-      const users = await UserDetailModel.query("PK").eq(PK).exec();
-
-      console.log("USERS: ", users);
-
-      if (users && users.length > 0) {
-        const user = users[0];
-
-        // Check if user object is defined
-        if (user) {
-          // Update the isEmailVerified field to true
-          // Update the isEmailVerified field to true
-          await UserDetailModel.update(
-            { PK: user.PK, SK: user.SK },
-            { isEmailVerified: true }
-          );
-        } else {
-          // Handle the case where user is undefined
-          throw new Error("User not found");
-        }
-      } else {
-        // Handle the case where users array is empty
-        throw new Error("User not found");
-      }
+      return UserDetailModel.update(
+        { PK: PK, SK: SK },
+        { isEmailVerified: true }
+      );
     } catch (error) {
       console.log("Update email verification -> ", error);
       throw error;
     }
   }
 
-  async updateCv(email: string, resume: string) {
+  async updateCv(SK: String, email: string, resume: string) {
     try {
       const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
-
-      const users = await UserDetailModel.query("PK").eq(PK).exec();
-
-      console.log("USERS: ", users);
-
-      if (users && users.length > 0) {
-        const user = users[0];
-
-        // Check if user object is defined
-        if (user) {
-          /* await UserDetailModel.update(
-            { PK: user.PK, SK: user.SK },
-            { CV: resume }
-          ); */
-        } else {
-          // Handle the case where user is undefined
-          throw new Error("User not found");
-        }
-      } else {
-        // Handle the case where users array is empty
-        throw new Error("User not found");
-      }
+      return UserDetailModel.update({ PK: PK, SK: SK }, { CV: resume });
     } catch (error) {
       console.log("error CV: ", error);
+      throw error;
     }
   }
 }

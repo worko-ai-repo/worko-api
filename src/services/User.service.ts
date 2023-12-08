@@ -81,7 +81,8 @@ class UserService {
    */
   async verifyEmail(email: string) {
     try {
-      userDetailDao.updateEmailVerify(email);
+      const SK = await userDetailDao.getUserDetailSK(email);
+      userDetailDao.updateEmailVerify(SK, email);
     } catch (error) {
       throw error;
     }
@@ -96,7 +97,8 @@ class UserService {
    */
   async updateUserCV(email: string, resume: string) {
     try {
-      userDetailDao.updateCv(email, resume);
+      const SK = await userDetailDao.getUserDetailSK(email);
+      userDetailDao.updateCv(SK, email, resume);
     } catch (error) {
       throw error;
     }

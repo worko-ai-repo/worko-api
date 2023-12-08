@@ -3,7 +3,7 @@ import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
-import { BaseDbDto, dbModel } from "./Base.model";
+import { BaseDbDto } from "./Base.model";
 
 // Define the structure for User Subscription Database Data Transfer Object (DTO)
 class DbUserSubsDto extends BaseDbDto {
@@ -54,9 +54,6 @@ const UserSubModel = dynamoose.model<DbUserSubsDto>(
   "UserSubs",
   UserSubscriptionSchema
 );
-
-// Register the UserSubModel within the database model
-dbModel.registerModel(UserSubModel);
 
 // Export the UserSubModel
 export { UserSubModel };

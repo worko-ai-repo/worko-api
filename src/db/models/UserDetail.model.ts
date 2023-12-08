@@ -2,7 +2,7 @@
 import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
-import { BaseDbDto, dbModel } from "./Base.model";
+import { BaseDbDto } from "./Base.model";
 import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the structure for User Details Database Data Transfer Object (DTO)
@@ -80,9 +80,6 @@ const UserDetailSchema = new dynamoose.Schema(
 const UserDetailModel = dynamoose.model<DbUserDetailDto>("UserDetail", [
   UserDetailSchema,
 ]);
-
-// Register the UserDetailsModel within the database model
-dbModel.registerModel(UserDetailModel);
 
 // Export the UserDetailsModel
 export { UserDetailModel };

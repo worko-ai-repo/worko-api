@@ -3,7 +3,7 @@ import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
-import { dbModel, BaseDbDto } from "./Base.model";
+import { BaseDbDto } from "./Base.model";
 
 // Define the structure for Company Request Database Data Transfer Object (DTO)
 class DbCompanyRequestDto extends BaseDbDto {
@@ -39,8 +39,6 @@ const CompanyRequestModel = dynamoose.model<DbCompanyRequestDto>(
   "CompanyRequest",
   CompanySchema
 );
-// Register the Company Request Model
-dbModel.registerModel(CompanyRequestModel);
 
 // Export the Company Request Model for external use
 export { CompanyRequestModel };

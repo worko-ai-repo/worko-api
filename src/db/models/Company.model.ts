@@ -2,7 +2,6 @@ import * as dynamoose from "dynamoose";
 
 //Local
 import { DB_CONSTANTS } from "../DB.constants";
-import { dbModel } from "./Base.model";
 
 const CompanySchema = new dynamoose.Schema(
   {
@@ -14,7 +13,6 @@ const CompanySchema = new dynamoose.Schema(
 );
 
 const CompanyModel = dynamoose.model("Company", CompanySchema);
-dbModel.registerModel(CompanyModel);
 
 export { CompanyModel };
 

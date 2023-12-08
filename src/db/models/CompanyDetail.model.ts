@@ -3,7 +3,7 @@ import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
-import { dbModel, BaseDbDto } from "./Base.model";
+import { BaseDbDto } from "./Base.model";
 
 // Declaring a class 'CompanyDetailsDbDto' that extends 'BaseDbDto' with specific properties for company details
 class DbCompanyDetailDto extends BaseDbDto {
@@ -54,7 +54,6 @@ const CompanyDetailModel = dynamoose.model<DbCompanyDetailDto>(
   "CompanyDetail",
   CompanySchema
 );
-dbModel.registerModel(CompanyDetailModel);
 
 // Exporting the 'CompanyDetailModel' for external usage
 export { CompanyDetailModel };

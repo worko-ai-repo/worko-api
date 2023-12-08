@@ -3,7 +3,6 @@ import * as dynamoose from "dynamoose";
 
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
-import { dbModel } from "./Base.model";
 
 const UserRequestSchema = new dynamoose.Schema(
   {
@@ -33,12 +32,6 @@ const UserRequestSchema = new dynamoose.Schema(
 
 // Create the UserRequestModel using the defined schema
 const UserRequestModel = dynamoose.model("UserRequest", UserRequestSchema);
-
-// Register the UserRequestModel within the database model
-/* const UserTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
-  UserRequestModel,
-]); */
-dbModel.registerModel(UserRequestModel);
 
 // Export the UserRequestModel
 export { UserRequestModel };

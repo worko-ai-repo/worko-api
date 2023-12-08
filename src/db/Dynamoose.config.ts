@@ -1,4 +1,5 @@
 import * as dynamoose from "dynamoose";
+import DBConfig from "./DB.config";
 
 /* import { UserModel } from "./models/User.model";
 import { UserDetailModel } from "./models/UserDetail.model";
@@ -27,7 +28,8 @@ const ddb = new dynamoose.aws.ddb.DynamoDB({
 dynamoose.aws.ddb.set(ddb);
 
 // dynamoose.aws.ddb.local();
-
+const dbConfig = new DBConfig();
+dbConfig.registerModels();
 class DynamooseConfig {}
 
 export default DynamooseConfig;
