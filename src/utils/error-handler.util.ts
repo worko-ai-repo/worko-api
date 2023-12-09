@@ -4,7 +4,7 @@ import { Response } from "express";
 // Import the local packages
 import APP_CONSTANTS from "../configs/constants.config";
 import HttpStatusCode from "./http-codes.util";
-import { BaseError } from "./errors.util";
+import { BaseError, RequestValidationError } from "./errors.util";
 
 /**
  * ErrorHandler
@@ -30,7 +30,8 @@ class ErrorHandler {
 
             // When object is instance of the provided classes then no changes/parsing required
             if (
-                err instanceof BaseError
+                err instanceof BaseError ||
+                err instanceof RequestValidationError
             ) {
                 newErrorObj = err;
             }

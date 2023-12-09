@@ -1,17 +1,15 @@
 // Importing necessary packages/modules from npm
 import { Item } from "dynamoose/dist/Item";
 
-// Represents the structure for timestamps
-class Timestamps {
-  "createdAt": String; // Dynamoose will handle this field
-  "updatedAt": String; // Dynamoose will handle this field
-}
-
 // Represents the base structure for the database DTO (Data Transfer Object)
+// @todo change "BaseDbDto" name to "DbBaseDto" and update it everywhere.
 class BaseDbDto extends Item {
-  "PK": String;
-  "SK": String;
-  "timestamps": Timestamps; // Includes timestamps structure
+  "PK": string;
+  "SK": string;
+  "timestamps": {
+    "createdAt": string; // Dynamoose will handle this field
+    "updatedAt": string; // Dynamoose will handle this field
+  };
 }
 
 // Exports the necessary elements to be used externally

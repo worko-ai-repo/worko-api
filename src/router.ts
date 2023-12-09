@@ -2,7 +2,6 @@
 import { Router } from "express";
 
 // Load local packages
-import CandidateRouter from "./routers/Candidate.router";
 import CompanyRouter from "./routers/Company.router";
 import UserRouter from "./routers/User.router";
 import UserReferralRouter from "./routers/UserReferral.router";
@@ -11,9 +10,6 @@ import FileRouter from "./routers/File.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
-
-// Regitser the "Candidate" routers
-router.use("/candidate", CandidateRouter);
 
 // Regitser the "Company" routers
 router.use("/company", CompanyRouter);

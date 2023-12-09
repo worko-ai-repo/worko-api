@@ -51,7 +51,7 @@ const UserSubscriptionSchema = new dynamoose.Schema(
 
 // Create the UserSubModel using the defined schema
 const UserSubModel = dynamoose.model<DbUserSubsDto>(
-  "UserSubs",
+  "UserSubs", // @here this value is not same as the file name. We need to make sure we are consistent with naming convension.
   UserSubscriptionSchema
 );
 

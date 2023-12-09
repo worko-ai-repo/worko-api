@@ -6,6 +6,7 @@ import { BaseDbDto } from "./Base.model";
 import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the structure for User Emaill Database Data Transfer Object (DTO)
+// @todo where is the actual "email" field value here? Can we connect to talk on this?
 class DbUserEmailDto extends BaseDbDto {
   companyName!: string;
   emailId!: String;
@@ -32,7 +33,7 @@ const UserEmailSchema = new dynamoose.Schema(
 
 // Create the UserEmaillsModel using the defined schema
 const UserEmailModel = dynamoose.model<DbUserEmailDto>("UserEmail", [
-  UserEmailSchema,
+  UserEmailSchema, // @todo why it is in [] bracket and everywhere it is without any brackets?
 ]);
 
 // Export the UserEmaillModel

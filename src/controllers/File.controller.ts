@@ -18,7 +18,7 @@ import UlidService from "../services/Ulid.service";
 import { FileGeneratePsuToUploadUserResumeDTOValidation } from "../schemas/File.schema";
 
 // Import utilities
-import { BaseError } from "../utils/errors.util";
+import { BaseError, RequestValidationError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
 
 /**
@@ -95,13 +95,7 @@ class FileController {
       );
 
       if (error) {
-        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
-          error: "Validation Error",
-          details: error.details.map((detail) => ({
-            message: detail.message,
-            path: detail.path,
-          })),
-        });
+        throw new RequestValidationError(error);
       }
 
       // Get the base path where the user's resume file would be uploaded

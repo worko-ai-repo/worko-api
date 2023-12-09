@@ -9,6 +9,9 @@ import {
   UserReferralRequestDTO,
 } from "../dtos/User.dto";
 
+// @todo all methods from everything (Dao, Service, etc) should return the response,
+// it will help the caller to know what happed with the action and what is the response.
+
 /**
  *  UserService class responsible for managing user-related operations.
  */
@@ -35,6 +38,7 @@ class UserService {
    * @returns {Promise<any>} - Subscription details of the user
    */
   async getsubscriptionDetails(email: string) {
+    // @todo Kindly update the method name to "getSubscriptionDetails" (S capital).
     try {
       return userSubscriptionDao.subscriptionDetails(email);
     } catch (error) {
@@ -96,6 +100,7 @@ class UserService {
    * @param resume
    */
   async updateUserCV(email: string, resume: string) {
+    // @todo change the method name to "updateUserDetails" and update the code to update all ther attributes not just CV.
     try {
       const SK = await userDetailDao.getUserDetailSK(email);
       userDetailDao.updateCv(SK, email, resume);

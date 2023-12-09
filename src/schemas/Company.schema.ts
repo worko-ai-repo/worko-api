@@ -1,9 +1,7 @@
 import Joi from "joi";
 
+// @todo Kindly add appropriate comments for all schemas
 export const CompanyDTOValidation = Joi.object({
-  // Assuming WorkoDTO has its own validation or properties
-  // ...
-
   name: Joi.string().required().messages({
     "any.required": "Company name is required",
   }),
@@ -36,9 +34,6 @@ export const CompanyDTOValidation = Joi.object({
 });
 
 export const CompanyRequestDTOValidation = Joi.object({
-  // Assuming WorkoDTO has its own validation or properties
-  // ...
-
   userType: Joi.string().valid("EMP", "CAND").required().messages({
     "any.only": "User type must be either EMP or CAND",
     "any.required": "User type is required",

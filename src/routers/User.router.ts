@@ -23,12 +23,7 @@ UserRouter.get("/:id", userController.getUserById);
 UserRouter.patch("/verify/:id", userController.updateEmailVerifyStatus);
 
 //Update the cv of user based on the provided query parameter
+// @todo change this to "/:id" and it should update any UserDetail SK fields along with CV/resume.
 UserRouter.patch("/cv/:id", userController.updateUserResume);
-
-// UserRouter.put("/:id",userController.updateUser);
-
-// UserRouter.delete("/:id",userController.deleteUser);
-
-// UserRouter.get("/",userController.getUser);
 
 export default UserRouter;

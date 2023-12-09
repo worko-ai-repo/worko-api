@@ -10,8 +10,9 @@ import { UserReferralRequestDTOValidation } from "../schemas/UserReferral.schema
 // Load the shared service
 import UserService from "../services/User.service";
 
-//Load local util statuscode
+//Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
+import { RequestValidationError } from "../utils/errors.util";
 
 /**
  * UserReferralController
@@ -36,15 +37,11 @@ class UserReferralController {
         referralRequest,
         { abortEarly: false }
       );
+      
       if (error) {
-        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
-          error: "Validation Error",
-          details: error.details.map((detail) => ({
-            message: detail.message,
-            path: detail.path,
-          })),
-        });
+        throw new RequestValidationError(error);
       }
+      
       const email = req.params.id;
       const newreferral = await UserService.referralRequest(
         referralRequest,

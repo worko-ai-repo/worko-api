@@ -7,7 +7,7 @@ export const UserSubscriptionDTOValidation = Joi.object({
   }),
 
   status: Joi.string()
-    .valid("active", "inactive", "expired")
+    .valid("active", "inactive", "expired") // @todo KIndly update this to read the values from enum.
     .required()
     .messages({
       "string.valid": "Status must be one of: active, inactive, expired",

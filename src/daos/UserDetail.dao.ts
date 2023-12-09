@@ -38,11 +38,15 @@ class UserDetailDao implements BaseDao {
       const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
+
+      // @todo we should never use the await in DTO unless extremly required. Kindly have await in controller; 
+      // Or in service if the value is required there.
       const user = await UserDetailModel.query("PK")
         .eq(PK)
         .where("SK")
         .beginsWith("ID#")
         .exec();
+      
       return user[0].SK;
     } catch (error) {
       console.error("Error in getUserDetailSK:", error);

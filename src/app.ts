@@ -3,11 +3,20 @@ import express, { Express, Request, Response, NextFunction } from "express";
 import serverless from "serverless-http";
 import cors from "cors";
 
-// Import the routes from the `services`
+// Import configs
+import DBConfig from "./db/DB.config";
+
+// Import extensions
 import "./extensions/string.extension";
+
+// Import libraries
+import "./libraries/logger.library";
+
+// Import the routes
 import routes from "./router";
+
+// Import Utils
 import { errorHandler } from "./utils/error-handler.util";
-import DynamooseConfig from "./db/Dynamoose.config";
 
 class App {
   /**
@@ -28,10 +37,16 @@ class App {
 
     // Call the register methods to do their works
     this.defineGlobals();
-    this.initialiseLogger();
+    this.initDatabaseConfig();
     this.registerMiddleWares();
     this.registerAppRoutes();
     this.registerErrorHandlingRoutes();
+
+    // Logger message
+    global.logger.info("Application is initialised successfully.", {
+      filePath: __filename,
+      methodName: this.constructor.name
+    });
   }
 
   /**
@@ -40,15 +55,18 @@ class App {
    * This method define some of the globals required in the application.
    */
   defineGlobals(): void {
-    new DynamooseConfig();
+    
   }
 
   /**
-   * Initialise Logger
-   *
-   * This method intialises the "logger" library which can be used to "log" messages, warnings, errors, etc instead of using build in "console.log."
+   * initDatabaseConfig
+   * 
+   * Initialise the database configurations
    */
-  initialiseLogger() {}
+  initDatabaseConfig(){
+    const dbConf = new DBConfig();
+    dbConf.init();
+  }
 
   /**
    * Register Middlewares
@@ -86,7 +104,8 @@ class App {
         // Check if it is trusted/known/expected error, meaning known to the developer.
         if (errorHandler.isTrustedError(err)) {
           // Handle the error manually
-          errorHandler.handleError(err, res);
+          // @todo here some improvements might required depending upon the situation
+          return errorHandler.handleError(err, res);
         }
 
         // Otherwise pass the error to the express and the error would be handled by the express exception handler

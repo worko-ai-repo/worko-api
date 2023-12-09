@@ -3,10 +3,10 @@ import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 import {
-  UserDetailResponseDto,
   UserEmployeeSignUpDTO,
   UserLinkedinSignUpDTO,
 } from "../dtos/User.dto";
+import { UserType } from "../dtos/Company.dto";
 
 // Load the local schema
 import {
@@ -18,9 +18,10 @@ import {
 import UserService from "../services/User.service";
 import UserEmailService from "../services/UserEmail.service";
 import UserExperienceService from "../services/UserExperience.service";
-//Load local util statuscode
+
+// Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
-import { UserType } from "../dtos/Company.dto";
+import { RequestValidationError } from "../utils/errors.util";
 
 /**
  * UserController
@@ -91,14 +92,9 @@ class UserController {
       );
 
       if (error) {
-        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
-          error: "Validation Error",
-          details: error.details.map((detail) => ({
-            message: detail.message,
-            path: detail.path,
-          })),
-        });
+        throw new RequestValidationError(error);
       }
+      
       const userType = UserType.CAND;
       const newUser = await UserService.addUser(userSingUpDto, userType);
       res.status(HttpStatusCode.CREATED_201).json(newUser);
@@ -132,13 +128,7 @@ class UserController {
       );
 
       if (error) {
-        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
-          error: "Validation Error",
-          details: error.details.map((detail) => ({
-            message: detail.message,
-            path: detail.path,
-          })),
-        });
+        throw new RequestValidationError(error);
       }
 
       const email = userSingUpDto.email;

@@ -22,6 +22,7 @@ const SubscriptionSchema = Joi.object({
   }),
 
   // Validate the 'userType' field:
+  // @todo KIndly update this to read the values from enum.
   UserType: Joi.string().valid("CAND", "EMP").required().messages({
     "any.only": "User type must be either 'CAND' or 'EMP'",
     "any.required": "User type is required",
@@ -34,7 +35,7 @@ const SubscriptionDTOValidation = Joi.object({
     "number.base": "Amount must be a number.",
   }),
   status: Joi.string()
-    .valid("active", "inactive", "cancelled")
+    .valid("active", "inactive", "cancelled") // @todo KIndly update this to read the values from enum.
     .required()
     .messages({
       "any.required": "Status is required.",

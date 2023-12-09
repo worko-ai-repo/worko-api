@@ -4,9 +4,7 @@ import userExperienceDao from "../daos/UserExperience.dao";
 // Load the local dtos
 
 /**
- *
  *  UserExperienceService class responsible for managing user Experience-related operations.
- *
  */
 class UserExperienceService {
   /**

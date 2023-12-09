@@ -34,6 +34,7 @@ class UserReferralDao implements BaseDao {
       const [refPrefix, refId, refNum] = SK.split("#");
 
       // Assigning values to GSI1PK and GSI1SK for Global Secondary Index 1
+      // @todo add these along with other propertise of class like "primaryKey" and "sortKeys"; And refer them from there.
       const GSI1PK = `${refPrefix}#`;
       const GSI1SK = `${refId}#${refNum}`;
 

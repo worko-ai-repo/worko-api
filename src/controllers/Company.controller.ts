@@ -5,7 +5,6 @@ import { Request, Response, NextFunction } from "express";
 import {
   CompanyDTO,
   AddCompanyDTO,
-  CompanyListResponseDto,
 } from "../dtos/Company.dto";
 
 // Load the shared service
@@ -19,6 +18,7 @@ import {
 
 //Load local util statuscode
 import HttpStatusCode from "../utils/http-codes.util";
+import { RequestValidationError } from "../utils/errors.util";
 
 /**
  * CompanyController
@@ -48,16 +48,7 @@ class CompanyController {
 
       // Check if validation resulted in errors
       if (error) {
-        // If validation errors are present, respond with a 400 Bad Request status
-        // Include a meaningful error message and details about each validation error
-        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
-          error: "Validation Error",
-          details: error.details.map((detail) => ({
-            // Include the error message and the path in the data structure
-            message: detail.message,
-            path: detail.path,
-          })),
-        });
+        throw new RequestValidationError(error);
       }
 
       // Call the CompanyService to add a new company
@@ -120,16 +111,7 @@ class CompanyController {
 
       // Check if validation resulted in errors
       if (error) {
-        // If validation errors are present, respond with a 400 Bad Request status
-        // Include a meaningful error message and details about each validation error
-        return res.status(HttpStatusCode.BAD_REQUEST_400).json({
-          error: "Validation Error",
-          details: error.details.map((detail) => ({
-            // Include the error message and the path in the data structure
-            message: detail.message,
-            path: detail.path,
-          })),
-        });
+        throw new RequestValidationError(error);
       }
 
       const addCompany = await CompanyService.requestNewCompany(addCompanyDto);

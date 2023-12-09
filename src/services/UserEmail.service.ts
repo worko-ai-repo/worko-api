@@ -1,12 +1,8 @@
 // Load the local daos
 import userEmailDao from "../daos/UserEmail.dao";
 
-// Load the local dtos
-
 /**
- *
  *  UserEmailService class responsible for managing user email-related operations.
- *
  */
 class UserEmailService {
   /**

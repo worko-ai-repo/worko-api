@@ -4,7 +4,7 @@ import Joi from "joi";
 /**
  * FileGeneratePsuToUploadUserResumeDTOValidation
  * 
- * Join validation schema to validate the request data.
+ * Joi validation schema to validate the request data.
  */
 export const FileGeneratePsuToUploadUserResumeDTOValidation = Joi.object({
   userId: Joi

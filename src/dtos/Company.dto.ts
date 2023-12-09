@@ -1,4 +1,7 @@
 // It defines the structure of the data that can be sent or received when working with candidates.
+// @todo make sure to add appropriate comment for every DTO, 
+// mentioning the purpose and where it should be used and for which action.
+// We can come up with our own JS DOC properties like resource, action, etc. ANd update the same for all DTOs.
 export interface CompanyDTO {
   name: string;
   industry: string;
