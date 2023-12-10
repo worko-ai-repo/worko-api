@@ -23,6 +23,7 @@ class UserDetailDao implements BaseDao {
    */
   async getUserDetails(email: string) {
     try {
+      console.log("Get user detail by id [DAO]");
       const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
@@ -35,6 +36,7 @@ class UserDetailDao implements BaseDao {
 
   async getUserDetailSK(email: string) {
     try {
+      console.log("get UserDetail SK [DAO]");
       const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
@@ -58,17 +60,18 @@ class UserDetailDao implements BaseDao {
    */
   async add(userSignUpDTO: UserLinkedinSignUpDTO, userType: string) {
     try {
+      console.log("Create candidate/employee [DAO]");
       if (!userSignUpDTO.CV) {
         userSignUpDTO.CV = "";
       }
-      const { email, ...copyUserSignUpDTO } = userSignUpDTO;
+      const { email, userId, ...copyUserSignUpDTO } = userSignUpDTO;
       const emailList = { primary: email };
       const newUserSignUpDTO = {
         PK: this.partitianKey.strtr({
           "{primaryEmail}": email,
         }),
         SK: this.sortKeys.SK_ID.strtr({
-          "{uuid}": UlidService.getUlidId(),
+          "{uuid}": userId,
         }),
         ...copyUserSignUpDTO,
         emailList: emailList,
@@ -91,6 +94,7 @@ class UserDetailDao implements BaseDao {
    */
   async updateEmailVerify(SK: String, email: string) {
     try {
+      console.log("Update user primary email verify status [DAO]");
       const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
@@ -106,6 +110,7 @@ class UserDetailDao implements BaseDao {
 
   async updateCv(SK: String, email: string, resume: string) {
     try {
+      console.log("Update user resume [DAO]");
       const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });

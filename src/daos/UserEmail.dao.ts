@@ -38,6 +38,7 @@ class UserEmailDao implements BaseDao {
    */
   async create(email: string, companyName: string, companyEmailId: string) {
     try {
+      console.log("Create employee Work Email [DAO]");
       const userEmailDTO = {
         PK: this.partitianKey.strtr({
           "{primaryEmail}": email,

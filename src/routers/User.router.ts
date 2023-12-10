@@ -20,10 +20,10 @@ UserRouter.post("/register/employee", userController.createEmployee);
 UserRouter.get("/:id", userController.getUserById);
 
 //Update the verification status of user email based on the provided query parameter
-UserRouter.patch("/verify/:id", userController.updateEmailVerifyStatus);
+UserRouter.patch("/:id/verify/email", userController.updateEmailVerifyStatus);
 
 //Update the cv of user based on the provided query parameter
-UserRouter.patch("/cv/:id", userController.updateUserResume);
+UserRouter.patch("/:id/cv", userController.updateUserResume);
 
 // UserRouter.put("/:id",userController.updateUser);
 

@@ -10,7 +10,7 @@ export const UserLinkedinSignUpDTOValidation = Joi.object({
     "any.required": "Email is required",
   }),
 
-  number: Joi.number().required().messages({
+  number: Joi.number().options({ convert: false }).required().messages({
     "any.required": "Number is required",
   }),
 
@@ -18,16 +18,21 @@ export const UserLinkedinSignUpDTOValidation = Joi.object({
     "any.required": "LinkedIn URL is required",
   }),
 
-  ECTC: Joi.number().required().messages({
+  ECTC: Joi.number().options({ convert: false }).required().messages({
     "any.required": "ECTC is required",
+    "number.base": "ECTC should be a valid number",
   }),
 
-  YOE: Joi.number().required().messages({
+  YOE: Joi.number().options({ convert: false }).required().messages({
     "any.required": "YOE is required",
+    "number.base": "YOE should be a valid number",
   }),
 
   CV: Joi.string().optional().messages({
     "any.required": "CV is required",
+  }),
+  userId: Joi.string().required().messages({
+    "any.required": "User ID is required",
   }),
 });
 
@@ -41,7 +46,7 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
     "string.email": "Please provide a valid email address.",
     "string.empty": "Email cannot be empty.",
   }),
-  number: Joi.number().required().messages({
+  number: Joi.number().options({ convert: false }).required().messages({
     "any.required": "Number is required.",
     "number.base": "Number must be a valid number.",
   }),
@@ -49,7 +54,7 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
     "any.required": "LinkedIn URL is required.",
     "string.empty": "LinkedIn URL cannot be empty.",
   }),
-  YOE: Joi.number().integer().required().messages({
+  YOE: Joi.number().options({ convert: false }).integer().required().messages({
     "any.required": "Years of Experience (YOE) is required.",
     "number.base": "YOE must be a valid number.",
     "number.integer": "YOE must be an integer.",
@@ -70,5 +75,8 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
   designation: Joi.string().required().messages({
     "any.required": "Designation is required.",
     "string.empty": "Designation cannot be empty.",
+  }),
+  userId: Joi.string().required().messages({
+    "any.required": "User ID is required",
   }),
 });

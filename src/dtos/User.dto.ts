@@ -6,6 +6,7 @@ export interface UserLinkedinSignUpDTO {
   ECTC?: number;
   YOE: number;
   CV?: string;
+  userId: string;
 }
 
 export interface UserReferralRequestDTO {
@@ -31,4 +32,5 @@ export interface UserEmployeeSignUpDTO {
   companyEmailId: string;
   department: string;
   designation: string;
+  userId: string;
 }
