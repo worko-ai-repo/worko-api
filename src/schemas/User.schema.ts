@@ -76,6 +76,15 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
     "any.required": "Designation is required.",
     "string.empty": "Designation cannot be empty.",
   }),
+  designationTag: Joi.number()
+    .options({ convert: false })
+    .integer()
+    .required()
+    .messages({
+      "any.required": "designationTag is required.",
+      "number.base": "designationTag must be a valid number.",
+      "number.integer": "designationTag must be an integer.",
+    }),
   userId: Joi.string().required().messages({
     "any.required": "User ID is required",
   }),

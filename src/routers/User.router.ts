@@ -19,6 +19,9 @@ UserRouter.post("/register/employee", userController.createEmployee);
 // Get the user based on the provided query parameter
 UserRouter.get("/:id", userController.getUserById);
 
+// Get the user profile detail based on the provided query parameter
+UserRouter.get("/:id/profile", userController.getUserProfileDetailById);
+
 //Update the verification status of user email based on the provided query parameter
 UserRouter.patch("/:id/verify/email", userController.updateEmailVerifyStatus);
 

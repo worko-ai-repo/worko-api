@@ -5,6 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import {
   UserEmployeeSignUpDTO,
   UserLinkedinSignUpDTO,
+  UserProfileResponse,
 } from "../dtos/User.dto";
 import { UserType } from "../dtos/Company.dto";
 
@@ -71,6 +72,55 @@ class UserController {
   };
 
   /**
+   * getUserProfileDetailById
+   *
+   * Get the user based on the provided quesry parameters
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  getUserProfileDetailById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      console.log("Get user profile detail by id [controller]");
+      // Extract email from request parameters
+      const email = req.params.id;
+
+      const SK = await UserService.getSK(email);
+
+      // Check if SK is null or indicates an error
+      if (SK === null || SK === undefined) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Call the UserService to get user by email
+      const result = await UserService.getUserDetailByEmail(email, SK);
+
+      // Transform the result to the desired format
+      const userProfileResponse: UserProfileResponse = {
+        name: result[0].name,
+        lastAccessedDash: result[0].lastAccessedDash,
+        profileImage:
+          result[0].profileImage ||
+          "https://cdn.pixabay.com/photo/2017/02/23/13/05/avatar-2092113_1280.png", // If profileImage is not present, set it to an dummy image
+      };
+
+      // Send successful response with transformed user data
+      res.status(HttpStatusCode.OK_200).json({
+        status: "success",
+        data: userProfileResponse,
+      });
+    } catch (error: any) {
+      // If it's another type of error, pass it to the next error handler
+      next(error);
+    }
+  };
+
+  /**
    * createUser
    *
    * Create a new user based on the provided input data. Validates the input data
@@ -94,7 +144,7 @@ class UserController {
       if (error) {
         throw new RequestValidationError(error);
       }
-      
+
       const userType = UserType.CAND;
       const newUser = await UserService.addUser(userSingUpDto, userType);
       res.status(HttpStatusCode.CREATED_201).json(newUser);
@@ -138,6 +188,7 @@ class UserController {
         companyEmailId,
         department,
         designation,
+        designationTag,
         ...copyUserSignUpDTO
       } = userSingUpDto;
       const userType = UserType.EMP;
@@ -146,7 +197,8 @@ class UserController {
       await UserExperienceService.createExperience(
         email,
         department,
-        designation
+        designation,
+        designationTag
       );
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {

@@ -9,10 +9,11 @@ import { DB_CONSTANTS } from "../DB.constants";
 class DbUserExperienceDto extends BaseDbDto {
   department!: string;
   designation!: String;
-  startedMonth!: number;
-  endedMonth!: number;
-  startedYear!: number;
-  endedYear!: number;
+  designationTag!: number;
+  startedMonth?: number;
+  endedMonth?: number;
+  startedYear?: number;
+  endedYear?: number;
 }
 
 // Define the schema for the User Experience model using DynamoDB
@@ -26,6 +27,10 @@ const UserExperienceSchema = new dynamoose.Schema(
     },
     designation: {
       type: String,
+      required: true,
+    },
+    designationTag: {
+      type: Number,
       required: true,
     },
     startedMonth: {

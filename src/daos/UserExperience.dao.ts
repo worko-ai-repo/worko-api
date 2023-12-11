@@ -19,7 +19,12 @@ class UserExperienceDao implements BaseDao {
    * @param designation
    * @returns
    */
-  async create(email: string, department: string, designation: string) {
+  async create(
+    email: string,
+    department: string,
+    designation: string,
+    designationTag: number
+  ) {
     try {
       console.log("Create employee Work Experience [DAO]");
       const userExperienceDTO = {
@@ -31,6 +36,7 @@ class UserExperienceDao implements BaseDao {
         }),
         department: department,
         designation: designation,
+        designationTag: designationTag,
       };
       await UserExperienceModel.create(userExperienceDTO);
     } catch (error) {

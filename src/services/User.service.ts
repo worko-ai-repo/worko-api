@@ -25,7 +25,23 @@ class UserService {
   async getUserByEmail(email: string) {
     try {
       console.log("Get user detail by id [service]");
-      return userDetailDao.getUserDetails(email);
+      return userDetailDao.getUserInfo(email);
+    } catch (error) {
+      console.log("Error -> ", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves user details by email id.
+   *
+   * @param email - Email of the user
+   * @returns {Promise<any>} - Details of the user
+   */
+  async getUserDetailByEmail(email: string, SK: string) {
+    try {
+      console.log("Get user detail by id [service]");
+      return userDetailDao.getUserDetails(email, SK);
     } catch (error) {
       console.log("Error -> ", error);
       throw error;
@@ -75,6 +91,20 @@ class UserService {
   ) {
     try {
       userReferralDao.requestReferral(referralRequest, email);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * getSK
+   *
+   * @param email - Email of the user making the request
+   */
+  async getSK(email: string) {
+    try {
+      console.log("Get user SK [service]");
+      return await userDetailDao.getUserDetailSK(email);
     } catch (error) {
       throw error;
     }

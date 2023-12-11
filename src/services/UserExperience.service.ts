@@ -16,11 +16,12 @@ class UserExperienceService {
   async createExperience(
     email: string,
     department: string,
-    designation: string
+    designation: string,
+    designationTag: number
   ) {
     try {
       console.log("Create employee Work Experience [service]");
-      userExperienceDao.create(email, department, designation);
+      userExperienceDao.create(email, department, designation, designationTag);
     } catch (error) {
       throw error;
     }

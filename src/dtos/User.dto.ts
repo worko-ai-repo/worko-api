@@ -32,5 +32,12 @@ export interface UserEmployeeSignUpDTO {
   companyEmailId: string;
   department: string;
   designation: string;
+  designationTag: number;
   userId: string;
+}
+
+export interface UserProfileResponse {
+  name: string;
+  lastAccessedDash: string;
+  profileImage: string;
 }

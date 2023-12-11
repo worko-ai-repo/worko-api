@@ -5,7 +5,7 @@ import * as dynamoose from "dynamoose";
 import { BaseDbDto } from "./Base.model";
 import { DB_CONSTANTS } from "../DB.constants";
 
-// @todo the "DbUserDetailDto" and "UserDetailSchema" should be in sync. 
+// @todo the "DbUserDetailDto" and "UserDetailSchema" should be in sync.
 // For ex, the "DbUserDetailDto.CV" is required but the "UserDetailSchema.CV" is optional.
 // So update this and review all DTOs and makre they are in sync with respective Schemas.
 
@@ -19,9 +19,11 @@ class DbUserDetailDto extends BaseDbDto {
   isEmailVerified!: boolean;
   isNumberVerified!: boolean;
   isSubscribed!: boolean;
-  ECTC!: number;
+  ECTC?: number;
   YOE!: number;
-  CV!: string;
+  CV?: string;
+  lastAccessedDash!: string;
+  profileImage?: string;
 }
 
 // Define the schema for the User Details model using DynamoDB
@@ -71,6 +73,14 @@ const UserDetailSchema = new dynamoose.Schema(
       required: true,
     },
     CV: {
+      type: String,
+      required: false,
+    },
+    lastAccessedDash: {
+      type: String,
+      required: true,
+    },
+    profileImage: {
       type: String,
       required: false,
     },

@@ -17,7 +17,7 @@ import { UserSubModel } from "./models/UserSubscription.model";
 
 /**
  * DBConfig
- * 
+ *
  * Class to initialise the database connection, register dynamoose models, etc.
  */
 class DBConfig {
@@ -30,7 +30,7 @@ class DBConfig {
 
   /**
    * init
-   * 
+   *
    * Initialise the required components to enable DynamoDB connection.
    */
   init() {
@@ -40,14 +40,14 @@ class DBConfig {
 
   /**
    * setDynamoDbConnection
-   * 
+   *
    * Set up the DynamoDB connection to couunicate with the database.
    */
   setDynamoDbConnection() {
     console.log("Establish the 'DynamoDB' connection through 'Dynamoose'.");
 
     // Establish the "DynamoDB" connection through "Dynamoose".
-    // @todo Make sure these configuration values are used only for local env. 
+    // @todo Make sure these configuration values are used only for local env.
     // And for all other envs, the appropriate permissions needs to be for lambada function.
     const ddb = new dynamoose.aws.ddb.DynamoDB({
       credentials: {
@@ -64,7 +64,7 @@ class DBConfig {
 
   /**
    * registerDynamooseModels
-   * 
+   *
    * Register the models created for differet PK and SK to communicate with Dynamoose.
    */
   registerDynamooseModels() {

@@ -21,13 +21,31 @@ class UserDetailDao implements BaseDao {
    * @param email - Email address of the user
    * @returns User details corresponding to the email
    */
-  async getUserDetails(email: string) {
+  async getUserInfo(email: string) {
+    try {
+      console.log("Get user info by id [DAO]");
+      const PK = this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      });
+      return UserDetailModel.query("PK").eq(PK).exec();
+    } catch (error) {
+      console.error("Error in getUserDetails:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetches user details based on the provided email.
+   * @param email - Email address of the user
+   * @returns User details corresponding to the email
+   */
+  async getUserDetails(email: string, SK: string) {
     try {
       console.log("Get user detail by id [DAO]");
       const PK = this.partitianKey.strtr({
         "{primaryEmail}": email,
       });
-      return UserDetailModel.query("PK").eq(PK).exec();
+      return UserDetailModel.query("PK").eq(PK).where("SK").eq(SK).exec();
     } catch (error) {
       console.error("Error in getUserDetails:", error);
       throw error;
@@ -41,14 +59,14 @@ class UserDetailDao implements BaseDao {
         "{primaryEmail}": email,
       });
 
-      // @todo we should never use the await in DTO unless extremly required. Kindly have await in controller; 
+      // @todo we should never use the await in DTO unless extremly required. Kindly have await in controller;
       // Or in service if the value is required there.
       const user = await UserDetailModel.query("PK")
         .eq(PK)
         .where("SK")
         .beginsWith("ID#")
         .exec();
-      
+
       return user[0].SK;
     } catch (error) {
       console.error("Error in getUserDetailSK:", error);
@@ -65,9 +83,9 @@ class UserDetailDao implements BaseDao {
   async add(userSignUpDTO: UserLinkedinSignUpDTO, userType: string) {
     try {
       console.log("Create candidate/employee [DAO]");
-      if (!userSignUpDTO.CV) {
+      /* if (!userSignUpDTO.CV) {
         userSignUpDTO.CV = "";
-      }
+      } */
       const { email, userId, ...copyUserSignUpDTO } = userSignUpDTO;
       const emailList = { primary: email };
       const newUserSignUpDTO = {
@@ -83,6 +101,7 @@ class UserDetailDao implements BaseDao {
         isNumberVerified: false,
         isSubscribed: false,
         userType: [userType],
+        lastAccessedDash: userType,
       };
       return UserDetailModel.create(newUserSignUpDTO);
     } catch (error) {
