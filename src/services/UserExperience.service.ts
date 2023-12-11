@@ -19,8 +19,7 @@ class UserExperienceService {
     designation: string
   ) {
     try {
-      console.log("Experience called servive");
-
+      console.log("Create employee Work Experience [service]");
       userExperienceDao.create(email, department, designation);
     } catch (error) {
       throw error;

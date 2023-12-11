@@ -17,6 +17,7 @@ class UserEmailService {
     companyEmailId: string
   ) {
     try {
+      console.log("Create employee Work Email [service]");
       userEmailDao.create(email, companyName, companyEmailId);
     } catch (error) {
       throw error;

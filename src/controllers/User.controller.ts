@@ -40,6 +40,7 @@ class UserController {
    */
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log("Get user detail by id [controller]");
       // Extract email from request parameters
       const email = req.params.id;
 
@@ -81,8 +82,7 @@ class UserController {
    */
   createCandidate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // const companyDto: CompanyDTO = req.body;
-      // const createdCompany = await CompanyService.createNewCompany(companyDto);
+      console.log("Create candidate [controller]");
       const userSingUpDto: UserLinkedinSignUpDTO = req.body;
       const { error } = UserLinkedinSignUpDTOValidation.validate(
         userSingUpDto,
@@ -118,6 +118,7 @@ class UserController {
    */
   createEmployee = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log("Create employee [controller]");
       const userSingUpDto: UserEmployeeSignUpDTO = req.body;
 
       const { error } = userEmployeeSignUpDTOValidation.validate(
@@ -172,6 +173,7 @@ class UserController {
     next: NextFunction
   ) => {
     try {
+      console.log("update EmailVerify Status [controller]");
       const email = req.params.id;
       const verify = await UserService.verifyEmail(email);
       res.status(HttpStatusCode.OK_200).json(verify);
@@ -199,6 +201,7 @@ class UserController {
     next: NextFunction
   ) => {
     try {
+      console.log("Update user resume [controller]");
       const resume = req.body.resume;
       const email = req.params.id;
       const update = await UserService.updateUserCV(email, resume);

@@ -21,6 +21,7 @@ class UserExperienceDao implements BaseDao {
    */
   async create(email: string, department: string, designation: string) {
     try {
+      console.log("Create employee Work Experience [DAO]");
       const userExperienceDTO = {
         PK: this.partitianKey.strtr({
           "{primaryEmail}": email,

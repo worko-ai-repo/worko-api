@@ -24,6 +24,7 @@ class UserService {
    */
   async getUserByEmail(email: string) {
     try {
+      console.log("Get user detail by id [service]");
       return userDetailDao.getUserDetails(email);
     } catch (error) {
       console.log("Error -> ", error);
@@ -55,6 +56,7 @@ class UserService {
    */
   async addUser(userSignUpDTO: UserLinkedinSignUpDTO, userType: string) {
     try {
+      console.log("Create candidate/employee [service]");
       userDetailDao.add(userSignUpDTO, userType);
     } catch (error) {
       throw error;
@@ -85,6 +87,7 @@ class UserService {
    */
   async verifyEmail(email: string) {
     try {
+      console.log("update EmailVerify Status [service]");
       const SK = await userDetailDao.getUserDetailSK(email);
       userDetailDao.updateEmailVerify(SK, email);
     } catch (error) {
@@ -102,6 +105,7 @@ class UserService {
   async updateUserCV(email: string, resume: string) {
     // @todo change the method name to "updateUserDetails" and update the code to update all ther attributes not just CV.
     try {
+      console.log("Update user resume [service]");
       const SK = await userDetailDao.getUserDetailSK(email);
       userDetailDao.updateCv(SK, email, resume);
     } catch (error) {
