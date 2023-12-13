@@ -15,10 +15,10 @@ const DB_CONSTANTS = {
     // Schema options for the 'worko' model
     create: false,
     waitForActive: false,
-    
-    // @todo this should be false, because we should know what we are creating in the database. 
+
+    // @todo this should be false, because we should know what we are creating in the database.
     // When there is unknown field is being added then the dynamoose should through error.
-    saveUnknown: true, 
+    saveUnknown: true,
 
     timestamps: true,
   },

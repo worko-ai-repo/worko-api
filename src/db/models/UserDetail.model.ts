@@ -64,6 +64,14 @@ const UserDetailSchema = new dynamoose.Schema(
       type: Boolean,
       required: true,
     },
+    referralCount: {
+      type: Number,
+      required: true,
+    },
+    expiryDate: {
+      type: Date,
+      required: true,
+    },
     ECTC: {
       type: Number,
       required: false,

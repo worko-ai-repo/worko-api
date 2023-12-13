@@ -10,8 +10,8 @@ export interface UserLinkedinSignUpDTO {
 }
 
 export interface UserReferralRequestDTO {
-  status: string;
-  company: string;
+  companySK: string;
+  jobUrl: string;
 }
 
 export interface UserDetailResponseDto {

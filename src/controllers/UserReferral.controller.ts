@@ -9,6 +9,7 @@ import { UserReferralRequestDTOValidation } from "../schemas/UserReferral.schema
 
 // Load the shared service
 import UserService from "../services/User.service";
+import UserReferralService from "../services/UserReferral.service";
 
 //Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -32,27 +33,56 @@ class UserReferralController {
    */
   createReferral = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log("Create referral [controller]");
       const referralRequest: UserReferralRequestDTO = req.body;
       const { error } = UserReferralRequestDTOValidation.validate(
         referralRequest,
         { abortEarly: false }
       );
-      
+
       if (error) {
         throw new RequestValidationError(error);
       }
-      
+
       const email = req.params.id;
-      const newreferral = await UserService.referralRequest(
-        referralRequest,
-        email
-      );
-      res.status(HttpStatusCode.OK_200).json(newreferral);
+      const SK = await UserService.getSK(email);
+      const subStatus = await UserService.getSubscriptionStatus(email, SK);
+      if (!subStatus[0].isSubscribed) {
+        res.status(HttpStatusCode.PAYMENT_REQUIRED_402).json({
+          status: "failure",
+          message: "Payment Required",
+          description:
+            "User does not have an active subscription. Please subscribe to access this service.",
+        });
+      } else {
+        const newreferral = await UserReferralService.referralRequest(
+          referralRequest,
+          email
+        );
+        res.status(HttpStatusCode.OK_200).json({
+          status: "success",
+          message: "Referral created successfully",
+          data: newreferral,
+        });
+      }
     } catch (error) {
       // Handle errors
-
       // Pass the error to the next error handler
-      next(error);
+      console.log("error: ", error);
+      // Check if the error is a specific type (TypeError in this case)
+      if (
+        error instanceof TypeError &&
+        error.message.includes("undefined (reading 'SK')")
+      ) {
+        // Respond with "User not found" message and set a different status code (e.g., 400)
+        res.status(HttpStatusCode.UNAUTHORIZED_401).json({
+          status: "failure",
+          message: "There is no user with the provided details",
+        });
+      } else {
+        // Pass other errors to the next error handler
+        next(error);
+      }
     }
   };
 }

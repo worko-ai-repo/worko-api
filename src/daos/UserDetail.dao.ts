@@ -52,26 +52,39 @@ class UserDetailDao implements BaseDao {
     }
   }
 
+  /**
+   * Fetches user Subscription status based on the provided PK and SK.
+   * @param email - Email address of the user
+   * @returns User Subscription-Status corresponding to the email and SK
+   */
+  async getUserSubscriptionStatus(email: string, SK: string) {
+    console.log("Get user Subscription-Status [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserDetailModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .eq(SK)
+      .attributes(["isSubscribed"])
+      .exec();
+  }
+
   async getUserDetailSK(email: string) {
-    try {
-      console.log("get UserDetail SK [DAO]");
-      const PK = this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      });
+    console.log("get UserDetail SK [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
 
-      // @todo we should never use the await in DTO unless extremly required. Kindly have await in controller;
-      // Or in service if the value is required there.
-      const user = await UserDetailModel.query("PK")
-        .eq(PK)
-        .where("SK")
-        .beginsWith("ID#")
-        .exec();
+    // @todo we should never use the await in DTO unless extremly required. Kindly have await in controller;
+    // Or in service if the value is required there.
+    const user = await UserDetailModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith("ID#")
+      .exec();
 
-      return user[0].SK;
-    } catch (error) {
-      console.error("Error in getUserDetailSK:", error);
-      throw error;
-    }
+    return user[0].SK;
   }
 
   /**
@@ -88,6 +101,7 @@ class UserDetailDao implements BaseDao {
       } */
       const { email, userId, ...copyUserSignUpDTO } = userSignUpDTO;
       const emailList = { primary: email };
+      const today = new Date();
       const newUserSignUpDTO = {
         PK: this.partitianKey.strtr({
           "{primaryEmail}": email,
@@ -102,6 +116,8 @@ class UserDetailDao implements BaseDao {
         isSubscribed: false,
         userType: [userType],
         lastAccessedDash: userType,
+        referralCount: 0,
+        expiryDate: today,
       };
       return UserDetailModel.create(newUserSignUpDTO);
     } catch (error) {

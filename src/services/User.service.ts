@@ -1,13 +1,9 @@
 // Load the local daos
 import userDetailDao from "../daos/UserDetail.dao";
-import userReferralDao from "../daos/UserReferral.dao";
 import userSubscriptionDao from "../daos/UserSubscription.dao";
 
 // Load the local dtos
-import {
-  UserLinkedinSignUpDTO,
-  UserReferralRequestDTO,
-} from "../dtos/User.dto";
+import { UserLinkedinSignUpDTO } from "../dtos/User.dto";
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
@@ -80,34 +76,26 @@ class UserService {
   }
 
   /**
-   * Processes a referral request made by a user(candidate).
-   *
-   * @param referralRequest - Referral request details
-   * @param email - Email of the user making the referral request
-   */
-  async referralRequest(
-    referralRequest: UserReferralRequestDTO,
-    email: string
-  ) {
-    try {
-      userReferralDao.requestReferral(referralRequest, email);
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
    * getSK
    *
    * @param email - Email of the user making the request
    */
   async getSK(email: string) {
-    try {
-      console.log("Get user SK [service]");
-      return await userDetailDao.getUserDetailSK(email);
-    } catch (error) {
-      throw error;
-    }
+    console.log("Get user SK [service]");
+    return userDetailDao.getUserDetailSK(email);
+  }
+
+  /**
+   *
+   *  getSubscriptionStatus
+   *
+   * @param email - Email of the user making the request
+   * @param SK
+   * @returns
+   */
+  async getSubscriptionStatus(email: string, SK: string) {
+    console.log("Get user Subscription status [service]");
+    return userDetailDao.getUserSubscriptionStatus(email, SK);
   }
 
   /**
