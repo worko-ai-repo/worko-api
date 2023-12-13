@@ -11,6 +11,14 @@ const userReferralController = new UserReferralController();
 const UserReferralRouter = Router();
 
 // Create referral based on the provided query parameter
-UserReferralRouter.post("/:id/referral", userReferralController.createReferral);
+UserReferralRouter.post(
+  "/:id/referral/request",
+  userReferralController.createReferral
+);
+
+UserReferralRouter.get(
+  "/:id/referral/:referralId/score",
+  userReferralController.getMatchingScore
+);
 
 export default UserReferralRouter;

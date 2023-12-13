@@ -22,6 +22,38 @@ import { RequestValidationError } from "../utils/errors.util";
  */
 class UserReferralController {
   /**
+   *
+   * getMatchingScore
+   *
+   * get the referral request matching score
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  getMatchingScore = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { id, referralId } = req.params;
+      const matchingScore = await UserReferralService.matchingScore(
+        id,
+        referralId
+      );
+      res.status(HttpStatusCode.OK_200).json({
+        status: "success",
+        message: "Calculated referral matching score successfully",
+        data: matchingScore,
+      });
+    } catch (error) {
+      console.log("getMatchingScore-> Error: ", error);
+      next(error);
+    }
+  };
+
+  /**
    * createReferral
    *
    * Create a new referral based on the provided input data. Validates the input data
@@ -45,7 +77,7 @@ class UserReferralController {
       }
 
       const email = req.params.id;
-      const SK = await UserService.getSK(email);
+      /* const SK = await UserService.getSK(email);
       const subStatus = await UserService.getSubscriptionStatus(email, SK);
       if (!subStatus[0].isSubscribed) {
         res.status(HttpStatusCode.PAYMENT_REQUIRED_402).json({
@@ -54,17 +86,17 @@ class UserReferralController {
           description:
             "User does not have an active subscription. Please subscribe to access this service.",
         });
-      } else {
-        const newreferral = await UserReferralService.referralRequest(
-          referralRequest,
-          email
-        );
-        res.status(HttpStatusCode.OK_200).json({
-          status: "success",
-          message: "Referral created successfully",
-          data: newreferral,
-        });
-      }
+      } */
+
+      const referralRequestId = await UserReferralService.referralRequest(
+        referralRequest,
+        email
+      );
+      res.status(HttpStatusCode.OK_200).json({
+        status: "success",
+        message: "Referral created successfully",
+        data: referralRequestId,
+      });
     } catch (error) {
       // Handle errors
       // Pass the error to the next error handler

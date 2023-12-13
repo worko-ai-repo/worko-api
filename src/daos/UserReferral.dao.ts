@@ -49,12 +49,31 @@ class UserReferralDao implements BaseDao {
       matchingScore: mScore,
       ...referralRequest,
     };
-    // Log the referral request details
-    console.log("newReferralRequest: ->", newReferralRequest);
-
     // Create a new entry in the UserReferralModel (database model) with the referral request data
     UserReferralModel.create(newReferralRequest);
-    return { matchingScore: mScore };
+    const SKId = SK.split("#")[2];
+    return { referralRequestId: SKId };
+  }
+
+  /**
+   *
+   * @param referralId
+   * @param email
+   */
+  async getScore(referralId: string, email: string) {
+    console.log("Get referral Matching score [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    const SK = this.sortKeys.SK_REFERRAL.strtr({
+      "{reqId}": referralId,
+    });
+    return UserReferralModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .eq(SK)
+      .attributes(["matchingScore"])
+      .exec();
   }
 }
 

@@ -21,6 +21,19 @@ class UserReferralService {
     console.log("Create referral [service]");
     return userReferralDao.requestReferral(referralRequest, email);
   }
+
+  /**
+   *
+   *
+   *
+   * @param referralId Referral request Id
+   * @param email Email of the user
+   * @returns matchingScore
+   */
+  async matchingScore(referralId: string, email: string) {
+    console.log("Get referral matching score [service]");
+    return userReferralDao.getScore(email, referralId);
+  }
 }
 
 // Export an instance of the UserService class
