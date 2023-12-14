@@ -48,6 +48,41 @@ class UserSubscriptionController {
   };
 
   /**
+   * getSubscriptionStatusId
+   *
+   * Get the subscription status based on the provided quesry parameters
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  getSubscriptionStatusId = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const email = req.params.id;
+      const SK = await UserService.getSK(email);
+      const subStatus = await UserService.getSubscriptionStatus(email, SK);
+      /* if (!subStatus[0].isSubscribed) {
+        res.status(HttpStatusCode.PAYMENT_REQUIRED_402).json({
+          status: "failure",
+          message: "Payment Required",
+          description:
+            "User does not have an active subscription. Please subscribe to access this service.",
+        });
+      } */
+      res.status(HttpStatusCode.OK_200).json(subStatus[0]);
+    } catch (error) {
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
+    }
+  };
+
+  /**
    *
    * createSubscription
    *

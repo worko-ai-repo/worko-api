@@ -22,4 +22,10 @@ UserSubscriptionRouter.get(
   userSubscriptionController.getSubscriptionDetailsById
 );
 
+// Get the user subscription Status based on the provided query parameter
+UserSubscriptionRouter.get(
+  "/:id/subscription/status",
+  userSubscriptionController.getSubscriptionStatusId
+);
+
 export default UserSubscriptionRouter;

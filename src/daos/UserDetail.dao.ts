@@ -10,6 +10,9 @@ import { UserLinkedinSignUpDTO } from "../dtos/User.dto";
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
 
+//Load enums
+import { UserType } from "../dtos/Company.dto";
+
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
   modelName = "user";
@@ -66,7 +69,7 @@ class UserDetailDao implements BaseDao {
       .eq(PK)
       .where("SK")
       .eq(SK)
-      .attributes(["isSubscribed"])
+      .attributes(["isSubscribed", "referralCount"])
       .exec();
   }
 
@@ -99,6 +102,12 @@ class UserDetailDao implements BaseDao {
       /* if (!userSignUpDTO.CV) {
         userSignUpDTO.CV = "";
       } */
+      let refCount = 0;
+      let isSub = false;
+      if (userType === UserType.CAND) {
+        refCount = 1;
+        isSub = true;
+      }
       const { email, userId, ...copyUserSignUpDTO } = userSignUpDTO;
       const emailList = { primary: email };
       const today = new Date();
@@ -113,10 +122,10 @@ class UserDetailDao implements BaseDao {
         emailList: emailList,
         isEmailVerified: false,
         isNumberVerified: false,
-        isSubscribed: false,
+        isSubscribed: isSub,
         userType: [userType],
         lastAccessedDash: userType,
-        referralCount: 0,
+        referralCount: refCount,
         expiryDate: today,
       };
       return UserDetailModel.create(newUserSignUpDTO);

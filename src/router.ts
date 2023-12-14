@@ -7,6 +7,7 @@ import UserRouter from "./routers/User.router";
 import UserReferralRouter from "./routers/UserReferral.router";
 import UserSubscriptionRouter from "./routers/UserSubscription.router";
 import FileRouter from "./routers/File.router";
+import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -25,6 +26,9 @@ router.use("/user", UserSubscriptionRouter);
 
 // Regitser the "File" router
 router.use("/file", FileRouter);
+
+// Regitser the "Master Subscription" routers
+router.use("/subscription", MasterSubscriptionRouter);
 
 // Export the router
 export default router;
