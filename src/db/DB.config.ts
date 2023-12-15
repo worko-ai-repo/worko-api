@@ -15,6 +15,7 @@ import { UserEmailModel } from "./models/UserEmail.model";
 import { UserExperienceModel } from "./models/UserExperience.model";
 import { UserSubModel } from "./models/UserSubscription.model";
 import { UserReferralModel } from "./models/UserReferral.model";
+import { MasterSubscriptionModel } from "./models/MasterSubscription.model";
 
 /**
  * DBConfig
@@ -90,6 +91,7 @@ class DBConfig {
       CompanyModel,
       CompanyDetailModel,
       CompanyRequestModel,
+      MasterSubscriptionModel,
     ]);
   }
 }

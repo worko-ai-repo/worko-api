@@ -42,11 +42,7 @@ class UserReferralController {
         id,
         referralId
       );
-      res.status(HttpStatusCode.OK_200).json({
-        status: "success",
-        message: "Calculated referral matching score successfully",
-        data: matchingScore,
-      });
+      res.status(HttpStatusCode.OK_200).json(matchingScore[0]);
     } catch (error) {
       console.log("getMatchingScore-> Error: ", error);
       next(error);
@@ -92,11 +88,7 @@ class UserReferralController {
         referralRequest,
         email
       );
-      res.status(HttpStatusCode.OK_200).json({
-        status: "success",
-        message: "Referral created successfully",
-        data: referralRequestId,
-      });
+      res.status(HttpStatusCode.OK_200).json(referralRequestId);
     } catch (error) {
       // Handle errors
       // Pass the error to the next error handler
