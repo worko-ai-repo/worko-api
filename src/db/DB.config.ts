@@ -47,7 +47,9 @@ class DBConfig {
    */
   setDynamoDbConnection() {
     // Log message
-    global.logger.info("Establish the 'DynamoDB' connection through 'Dynamoose'.");
+    global.logger.info(
+      "Establish the 'DynamoDB' connection through 'Dynamoose'."
+    );
 
     // Configuration to connect to the DynamodDB database
     let config = {};
@@ -57,17 +59,18 @@ class DBConfig {
       config = {
         credentials: {
           accessKeyId: process.env.APP_AWS_DYNAMODB_ACCESS_KEY_ID as string,
-          secretAccessKey: process.env.APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
+          secretAccessKey: process.env
+            .APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
         },
         region: "local",
         endpoint: "http://localhost:8000",
-      }
+      };
     }
     // For other stages, the required permissions would be added in the "serverless.ts" file
     else {
       config = {
         region: process.env.APP_SLS_REGION,
-      }
+      };
     }
 
     const ddb = new dynamoose.aws.ddb.DynamoDB(config);
@@ -81,7 +84,7 @@ class DBConfig {
    */
   registerDynamooseModels() {
     console.log("Registering the all available models");
-    const workoTable = new dynamoose.Table("worko-1", [
+    const workoTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
       UserDetailModel,
       UserModel,
       UserEmailModel,
