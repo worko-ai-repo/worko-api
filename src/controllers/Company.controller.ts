@@ -6,6 +6,11 @@ import {
   CompanyDTO,
   AddCompanyDTO,
 } from "../dtos/Company.dto";
+import { RecordListingFilterOptions, RecordListingFilterRequestDTO, RecordListingResponseDTO } from "../dtos/Common.dto";
+
+// Import Helpers
+import { RequestHelper } from "../helpers/request.helper";
+import { lastKeyToBase64EncodeStr } from "../helpers/dynamoose.helper";
 
 // Load the shared service
 import CompanyService from "../services/Company.service";
@@ -65,9 +70,9 @@ class CompanyController {
   };
 
   /**
-   *getCompanyList
+   * getCompanyList
    *
-   * Get company details in list
+   * Get companies based on the provided filters
    *
    * @param {Request} req
    * @param {Response} res
@@ -75,16 +80,27 @@ class CompanyController {
    */
   getCompanyList = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Call the CompanyService to get company list
-      const companyList = await CompanyService.getCompanyList();
+      // Only the filter condition/details required for filtering the records
+      const recordListingFilterRequest: RecordListingFilterOptions = RequestHelper.parseFilterOptions(req.query as unknown as RecordListingFilterRequestDTO);
 
-      console.log("companyList: ", companyList);
+      // Call the CompanyService to get company list
+      const companyList = await CompanyService.getCompanyList(recordListingFilterRequest);
+
+      // Response
+      const response: RecordListingResponseDTO = {
+        data: companyList,
+        pagination: {
+          count: companyList.count,
+          queriedCount: companyList.queriedCount,
+          pageSize: recordListingFilterRequest.pageSize,
+          lastKey: lastKeyToBase64EncodeStr(companyList.lastKey),
+        },
+      }
 
       // Send successful response with company list data
-      res.status(HttpStatusCode.OK_200).json(companyList);
+      res.status(HttpStatusCode.OK_200).json(response);
     } catch (error: any) {
-      // Handle errors
-      // If it's another type of error, pass it to the next error handler
+      // Let "app.ts" and/or expressjs handle the error
       next(error);
     }
   };
