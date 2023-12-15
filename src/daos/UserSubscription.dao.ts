@@ -9,6 +9,7 @@ import SubscriptionDTO from "../dtos/Subscription.dto";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
+import { SubscriptionPlanDetailDTO } from "../dtos/MasterSubscription.dto";
 
 // Class definition for UserSubscriptionDao implementing BaseDao
 class UserSubscriptionDao implements BaseDao {
@@ -60,7 +61,7 @@ class UserSubscriptionDao implements BaseDao {
           "{subsId}": UlidService.getUlidId(),
         }),
         GSI1PK: this.sortKeys.SK_SUBS.strtr({
-          "ID#(subsId}": "",
+          "ID#{subsId}": "",
         }),
         GSI1SK: this.partitianKey.strtr({
           "{primaryEmail}": email,
@@ -74,6 +75,47 @@ class UserSubscriptionDao implements BaseDao {
       console.log(error);
       throw error;
     }
+  }
+
+  /**
+   * Adds a subscription using SubscriptionDTO and email
+   *
+   * @param subscriptionPlanDetailDto - Subscription data to be added
+   * @param email - Email associated with the subscription
+   */
+  async addNewSubscription(
+    subscriptionPlanDetailDto: SubscriptionPlanDetailDTO,
+    email: string
+  ) {
+    console.log("create subscription for candidate[DAO]");
+
+    // Current date
+    const purchaseDate = new Date();
+
+    // Calculating expiryDate based on purchaseDate and duration
+    const expiryDate = new Date(purchaseDate);
+    expiryDate.setDate(
+      purchaseDate.getDate() + subscriptionPlanDetailDto.duration
+    );
+    const newSubscriptionDto = {
+      PK: this.partitianKey.strtr({ "{primaryEmail}": email }),
+      SK: this.sortKeys.SK_SUBS.strtr({
+        "{subsId}": UlidService.getUlidId(),
+      }),
+      GSI1PK: this.sortKeys.SK_SUBS.strtr({
+        "ID#{subsId}": "",
+      }),
+      GSI1SK: this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      }),
+      status: "Active",
+      amount: subscriptionPlanDetailDto.amount,
+      purchaseDate: purchaseDate,
+      expiryDate: expiryDate,
+    };
+
+    console.log("newSubscriptionDto: ", newSubscriptionDto);
+    return UserSubModel.create(newSubscriptionDto);
   }
 }
 

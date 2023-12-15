@@ -10,4 +10,16 @@ const masterSubscriptionController = new MasterSubscriptionController();
 // Route to hold the routes (CRUD, etc) related to "MasterSubscription" table
 const MasterSubscriptionRouter = Router();
 
+// create master subscription plan [Admin]
+MasterSubscriptionRouter.post(
+  "/create",
+  masterSubscriptionController.createMasterSubscription
+);
+
+// get master subscription plan [ui]
+MasterSubscriptionRouter.get(
+  "/plans",
+  masterSubscriptionController.getMasterSubscriptionPlans
+);
+
 export default MasterSubscriptionRouter;

@@ -1,9 +1,12 @@
 // Load the local daos
 import userDetailDao from "../daos/UserDetail.dao";
 import userSubscriptionDao from "../daos/UserSubscription.dao";
+import { SubscriptionPlanDetailDTO } from "../dtos/MasterSubscription.dto";
 
 // Load the local dtos
 import { UserLinkedinSignUpDTO } from "../dtos/User.dto";
+import MasterSubscriptionService from "./MasterSubscription.service";
+import UserSubscriptionService from "./UserSubscription.service";
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
@@ -45,22 +48,6 @@ class UserService {
   }
 
   /**
-   * Retrieves subscription details by user email id.
-   *
-   * @param email - Email of the user
-   * @returns {Promise<any>} - Subscription details of the user
-   */
-  async getsubscriptionDetails(email: string) {
-    // @todo Kindly update the method name to "getSubscriptionDetails" (S capital).
-    try {
-      return userSubscriptionDao.subscriptionDetails(email);
-    } catch (error) {
-      console.log("Error -> ", error);
-      throw error;
-    }
-  }
-
-  /**
    * create a new user with provided details.
    *
    * @param userSignUpDTO - Details of the user to be added
@@ -69,7 +56,17 @@ class UserService {
   async addUser(userSignUpDTO: UserLinkedinSignUpDTO, userType: string) {
     try {
       console.log("Create candidate/employee [service]");
-      userDetailDao.add(userSignUpDTO, userType);
+      if (userType === "CAND") {
+        userDetailDao.add(userSignUpDTO, userType);
+        const subscriptionPlanDetailDTO: SubscriptionPlanDetailDTO =
+          await MasterSubscriptionService.getSubscriptionPlanDetail("Free");
+        UserSubscriptionService.createSubscription(
+          subscriptionPlanDetailDTO,
+          userSignUpDTO.email
+        );
+      } else {
+        userDetailDao.add(userSignUpDTO, userType);
+      }
     } catch (error) {
       throw error;
     }

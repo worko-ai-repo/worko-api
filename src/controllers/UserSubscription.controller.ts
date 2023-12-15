@@ -8,7 +8,7 @@ import SubscriptionDTO from "../dtos/Subscription.dto";
 import { SubscriptionDTOValidation } from "../schemas/Subscription.schema";
 
 // Load the shared service
-import SubscriptionService from "../services/Subscription.service";
+import UserSubscriptionService from "../services/UserSubscription.service";
 import UserService from "../services/User.service";
 
 //Load local util statuscode
@@ -37,7 +37,9 @@ class UserSubscriptionController {
   ) => {
     try {
       const email = req.params.id;
-      const result = await UserService.getsubscriptionDetails(email);
+      const result = await UserSubscriptionService.getsubscriptionDetails(
+        email
+      );
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error) {
       // Handle errors
@@ -114,10 +116,11 @@ class UserSubscriptionController {
         throw new RequestValidationError(error);
       }
 
-      const addSubscription = await SubscriptionService.createNewSubscription(
-        subscriptionDto,
-        email
-      );
+      const addSubscription =
+        await UserSubscriptionService.createNewSubscription(
+          subscriptionDto,
+          email
+        );
       res.status(HttpStatusCode.CREATED_201).json(addSubscription);
     } catch (error) {
       // Handle errors
