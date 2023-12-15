@@ -105,7 +105,7 @@ class App {
         if (errorHandler.isTrustedError(err)) {
           // Handle the error manually
           // @todo here some improvements might required depending upon the situation
-          return errorHandler.handleError(err, res);
+          errorHandler.handleError(err, res);
         }
 
         // Otherwise pass the error to the express and the error would be handled by the express exception handler

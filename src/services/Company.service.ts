@@ -5,6 +5,7 @@ import companyRequestDao from "../daos/CompanyRequest.dao";
 
 // Load the local dto
 import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
+import { RecordListingFilterOptions } from "../dtos/Common.dto";
 
 // @todo update the method return type, request payload types, etc for all methods.
 // @todo Kindly remove the try-catch blocks from all methods, having just one try-catch blocks in the controller methods should be helpful.
@@ -22,12 +23,8 @@ class CompanyService {
    *
    * @returns
    */
-  async getCompanyList() {
-    try {
-      return companyDao.companyList();
-    } catch (error) {
-      throw error;
-    }
+  async getCompanyList(filterOptions: RecordListingFilterOptions) {
+    return companyDao.companyList(filterOptions);
   }
 
   /**
@@ -51,13 +48,7 @@ class CompanyService {
    * @param companyDto
    */
   async addNewCompany(companyDto: CompanyDTO) {
-    try {
-      // @todo Kindly consider returing the data directly from the dao instead of storing ina variable and returning it.
-      const result = companyDetailDao.add(companyDto);
-      console.log(result);
-    } catch (error) {
-      throw error;
-    }
+    return companyDetailDao.add(companyDto);
   }
 
   /**

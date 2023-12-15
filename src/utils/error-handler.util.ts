@@ -42,6 +42,11 @@ class ErrorHandler {
                 newErrorObj = new BaseError(responseMessage, responseStatus);
             }
 
+            // Logger message
+            /* global.logger.error("%s", newErrorObj, {
+                filePath: __filename,
+            }); */
+
             // Respond to the user's request with generic error class that has standard response
             return res
                 .status(newErrorObj.errorCode)
