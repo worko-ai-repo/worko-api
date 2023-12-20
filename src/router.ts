@@ -8,6 +8,7 @@ import UserReferralRouter from "./routers/UserReferral.router";
 import UserSubscriptionRouter from "./routers/UserSubscription.router";
 import FileRouter from "./routers/File.router";
 import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
+import UserServiceRouter from "./routers/UserService.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -20,6 +21,9 @@ router.use("/user", UserRouter);
 
 // Regitser the "User Referral" routers
 router.use("/user", UserReferralRouter);
+
+// Regitser the "User Service" routers
+router.use("/user", UserServiceRouter);
 
 // Regitser the "User Subscription" routers
 router.use("/user", UserSubscriptionRouter);

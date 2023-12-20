@@ -1,5 +1,6 @@
 // Load the local daos
 import userReferralDao from "../daos/UserReferral.dao";
+import UserService from "./User.service";
 
 // Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
@@ -19,6 +20,8 @@ class UserReferralService {
     email: string
   ) {
     console.log("Create referral [service]");
+    // To decrease the referral count by 1 every time the candidate request for referral
+    // UserService.decreaseReferralCount(email);
     return userReferralDao.requestReferral(referralRequest, email);
   }
 

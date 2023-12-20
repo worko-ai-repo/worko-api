@@ -127,6 +127,34 @@ class UserService {
       throw error;
     }
   }
+
+  /**
+   *
+   * Decrease referral
+   *
+   * @param email
+   */
+  async decreaseReferralCount(email: string) {
+    console.log("Decrease referral count [service]");
+    //To Get SK
+    const SK = await this.getSK(email);
+    //To Get referral count
+    const refCount = await userDetailDao.getUserSubscriptionStatus(email, SK);
+    console.log("refCount: ", refCount[0].referralCount);
+    const currRefCount = refCount[0].referralCount - 1;
+    //if referral count is below 1 then subscription status is set to be false
+    if (currRefCount < 1) {
+      userDetailDao.updateIsSubscribedStatus(SK, email, false);
+    }
+    /* Ensure that the referral count is never below zero.
+    If somehow the referral count goes below zero (negative number),
+    reset it to zero to maintain a non-negative count. */
+    if (currRefCount < 0) {
+      return userDetailDao.updateReferralCount(SK, email, 0);
+    }
+    // updating referral count
+    return userDetailDao.updateReferralCount(SK, email, currRefCount);
+  }
 }
 
 // Export an instance of the UserService class

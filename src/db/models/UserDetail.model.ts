@@ -19,6 +19,7 @@ class DbUserDetailDto extends BaseDbDto {
   isEmailVerified!: boolean;
   isNumberVerified!: boolean;
   isSubscribed!: boolean;
+  referralCount!: number;
   ECTC?: number;
   YOE!: number;
   CV?: string;

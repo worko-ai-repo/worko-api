@@ -156,6 +156,13 @@ class UserDetailDao implements BaseDao {
     }
   }
 
+  /**
+   *
+   * @param SK
+   * @param email
+   * @param resume
+   * @returns
+   */
   async updateCv(SK: String, email: string, resume: string) {
     try {
       console.log("Update user resume [DAO]");
@@ -167,6 +174,39 @@ class UserDetailDao implements BaseDao {
       console.log("error CV: ", error);
       throw error;
     }
+  }
+
+  /**
+   *
+   * @param SK
+   * @param email
+   * @param currRefCount
+   * @returns
+   */
+  async updateReferralCount(SK: string, email: string, currRefCount: number) {
+    console.log("Decrease referral count [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserDetailModel.update(
+      { PK: PK, SK: SK },
+      { referralCount: currRefCount }
+    );
+  }
+
+  /**
+   *
+   * @param SK
+   * @param email
+   * @param status
+   * @returns
+   */
+  async updateIsSubscribedStatus(SK: string, email: string, status: boolean) {
+    console.log("update subscription status [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserDetailModel.update({ PK: PK, SK: SK }, { isSubscribed: status });
   }
 }
 
