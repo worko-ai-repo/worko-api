@@ -17,6 +17,7 @@ import { UserSubModel } from "./models/UserSubscription.model";
 import { UserReferralModel } from "./models/UserReferral.model";
 import { UserServiceModel } from "./models/UserService.model";
 import { MasterSubscriptionModel } from "./models/MasterSubscription.model";
+import { MasterServiceModel } from "./models/MasterService.model";
 
 /**
  * DBConfig
@@ -97,6 +98,7 @@ class DBConfig {
       CompanyRequestModel,
       UserServiceModel,
       MasterSubscriptionModel,
+      MasterServiceModel,
     ]);
   }
 }

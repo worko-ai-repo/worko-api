@@ -2,13 +2,22 @@
 import { Router } from "express";
 
 // Load local packages
+
+//Company routers
 import CompanyRouter from "./routers/Company.router";
+
+//User routers
 import UserRouter from "./routers/User.router";
 import UserReferralRouter from "./routers/UserReferral.router";
 import UserSubscriptionRouter from "./routers/UserSubscription.router";
-import FileRouter from "./routers/File.router";
-import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
 import UserServiceRouter from "./routers/UserService.router";
+
+//File routers
+import FileRouter from "./routers/File.router";
+
+//Master routers
+import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
+import MasterServiceRouter from "./routers/MasterService.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -33,6 +42,9 @@ router.use("/file", FileRouter);
 
 // Regitser the "Master Subscription" routers
 router.use("/subscription", MasterSubscriptionRouter);
+
+// Regitser the "Master Service" routers
+router.use("/service", MasterServiceRouter);
 
 // Export the router
 export default router;
