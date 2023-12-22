@@ -9,6 +9,7 @@ import { DB_CONSTANTS } from "./DB.constants";
 import { CompanyModel } from "./models/Company.model";
 import { CompanyDetailModel } from "./models/CompanyDetail.model";
 import { CompanyRequestModel } from "./models/CompanyRequest.model";
+import { CompanyJobModel } from "./models/CompanyJob.model";
 import { UserModel } from "./models/User.model";
 import { UserDetailModel } from "./models/UserDetail.model";
 import { UserEmailModel } from "./models/UserEmail.model";
@@ -93,10 +94,11 @@ class DBConfig {
       UserExperienceModel,
       UserReferralModel,
       UserSubModel,
+      UserServiceModel,
       CompanyModel,
       CompanyDetailModel,
       CompanyRequestModel,
-      UserServiceModel,
+      CompanyJobModel,
       MasterSubscriptionModel,
       MasterServiceModel,
     ]);

@@ -4,6 +4,7 @@ import UserService from "./User.service";
 
 // Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
+import CompanyJobService from "./CompanyJob.service";
 
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
@@ -20,8 +21,24 @@ class UserReferralService {
     email: string
   ) {
     console.log("Create referral [service]");
+
     // To decrease the referral count by 1 every time the candidate request for referral
     // UserService.decreaseReferralCount(email);
+
+    //below block checks gets the ExtractedJd from db if it is there
+    /* const jdExtract = await CompanyJobService.getJdUrl(
+      referralRequest.jobUrl,
+      referralRequest.companySK
+    );
+    if (jdExtract.count == 0) {
+      //create new entery for company related jobUrl
+      CompanyJobService.addCompanyRelatedJob(
+        referralRequest.jobUrl,
+        referralRequest.companySK
+      );
+    }
+
+    console.log("cTesting: ", jdExtract); */
     return userReferralDao.requestReferral(referralRequest, email);
   }
 
