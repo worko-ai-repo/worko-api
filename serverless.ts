@@ -1,4 +1,5 @@
 import type { AWS } from "@serverless/typescript";
+import { request } from "express";
 
 const serverlessConfiguration: AWS = {
   service: "worko-api",
@@ -50,10 +51,32 @@ const serverlessConfiguration: AWS = {
       handler: "dist/src/app.handler",
       events: [
         {
-          http: "ANY /",
+          http: {
+            path: "/",
+            method: "ANY",
+            cors:{
+              origin: "*",
+              allowCredentials: false,
+            },
+            authorizer: {
+              type: "request",
+              arn: "arn:aws:lambda:ap-south-1:787066054733:function:worko-auth"
+            }
+          }
         },
         {
-          http: "ANY /{proxy+}",
+          http: {
+            path: "/{proxy+}",
+            method: "ANY",
+            cors:{
+              origin: "*",
+              allowCredentials: false,
+            },
+            authorizer: {
+              type: "request",
+              arn: "arn:aws:lambda:ap-south-1:787066054733:function:worko-auth"
+            }
+          }
         },
       ],
     },
