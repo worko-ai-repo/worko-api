@@ -42,6 +42,15 @@ const serverlessConfiguration: AWS = {
           "arn:aws:s3:::worko-app-*",
           "arn:aws:s3:::*/*"
         ]
+      },{
+        Effect: "Allow",
+        Action:[
+          "lambda:InvokeFunction",
+          "lambda:InvokeAsync"
+        ],
+        Resource:[
+          "rn:aws:lambda:ap-south-1:787066054733:function:worko-jd-resume-matching"
+        ]
       }
     ],
     environment: {},
@@ -56,6 +65,7 @@ const serverlessConfiguration: AWS = {
             method: "ANY",
             cors:{
               origin: "*",
+              headers: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent", "X-Amzn-Trace-Id"],
               allowCredentials: false,
             },
             authorizer: {
@@ -70,6 +80,7 @@ const serverlessConfiguration: AWS = {
             method: "ANY",
             cors:{
               origin: "*",
+              headers: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent", "X-Amzn-Trace-Id"],
               allowCredentials: false,
             },
             authorizer: {

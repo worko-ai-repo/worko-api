@@ -7,7 +7,8 @@
 // the authorizer returns an HTTP 500 status code. 
 // Note that token values are case-sensitive.
 import { CognitoJwtVerifier } from "aws-jwt-verify";
-   
+import UrlPattern from "url-pattern";
+
     // Verifier that expects valid access tokens:
     const verifier = CognitoJwtVerifier.create({
       userPoolId: "ap-south-1_tAj7HAKZh",
@@ -17,20 +18,25 @@ import { CognitoJwtVerifier } from "aws-jwt-verify";
 
 export const handler =  async function(event, context, callback) {
     console.log(event);
-    const bearerToken = event.headers.authorization == undefined? event.headers.Authorization: event.headers.authorization;
-    console.log(bearerToken);
-    const token = bearerToken.split(" ")[1];
-    console.log(token);
-    let access = 'unauthorized';
-    // console.log(event)
-    try {
-      const payload = await verifier.verify(token);
-      console.log("Token is valid. Payload:", payload);
-      access = 'allow';
-    } catch {
-      console.log("Token not valid!");
+    console.log(event.path);
+    let access = 'allow';
+    if(!checkWhitelistedUrl(event.path)){
+        let bearerToken = event.headers.authorization;
+        if(bearerToken == undefined)
+            bearerToken = event.headers.Authorization;
+            
+        const token = bearerToken.split(" ")[1];
+        console.log(token);
+        try {
+          const payload = await verifier.verify(token);
+          console.log("Token is valid. Payload:", payload);
+          access = 'allow';
+        } catch {
+          console.log("Token not valid!");
+          access = 'unauthorized';
+        }
     }
-    
+   
     switch (access) {
         case 'allow':
             callback(null, generatePolicy('user', 'Allow', event.methodArn));
@@ -70,4 +76,21 @@ var generatePolicy = function(principalId, effect, resource) {
         "booleanKey": true
     };
     return authResponse;
+}
+
+var checkWhitelistedUrl = function(url){
+    
+    const urlList = ['/company/list','/user/register/candidate','/user/register/employee','/user/:email/cv','/file/gsu2u/USER_RESUME'];
+    let result = false;
+    for(let i=0; i<urlList.length; i++){
+        var pattern = new UrlPattern(urlList[i]);
+        const matchResult = pattern.match(url);
+        if(matchResult!=null){
+            console.log(`Url:${url} is whitelisted!`)
+            result = true;
+            break;
+        }
+    }
+    
+    return result;
 }
