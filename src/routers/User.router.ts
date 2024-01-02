@@ -17,7 +17,7 @@ UserRouter.post("/register/candidate", userController.createCandidate);
 UserRouter.post("/register/employee", userController.createEmployee);
 
 // Get the user based on the provided query parameter
-UserRouter.get("/:id", userController.getUserById);
+// UserRouter.get("/:id", userController.getUserById);
 
 // Get the user profile detail based on the provided query parameter
 UserRouter.get("/:id/profile", userController.getUserProfileDetailById);

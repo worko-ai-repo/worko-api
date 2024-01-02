@@ -12,7 +12,25 @@ class UserEmailDao implements BaseDao {
   modelName = "userEmail";
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
   sortKeys = { SK_ID: "EMAIL#ID#{uuid}" }; // Sort key structure using unique IDs
-  
+
+  /**
+   * Fetches user email based on the provided email.
+   * @param email - Email address of the user
+   * @returns User email corresponding to the email
+   */
+  async get(email: string) {
+    console.log("Get user email by id [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    const [skBegins] = this.sortKeys.SK_ID.split("#", 2);
+    return UserEmailModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith(skBegins)
+      .exec();
+  }
+
   /**
    * Adds a new user by creating a user sign-up DTO and saving it.
    *

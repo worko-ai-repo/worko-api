@@ -6,6 +6,17 @@ import userEmailDao from "../daos/UserEmail.dao";
  */
 class UserEmailService {
   /**
+   * Retrieves user emails by email id.
+   *
+   * @param email - Email of the user
+   * @returns {Promise<any>} - Emails of the user
+   */
+  async get(email: string) {
+    console.log("Get user email by id [service]");
+    return userEmailDao.get(email);
+  }
+
+  /**
    *
    * @param email
    * @param companyName

@@ -8,12 +8,15 @@ import { DB_CONSTANTS } from "../DB.constants";
 // Define the structure for User Experience Database Data Transfer Object (DTO)
 class DbUserExperienceDto extends BaseDbDto {
   department!: string;
-  designation!: String;
+  designation!: string;
   designationTag!: number;
   startedMonth?: number;
   endedMonth?: number;
   startedYear?: number;
   endedYear?: number;
+  company?: string;
+  isCurrentCompany?: boolean;
+  CTC?: number;
 }
 
 // Define the schema for the User Experience model using DynamoDB
@@ -47,6 +50,18 @@ const UserExperienceSchema = new dynamoose.Schema(
     },
     endedYear: {
       type: Number, // Assuming it's a number
+      required: false,
+    },
+    company: {
+      type: String,
+      required: false,
+    },
+    isCurrentCompany: {
+      type: Boolean,
+      required: false,
+    },
+    CTC: {
+      type: Number,
       required: false,
     },
   },

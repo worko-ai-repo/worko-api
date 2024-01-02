@@ -15,7 +15,7 @@ import { UserType } from "../dtos/Company.dto";
 
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
-  modelName = "user";
+  modelName = "userDetail";
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
   sortKeys = { SK_ID: "ID#{uuid}" }; // Sort key structure using unique IDs
 
@@ -24,17 +24,17 @@ class UserDetailDao implements BaseDao {
    * @param email - Email address of the user
    * @returns User details corresponding to the email
    */
-  async getUserInfo(email: string) {
-    try {
-      console.log("Get user info by id [DAO]");
-      const PK = this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      });
-      return UserDetailModel.query("PK").eq(PK).exec();
-    } catch (error) {
-      console.error("Error in getUserDetails:", error);
-      throw error;
-    }
+  async get(email: string) {
+    console.log("Get user experience by id [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    const [skBegins] = this.sortKeys.SK_ID.split("#", 1);
+    return UserDetailModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith(skBegins)
+      .exec();
   }
 
   /**

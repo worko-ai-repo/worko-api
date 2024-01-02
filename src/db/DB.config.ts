@@ -14,6 +14,8 @@ import { UserModel } from "./models/User.model";
 import { UserDetailModel } from "./models/UserDetail.model";
 import { UserEmailModel } from "./models/UserEmail.model";
 import { UserExperienceModel } from "./models/UserExperience.model";
+import { UserSocialProfileModel } from "./models/UserSocialProfile.model";
+import { UserEducationModel } from "./models/UserEducation.model";
 import { UserSubModel } from "./models/UserSubscription.model";
 import { UserReferralModel } from "./models/UserReferral.model";
 import { UserServiceModel } from "./models/UserService.model";
@@ -92,6 +94,8 @@ class DBConfig {
       UserModel,
       UserEmailModel,
       UserExperienceModel,
+      UserSocialProfileModel,
+      UserEducationModel,
       UserReferralModel,
       UserSubModel,
       UserServiceModel,

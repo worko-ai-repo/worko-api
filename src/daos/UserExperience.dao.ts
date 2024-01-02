@@ -14,6 +14,24 @@ class UserExperienceDao implements BaseDao {
   sortKeys = { SK_ID: "EXP#ID#{uuid}" }; // Sort key structure using unique IDs
 
   /**
+   * Fetches user experience based on the provided email.
+   * @param email - Email address of the user
+   * @returns User details corresponding to the email
+   */
+  async get(email: string) {
+    console.log("Get user experience by id [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    const [skBegins] = this.sortKeys.SK_ID.split("#", 2);
+    return UserExperienceModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith(skBegins)
+      .exec();
+  }
+
+  /**
    * @param email
    * @param department
    * @param designation

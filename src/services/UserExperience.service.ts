@@ -8,6 +8,17 @@ import userExperienceDao from "../daos/UserExperience.dao";
  */
 class UserExperienceService {
   /**
+   * Retrieves user Experience by email id.
+   *
+   * @param email - Email of the user
+   * @returns {Promise<any>} - Experience of the user
+   */
+  async get(email: string) {
+    console.log("Get user experience by id [service]");
+    return userExperienceDao.get(email);
+  }
+
+  /**
    *
    * @param email
    * @param companyName

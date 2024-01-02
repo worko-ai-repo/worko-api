@@ -24,6 +24,10 @@ import UserExperienceService from "../services/UserExperience.service";
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 
+// Load local helper
+import { GroupingHelper } from "../helpers/grouping.helper";
+import UserDetailService from "../services/UserDetail.service";
+
 /**
  * UserController
  *
@@ -42,19 +46,41 @@ class UserController {
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Get user detail by id [controller]");
+
       // Extract email from request parameters
       const email = req.params.id;
+      const queryParams = req.query;
+      console.log(" queryParams:", queryParams);
 
-      // Call the UserService to get user by email
-      const result = await UserService.getUserByEmail(email);
+      // Create an array of service functions based on query parameters
+      const serviceFunctions: {
+        [key: string]: (email: string) => Promise<any>;
+      } = {
+        UserDetail: UserDetailService.get,
+        UserEmail: UserEmailService.get,
+        UserExperience: UserExperienceService.get,
+      };
 
-      // Check if user not found
-      if (result.count === 0) {
-        // If user not found, throw a specific error
-        throw new Error("User not found");
-      }
+      // Use Object.entries to iterate over queryParams and create promises array
+      const promises = Object.entries(queryParams)
+        .filter(([key, value]) => value === "true" && serviceFunctions[key])
+        .map(([key]) => serviceFunctions[key](email));
+
+      // Use Promise.all to wait for all promises to resolve
+      const results = await Promise.all(promises);
+
+      // Create an object with the results
+      const responseFormat: { [key: string]: any } = Object.fromEntries(
+        Object.entries(queryParams).map(([key, value], index) => [
+          key,
+          value === "true" ? results[index] : undefined,
+        ])
+      );
+
+      console.log("responseFormat: ", responseFormat);
+
       // Send successful response with user data
-      res.status(HttpStatusCode.OK_200).json(result);
+      res.status(HttpStatusCode.OK_200).json(responseFormat);
     } catch (error: any) {
       // Handle errors
 

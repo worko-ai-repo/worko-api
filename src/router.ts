@@ -8,6 +8,10 @@ import CompanyRouter from "./routers/Company.router";
 
 //User routers
 import UserRouter from "./routers/User.router";
+import UserDetailRouter from "./routers/UserDetail.router";
+import UserExperienceRouter from "./routers/UserExperience.router";
+import UserEmailRouter from "./routers/UserEmail.router";
+import UserSocialProfileRouter from "./routers/UserSocialProfile.router";
 import UserReferralRouter from "./routers/UserReferral.router";
 import UserSubscriptionRouter from "./routers/UserSubscription.router";
 import UserServiceRouter from "./routers/UserService.router";
@@ -27,6 +31,18 @@ router.use("/company", CompanyRouter);
 
 // Regitser the "User CRUD" routers
 router.use("/user", UserRouter);
+
+// Regitser the "UserDetail CRUD" routers
+router.use("/user", UserDetailRouter);
+
+// Regitser the "UserEmail CRUD" routers
+router.use("/user", UserEmailRouter);
+
+// Regitser the "UserExperience CRUD" routers
+router.use("/user", UserExperienceRouter);
+
+// Regitser the "UserSociapProfile CRUD" routers
+router.use("/user", UserSocialProfileRouter);
 
 // Regitser the "User Referral" routers
 router.use("/user", UserReferralRouter);

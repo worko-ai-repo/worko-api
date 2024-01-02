@@ -1,4 +1,5 @@
 // Load the local daos
+import userDao from "../daos/User.dao";
 import userDetailDao from "../daos/UserDetail.dao";
 import userSubscriptionDao from "../daos/UserSubscription.dao";
 import { SubscriptionPlanDetailDTO } from "../dtos/MasterSubscription.dto";
@@ -22,13 +23,8 @@ class UserService {
    * @returns {Promise<any>} - Details of the user
    */
   async getUserByEmail(email: string) {
-    try {
-      console.log("Get user detail by id [service]");
-      return userDetailDao.getUserInfo(email);
-    } catch (error) {
-      console.log("Error -> ", error);
-      throw error;
-    }
+    console.log("Get user detail by id [service]");
+    return userDao.getUserInfo(email);
   }
 
   /**
