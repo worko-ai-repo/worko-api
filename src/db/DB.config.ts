@@ -16,6 +16,8 @@ import { UserEmailModel } from "./models/UserEmail.model";
 import { UserExperienceModel } from "./models/UserExperience.model";
 import { UserSocialProfileModel } from "./models/UserSocialProfile.model";
 import { UserEducationModel } from "./models/UserEducation.model";
+import { UserSkillModel } from "./models/UserSkill.model";
+import { UserAchievementModel } from "./models/UserAchievement.model";
 import { UserSubModel } from "./models/UserSubscription.model";
 import { UserReferralModel } from "./models/UserReferral.model";
 import { UserServiceModel } from "./models/UserService.model";
@@ -69,6 +71,7 @@ class DBConfig {
         },
         region: "local",
         endpoint: "http://localhost:8000",
+        // convertClassInstanceToMap: true,
       };
     }
     // For other stages, the required permissions would be added in the "serverless.ts" file
@@ -96,6 +99,8 @@ class DBConfig {
       UserExperienceModel,
       UserSocialProfileModel,
       UserEducationModel,
+      UserSkillModel,
+      UserAchievementModel,
       UserReferralModel,
       UserSubModel,
       UserServiceModel,

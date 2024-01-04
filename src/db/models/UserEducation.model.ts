@@ -5,11 +5,14 @@ import * as dynamoose from "dynamoose";
 import { DB_CONSTANTS } from "../DB.constants";
 import { BaseDbDto } from "./Base.model";
 
-// Define the structure for User Social profile Database Data Transfer Object (DTO)
+// Define the structure for User Education Database Data Transfer Object (DTO)
 class DbUserEducationDto extends BaseDbDto {
   collage!: string;
   degree!: string;
-  passingYear!: string;
+  startedYear?: number;
+  passingYear!: number;
+  grade?: string;
+  field?: string;
 }
 
 const UserEducationSchema = new dynamoose.Schema(
@@ -23,9 +26,21 @@ const UserEducationSchema = new dynamoose.Schema(
       type: String,
       required: true,
     },
+    startedYear: {
+      type: Number,
+      required: false,
+    },
     passingYear: {
-      type: String,
+      type: Number,
       required: true,
+    },
+    grade: {
+      type: String,
+      required: false,
+    },
+    field: {
+      type: String,
+      required: false,
     },
     // Add other user-specific attributes here
   },

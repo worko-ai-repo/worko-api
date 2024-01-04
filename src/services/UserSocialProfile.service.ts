@@ -29,7 +29,7 @@ class UserSocialProfileService {
    * @param userSocialProfileDTO - Data Transfer Object containing user SocialProfile details
    * @returns {Promise<any>} - A Promise that resolves when the SocialProfile is successfully created
    */
-  async createSocialProfile(
+  async create(
     email: string,
     userSocialProfileDTO: UserSocialProfileDTO
   ): Promise<any> {

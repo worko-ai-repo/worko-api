@@ -9,6 +9,7 @@ import { UserEducationModel } from "../db/models/UserEducation.model";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
+import { UserEducationDTO } from "../dtos/UserEducation.dto";
 
 // UserEducationDao class implementing the BaseDao interface
 class UserEducationDao implements BaseDao {
@@ -22,15 +23,15 @@ class UserEducationDao implements BaseDao {
    * @returns User details corresponding to the email
    */
   async get(email: string) {
-    console.log("Get user Education by id [DAO]");
+    logger.info("Get user Education by id [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    const SK = this.sortKeys.SK_ID;
+    // const SK = this.sortKeys.SK_ID;
     return UserEducationModel.query("PK")
       .eq(PK)
       .where("SK")
-      .beginsWith(SK)
+      .beginsWith("EDU#ID#")
       .exec();
   }
 
@@ -40,34 +41,34 @@ class UserEducationDao implements BaseDao {
    * @param designation
    * @returns
    */
-  /* async create(email: string, userEducationDTO: UserEducationDTO) {
-    console.log("Create employee Work Education [DAO]");
+  async create(email: string, userEducationDTO: UserEducationDTO) {
+    logger.info("Create employee Work Education [DAO]");
+    const SK = this.sortKeys.SK_ID.strtr({
+      "{eduId}": UlidService.getUlidId(),
+    });
+    console.log("SK: ", SK);
     const userEducation = {
       PK: this.partitianKey.strtr({
         "{primaryEmail}": email,
       }),
-      SK: this.sortKeys.SK_ID,
+      SK: SK,
       ...userEducationDTO,
     };
-    await UserEducationModel.create(userEducation);
-  } */
+    return await UserEducationModel.create(userEducation);
+  }
 
   /**
    *
    * @param email
    * @returns
    */
-  /* async update(email: string, userEducationDTO: UserEducationDTO) {
-    console.log("Update user primary email verify status [DAO]");
+  async update(email: string, SK: string, userEducationDTO: UserEducationDTO) {
+    logger.info("Update user education [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    const SK = this.sortKeys.SK_ID;
-    return UserEducationModel.update(
-      { PK: PK, SK: SK },
-      userEducationDTO
-    );
-  } */
+    return UserEducationModel.update({ PK: PK, SK: SK }, userEducationDTO);
+  }
 }
 
 const userEducationDao = new UserEducationDao();

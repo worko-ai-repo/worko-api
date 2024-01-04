@@ -91,10 +91,7 @@ class UserSocialProfileController {
       if (req.body.SK) {
         result = await UserSocialProfileService.update(email, value);
       } else {
-        result = await UserSocialProfileService.createSocialProfile(
-          email,
-          value
-        );
+        result = await UserSocialProfileService.create(email, value);
       }
 
       // Send a successful response with user data

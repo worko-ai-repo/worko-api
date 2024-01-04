@@ -12,6 +12,9 @@ import UserDetailRouter from "./routers/UserDetail.router";
 import UserExperienceRouter from "./routers/UserExperience.router";
 import UserEmailRouter from "./routers/UserEmail.router";
 import UserSocialProfileRouter from "./routers/UserSocialProfile.router";
+import UserEducationRouter from "./routers/UserEducation.router";
+import UserSkillRouter from "./routers/UserSkill.router";
+import UserAchievementRouter from "./routers/UserAchievement.router";
 import UserReferralRouter from "./routers/UserReferral.router";
 import UserSubscriptionRouter from "./routers/UserSubscription.router";
 import UserServiceRouter from "./routers/UserService.router";
@@ -43,6 +46,15 @@ router.use("/user", UserExperienceRouter);
 
 // Regitser the "UserSociapProfile CRUD" routers
 router.use("/user", UserSocialProfileRouter);
+
+// Regitser the "UserEducation CRUD" routers
+router.use("/user", UserEducationRouter);
+
+// Regitser the "UserSkill CRUD" routers
+router.use("/user", UserSkillRouter);
+
+// Regitser the "UserAchievement CRUD" routers
+router.use("/user", UserAchievementRouter);
 
 // Regitser the "User Referral" routers
 router.use("/user", UserReferralRouter);

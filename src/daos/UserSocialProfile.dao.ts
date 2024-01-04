@@ -59,7 +59,7 @@ class UserSocialProfileDao implements BaseDao {
    * @returns Updated user social profile
    */
   async update(email: string, userSocialProfileDTO: UserSocialProfileDTO) {
-    logger.info("Updating user primary email verify status [DAO]");
+    logger.info("Updating user social profile [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
