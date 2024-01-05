@@ -98,13 +98,13 @@ class UserEducationController {
       let result;
 
       for (let i = 0; i < userEducationDTO.length; i++) {
+        // If it has an SK, then it is an update, and if it does not have an SK, it is a create
         if (userEducationDTO[i].SK) {
           UserEducationService.update(email, userEducationDTO[i].SK, value[i]);
         } else {
           UserEducationService.createEducation(email, value[i]);
         }
       }
-      // If it has an SK, then it is an update, and if it does not have an SK, it is a create
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);

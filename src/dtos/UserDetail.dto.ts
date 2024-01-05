@@ -1,4 +1,4 @@
-export interface UserDetailDto {
+export interface UserDetailDTO {
   name: string;
   emailList: { [key: string]: string };
   number: number;

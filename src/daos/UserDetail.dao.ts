@@ -6,6 +6,7 @@ import { UserDetailModel } from "../db/models/UserDetail.model";
 
 //Load the local dtos
 import { UserLinkedinSignUpDTO } from "../dtos/User.dto";
+import { UserDetailDTO } from "../dtos/UserDetail.dto";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
@@ -35,6 +36,27 @@ class UserDetailDao implements BaseDao {
       .where("SK")
       .beginsWith(skBegins)
       .exec();
+  }
+
+  /**
+   * @param email
+   * @returns
+   */
+  async create(email: string, userDetailDTO: UserDetailDTO) {
+    logger.info("Create user detail [DAO]");
+    const SK = this.sortKeys.SK_ID.strtr({
+      "{uuid}": UlidService.getUlidId(),
+    });
+    console.log("SK: ", SK);
+    const userDetail = {
+      PK: this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      }),
+      SK: SK,
+      ...userDetailDTO,
+    };
+    global.logger.debug("userDetail", userDetail);
+    return UserDetailModel.create(userDetail);
   }
 
   /**
@@ -133,6 +155,19 @@ class UserDetailDao implements BaseDao {
       console.log("Addd user -> ", error);
       throw error;
     }
+  }
+
+  /**
+   *
+   * @param email
+   * @returns
+   */
+  async update(email: string, SK: string, userDetailDTO: UserDetailDTO) {
+    logger.info("Update user Detail [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserDetailModel.update({ PK: PK, SK: SK }, userDetailDTO);
   }
 
   /**

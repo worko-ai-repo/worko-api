@@ -8,8 +8,7 @@ import { BaseDbDto } from "./Base.model";
 // Define the structure for User Skill Database Data Transfer Object (DTO)
 class DbUserSkillDto extends BaseDbDto {
   coreSkills?: {
-    masterSkillId?: string;
-    otherSkillName?: string;
+    skillName: string;
     years: number;
     timestamps?: {
       createdAt: string;
@@ -17,15 +16,13 @@ class DbUserSkillDto extends BaseDbDto {
     };
   }[];
   softSkills?: {
-    masterSkillId?: string;
-    otherSkillName?: string;
+    skillName: string;
     timestamps?: {
       createdAt: string;
     };
   }[];
   certifications?: {
-    masterCertId?: string;
-    otherCertName?: string;
+    certName?: string;
     timestamps?: {
       createdAt: string;
     };
@@ -37,17 +34,17 @@ const UserSkillSchema = new dynamoose.Schema(
     ...DB_CONSTANTS.WORKO_PK_SK,
     softSkills: {
       type: Array,
-      required: true,
+      required: false,
       schema: [Object],
     },
     coreSkills: {
       type: Array,
-      required: true,
+      required: false,
       schema: [Object],
     },
     certifications: {
       type: Array,
-      required: true,
+      required: false,
       schema: [Object],
     },
     // Add other user-specific attributes here

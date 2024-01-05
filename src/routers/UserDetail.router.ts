@@ -13,4 +13,7 @@ const UserDetailRouter = Router();
 // Get the user detail based on the provided query parameter
 UserDetailRouter.get("/:id", userDetailController.getByEmail);
 
+// create/update the user Detail details based on the provided query parameter
+UserDetailRouter.put("/:id", userDetailController.update);
+
 export default UserDetailRouter;

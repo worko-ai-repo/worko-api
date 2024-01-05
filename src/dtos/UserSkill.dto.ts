@@ -1,7 +1,6 @@
 export interface UserSkillDTO {
   coreSkills?: {
-    masterSkillId?: string;
-    otherSkillName?: string;
+    skillName: string;
     years: number;
     timestamps?: {
       createdAt: string;
@@ -9,15 +8,13 @@ export interface UserSkillDTO {
     };
   }[];
   softSkills?: {
-    masterSkillId?: string;
-    otherSkillName?: string;
+    skillName: string;
     timestamps?: {
       createdAt: string;
     };
   }[];
   certifications?: {
-    masterCertId?: string;
-    otherCertName?: string;
+    certName?: string;
     timestamps?: {
       createdAt: string;
     };
