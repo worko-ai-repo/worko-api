@@ -92,7 +92,7 @@ class DBConfig {
    */
   registerDynamooseModels() {
     console.log("Registering the all available models");
-    const workoTable = new dynamoose.Table("worko-1", [
+    const workoTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
       UserDetailModel,
       UserModel,
       UserEmailModel,
