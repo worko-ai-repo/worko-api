@@ -54,6 +54,18 @@ class UserReferralService {
     console.log("Get referral matching score [service]");
     return userReferralDao.getScore(email, referralId);
   }
+
+  /**
+   * Retrieves user Referral by email.
+   *
+   * @param email - Email of the user
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async get(email: string): Promise<any> {
+    // Logging the action of getting user Referral by email in the service layer
+    logger.info("Fetching user Referral by email [UserReferralService]");
+    return userReferralDao.get(email);
+  }
 }
 
 // Export an instance of the UserService class

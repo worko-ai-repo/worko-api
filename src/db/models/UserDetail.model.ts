@@ -20,9 +20,14 @@ class DbUserDetailDto extends BaseDbDto {
   isNumberVerified!: boolean;
   isSubscribed!: boolean;
   referralCount!: number;
+  location?: string;
+  about?: string;
+  CTC?: number;
   ECTC?: number;
+  noticePeriod?: number;
   YOE!: number;
   CV?: string;
+  coverLetter?: string;
   lastAccessedDash!: string;
   profileImage?: string;
 }
@@ -73,7 +78,23 @@ const UserDetailSchema = new dynamoose.Schema(
       type: Date,
       required: true,
     },
+    location: {
+      type: String,
+      required: false,
+    },
+    about: {
+      type: String,
+      required: false,
+    },
+    CTC: {
+      type: Number,
+      required: false,
+    },
     ECTC: {
+      type: Number,
+      required: false,
+    },
+    noticePeriod: {
       type: Number,
       required: false,
     },
@@ -82,6 +103,10 @@ const UserDetailSchema = new dynamoose.Schema(
       required: true,
     },
     CV: {
+      type: String,
+      required: false,
+    },
+    coverLetter: {
       type: String,
       required: false,
     },

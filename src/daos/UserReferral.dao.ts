@@ -17,6 +17,23 @@ class UserReferralDao implements BaseDao {
   sortKeys = { SK_REFERRAL: "REF#ID#{reqId}" }; // Sort key format for user referrals
 
   /**
+   * Fetches user Referral based on the provided email.
+   * @param email - Email address of the user
+   * @returns User details corresponding to the email
+   */
+  async get(email: string) {
+    logger.info("Get user Referral by email [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserReferralModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith("REF#ID#")
+      .exec();
+  }
+
+  /**
    * Request a user referral by creating a new entry in the database.
    *
    * @param referralRequest - The UserReferralRequestDTO containing referral request details.
