@@ -27,6 +27,42 @@ import UserServiceService from "../services/UserService.service";
  */
 class UserServiceController {
   /**
+   * getByEmail
+   *
+   * Retrieves the user service's based on the provided query parameters
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  get = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Log the action for debugging purposes
+      logger.info("Get user Service by email [controller]");
+
+      // Extract email from request parameters
+      const email = req.params.emailAddress;
+
+      const result = await UserServiceService.get(email);
+
+      // Send a successful response with user data
+      res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error: any) {
+      // Handle errors
+
+      // Check if the error is due to user not found
+      if (error.message === "User not found") {
+        // If user not found, send a 404 response with an informative error message
+        res
+          .status(HttpStatusCode.NOT_FOUND_404)
+          .json({ error: "User not found. Please check the email." });
+      } else {
+        // If it's another type of error, pass it to the next error handler
+        next(error);
+      }
+    }
+  };
+  /**
    *
    * @param req
    * @param res

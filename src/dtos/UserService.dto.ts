@@ -5,6 +5,7 @@ export interface UserServiceRequestDTO {
   slot3: Date;
   details?: string;
   masterServiceId: string;
+  companySK: string;
 }
 
 export interface UserServiceInterviewGuidanceRequestDTO {
@@ -12,5 +13,6 @@ export interface UserServiceInterviewGuidanceRequestDTO {
   slot1: Date;
   details?: string;
   masterServiceId: string;
+  companySK: string;
   role: string;
 }

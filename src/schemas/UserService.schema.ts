@@ -25,6 +25,9 @@ export const userServiceRequestDTOValidation = Joi.object({
     "any.required": "Master service ID is required.",
     "string.base": "Master service ID must be a string.",
   }),
+  companySK: Joi.string().required().messages({
+    "any.required": "companySK is required",
+  }),
 });
 
 export const userServiceInterviewGuidanceRequestDTOValidation = Joi.object({
@@ -43,6 +46,9 @@ export const userServiceInterviewGuidanceRequestDTOValidation = Joi.object({
   masterServiceId: Joi.string().required().messages({
     "any.required": "Master service ID is required.",
     "string.base": "Master service ID must be a string.",
+  }),
+  companySK: Joi.string().required().messages({
+    "any.required": "CompanySK is required",
   }),
   role: Joi.string().required().messages({
     "any.required": "Role is required.",

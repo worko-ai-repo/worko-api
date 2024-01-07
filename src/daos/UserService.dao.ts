@@ -19,6 +19,23 @@ class UserServiceDao implements BaseDao {
   partitianKey = "USR#EML#{primaryEmail}";
   sortKeys = { SK_SRVC: "SRVC#ID#{serviceId}" };
 
+  /**
+   * Fetches user Service based on the provided email.
+   * @param email - Email address of the user
+   * @returns User details corresponding to the email
+   */
+  async get(email: string) {
+    logger.info("Get user Service by email [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserServiceModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith("SRVC#ID#")
+      .exec();
+  }
+
   async createRequest(
     email: string,
     userServiceRequestDTO:
@@ -29,7 +46,7 @@ class UserServiceDao implements BaseDao {
     const SK = this.sortKeys.SK_SRVC.strtr({
       "{serviceId}": UlidService.getUlidId(),
     });
-    // Splitting referralRequest.SK into three parts using '#' delimiter
+    // Splitting ServiceRequest.SK into three parts using '#' delimiter
     const [refPrefix, refId, refNum] = SK.split("#");
 
     // Assigning values to GSI1PK and GSI1SK for Global Secondary Index 1
@@ -47,7 +64,7 @@ class UserServiceDao implements BaseDao {
       ...userServiceRequestDTO,
     };
     console.log("newServiceRequest: ", newServiceRequest);
-    // Create a new entry in the UserReferralModel (database model) with the referral request data
+    // Create a new entry in the UserServiceModel (database model) with the Service request data
     await UserServiceModel.create(newServiceRequest);
     const SKId = SK.split("#")[2];
     return { serviceRequestId: SKId };
@@ -55,16 +72,16 @@ class UserServiceDao implements BaseDao {
 
   /**
    *
-   * @param referralId
+   * @param ServiceId
    * @param email
    */
-  async getStatus(referralId: string, email: string) {
+  async getStatus(ServiceId: string, email: string) {
     console.log("Get candidate service status [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
     const SK = this.sortKeys.SK_SRVC.strtr({
-      "{serviceId}": referralId,
+      "{serviceId}": ServiceId,
     });
     return UserServiceModel.query("PK")
       .eq(PK)

@@ -25,6 +25,18 @@ class UserServiceService {
   }
 
   /**
+   * Retrieves user Service by email.
+   *
+   * @param email - Email of the user
+   * @returns {Promise<any>} - A Promise that resolves to the Service of the user
+   */
+  async get(email: string): Promise<any> {
+    // Logging the action of getting user Service by email in the service layer
+    logger.info("Fetching user Service by email [UserServiceService]");
+    return userServiceDao.get(email);
+  }
+
+  /**
    *
    *
    *

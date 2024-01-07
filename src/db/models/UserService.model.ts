@@ -14,6 +14,7 @@ class DbUserServiceDto extends BaseDbDto {
   slot3?: Date;
   details?: string;
   masterServiceId!: string;
+  companySK!: string;
   employeeServiceId?: string;
   role?: string;
   selectedSlot?: Date;
@@ -45,6 +46,10 @@ const UserServiceSchema = new dynamoose.Schema(
       required: false,
     },
     masterServiceId: {
+      type: String,
+      required: true,
+    },
+    companySK: {
       type: String,
       required: true,
     },

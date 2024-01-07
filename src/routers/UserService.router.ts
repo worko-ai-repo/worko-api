@@ -10,6 +10,8 @@ const userServiceController = new UserServiceController();
 // Route to hold the routes (CRUD, etc) related to "userService" table
 const UserServiceRouter = Router();
 
+UserServiceRouter.get("/:emailAddress/service", userServiceController.get);
+
 // Create Service based on the provided query parameter
 UserServiceRouter.post(
   "/:emailAddress/service",
