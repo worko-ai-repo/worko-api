@@ -5,7 +5,10 @@ import { Request, Response, NextFunction } from "express";
 import { UserReferralRequestDTO } from "../dtos/User.dto";
 
 // Load the local schema
-import { UserReferralRequestDTOValidation } from "../schemas/UserReferral.schema";
+import {
+  UserReferralRequestDTOValidation,
+  UserReferralStatusValidation,
+} from "../schemas/UserReferral.schema";
 
 // Load the shared service
 import UserService from "../services/User.service";
@@ -37,8 +40,18 @@ class UserReferralController {
 
       // Extract email from request parameters
       const email = req.params.id;
+      const status = req.query.status;
+      let result;
 
-      const result = await UserReferralService.get(email);
+      if (status && typeof status === "string") {
+        result = await UserReferralService.getByStatus(email, status);
+      } else {
+        result = await UserReferralService.get(email);
+      }
+
+      /* status && typeof status === "string"
+        ? result = await UserReferralService.getByStatus(email, status)
+        : result = await UserReferralService.get(email); */
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
@@ -144,6 +157,41 @@ class UserReferralController {
         // Pass other errors to the next error handler
         next(error);
       }
+    }
+  };
+
+  /**
+   * updateStatus
+   *
+   * updates the status of user Referral request
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  updateStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      global.logger.info("update referral status [controller]");
+
+      const { emailAddress, referralId, status } = req.params;
+      const { error } = UserReferralStatusValidation.validate(status, {
+        abortEarly: false,
+      });
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      const result = await UserReferralService.updateStatus(
+        referralId,
+        emailAddress,
+        status
+      );
+      res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error) {
+      // Handle errors
+      // Pass other errors to the next error handler
+      next(error);
     }
   };
 }

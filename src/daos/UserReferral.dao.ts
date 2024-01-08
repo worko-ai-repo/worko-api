@@ -7,6 +7,9 @@ import { UserReferralModel } from "../db/models/UserReferral.model";
 //Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
 
+//Load the local enums
+import { ReferralStatus } from "../enums/UserReferral.enum";
+
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
 
@@ -22,7 +25,7 @@ class UserReferralDao implements BaseDao {
    * @returns User details corresponding to the email
    */
   async get(email: string) {
-    logger.info("Get user Referral by email [DAO]");
+    global.logger.info("Get user Referral by email [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -30,6 +33,26 @@ class UserReferralDao implements BaseDao {
       .eq(PK)
       .where("SK")
       .beginsWith("REF#ID#")
+      .exec();
+  }
+
+  /**
+   * Fetches user Referral based on the provided email and status.
+   * @param email - Email address of the user
+   * @param status - referral status
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async getByStatus(email: string, status: string) {
+    global.logger.info("Get user Referral by status [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserReferralModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith("REF#ID#")
+      .filter("status")
+      .eq(status)
       .exec();
   }
 
@@ -43,7 +66,7 @@ class UserReferralDao implements BaseDao {
     referralRequest: UserReferralRequestDTO,
     email: string
   ) {
-    console.log("Create referral [DAO]");
+    global.logger.info("Create referral [DAO]");
     const SK = this.sortKeys.SK_REFERRAL.strtr({
       "{reqId}": UlidService.getUlidId(),
     });
@@ -62,7 +85,7 @@ class UserReferralDao implements BaseDao {
       SK: SK,
       GSI1PK: GSI1PK,
       GSI1SK: GSI1SK,
-      status: "pending",
+      status: ReferralStatus.AWAITING,
       matchingScore: mScore,
       ...referralRequest,
     };
@@ -78,7 +101,7 @@ class UserReferralDao implements BaseDao {
    * @param email
    */
   async getScore(referralId: string, email: string) {
-    console.log("Get referral Matching score [DAO]");
+    global.logger.info("Get referral Matching score [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -91,6 +114,22 @@ class UserReferralDao implements BaseDao {
       .eq(SK)
       .attributes(["matchingScore"])
       .exec();
+  }
+
+  /**
+   *
+   * @param email
+   * @returns
+   */
+  async updateStatus(referralId: string, email: string, status: string) {
+    global.logger.info("Update user referral status status [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    const SK = this.sortKeys.SK_REFERRAL.strtr({
+      "{reqId}": referralId,
+    });
+    return UserReferralModel.update({ PK: PK, SK: SK }, { status: status });
   }
 }
 

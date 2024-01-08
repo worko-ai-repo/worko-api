@@ -24,4 +24,9 @@ UserReferralRouter.get(
   userReferralController.getMatchingScore
 );
 
+UserReferralRouter.patch(
+  "/:emailAddress/referral/:referralId/:status",
+  userReferralController.updateStatus
+);
+
 export default UserReferralRouter;

@@ -37,6 +37,19 @@ class UserServiceService {
   }
 
   /**
+   * Retrieves user Service by status.
+   *
+   * @param email - Email of the user
+   * @param status - Service status
+   * @returns {Promise<any>} - A Promise that resolves to the Service of the user
+   */
+  async getByStatus(email: string, status: string): Promise<any> {
+    // Logging the action of getting user Service by status in the service layer
+    logger.info("Fetching user Service by status [UserServiceService]");
+    return userServiceDao.getByStatus(email, status);
+  }
+
+  /**
    *
    *
    *
@@ -47,6 +60,24 @@ class UserServiceService {
   async getStatus(serviceId: string, email: string) {
     console.log("Get candidate service status [service]");
     return userServiceDao.getStatus(email, serviceId);
+  }
+
+  /**
+   * updates the status of user Service
+   *
+   * @param ServiceId - Service ID
+   * @param email - Email of the user
+   * @param status - status
+   * @returns {Promise<any>} - A Promise that resolves to the Service of the user
+   */
+  async updateStatus(
+    serviceId: string,
+    email: string,
+    status: string
+  ): Promise<any> {
+    // Logging the action of getting user Service by email in the service layer
+    global.logger.info("Updating user Service status [UserServiceService]");
+    return userServiceDao.updateStatus(serviceId, email, status);
   }
 }
 

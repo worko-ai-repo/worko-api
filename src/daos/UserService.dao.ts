@@ -12,6 +12,7 @@ import {
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
+import { ServiceStatus } from "../enums/UserService.enum";
 
 // Class definition for UserServiceDao implementing BaseDao
 class UserServiceDao implements BaseDao {
@@ -33,6 +34,26 @@ class UserServiceDao implements BaseDao {
       .eq(PK)
       .where("SK")
       .beginsWith("SRVC#ID#")
+      .exec();
+  }
+
+  /**
+   * Fetches user Service based on the provided email and status.
+   * @param email - Email address of the user
+   * @param status - Service status
+   * @returns {Promise<any>} - A Promise that resolves to the Service of the user
+   */
+  async getByStatus(email: string, status: string) {
+    global.logger.info("Get user Service by status [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserServiceModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith("SRVC#ID#")
+      .filter("status")
+      .eq(status)
       .exec();
   }
 
@@ -60,7 +81,7 @@ class UserServiceDao implements BaseDao {
       SK: SK,
       GSI1PK: GSI1PK,
       GSI1SK: GSI1SK,
-      status: "pending",
+      status: ServiceStatus.AWAITING,
       ...userServiceRequestDTO,
     };
     console.log("newServiceRequest: ", newServiceRequest);
@@ -89,6 +110,24 @@ class UserServiceDao implements BaseDao {
       .eq(SK)
       .attributes(["status", "selectedSlot"])
       .exec();
+  }
+
+  /**
+   *
+   * @param serviceId - Service ID
+   * @param email - Email of the user
+   * @param status - status
+   * @returns {Promise<any>} - A Promise that resolves to the Service of the user
+   */
+  async updateStatus(serviceId: string, email: string, status: string) {
+    global.logger.info("Update user Service status status [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    const SK = this.sortKeys.SK_SRVC.strtr({
+      "{serviceId}": serviceId,
+    });
+    return UserServiceModel.update({ PK: PK, SK: SK }, { status: status });
   }
 }
 

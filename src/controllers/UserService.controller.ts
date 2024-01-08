@@ -9,6 +9,7 @@ import {
 
 // Load the local schema
 import {
+  UserServiceStatusValidation,
   userServiceInterviewGuidanceRequestDTOValidation,
   userServiceRequestDTOValidation,
 } from "../schemas/UserService.schema";
@@ -42,8 +43,14 @@ class UserServiceController {
 
       // Extract email from request parameters
       const email = req.params.emailAddress;
+      const status = req.query.status;
+      let result;
 
-      const result = await UserServiceService.get(email);
+      if (status && typeof status === "string") {
+        result = await UserServiceService.getByStatus(email, status);
+      } else {
+        result = await UserServiceService.get(email);
+      }
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
@@ -62,6 +69,7 @@ class UserServiceController {
       }
     }
   };
+
   /**
    *
    * @param req
@@ -151,6 +159,41 @@ class UserServiceController {
       console.log("Error Service: ", error);
 
       // Pass the error to the next error handler
+      next(error);
+    }
+  };
+
+  /**
+   * updateStatus
+   *
+   * updates the status of user Service request
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  updateStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      global.logger.info("update Service status [controller]");
+
+      const { emailAddress, serviceId, status } = req.params;
+      const { error } = UserServiceStatusValidation.validate(status, {
+        abortEarly: false,
+      });
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      const result = await UserServiceService.updateStatus(
+        serviceId,
+        emailAddress,
+        status
+      );
+      res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error) {
+      // Handle errors
+      // Pass other errors to the next error handler
       next(error);
     }
   };

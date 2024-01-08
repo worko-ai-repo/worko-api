@@ -1,14 +1,8 @@
 import Joi from "joi";
 
-export const UserReferralRequestDTOValidation = Joi.object({
-  /* status: Joi.string()
-    .valid("pending", "approved", "rejected") // @todo KIndly update this to read the values from enum.
-    .required()
-    .messages({
-      "string.valid": "Status must be one of: pending, approved, rejected",
-      "any.required": "Status is required",
-    }), */
+import { ReferralStatus } from "../enums/UserReferral.enum";
 
+export const UserReferralRequestDTOValidation = Joi.object({
   companySK: Joi.string().required().messages({
     "any.required": "CompanySK is required",
   }),
@@ -17,3 +11,13 @@ export const UserReferralRequestDTOValidation = Joi.object({
     "any.required": "jobUrl is required",
   }),
 });
+
+export const UserReferralStatusValidation = Joi.string()
+  .valid(...Object.values(ReferralStatus))
+  .required()
+  .messages({
+    "string.valid": `Status must be one of: ${Object.values(
+      ReferralStatus
+    ).join(", ")}`,
+    "any.required": "Status is required",
+  });

@@ -1,5 +1,7 @@
 import Joi from "joi";
 
+import { ServiceStatus } from "../enums/UserService.enum";
+
 export const userServiceRequestDTOValidation = Joi.object({
   mentorLevel: Joi.number().integer().required().messages({
     "any.required": "Mentor level is required.",
@@ -55,3 +57,13 @@ export const userServiceInterviewGuidanceRequestDTOValidation = Joi.object({
     "string.base": "Role must be a string.",
   }),
 });
+
+export const UserServiceStatusValidation = Joi.string()
+  .valid(...Object.values(ServiceStatus))
+  .required()
+  .messages({
+    "string.valid": `Status must be one of: ${Object.values(ServiceStatus).join(
+      ", "
+    )}`,
+    "any.required": "Status is required",
+  });

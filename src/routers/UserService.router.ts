@@ -28,4 +28,9 @@ UserServiceRouter.get(
   userServiceController.getServiceStatus
 );
 
+UserServiceRouter.patch(
+  "/:emailAddress/service/:serviceId/:status",
+  userServiceController.updateStatus
+);
+
 export default UserServiceRouter;

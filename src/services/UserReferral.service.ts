@@ -66,6 +66,37 @@ class UserReferralService {
     logger.info("Fetching user Referral by email [UserReferralService]");
     return userReferralDao.get(email);
   }
+
+  /**
+   * Retrieves user Referral by status.
+   *
+   * @param email - Email of the user
+   * @param status - referral status
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async getByStatus(email: string, status: string): Promise<any> {
+    // Logging the action of getting user Referral by status in the service layer
+    logger.info("Fetching user Referral by status [UserReferralService]");
+    return userReferralDao.getByStatus(email, status);
+  }
+
+  /**
+   * updates the status of user Referral
+   *
+   * @param referralId - Referral ID
+   * @param email - Email of the user
+   * @param status - status
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async updateStatus(
+    referralId: string,
+    email: string,
+    status: string
+  ): Promise<any> {
+    // Logging the action of getting user Referral by email in the service layer
+    global.logger.info("Updating user Referral status [UserReferralService]");
+    return userReferralDao.updateStatus(referralId, email, status);
+  }
 }
 
 // Export an instance of the UserService class
