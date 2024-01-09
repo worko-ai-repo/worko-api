@@ -4,14 +4,15 @@ import { Request, Response, NextFunction } from "express";
 // Load the local dtos
 import {
   UserEmployeeSignUpDTO,
-  UserLinkedinSignUpDTO,
   UserProfileResponse,
+  UserSignUpDTO,
 } from "../dtos/User.dto";
 import { UserType } from "../dtos/Company.dto";
+import { UserExperienceDTO } from "../dtos/UserExperience.dto";
 
 // Load the local schema
 import {
-  UserLinkedinSignUpDTOValidation,
+  UserSignUpDTOValidation,
   userEmployeeSignUpDTOValidation,
 } from "../schemas/User.schema";
 
@@ -19,6 +20,7 @@ import {
 import UserService from "../services/User.service";
 import UserEmailService from "../services/UserEmail.service";
 import UserExperienceService from "../services/UserExperience.service";
+import UserDetailService from "../services/UserDetail.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -26,7 +28,8 @@ import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
 import { GroupingHelper } from "../helpers/grouping.helper";
-import UserDetailService from "../services/UserDetail.service";
+import UserSocialProfileService from "../services/UserSocialProfile.service";
+import { UserSocialProfileDTO } from "../dtos/UserSocialProfile.dto";
 
 /**
  * UserController
@@ -45,7 +48,7 @@ class UserController {
    */
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("Get user detail by id [controller]");
+      global.logger.info("Get user detail by id [controller]");
 
       // Extract email from request parameters
       const email = req.params.id;
@@ -112,7 +115,7 @@ class UserController {
     next: NextFunction
   ) => {
     try {
-      console.log("Get user profile detail by id [controller]");
+      global.logger.info("Get user profile detail by id [controller]");
       // Extract email from request parameters
       const email = req.params.id;
 
@@ -158,21 +161,25 @@ class UserController {
    */
   createCandidate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("Create candidate [controller]");
-      const userSingUpDto: UserLinkedinSignUpDTO = req.body;
-      const { error } = UserLinkedinSignUpDTOValidation.validate(
-        userSingUpDto,
-        {
-          abortEarly: false,
-        }
-      );
+      global.logger.info("Create candidate [controller]");
+      const userSingUpDto: UserSignUpDTO = req.body;
+      const { error, value } = UserSignUpDTOValidation.validate(userSingUpDto, {
+        abortEarly: false,
+      });
 
       if (error) {
         throw new RequestValidationError(error);
       }
-
+      const linkedinUrl = req.body.linkedinUrl;
+      const userSocialProfileDTO: UserSocialProfileDTO = {
+        linkedin: [linkedinUrl],
+      };
       const userType = UserType.CAND;
-      const newUser = await UserService.addUser(userSingUpDto, userType);
+      const newUser = await UserService.addUser(value, userType);
+      UserSocialProfileService.create(
+        userSingUpDto.email,
+        userSocialProfileDTO
+      );
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
       // Handle errors
@@ -194,7 +201,7 @@ class UserController {
    */
   createEmployee = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("Create employee [controller]");
+      global.logger.info("Create employee [controller]");
       const userSingUpDto: UserEmployeeSignUpDTO = req.body;
 
       const { error } = userEmployeeSignUpDTOValidation.validate(
@@ -215,17 +222,25 @@ class UserController {
         department,
         designation,
         designationTag,
+        linkedinUrl,
         ...copyUserSignUpDTO
       } = userSingUpDto;
-      const userType = UserType.EMP;
-      const newUser = await UserService.addUser(copyUserSignUpDTO, userType);
-      await UserEmailService.createEmailt(email, companyName, companyEmailId);
-      await UserExperienceService.createExperience(
-        email,
+
+      const userExperienceDto: UserExperienceDTO = {
         department,
         designation,
-        designationTag
-      );
+        designationTag,
+        companyName,
+        emailId: companyEmailId,
+      };
+      const userSocialProfileDTO: UserSocialProfileDTO = {
+        linkedin: [linkedinUrl],
+      };
+      const userType = UserType.EMP;
+      const newUser = await UserService.addUser(copyUserSignUpDTO, userType);
+      UserSocialProfileService.create(email, userSocialProfileDTO);
+      // await UserEmailService.createEmailt(email, companyName, companyEmailId);
+      UserExperienceService.create(email, userExperienceDto);
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
       // Handle errors
@@ -251,7 +266,7 @@ class UserController {
     next: NextFunction
   ) => {
     try {
-      console.log("update EmailVerify Status [controller]");
+      global.logger.info("update EmailVerify Status [controller]");
       const email = req.params.id;
       const verify = await UserService.verifyEmail(email);
       res.status(HttpStatusCode.OK_200).json(verify);
@@ -279,7 +294,7 @@ class UserController {
     next: NextFunction
   ) => {
     try {
-      console.log("Update user resume [controller]");
+      global.logger.info("Update user resume [controller]");
       const resume = req.body.resume;
       const email = req.params.id;
       const update = await UserService.updateUserCV(email, resume);

@@ -5,7 +5,7 @@ import userSubscriptionDao from "../daos/UserSubscription.dao";
 import { SubscriptionPlanDetailDTO } from "../dtos/MasterSubscription.dto";
 
 // Load the local dtos
-import { UserLinkedinSignUpDTO } from "../dtos/User.dto";
+import { UserSignUpDTO } from "../dtos/User.dto";
 import MasterSubscriptionService from "./MasterSubscription.service";
 import UserSubscriptionService from "./UserSubscription.service";
 
@@ -23,7 +23,7 @@ class UserService {
    * @returns {Promise<any>} - Details of the user
    */
   async getUserByEmail(email: string) {
-    console.log("Get user detail by id [service]");
+    global.logger.info("Get user detail by id [service]");
     return userDao.getUserInfo(email);
   }
 
@@ -34,13 +34,8 @@ class UserService {
    * @returns {Promise<any>} - Details of the user
    */
   async getUserDetailByEmail(email: string, SK: string) {
-    try {
-      console.log("Get user detail by id [service]");
-      return userDetailDao.getUserDetails(email, SK);
-    } catch (error) {
-      console.log("Error -> ", error);
-      throw error;
-    }
+    global.logger.info("Get user detail by id [service]");
+    return userDetailDao.getUserDetails(email, SK);
   }
 
   /**
@@ -49,22 +44,21 @@ class UserService {
    * @param userSignUpDTO - Details of the user to be added
    * @param email - Email of the user
    */
-  async addUser(userSignUpDTO: UserLinkedinSignUpDTO, userType: string) {
-    try {
-      console.log("Create candidate/employee [service]");
-      if (userType === "CAND") {
-        userDetailDao.add(userSignUpDTO, userType);
-        const subscriptionPlanDetailDTO: SubscriptionPlanDetailDTO =
-          await MasterSubscriptionService.getSubscriptionPlanDetail("Free");
-        UserSubscriptionService.createSubscription(
-          subscriptionPlanDetailDTO,
-          userSignUpDTO.email
-        );
-      } else {
-        userDetailDao.add(userSignUpDTO, userType);
-      }
-    } catch (error) {
-      throw error;
+  async addUser(userSignUpDTO: UserSignUpDTO, userType: string) {
+    console.log("Create candidate/employee [service]");
+    if (userType === "CAND") {
+      //Creating candidate account
+      userDetailDao.add(userSignUpDTO, userType);
+      //Adding the FREE subscription plan for Candidate
+      const subscriptionPlanDetailDTO: SubscriptionPlanDetailDTO =
+        await MasterSubscriptionService.getSubscriptionPlanDetail("Free");
+      UserSubscriptionService.createSubscription(
+        subscriptionPlanDetailDTO,
+        userSignUpDTO.email
+      );
+    } else {
+      //Creating employee account
+      userDetailDao.add(userSignUpDTO, userType);
     }
   }
 
@@ -74,7 +68,7 @@ class UserService {
    * @param email - Email of the user making the request
    */
   async getSK(email: string) {
-    console.log("Get user SK [service]");
+    global.logger.info("Get user SK [service]");
     return userDetailDao.getUserDetailSK(email);
   }
 
@@ -87,7 +81,7 @@ class UserService {
    * @returns
    */
   async getSubscriptionStatus(email: string, SK: string) {
-    console.log("Get user Subscription status [service]");
+    global.logger.info("Get user Subscription status [service]");
     return userDetailDao.getUserSubscriptionStatus(email, SK);
   }
 
@@ -97,13 +91,9 @@ class UserService {
    * @param email - Email of the user making the request
    */
   async verifyEmail(email: string) {
-    try {
-      console.log("update EmailVerify Status [service]");
-      const SK = await userDetailDao.getUserDetailSK(email);
-      userDetailDao.updateEmailVerify(SK, email);
-    } catch (error) {
-      throw error;
-    }
+    global.logger.info("update EmailVerify Status [service]");
+    const SK = await userDetailDao.getUserDetailSK(email);
+    userDetailDao.updateEmailVerify(SK, email);
   }
 
   /**
@@ -114,14 +104,9 @@ class UserService {
    * @param resume
    */
   async updateUserCV(email: string, resume: string) {
-    // @todo change the method name to "updateUserDetails" and update the code to update all ther attributes not just CV.
-    try {
-      console.log("Update user resume [service]");
-      const SK = await userDetailDao.getUserDetailSK(email);
-      userDetailDao.updateCv(SK, email, resume);
-    } catch (error) {
-      throw error;
-    }
+    global.logger.info("Update user resume [service]");
+    const SK = await userDetailDao.getUserDetailSK(email);
+    userDetailDao.updateCv(SK, email, resume);
   }
 
   /**
@@ -131,7 +116,7 @@ class UserService {
    * @param email
    */
   async decreaseReferralCount(email: string) {
-    console.log("Decrease referral count [service]");
+    global.logger.info("Decrease referral count [service]");
     //To Get SK
     const SK = await this.getSK(email);
     //To Get referral count

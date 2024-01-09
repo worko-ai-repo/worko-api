@@ -67,7 +67,7 @@ class UserEducationController {
   /**
    * create
    *
-   * Creates/updates the user's social profile URLs
+   * Creates/updates the user's Education URLs
    *
    * @param {Request} req
    * @param {Response} res

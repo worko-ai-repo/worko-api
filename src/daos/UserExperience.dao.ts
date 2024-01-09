@@ -6,6 +6,7 @@ import { UserExperienceModel } from "../db/models/UserExperience.model";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
+import { UserExperienceDTO } from "../dtos/UserExperience.dto";
 
 // UserExperienceDao class implementing the BaseDao interface
 class UserExperienceDao implements BaseDao {
@@ -19,7 +20,7 @@ class UserExperienceDao implements BaseDao {
    * @returns User details corresponding to the email
    */
   async get(email: string) {
-    console.log("Get user experience by id [DAO]");
+    global.logger.info("Get user experience by id [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -33,34 +34,39 @@ class UserExperienceDao implements BaseDao {
 
   /**
    * @param email
-   * @param department
-   * @param designation
+   * @param UserExperienceDto
    * @returns
    */
-  async create(
+  async create(email: string, userExperienceDto: UserExperienceDTO) {
+    global.logger.info("Create employee Work Experience [DAO]");
+    const userExperienceDTO = {
+      PK: this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      }),
+      SK: this.sortKeys.SK_ID.strtr({
+        "{uuid}": UlidService.getUlidId(),
+      }),
+      isEmailVerified: false,
+      ...userExperienceDto,
+    };
+    return UserExperienceModel.create(userExperienceDTO);
+  }
+
+  /**
+   *
+   * @param email
+   * @returns
+   */
+  async update(
     email: string,
-    department: string,
-    designation: string,
-    designationTag: number
+    SK: string,
+    userExperienceDTO: UserExperienceDTO
   ) {
-    try {
-      console.log("Create employee Work Experience [DAO]");
-      const userExperienceDTO = {
-        PK: this.partitianKey.strtr({
-          "{primaryEmail}": email,
-        }),
-        SK: this.sortKeys.SK_ID.strtr({
-          "{uuid}": UlidService.getUlidId(),
-        }),
-        department: department,
-        designation: designation,
-        designationTag: designationTag,
-      };
-      await UserExperienceModel.create(userExperienceDTO);
-    } catch (error) {
-      console.log("Addd user Experience -> ", error);
-      throw error;
-    }
+    global.logger.info("Update user Experience [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserExperienceModel.update({ PK: PK, SK: SK }, userExperienceDTO);
   }
 }
 

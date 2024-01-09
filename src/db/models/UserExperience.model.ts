@@ -9,14 +9,15 @@ import { DB_CONSTANTS } from "../DB.constants";
 class DbUserExperienceDto extends BaseDbDto {
   department!: string;
   designation!: string;
-  designationTag!: number;
+  designationTag?: number;
   startedMonth?: number;
   endedMonth?: number;
   startedYear?: number;
   endedYear?: number;
-  company?: string;
+  companyName!: string;
+  emailId!: String;
+  isEmailVerified?: boolean;
   isCurrentCompany?: boolean;
-  CTC?: number;
 }
 
 // Define the schema for the User Experience model using DynamoDB
@@ -34,7 +35,7 @@ const UserExperienceSchema = new dynamoose.Schema(
     },
     designationTag: {
       type: Number,
-      required: true,
+      required: false,
     },
     startedMonth: {
       type: Number, // Assuming it's a number
@@ -45,23 +46,27 @@ const UserExperienceSchema = new dynamoose.Schema(
       required: false,
     },
     startedYear: {
-      type: Number, // Assuming it's a number
+      type: Number,
       required: false,
     },
     endedYear: {
-      type: Number, // Assuming it's a number
+      type: Number,
       required: false,
     },
-    company: {
+    companyName: {
       type: String,
+      required: true,
+    },
+    emailId: {
+      type: String,
+      required: true,
+    },
+    isEmailVerified: {
+      type: Boolean,
       required: false,
     },
     isCurrentCompany: {
       type: Boolean,
-      required: false,
-    },
-    CTC: {
-      type: Number,
       required: false,
     },
   },

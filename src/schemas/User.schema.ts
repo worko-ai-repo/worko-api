@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-export const UserLinkedinSignUpDTOValidation = Joi.object({
+export const UserSignUpDTOValidation = Joi.object({
   name: Joi.string().required().messages({
     "any.required": "Name is required",
   }),
@@ -12,10 +12,6 @@ export const UserLinkedinSignUpDTOValidation = Joi.object({
 
   number: Joi.number().options({ convert: false }).required().messages({
     "any.required": "Number is required",
-  }),
-
-  linkedinUrl: Joi.string().required().messages({
-    "any.required": "LinkedIn URL is required",
   }),
 
   ECTC: Joi.number().options({ convert: false }).required().messages({
@@ -34,7 +30,7 @@ export const UserLinkedinSignUpDTOValidation = Joi.object({
   userId: Joi.string().required().messages({
     "any.required": "User ID is required",
   }),
-});
+}).options({ stripUnknown: true });
 
 export const userEmployeeSignUpDTOValidation = Joi.object({
   name: Joi.string().required().messages({

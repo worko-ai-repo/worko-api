@@ -1,8 +1,8 @@
-export interface UserLinkedinSignUpDTO {
+export interface UserSignUpDTO {
   name: string;
   email: string;
   number: number;
-  linkedinUrl: string;
+  linkedinUrl?: string;
   ECTC?: number;
   YOE: number;
   CV?: string;

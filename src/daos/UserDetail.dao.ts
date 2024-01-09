@@ -5,7 +5,7 @@ import BaseDao from "./Base.dao";
 import { UserDetailModel } from "../db/models/UserDetail.model";
 
 //Load the local dtos
-import { UserLinkedinSignUpDTO } from "../dtos/User.dto";
+import { UserSignUpDTO } from "../dtos/User.dto";
 import { UserDetailDTO } from "../dtos/UserDetail.dto";
 
 //Load UlidService for generating ULID IDs
@@ -26,7 +26,7 @@ class UserDetailDao implements BaseDao {
    * @returns User details corresponding to the email
    */
   async get(email: string) {
-    console.log("Get user experience by id [DAO]");
+    global.logger.info("Get user experience by id [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -65,16 +65,11 @@ class UserDetailDao implements BaseDao {
    * @returns User details corresponding to the email
    */
   async getUserDetails(email: string, SK: string) {
-    try {
-      console.log("Get user detail by id [DAO]");
-      const PK = this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      });
-      return UserDetailModel.query("PK").eq(PK).where("SK").eq(SK).exec();
-    } catch (error) {
-      console.error("Error in getUserDetails:", error);
-      throw error;
-    }
+    global.logger.info("Get user detail by id [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserDetailModel.query("PK").eq(PK).where("SK").eq(SK).exec();
   }
 
   /**
@@ -83,7 +78,7 @@ class UserDetailDao implements BaseDao {
    * @returns User Subscription-Status corresponding to the email and SK
    */
   async getUserSubscriptionStatus(email: string, SK: string) {
-    console.log("Get user Subscription-Status [DAO]");
+    global.logger.info("Get user Subscription-Status [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -96,7 +91,7 @@ class UserDetailDao implements BaseDao {
   }
 
   async getUserDetailSK(email: string) {
-    console.log("get UserDetail SK [DAO]");
+    global.logger.info("get UserDetail SK [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -118,43 +113,38 @@ class UserDetailDao implements BaseDao {
    * @param userSignUpDTO - User sign-up data transfer object
    * @param email - Email address of the user
    */
-  async add(userSignUpDTO: UserLinkedinSignUpDTO, userType: string) {
-    try {
-      console.log("Create candidate/employee [DAO]");
-      /* if (!userSignUpDTO.CV) {
+  async add(userSignUpDTO: UserSignUpDTO, userType: string) {
+    global.logger.info("Create candidate/employee [DAO]");
+    /* if (!userSignUpDTO.CV) {
         userSignUpDTO.CV = "";
       } */
-      let refCount = 0;
-      let isSub = false;
-      if (userType === UserType.CAND) {
-        refCount = 1;
-        isSub = true;
-      }
-      const { email, userId, ...copyUserSignUpDTO } = userSignUpDTO;
-      const emailList = { primary: email };
-      const today = new Date();
-      const newUserSignUpDTO = {
-        PK: this.partitianKey.strtr({
-          "{primaryEmail}": email,
-        }),
-        SK: this.sortKeys.SK_ID.strtr({
-          "{uuid}": userId,
-        }),
-        ...copyUserSignUpDTO,
-        emailList: emailList,
-        isEmailVerified: false,
-        isNumberVerified: false,
-        isSubscribed: isSub,
-        userType: [userType],
-        lastAccessedDash: userType,
-        referralCount: refCount,
-        expiryDate: today,
-      };
-      return UserDetailModel.create(newUserSignUpDTO);
-    } catch (error) {
-      console.log("Addd user -> ", error);
-      throw error;
+    let refCount = 0;
+    let isSub = false;
+    if (userType === UserType.CAND) {
+      refCount = 1;
+      isSub = true;
     }
+    const { email, userId, ...copyUserSignUpDTO } = userSignUpDTO;
+    const emailList = { primary: email };
+    const today = new Date();
+    const newUserSignUpDTO = {
+      PK: this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      }),
+      SK: this.sortKeys.SK_ID.strtr({
+        "{uuid}": userId,
+      }),
+      ...copyUserSignUpDTO,
+      emailList: emailList,
+      isEmailVerified: false,
+      isNumberVerified: false,
+      isSubscribed: isSub,
+      userType: [userType],
+      lastAccessedDash: userType,
+      referralCount: refCount,
+      expiryDate: today,
+    };
+    return UserDetailModel.create(newUserSignUpDTO);
   }
 
   /**
@@ -163,7 +153,7 @@ class UserDetailDao implements BaseDao {
    * @returns
    */
   async update(email: string, SK: string, userDetailDTO: UserDetailDTO) {
-    logger.info("Update user Detail [DAO]");
+    global.logger.info("Update user Detail [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -176,19 +166,14 @@ class UserDetailDao implements BaseDao {
    * @returns
    */
   async updateEmailVerify(SK: String, email: string) {
-    try {
-      console.log("Update user primary email verify status [DAO]");
-      const PK = this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      });
-      return UserDetailModel.update(
-        { PK: PK, SK: SK },
-        { isEmailVerified: true }
-      );
-    } catch (error) {
-      console.log("Update email verification -> ", error);
-      throw error;
-    }
+    global.logger.info("Update user primary email verify status [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserDetailModel.update(
+      { PK: PK, SK: SK },
+      { isEmailVerified: true }
+    );
   }
 
   /**
@@ -199,16 +184,11 @@ class UserDetailDao implements BaseDao {
    * @returns
    */
   async updateCv(SK: String, email: string, resume: string) {
-    try {
-      console.log("Update user resume [DAO]");
-      const PK = this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      });
-      return UserDetailModel.update({ PK: PK, SK: SK }, { CV: resume });
-    } catch (error) {
-      console.log("error CV: ", error);
-      throw error;
-    }
+    global.logger.info("Update user resume [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserDetailModel.update({ PK: PK, SK: SK }, { CV: resume });
   }
 
   /**
@@ -219,7 +199,7 @@ class UserDetailDao implements BaseDao {
    * @returns
    */
   async updateReferralCount(SK: string, email: string, currRefCount: number) {
-    console.log("Decrease referral count [DAO]");
+    global.logger.info("Decrease referral count [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -237,7 +217,7 @@ class UserDetailDao implements BaseDao {
    * @returns
    */
   async updateIsSubscribedStatus(SK: string, email: string, status: boolean) {
-    console.log("update subscription status [DAO]");
+    global.logger.info("update subscription status [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });

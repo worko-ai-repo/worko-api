@@ -16,4 +16,6 @@ UserExperienceRouter.get(
   userExperienceController.getByEmail
 );
 
+UserExperienceRouter.post("/:id/experience", userExperienceController.create);
+
 export default UserExperienceRouter;
