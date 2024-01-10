@@ -11,9 +11,9 @@ const masterServiceController = new MasterServiceController();
 const MasterServiceRouter = Router();
 
 // create master Service plan [Admin]
-MasterServiceRouter.post("/", masterServiceController.createMasterService);
+MasterServiceRouter.post("/", masterServiceController.create);
 
 // get master Service plan [ui]
-MasterServiceRouter.get("/", masterServiceController.getMasterService);
+MasterServiceRouter.get("/", masterServiceController.get);
 
 export default MasterServiceRouter;

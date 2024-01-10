@@ -18,7 +18,7 @@ UserSubscriptionRouter.post(
 
 // Get the user subscription details based on the provided query parameter
 UserSubscriptionRouter.get(
-  "/subscription/:id",
+  "/:id/subscription",
   userSubscriptionController.getSubscriptionDetailsById
 );
 

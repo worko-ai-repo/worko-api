@@ -21,8 +21,8 @@ class MasterServiceDao implements BaseDao {
    *
    * @param masterServiceDto - Service data to be added
    */
-  async addMasterService(masterServiceDto: MasterServiceDTO) {
-    console.log("Create new mater Service [DAO]");
+  async create(masterServiceDto: MasterServiceDTO) {
+    global.logger.info("Create new mater Service [DAO]");
     const newMasterServiceDto = {
       PK: this.partitianKey,
       SK: this.sortKeys.SK_SRVC.strtr({
@@ -39,8 +39,8 @@ class MasterServiceDao implements BaseDao {
    * Get all Service plans
    *
    */
-  async getAllMasterServices() {
-    console.log("get all master Service [DAO]");
+  async get() {
+    global.logger.info("get all master Service [DAO]");
 
     const PK = this.partitianKey;
     const SK = this.sortKeys.SK_SRVC.strtr({

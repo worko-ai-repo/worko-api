@@ -36,13 +36,7 @@ class UserSubscriptionService {
    * @returns {Promise<any>} - Subscription details of the user
    */
   async getsubscriptionDetails(email: string) {
-    // @todo Kindly update the method name to "getSubscriptionDetails" (S capital).
-    try {
-      return userSubscriptionDao.subscriptionDetails(email);
-    } catch (error) {
-      console.log("Error -> ", error);
-      throw error;
-    }
+    return userSubscriptionDao.subscriptionDetails(email);
   }
 
   /**

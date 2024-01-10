@@ -35,11 +35,7 @@ class MasterServiceController {
    * @param {NextFunction} next
    * @returns
    */
-  createMasterService = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Create new mater Service plan [controller]");
       const masterServiceDto: MasterServiceDTO = req.body;
@@ -55,8 +51,9 @@ class MasterServiceController {
         throw new RequestValidationError(error);
       }
 
-      const addMasterService =
-        await MasterServiceService.createNewMasterService(masterServiceDto);
+      const addMasterService = await MasterServiceService.create(
+        masterServiceDto
+      );
       res.status(HttpStatusCode.CREATED_201).json(addMasterService);
     } catch (error) {
       // Handle errors
@@ -72,14 +69,10 @@ class MasterServiceController {
    * @param res
    * @param next
    */
-  getMasterService = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Get all mater Service [controller]");
-      const servicePlans = await MasterServiceService.getMasterServicePlans();
+      const servicePlans = await MasterServiceService.get();
       const allServicePlans: ServicePlanResponseDTO[] = servicePlans.map(
         (plan: { SK: any; name: any; details: any; isActive: any }) => ({
           SK: plan.SK,

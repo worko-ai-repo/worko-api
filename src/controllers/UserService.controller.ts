@@ -20,6 +20,8 @@ import {
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 import UserServiceService from "../services/UserService.service";
+import MasterServiceService from "../services/MasterService.service";
+import ServiceHelper from "../helpers/UserService.helper";
 
 /**
  * UserServiceController
@@ -39,18 +41,22 @@ class UserServiceController {
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Log the action for debugging purposes
-      logger.info("Get user Service by email [controller]");
+      global.logger.info("Get user Service by email [controller]");
 
       // Extract email from request parameters
       const email = req.params.emailAddress;
       const status = req.query.status;
       let result;
 
+      const servicePlans = MasterServiceService.get();
+
       if (status && typeof status === "string") {
         result = await UserServiceService.getByStatus(email, status);
       } else {
         result = await UserServiceService.get(email);
       }
+
+      ServiceHelper.updateServiceNames(result, await servicePlans);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);

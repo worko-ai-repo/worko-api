@@ -24,23 +24,18 @@ class UserSubscriptionDao implements BaseDao {
    * @returns Promise of subscription details
    */
   async subscriptionDetails(email: string) {
-    try {
-      const PK = this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      });
-      // const SK = this.USER_CONSTANTS.SK_SUBS;
-      const SK = this.sortKeys.SK_SUBS.strtr({
-        "ID#{subsId}": "",
-      });
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    // const SK = this.USER_CONSTANTS.SK_SUBS;
+    const SK = this.sortKeys.SK_SUBS.strtr({
+      "ID#{subsId}": "",
+    });
 
-      return UserSubModel.query({
-        PK,
-        SK,
-      }).exec();
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+    return UserSubModel.query({
+      PK,
+      SK,
+    }).exec();
   }
 
   /**
@@ -50,31 +45,24 @@ class UserSubscriptionDao implements BaseDao {
    * @param email - Email associated with the subscription
    */
   async addSubscription(subscriptionDto: SubscriptionDTO, email: string) {
-    try {
-      const timestamp = Date.now();
-      subscriptionDto.expiryDate = new Date(timestamp);
-      subscriptionDto.purchaseDate = new Date(timestamp);
+    const timestamp = Date.now();
+    subscriptionDto.expiryDate = new Date(timestamp);
+    subscriptionDto.purchaseDate = new Date(timestamp);
 
-      const newSubscriptionDto = {
-        PK: this.partitianKey.strtr({ "{primaryEmail}": email }),
-        SK: this.sortKeys.SK_SUBS.strtr({
-          "{subsId}": UlidService.getUlidId(),
-        }),
-        GSI1PK: this.sortKeys.SK_SUBS.strtr({
-          "ID#{subsId}": "",
-        }),
-        GSI1SK: this.partitianKey.strtr({
-          "{primaryEmail}": email,
-        }),
-        ...subscriptionDto,
-      };
-
-      console.log("newSubscriptionDto: ", newSubscriptionDto);
-      return UserSubModel.create(newSubscriptionDto);
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+    const newSubscriptionDto = {
+      PK: this.partitianKey.strtr({ "{primaryEmail}": email }),
+      SK: this.sortKeys.SK_SUBS.strtr({
+        "{subsId}": UlidService.getUlidId(),
+      }),
+      GSI1PK: this.sortKeys.SK_SUBS.strtr({
+        "ID#{subsId}": "",
+      }),
+      GSI1SK: this.partitianKey.strtr({
+        "{primaryEmail}": email,
+      }),
+      ...subscriptionDto,
+    };
+    return UserSubModel.create(newSubscriptionDto);
   }
 
   /**

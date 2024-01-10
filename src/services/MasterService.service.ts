@@ -18,9 +18,9 @@ class MasterServiceService {
    * @param masterServiceDto - master Service details
    * @returns
    */
-  async createNewMasterService(masterServiceDto: MasterServiceDTO) {
-    console.log("Create new mater Service [service]");
-    return masterServiceDao.addMasterService(masterServiceDto);
+  async create(masterServiceDto: MasterServiceDTO) {
+    global.logger.info("Create new mater Service [service]");
+    return masterServiceDao.create(masterServiceDto);
   }
 
   /**
@@ -29,9 +29,9 @@ class MasterServiceService {
    *
    * @returns
    */
-  async getMasterServicePlans() {
-    console.log("Get all master Service [service]");
-    return masterServiceDao.getAllMasterServices();
+  async get() {
+    global.logger.info("Get all master Service [service]");
+    return masterServiceDao.get();
   }
 }
 
