@@ -19,10 +19,10 @@ const serverlessConfiguration: AWS = {
     runtime: "nodejs18.x",
     stage: process.env.APP_SLS_STAGE,
     region: "ap-south-1", // Should be dynamically set
-    iamRoleStatements:[
+    iamRoleStatements: [
       {
         Effect: "Allow",
-        Action:[
+        Action: [
           "dynamodb:DescribeTable",
           "dynamodb:Query",
           "dynamodb:GetItem",
@@ -30,25 +30,26 @@ const serverlessConfiguration: AWS = {
           "dynamodb:UpdateItem"
         ],
         Resource: "arn:aws:dynamodb:ap-south-1:*:table/worko",
-
-      },{
+      },
+      {
         Effect: "Allow",
-        Action:[
+        Action: [
           "s3:PutObject",
-				  "s3:GetObject",
-				  "s3:ListBucket"
+          "s3:GetObject",
+          "s3:ListBucket"
         ],
         Resource: [
           "arn:aws:s3:::worko-app-*",
           "arn:aws:s3:::*/*"
         ]
-      },{
+      },
+      {
         Effect: "Allow",
-        Action:[
+        Action: [
           "lambda:InvokeFunction",
           "lambda:InvokeAsync"
         ],
-        Resource:[
+        Resource: [
           "rn:aws:lambda:ap-south-1:787066054733:function:worko-jd-resume-matching"
         ]
       }
@@ -63,9 +64,17 @@ const serverlessConfiguration: AWS = {
           http: {
             path: "/",
             method: "ANY",
-            cors:{
+            cors: {
               origin: "*",
-              headers: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent", "X-Amzn-Trace-Id"],
+              headers: [
+                "Content-Type",
+                "X-Amz-Date",
+                "Authorization",
+                "X-Api-Key",
+                "X-Amz-Security-Token",
+                "X-Amz-User-Agent",
+                "X-Amzn-Trace-Id"
+              ],
               allowCredentials: false,
             },
             authorizer: {
@@ -78,9 +87,17 @@ const serverlessConfiguration: AWS = {
           http: {
             path: "/{proxy+}",
             method: "ANY",
-            cors:{
+            cors: {
               origin: "*",
-              headers: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent", "X-Amzn-Trace-Id"],
+              headers: [
+                "Content-Type",
+                "X-Amz-Date",
+                "Authorization",
+                "X-Api-Key",
+                "X-Amz-Security-Token",
+                "X-Amz-User-Agent",
+                "X-Amzn-Trace-Id"
+              ],
               allowCredentials: false,
             },
             authorizer: {
