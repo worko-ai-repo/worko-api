@@ -15,9 +15,3 @@ export interface MasterSubscriptionDTO extends SubscriptionBaseDTO {}
 export interface SubscriptionPlanResponseDTO extends SubscriptionBaseDTO {
   SK: string;
 }
-
-export interface SubscriptionPlanDetailDTO {
-  duration: number;
-  referralCount: number;
-  amount: number;
-}

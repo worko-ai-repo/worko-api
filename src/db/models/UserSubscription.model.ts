@@ -9,6 +9,10 @@ import { BaseDbDto } from "./Base.model";
 class DbUserSubsDto extends BaseDbDto {
   amount!: Number;
   status!: String;
+  name!: String;
+  availableReferrals!: Number;
+  acceptedReferrals!: Number;
+  requestedReferrals!: Number;
   expiryDate!: Date;
   purchaseDate!: Date;
   GSI1PK!: String;
@@ -24,6 +28,22 @@ const UserSubscriptionSchema = new dynamoose.Schema(
     },
     status: {
       type: String,
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    availableReferrals: {
+      type: Number,
+      required: true,
+    },
+    acceptedReferrals: {
+      type: Number,
+      required: true,
+    },
+    requestedReferrals: {
+      type: Number,
       required: true,
     },
     expiryDate: {

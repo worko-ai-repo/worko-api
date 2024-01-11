@@ -21,7 +21,7 @@ class MasterSubscriptionDao implements BaseDao {
    *
    * @param masterSubscriptionDto - Subscription data to be added
    */
-  async addMasterSubscription(masterSubscriptionDto: MasterSubscriptionDTO) {
+  async create(masterSubscriptionDto: MasterSubscriptionDTO) {
     console.log("Create new mater subscription plan [DAO]");
     const newMasterSubscriptionDto = {
       PK: this.partitianKey,
@@ -40,7 +40,7 @@ class MasterSubscriptionDao implements BaseDao {
    * Get all subscription plans
    *
    */
-  async getMasterSubscriptionPlans() {
+  async get() {
     console.log("get all master subscription plans [DAO]");
 
     const PK = this.partitianKey;
@@ -60,7 +60,7 @@ class MasterSubscriptionDao implements BaseDao {
    * Get subscription plan details
    *
    */
-  async getSubscriptionPlanDetail(plan: string) {
+  async getByPlan(plan: string) {
     console.log("get subscription plan detail [DAO]");
 
     const PK = this.partitianKey;
@@ -68,7 +68,24 @@ class MasterSubscriptionDao implements BaseDao {
       .eq(PK)
       .where("name")
       .beginsWith(plan)
-      .attributes(["amount", "duration", "referralCount"])
+      .attributes(["SK", "amount", "duration", "referralCount"])
+      .exec();
+  }
+
+  /**
+   *
+   * Get subscription plan details
+   *
+   */
+  async getById(masterSubscriptionId: string) {
+    global.logger.info("get subscription plan detail by Id [DAO]");
+
+    const PK = this.partitianKey;
+    return MasterSubscriptionModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .eq(masterSubscriptionId)
+      .attributes(["SK", "PK", "name", "amount", "duration", "referralCount"])
       .exec();
   }
 }

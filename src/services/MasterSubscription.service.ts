@@ -22,7 +22,7 @@ class MasterSubscriptionService {
     masterSubscriptionDto: MasterSubscriptionDTO
   ) {
     console.log("Create new mater subscription plan [service]");
-    return masterSubscriptionDao.addMasterSubscription(masterSubscriptionDto);
+    return masterSubscriptionDao.create(masterSubscriptionDto);
   }
 
   /**
@@ -33,7 +33,7 @@ class MasterSubscriptionService {
    */
   async getMasterSubscriptionPlans() {
     console.log("Get all master subscription plan [service]");
-    return masterSubscriptionDao.getMasterSubscriptionPlans();
+    return masterSubscriptionDao.get();
   }
 
   /**
@@ -42,12 +42,22 @@ class MasterSubscriptionService {
    *
    * @returns
    */
-  async getSubscriptionPlanDetail(plan: string) {
+  async getByPlan(plan: string) {
     console.log("Get subscription plan details [service]");
-    const subPlanDetail = await masterSubscriptionDao.getSubscriptionPlanDetail(
-      plan
-    );
+    const subPlanDetail = await masterSubscriptionDao.getByPlan(plan);
     return subPlanDetail[0];
+  }
+
+  /**
+   *
+   * Get subscription plan details by id
+   *
+   * @returns
+   */
+  async getById(masterSubscriptionId: string) {
+    console.log("Get subscription plan details by Id [service]");
+    const result = await masterSubscriptionDao.getById(masterSubscriptionId);
+    return result[0];
   }
 }
 

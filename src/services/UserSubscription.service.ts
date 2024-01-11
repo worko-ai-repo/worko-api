@@ -1,9 +1,10 @@
 // Load the local daos
 import userSubscriptionDao from "../daos/UserSubscription.dao";
+import MasterSubscriptionService from "./MasterSubscription.service";
 
 // Load the local dtos
 import SubscriptionDTO from "../dtos/Subscription.dto";
-import { SubscriptionPlanDetailDTO } from "../dtos/MasterSubscription.dto";
+import { UserSubscriptionStatus } from "../enums/UserSubscriptionStatus.enum";
 
 /**
  * UserSubscriptionService
@@ -21,12 +22,27 @@ class UserSubscriptionService {
    * @param email - Email of the user creating the subscription
    * @returns
    */
-  async createNewSubscription(subscriptionDto: SubscriptionDTO, email: string) {
-    try {
-      return userSubscriptionDao.addSubscription(subscriptionDto, email);
-    } catch (error) {
-      throw error;
-    }
+  async create(masterSubscriptionId: string, email: string) {
+    const result = await MasterSubscriptionService.getById(
+      masterSubscriptionId
+    );
+    global.logger.debug("result", result);
+    const purchaseDate = new Date();
+
+    // Calculating expiryDate based on purchaseDate and duration
+    const expiryDate = new Date(purchaseDate);
+    expiryDate.setDate(purchaseDate.getDate() + result.duration);
+    const subscriptionDto: SubscriptionDTO = {
+      amount: result.amount,
+      status: UserSubscriptionStatus.ACTIVE,
+      name: result.name,
+      availableReferrals: result.referralCount,
+      acceptedReferrals: 0,
+      requestedReferrals: 0,
+      expiryDate: expiryDate,
+      purchaseDate: purchaseDate,
+    };
+    return userSubscriptionDao.create(subscriptionDto, email);
   }
 
   /**
@@ -35,27 +51,8 @@ class UserSubscriptionService {
    * @param email - Email of the user
    * @returns {Promise<any>} - Subscription details of the user
    */
-  async getsubscriptionDetails(email: string) {
-    return userSubscriptionDao.subscriptionDetails(email);
-  }
-
-  /**
-   *
-   * Creates a new subscription based on provided details.
-   *
-   * @param subscriptionDto - Subscription details
-   * @param email - Email of the user creating the subscription
-   * @returns
-   */
-  async createSubscription(
-    subscriptionPlanDetailDto: SubscriptionPlanDetailDTO,
-    email: string
-  ) {
-    console.log("create subscription for candidate[service]");
-    return userSubscriptionDao.addNewSubscription(
-      subscriptionPlanDetailDto,
-      email
-    );
+  async get(email: string) {
+    return userSubscriptionDao.get(email);
   }
 }
 

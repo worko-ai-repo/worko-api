@@ -14,6 +14,7 @@ import UserService from "../services/User.service";
 //Load local util statuscode
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
+import MasterSubscriptionService from "../services/MasterSubscription.service";
 
 /**
  * UserSubscriptionController
@@ -30,16 +31,10 @@ class UserSubscriptionController {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  getSubscriptionDetailsById = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const email = req.params.id;
-      const result = await UserSubscriptionService.getsubscriptionDetails(
-        email
-      );
+      const result = await UserSubscriptionService.get(email);
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error) {
       // Handle errors
@@ -50,7 +45,7 @@ class UserSubscriptionController {
   };
 
   /**
-   * getSubscriptionStatusId
+   * getStatus
    *
    * Get the subscription status based on the provided quesry parameters
    *
@@ -58,11 +53,7 @@ class UserSubscriptionController {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  getSubscriptionStatusId = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  getStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const email = req.params.id;
       const SK = await UserService.getSK(email);
@@ -86,7 +77,7 @@ class UserSubscriptionController {
 
   /**
    *
-   * createSubscription
+   * create
    *
    * Create a new subscription based on the provided input data. Validates the input data
    * and, if successful, proceeds with the subscription creation logic.
@@ -96,31 +87,32 @@ class UserSubscriptionController {
    * @param {NextFunction} next
    * @returns
    */
-  creatSubscription = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const subscriptionDto: SubscriptionDTO = req.body;
+      global.logger.info("create subscription for user [controller]");
+      const masterSubscriptionId = req.body.masterSubscriptionId;
       const email = req.params.id;
 
-      const { error, value } = SubscriptionDTOValidation.validate(
+      /* const { error, value } = SubscriptionDTOValidation.validate(
         subscriptionDto,
         {
           abortEarly: false, // Do not abort on the first validation error
         }
-      );
+      ); */
 
-      if (error) {
+      /* if (error) {
         throw new RequestValidationError(error);
-      }
+      } */
+      /* const result = await MasterSubscriptionService.getById(
+        "TYPE#CAND#ID#01HHP3FQNWEZZ5YH6HH995ZTB0"
+      );
+      global.logger.debug("result", result);
+      console.log("result: ", result); */
 
-      const addSubscription =
-        await UserSubscriptionService.createNewSubscription(
-          subscriptionDto,
-          email
-        );
+      const addSubscription = await UserSubscriptionService.create(
+        masterSubscriptionId,
+        email
+      );
       res.status(HttpStatusCode.CREATED_201).json(addSubscription);
     } catch (error) {
       // Handle errors

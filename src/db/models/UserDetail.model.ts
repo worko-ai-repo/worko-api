@@ -49,7 +49,7 @@ const UserDetailSchema = new dynamoose.Schema(
       required: true,
     },
     userType: {
-      type: Set,
+      type: Array,
       schema: [String],
       required: true,
     },

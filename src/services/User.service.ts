@@ -2,7 +2,6 @@
 import userDao from "../daos/User.dao";
 import userDetailDao from "../daos/UserDetail.dao";
 import userSubscriptionDao from "../daos/UserSubscription.dao";
-import { SubscriptionPlanDetailDTO } from "../dtos/MasterSubscription.dto";
 
 // Load the local dtos
 import { UserSignUpDTO } from "../dtos/User.dto";
@@ -50,12 +49,8 @@ class UserService {
       //Creating candidate account
       userDetailDao.add(userSignUpDTO, userType);
       //Adding the FREE subscription plan for Candidate
-      const subscriptionPlanDetailDTO: SubscriptionPlanDetailDTO =
-        await MasterSubscriptionService.getSubscriptionPlanDetail("Free");
-      UserSubscriptionService.createSubscription(
-        subscriptionPlanDetailDTO,
-        userSignUpDTO.email
-      );
+      const subPlan = await MasterSubscriptionService.getByPlan("Free");
+      UserSubscriptionService.create(subPlan.SK, userSignUpDTO.email);
     } else {
       //Creating employee account
       userDetailDao.add(userSignUpDTO, userType);

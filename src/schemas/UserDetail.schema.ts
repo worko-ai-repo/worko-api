@@ -17,7 +17,7 @@ export const userDetailDTOValidation = Joi.object({
     "number.base": "Number must be a valid number.",
   }),
   userType: Joi.array()
-    .items(Joi.string().valid("admin", "user"))
+    .items(Joi.string().valid("CAND", "EMP"))
     .required()
     .messages({
       "any.required": "User type is required.",
