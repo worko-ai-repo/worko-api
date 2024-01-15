@@ -136,8 +136,6 @@ class UserDetailDao implements BaseDao {
       }),
       ...copyUserSignUpDTO,
       emailList: emailList,
-      isEmailVerified: false,
-      isNumberVerified: false,
       isSubscribed: isSub,
       userType: [userType],
       lastAccessedDash: userType,

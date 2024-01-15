@@ -21,6 +21,7 @@ import { UserAchievementModel } from "./models/UserAchievement.model";
 import { UserSubModel } from "./models/UserSubscription.model";
 import { UserReferralModel } from "./models/UserReferral.model";
 import { UserServiceModel } from "./models/UserService.model";
+import { UserProfilePercentageModel } from "./models/UserProfilePercentage.model";
 import { MasterSubscriptionModel } from "./models/MasterSubscription.model";
 import { MasterServiceModel } from "./models/MasterService.model";
 
@@ -104,6 +105,7 @@ class DBConfig {
       UserReferralModel,
       UserSubModel,
       UserServiceModel,
+      UserProfilePercentageModel,
       CompanyModel,
       CompanyDetailModel,
       CompanyRequestModel,

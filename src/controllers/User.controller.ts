@@ -9,6 +9,8 @@ import {
 } from "../dtos/User.dto";
 import { UserType } from "../dtos/Company.dto";
 import { UserExperienceDTO } from "../dtos/UserExperience.dto";
+import { UserSocialProfileDTO } from "../dtos/UserSocialProfile.dto";
+import { UserProfilePercentageDTO } from "../dtos/UserProfilePercentage.dto";
 
 // Load the local schema
 import {
@@ -21,6 +23,8 @@ import UserService from "../services/User.service";
 import UserEmailService from "../services/UserEmail.service";
 import UserExperienceService from "../services/UserExperience.service";
 import UserDetailService from "../services/UserDetail.service";
+import UserSocialProfileService from "../services/UserSocialProfile.service";
+import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -28,8 +32,8 @@ import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
 import { GroupingHelper } from "../helpers/grouping.helper";
-import UserSocialProfileService from "../services/UserSocialProfile.service";
-import { UserSocialProfileDTO } from "../dtos/UserSocialProfile.dto";
+import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+import { profilePercentageField } from "../configs/constants/UserProfilePercentage.constant";
 
 /**
  * UserController
@@ -180,6 +184,30 @@ class UserController {
         userSingUpDto.email,
         userSocialProfileDTO
       );
+
+      // Create the variable using the helper class
+      let userProfilePercentageDTO: UserProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
+
+      // Update curPerc based on the update object
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateCurPerc(
+          userProfilePercentageDTO,
+          value
+        );
+
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateFieldCurPercByKeys(
+          userProfilePercentageDTO,
+          [profilePercentageField.socialProfile]
+        );
+
+      //creating profile percentage SK for user
+      UserProfilePercentageService.create(
+        userSingUpDto.email,
+        userProfilePercentageDTO
+      );
+
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
       // Handle errors
@@ -239,8 +267,39 @@ class UserController {
       const userType = UserType.EMP;
       const newUser = await UserService.addUser(copyUserSignUpDTO, userType);
       UserSocialProfileService.create(email, userSocialProfileDTO);
-      // await UserEmailService.createEmailt(email, companyName, companyEmailId);
+      //The User Email table is removed and added the work related email to User Experience table
+      /* UserEmailService.createEmailt(email, companyName, companyEmailId); */
       UserExperienceService.create(email, userExperienceDto);
+
+      // Create the variable using the helper class
+      let userProfilePercentageDTO: UserProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
+
+      // Update curPerc based on the update object
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateCurPerc(
+          userProfilePercentageDTO,
+          copyUserSignUpDTO
+        );
+
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateCurPerc(
+          userProfilePercentageDTO,
+          userExperienceDto
+        );
+
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateFieldCurPercByKeys(
+          userProfilePercentageDTO,
+          [profilePercentageField.socialProfile]
+        );
+
+      //creating profile percentage SK for user
+      UserProfilePercentageService.create(
+        userSingUpDto.email,
+        userProfilePercentageDTO
+      );
+
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
       // Handle errors
@@ -269,6 +328,20 @@ class UserController {
       global.logger.info("update EmailVerify Status [controller]");
       const email = req.params.id;
       const verify = await UserService.verifyEmail(email);
+
+      let userProfilePercentageDTO = await UserProfilePercentageService.get(
+        email
+      );
+      userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
+
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateFieldCurPercByKeys(
+          userProfilePercentageDTO,
+          [profilePercentageField.isEmailVerified]
+        );
+
+      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+
       res.status(HttpStatusCode.OK_200).json(verify);
     } catch (error) {
       // Handle errors
@@ -298,6 +371,20 @@ class UserController {
       const resume = req.body.resume;
       const email = req.params.id;
       const update = await UserService.updateUserCV(email, resume);
+
+      let userProfilePercentageDTO = await UserProfilePercentageService.get(
+        email
+      );
+      userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
+
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateFieldCurPercByKeys(
+          userProfilePercentageDTO,
+          [profilePercentageField.CV]
+        );
+
+      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+
       res.status(HttpStatusCode.OK_200).json(update);
     } catch (error) {
       // Handle errors

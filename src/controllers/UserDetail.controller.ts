@@ -2,11 +2,14 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
+import { UserDetailDTO } from "../dtos/UserDetail.dto";
 
 // Load the local schema
+import { userDetailDTOValidation } from "../schemas/UserDetail.schema";
 
 // Load the shared service
 import UserDetailService from "../services/UserDetail.service";
+import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -14,8 +17,7 @@ import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
 import { GroupingHelper } from "../helpers/grouping.helper";
-import { UserDetailDTO } from "../dtos/UserDetail.dto";
-import { userDetailDTOValidation } from "../schemas/UserDetail.schema";
+import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 
 /**
  * UserDetailController
@@ -79,14 +81,26 @@ class UserDetailController {
       let { error, value } = userDetailDTOValidation.validate(userDetailDTO, {
         abortEarly: false,
       });
-      logger.debug("value: ", value);
 
       // Validate the user input and throw a validation error if necessary
       if (error) {
         throw new RequestValidationError(error);
       }
 
+      let userProfilePercentageDTO = await UserProfilePercentageService.get(
+        email
+      );
+      userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
+
       const result = await UserDetailService.update(email, req.body.SK, value);
+
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateCurPerc(
+          userProfilePercentageDTO,
+          value
+        );
+
+      UserProfilePercentageService.update(email, userProfilePercentageDTO);
 
       // If it has an SK, then it is an update, and if it does not have an SK, it is a create
       /* if (req.body.SK) {

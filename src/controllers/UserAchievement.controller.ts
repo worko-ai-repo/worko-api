@@ -7,13 +7,15 @@ import { UserAchievementDTO } from "../dtos/UserAchievement.dto";
 import { userAchievementDTOValidation } from "../schemas/UserAchievement.schema";
 // Load the shared service
 import UserAchievementService from "../services/UserAchievement.service";
+import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
-import { TimestampHelper } from "../helpers/timeStamp.helper";
 
 // Load local helper
+import { TimestampHelper } from "../helpers/timeStamp.helper";
+import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 
 /**
  * UserAchievementController
@@ -111,6 +113,17 @@ class UserAchievementController {
       } else {
         result = await UserAchievementService.create(email, value);
       }
+
+      let userProfilePercentageDTO = await UserProfilePercentageService.get(
+        email
+      );
+      userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
+
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateCurPerc(
+          userProfilePercentageDTO,
+          value
+        );
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);

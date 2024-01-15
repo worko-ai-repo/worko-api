@@ -45,16 +45,14 @@ class UserService {
    */
   async addUser(userSignUpDTO: UserSignUpDTO, userType: string) {
     console.log("Create candidate/employee [service]");
+    //Creating new user
+    const newUser = await userDetailDao.add(userSignUpDTO, userType);
     if (userType === "CAND") {
-      //Creating candidate account
-      userDetailDao.add(userSignUpDTO, userType);
       //Adding the FREE subscription plan for Candidate
       const subPlan = await MasterSubscriptionService.getByPlan("Free");
       UserSubscriptionService.create(subPlan.SK, userSignUpDTO.email);
-    } else {
-      //Creating employee account
-      userDetailDao.add(userSignUpDTO, userType);
     }
+    return newUser;
   }
 
   /**

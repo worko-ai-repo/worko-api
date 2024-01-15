@@ -18,6 +18,7 @@ import UserAchievementRouter from "./routers/UserAchievement.router";
 import UserReferralRouter from "./routers/UserReferral.router";
 import UserSubscriptionRouter from "./routers/UserSubscription.router";
 import UserServiceRouter from "./routers/UserService.router";
+import UserProfilePercentageRouter from "./routers/UserProfilePercentage.router";
 
 //File routers
 import FileRouter from "./routers/File.router";
@@ -64,6 +65,9 @@ router.use("/user", UserServiceRouter);
 
 // Regitser the "User Subscription" routers
 router.use("/user", UserSubscriptionRouter);
+
+// Regitser the "User ProfilePercentage" routers
+router.use("/user", UserProfilePercentageRouter);
 
 // Regitser the "File" router
 router.use("/file", FileRouter);

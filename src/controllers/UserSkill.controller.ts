@@ -7,13 +7,15 @@ import { UserSkillDTO } from "../dtos/UserSkill.dto";
 import { userSkillDTOValidation } from "../schemas/UserSkill.schema";
 // Load the shared service
 import UserSkillService from "../services/UserSkill.service";
+import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
-import { TimestampHelper } from "../helpers/timeStamp.helper";
 
 // Load local helper
+import { TimestampHelper } from "../helpers/timeStamp.helper";
+import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 
 /**
  * UserSkillController
@@ -104,6 +106,17 @@ class UserSkillController {
       } else {
         result = await UserSkillService.create(email, value);
       }
+
+      let userProfilePercentageDTO = await UserProfilePercentageService.get(
+        email
+      );
+      userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
+
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateCurPerc(
+          userProfilePercentageDTO,
+          value
+        );
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);

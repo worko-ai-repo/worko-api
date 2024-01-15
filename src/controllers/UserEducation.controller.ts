@@ -2,17 +2,12 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import {
-  UserEducationDTO,
-  UserEducationDTOWithId,
-} from "../dtos/UserEducation.dto";
+import { UserEducationDTOWithId } from "../dtos/UserEducation.dto";
 // Load the local schema
-import {
-  userEducationDTOArrayValidation,
-  userEducationDTOValidation,
-} from "../schemas/UserEducation.schema";
+import { userEducationDTOArrayValidation } from "../schemas/UserEducation.schema";
 // Load the shared service
 import UserEducationService from "../services/UserEducation.service";
+import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -20,6 +15,7 @@ import { RequestValidationError } from "../utils/errors.util";
 import InvokeLambdaService from "../services/InvokeLambda.service";
 
 // Load local helper
+import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 
 /**
  * UserEducationController
@@ -88,16 +84,24 @@ class UserEducationController {
           abortEarly: false,
         }
       );
-      logger.debug("value: ", value);
 
       // Validate the user input and throw a validation error if necessary
       if (error) {
         throw new RequestValidationError(error);
       }
 
-      let result;
+      let userProfilePercentageDTO = await UserProfilePercentageService.get(
+        email
+      );
+      userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
 
       for (let i = 0; i < userEducationDTO.length; i++) {
+        // checking the fields in profile percentage for UserExperience and updating the current percentage
+        userProfilePercentageDTO =
+          UserProfilePercentageOperationHelper.updateCurPerc(
+            userProfilePercentageDTO,
+            value[i]
+          );
         // If it has an SK, then it is an update, and if it does not have an SK, it is a create
         if (userEducationDTO[i].SK) {
           UserEducationService.update(email, userEducationDTO[i].SK, value[i]);
@@ -106,8 +110,10 @@ class UserEducationController {
         }
       }
 
+      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+
       // Send a successful response with user data
-      res.status(HttpStatusCode.OK_200).json(result);
+      res.status(HttpStatusCode.OK_200).json();
     } catch (error: any) {
       // If it's another type of error, pass it to the next error handler
       next(error);

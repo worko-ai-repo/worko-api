@@ -26,7 +26,11 @@ class UserSubscriptionService {
     const result = await MasterSubscriptionService.getById(
       masterSubscriptionId
     );
-    global.logger.debug("result", result);
+    global.logger.debug("Master subscription service detail.", {
+      filePath: __filename,
+      methodName: this.constructor.name,
+      result: result,
+    });
     const purchaseDate = new Date();
 
     // Calculating expiryDate based on purchaseDate and duration
