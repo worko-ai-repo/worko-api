@@ -49,7 +49,9 @@ export class TimestampHelper {
           updatedAt: currentTimestamp,
         };
       } else {
-        item.timestamps.createdAt = item.timestamps.createdAt.toISOString();
+        //@todo Added below 2 lines cause 'createAt' is throwing error to convert to ISO even though it's in ISO. We need to investigate the error and remove this code
+        let createAtISO = new Date(item.timestamps.createdAt);
+        item.timestamps.createdAt = createAtISO.toISOString();
         // If timestamps present, update 'updatedAt'.
         item.timestamps.updatedAt = currentTimestamp;
       }

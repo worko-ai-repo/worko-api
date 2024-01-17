@@ -117,11 +117,10 @@ class UserBankDetailController {
       } else {
         value.bankDetails[0].status = BankUpiStatus.ACTIVE;
         value.upiIds[0].status = BankUpiStatus.ACTIVE;
-        console.log("value 120:- ", value);
         result = await UserBankDetailService.create(email, value);
       }
 
-      /* let userProfilePercentageDTO = await UserProfilePercentageService.get(
+      let userProfilePercentageDTO = await UserProfilePercentageService.get(
         email
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
@@ -132,7 +131,7 @@ class UserBankDetailController {
           value
         );
 
-      UserProfilePercentageService.update(email, userProfilePercentageDTO); */
+      UserProfilePercentageService.update(email, userProfilePercentageDTO);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
