@@ -181,7 +181,7 @@ export const UserProfilePercentage = {
           expPerc: 6,
         },
         {
-          field: "bankDetail",
+          field: "bankDetails",
           fieldText: "Bank Detail",
           expPerc: 2,
         },

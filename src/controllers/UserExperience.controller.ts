@@ -77,7 +77,6 @@ class UserExperienceController {
       // Extract email from request parameters
       const email = req.params.id;
       const userExperienceDTO: UserExperienceDTOWithId[] = req.body;
-      logger.debug("userExperienceDTO: ", userExperienceDTO);
       let { error, value } = userExperienceDTOArrayValidation.validate(
         userExperienceDTO,
         {

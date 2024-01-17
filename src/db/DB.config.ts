@@ -22,6 +22,7 @@ import { UserSubModel } from "./models/UserSubscription.model";
 import { UserReferralModel } from "./models/UserReferral.model";
 import { UserServiceModel } from "./models/UserService.model";
 import { UserProfilePercentageModel } from "./models/UserProfilePercentage.model";
+import { UserBankDetailModel } from "./models/UserBankDetail.model";
 import { MasterSubscriptionModel } from "./models/MasterSubscription.model";
 import { MasterServiceModel } from "./models/MasterService.model";
 
@@ -106,6 +107,7 @@ class DBConfig {
       UserSubModel,
       UserServiceModel,
       UserProfilePercentageModel,
+      UserBankDetailModel,
       CompanyModel,
       CompanyDetailModel,
       CompanyRequestModel,

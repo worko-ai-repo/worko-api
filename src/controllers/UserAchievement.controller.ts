@@ -125,6 +125,8 @@ class UserAchievementController {
           value
         );
 
+      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error: any) {
