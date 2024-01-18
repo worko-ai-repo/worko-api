@@ -13,7 +13,7 @@ const UserProfilePercentageRouter = Router();
 // Get the user ProfilePercentage details
 UserProfilePercentageRouter.get(
   "/:id/profilePercentage",
-  userProfilePercentageController.get
+  userProfilePercentageController.getByGroup
 );
 
 // Get the user ProfilePercentage details

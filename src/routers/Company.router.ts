@@ -12,7 +12,7 @@ const CompanyRouter = Router();
 
 // Create company based on the provided query parameter by admin
 // @todo change this to "/", this should help.
-CompanyRouter.post("/create", companyController.createCompany);
+CompanyRouter.post("/", companyController.createCompany);
 
 // Create a company request based on the provided query parameter by user
 // @todo change this to "/request", this should help.
@@ -24,7 +24,7 @@ CompanyRouter.get("/new", companyController.getRequestedCompanyList);
 
 // Get the company details list
 // @todo here we should not use "list", we can just have "/" and it should be helpful and consistent without naming convenstions/syntax.
-CompanyRouter.get("/list", companyController.getCompanyList);
+CompanyRouter.get("/", companyController.getCompanyList);
 
 // Export the "CompanyRouter"
 export default CompanyRouter;

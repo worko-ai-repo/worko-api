@@ -5,11 +5,12 @@ import BaseDao from "./Base.dao";
 import { UserEducationModel } from "../db/models/UserEducation.model";
 
 //Load the local dtos
+import { UserEducationDTO } from "../dtos/UserEducation.dto";
+
 // import { UserEducationDTO } from "../dtos/UserEducation.dto";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
-import { UserEducationDTO } from "../dtos/UserEducation.dto";
 
 // UserEducationDao class implementing the BaseDao interface
 class UserEducationDao implements BaseDao {
