@@ -199,30 +199,31 @@ class FileController {
         });
 
       // Get the user's ProfilePic file extension
-      const ProfilePicUserFileExtension =
-        requestBodyObject.ProfilePicUserFileName.split(".").pop() as string; // It is expected in request payload to provide flexibility
+      const profilePicUserFileExtension = requestBodyObject.profileUserFileName
+        .split(".")
+        .pop() as string; // It is expected in request payload to provide flexibility
 
       // Prepare the user's ProfilePic file name
-      const ProfilePicCloudFileName =
-        UlidService.getUlidId() + "." + ProfilePicUserFileExtension;
+      const profilePicCloudFileName =
+        UlidService.getUlidId() + "." + profilePicUserFileExtension;
 
       // Generate the AWS S3 Signed Url
       const masterCsvSignedUrl =
         await awsS3ClientLibrary.getSignedUrlForUploadingObject(
           process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
-          masterCsvUploadPath + "/" + ProfilePicCloudFileName,
+          masterCsvUploadPath + "/" + profilePicCloudFileName,
           APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
           {
-            ContentType: requestBodyObject.ProfilePicFileMimeType, // It is expected in request payload to provide flexibility
+            ContentType: requestBodyObject.profileFileMimeType, // It is expected in request payload to provide flexibility
           }
         );
 
       // Prepare the response object
       const resObject: PreSignedUrlToUploadFileResponseDto = {
-        userFileName: requestBodyObject.ProfilePicUserFileName,
-        cloudFileName: ProfilePicCloudFileName,
-        fileMimeType: requestBodyObject.ProfilePicFileMimeType,
-        fileExtension: ProfilePicUserFileExtension,
+        userFileName: requestBodyObject.profileUserFileName,
+        cloudFileName: profilePicCloudFileName,
+        fileMimeType: requestBodyObject.profileFileMimeType,
+        fileExtension: profilePicUserFileExtension,
         awsS3SignedUrl: masterCsvSignedUrl,
       };
 
