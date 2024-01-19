@@ -131,6 +131,41 @@ class UserReferralDao implements BaseDao {
     });
     return UserReferralModel.update({ PK: PK, SK: SK }, { status: status });
   }
+
+  /**
+   * Fetches Referral based on GSI1PK, companySK.
+   * @param companySK - Company sort key
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async getByGSI1PK(companySK: string) {
+    global.logger.info("Get Referral by GSI1PK and companySK [DAO]");
+    const GSI1PK = "REF#";
+    const cSK = "ID#" + companySK;
+    return UserReferralModel.query("GSI1PK")
+      .eq(GSI1PK)
+      .where("companySK")
+      .eq(cSK)
+      .exec();
+  }
+
+  /**
+   * Fetches Referral based on GSI1PK, companySK, and status.
+   * @param companySK - Company sort key
+   * @param status - Referral status
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async getByGSI1PKAndStatus(companySK: string, status: string) {
+    global.logger.info("Get Referral by GSI1PK and status [DAO]");
+    const GSI1PK = "REF#";
+    const cSK = "ID#" + companySK;
+    return UserReferralModel.query("GSI1PK")
+      .eq(GSI1PK)
+      .where("companySK")
+      .eq(cSK)
+      .where("status")
+      .eq(status)
+      .exec();
+  }
 }
 
 // Export a new instance of UserReferralDao

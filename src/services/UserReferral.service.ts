@@ -68,6 +68,35 @@ class UserReferralService {
   }
 
   /**
+   *
+   * Fetches Referral based on  companySK
+   *
+   * @param companySK - Company sort key
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   *
+   */
+  async getByGSI1PK(companySK: string): Promise<any> {
+    // Logging the action of getting user Referral by companySK in the service layer
+    logger.info("Fetching Referrals by companySK  [UserReferralService]");
+    return userReferralDao.getByGSI1PK(companySK);
+  }
+
+  /**
+   *
+   * Fetches Referral based on GSI1PK, companySK, and status.
+   *
+   * @param companySK - Company sort key
+   * @param status - Referral status
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   *
+   */
+  async getByGSI1PKAndStatus(companySK: string, status: string): Promise<any> {
+    // Logging the action of getting user Referral by GSI1PK & status in the service layer
+    logger.info("Fetching Referral by GSI1PK and status [UserReferralService]");
+    return userReferralDao.getByGSI1PKAndStatus(companySK, status);
+  }
+
+  /**
    * Retrieves user Referral by status.
    *
    * @param email - Email of the user

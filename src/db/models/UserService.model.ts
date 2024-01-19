@@ -72,7 +72,7 @@ const UserServiceSchema = new dynamoose.Schema(
     GSI1PK: {
       type: String,
       index: {
-        name: "PrimaryIndex",
+        name: "GSI1",
         type: "global",
         rangeKey: "GSI1SK",
       },
@@ -80,7 +80,7 @@ const UserServiceSchema = new dynamoose.Schema(
     GSI1SK: {
       type: String,
       index: {
-        name: "SecondaryIndex",
+        name: "GSI1",
         type: "global",
       },
     },

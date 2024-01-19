@@ -24,6 +24,9 @@ import UserBankDetailRouter from "./routers/UserBankDetail.router";
 //File routers
 import FileRouter from "./routers/File.router";
 
+//Referral routers
+import ReferralRouter from "./routers/Referral.router";
+
 //Master routers
 import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
 import MasterServiceRouter from "./routers/MasterService.router";
@@ -75,6 +78,9 @@ router.use("/user", UserBankDetailRouter);
 
 // Regitser the "File" router
 router.use("/file", FileRouter);
+
+// Regitser the "Referral" router
+router.use("/referral", ReferralRouter);
 
 // Regitser the "Master Subscription" routers
 router.use("/subscription", MasterSubscriptionRouter);

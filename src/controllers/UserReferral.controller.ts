@@ -72,6 +72,52 @@ class UserReferralController {
   };
 
   /**
+   * getByGSI1PKAndStatus
+   *
+   * Retrieves the referrals based on the provided query parameters
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  getByGSI1PKAndStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      // Log the action for debugging purposes
+      logger.info("Get Referral by GSI1PK and status [controller]");
+
+      // Extract email from request parameters
+      const companySK = req.params.companySK;
+      const status = req.query.status;
+      let result;
+
+      if (status && typeof status === "string") {
+        result = await UserReferralService.getByGSI1PKAndStatus(
+          companySK,
+          status
+        );
+      } else {
+        result = await UserReferralService.getByGSI1PK(companySK);
+      }
+
+      /* status && typeof status === "string"
+        ? result = await UserReferralService.getByStatus(email, status)
+        : result = await UserReferralService.get(email); */
+
+      // Send a successful response with user data
+      res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error: any) {
+      // Handle errors
+
+      // If it's another type of error, pass it to the next error handler
+      next(error);
+    }
+  };
+
+  /**
    *
    * getMatchingScore
    *
