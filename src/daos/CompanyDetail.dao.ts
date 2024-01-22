@@ -18,6 +18,21 @@ class CompanyDetailDao implements BaseDao {
 
   /**
    *
+   * Get a list of specific company name and SK
+   *
+   * @param beginsWith
+   */
+  async getByBeginsith(beginsWith: string) {
+    return CompanyDetailModel.query("PK")
+      .eq(this.partitianKey)
+      .where("name")
+      .beginsWith(beginsWith)
+      .attributes(["name", "SK"])
+      .exec();
+  }
+
+  /**
+   *
    * Add a company based on provided DTO
    *
    * @param companyDto

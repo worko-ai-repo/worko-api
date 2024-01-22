@@ -2,11 +2,12 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
+import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
 import {
-  CompanyDTO,
-  AddCompanyDTO,
-} from "../dtos/Company.dto";
-import { RecordListingFilterOptions, RecordListingFilterRequestDTO, RecordListingResponseDTO } from "../dtos/Common.dto";
+  RecordListingFilterOptions,
+  RecordListingFilterRequestDTO,
+  RecordListingResponseDTO,
+} from "../dtos/Common.dto";
 
 // Import Helpers
 import { RequestHelper } from "../helpers/request.helper";
@@ -81,10 +82,15 @@ class CompanyController {
   getCompanyList = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Only the filter condition/details required for filtering the records
-      const recordListingFilterRequest: RecordListingFilterOptions = RequestHelper.parseFilterOptions(req.query as unknown as RecordListingFilterRequestDTO);
+      const recordListingFilterRequest: RecordListingFilterOptions =
+        RequestHelper.parseFilterOptions(
+          req.query as unknown as RecordListingFilterRequestDTO
+        );
 
       // Call the CompanyService to get company list
-      const companyList = await CompanyService.getCompanyList(recordListingFilterRequest);
+      const companyList = await CompanyService.getCompanyList(
+        recordListingFilterRequest
+      );
 
       // Response
       const response: RecordListingResponseDTO = {
@@ -95,10 +101,34 @@ class CompanyController {
           pageSize: recordListingFilterRequest.pageSize,
           lastKey: lastKeyToBase64EncodeStr(companyList.lastKey),
         },
-      }
+      };
 
       // Send successful response with company list data
       res.status(HttpStatusCode.OK_200).json(response);
+    } catch (error: any) {
+      // Let "app.ts" and/or expressjs handle the error
+      next(error);
+    }
+  };
+
+  /**
+   * getCompany by beginsith name
+   *
+   * Get companies based on the provided filters
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  getByBeginsWith = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const beginsWith = req.params.beginsWith;
+
+      // Call the CompanyService to get company list
+      const companyList = await CompanyService.getByBeginsWith(beginsWith);
+
+      // Send successful response with company list data
+      res.status(HttpStatusCode.OK_200).json(companyList);
     } catch (error: any) {
       // Let "app.ts" and/or expressjs handle the error
       next(error);

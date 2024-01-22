@@ -29,6 +29,16 @@ class CompanyService {
 
   /**
    *
+   * Retrieves a list of existing companies.
+   *
+   * @returns
+   */
+  async getByBeginsWith(beginsWith: string) {
+    return companyDetailDao.getByBeginsith(beginsWith);
+  }
+
+  /**
+   *
    * Retrieves a list of requested companies.
    *
    * @returns

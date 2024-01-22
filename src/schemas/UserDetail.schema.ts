@@ -23,10 +23,6 @@ export const userDetailDTOValidation = Joi.object({
       "any.required": "User type is required.",
       "array.includesOne": "Invalid user type.",
     }),
-  linkedinUrl: Joi.string().uri().required().messages({
-    "any.required": "LinkedIn URL is required.",
-    "string.uri": "Invalid LinkedIn URL.",
-  }),
   isEmailVerified: Joi.boolean().required().messages({
     "any.required": "Email verification status is required.",
     "boolean.base": "Invalid email verification status.",

@@ -141,6 +141,8 @@ class UserDetailDao implements BaseDao {
       lastAccessedDash: userType,
       referralCount: refCount,
       expiryDate: today,
+      isEmailVerified: false,
+      isNumberVerified: false,
     };
     return UserDetailModel.create(newUserSignUpDTO);
   }

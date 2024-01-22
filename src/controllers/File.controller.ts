@@ -16,6 +16,7 @@ import UlidService from "../services/Ulid.service";
 
 // Import Schemas
 import {
+  FileGeneratePreSignedUrlsToViewDTOValidation,
   FileGeneratePsuToUploadUserProfilePicDTOValidation,
   FileGeneratePsuToUploadUserResumeDTOValidation,
 } from "../schemas/File.schema";
@@ -72,6 +73,60 @@ class FileController {
       // As resource keys are not matched above, let frontend know about the same.
       throw new BaseError(
         "The provide 'resourceKey' is invalid. Please provide a valid 'resourceKey'.",
+        HttpStatusCode.BAD_REQUEST_400
+      );
+    } catch (error) {
+      // Let global error handler handle the exception (app.ts)
+      next(error);
+    }
+  };
+
+  /**
+   * generatePreSignedUrlsToView
+   *
+   * Get the file (resume or profilePic) from the cloud storage.
+   *
+   * @param req Request
+   * @param res Response
+   * @param next NextFunction
+   * @returns {Promise<any>}
+   */
+  generatePreSignedUrlsToView = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> => {
+    try {
+      // Get the resource key to route the action/operation to respective methods
+      const resourceKey = req.params["resourceKey"];
+
+      // Get the request body
+      let requestParamsObject = req.params;
+
+      // Validate the request data
+      const { error } = FileGeneratePreSignedUrlsToViewDTOValidation.validate(
+        requestParamsObject,
+        {
+          abortEarly: false,
+        }
+      );
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Frontend wants to get the user's resume
+      if (resourceKey === FileResourceKey.USER_RESUME) {
+        return this.getUserResume(req, res, next);
+      }
+      // Frontend wants to get the user's profilePic
+      else if (resourceKey === FileResourceKey.USER_PROFILE_PIC) {
+        return this.getUserProfilePic(req, res, next);
+      }
+
+      // As resource keys are not matched above, let frontend know about the same.
+      throw new BaseError(
+        "The provided 'resourceKey' is invalid. Please provide a valid 'resourceKey'.",
         HttpStatusCode.BAD_REQUEST_400
       );
     } catch (error) {
@@ -229,6 +284,82 @@ class FileController {
 
       // Return the response
       return res.status(HttpStatusCode.OK_200).json(resObject);
+    } catch (error) {
+      // Let global error handler handle the exception (app.ts)
+      next(error);
+    }
+  };
+
+  /**
+   * getUserResume
+   *
+   * Get the user's resume from cloud storage.
+   *
+   * @param req Request
+   * @param res Response
+   * @param next NextFunction
+   * @param userId string
+   * @returns {Promise<any>}
+   */
+  private getUserResume = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> => {
+    try {
+      const userId = req.params["userId"];
+      const cloudFileName = req.params["cloudFileName"];
+      // Construct the file path in the cloud storage
+      const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_RESUME.strtr({
+        "{userId}": userId.toString(),
+      });
+
+      // Assume that you have a method to generate the object URL
+      const objectUrl = await awsS3ClientLibrary.generateObjectUrl(
+        process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+        filePath + "/" + cloudFileName
+      );
+
+      // Return the object URL to the frontend
+      return res.status(HttpStatusCode.OK_200).json({ objectUrl });
+    } catch (error) {
+      // Let global error handler handle the exception (app.ts)
+      next(error);
+    }
+  };
+
+  /**
+   * getUserProfilePic
+   *
+   * Get the user's profilePic from cloud storage.
+   *
+   * @param req Request
+   * @param res Response
+   * @param next NextFunction
+   * @param userId string
+   * @returns {Promise<any>}
+   */
+  private getUserProfilePic = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> => {
+    try {
+      const userId = req.params["userId"];
+      const cloudFileName = req.params["cloudFileName"];
+      // Construct the file path in the cloud storage
+      const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_PROFILE_PIC.strtr({
+        "{userId}": userId.toString(),
+      });
+
+      // Assume that you have a method to generate the object URL
+      const objectUrl = await awsS3ClientLibrary.generateObjectUrl(
+        process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+        filePath + "/" + cloudFileName
+      );
+
+      // Return the object URL to the frontend
+      return res.status(HttpStatusCode.OK_200).json({ objectUrl });
     } catch (error) {
       // Let global error handler handle the exception (app.ts)
       next(error);

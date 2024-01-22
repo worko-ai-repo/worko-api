@@ -3,7 +3,6 @@ export interface UserDetailDTO {
   emailList: { [key: string]: string };
   number: number;
   userType: string[];
-  linkedinUrl: string;
   isEmailVerified: boolean;
   isNumberVerified: boolean;
   isSubscribed: boolean;

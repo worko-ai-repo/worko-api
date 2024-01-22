@@ -11,7 +11,16 @@ const fileController = new FileController();
 const FileRouter = Router();
 
 // Generate pre-signed url to upload the file to aws s3
-FileRouter.post("/gsu2u/:resourceKey", fileController.generatePreSignedUrlsToUpload);
+FileRouter.post(
+  "/gsu2u/:resourceKey",
+  fileController.generatePreSignedUrlsToUpload
+);
+
+// Get the pre-signed URL to view the object/file
+FileRouter.get(
+  "/:userId/:cloudFileName/:resourceKey",
+  fileController.generatePreSignedUrlsToView
+);
 
 // Export the "FileRouter"
 export default FileRouter;

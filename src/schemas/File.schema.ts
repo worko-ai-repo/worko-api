@@ -1,3 +1,4 @@
+import { FileResourceKey } from "../enums/File.enum";
 // Import npm packages
 import Joi from "joi";
 
@@ -33,4 +34,19 @@ export const FileGeneratePsuToUploadUserProfilePicDTOValidation = Joi.object({
   profileFileMimeType: Joi.string().required().messages({
     "any.required": "The 'profileFileMimeType' field is required",
   }),
+});
+
+/**
+ * FileGeneratePreSignedUrlsToViewDTOValidation
+ *
+ * Joi validation schema to validate the request data.
+ */
+export const FileGeneratePreSignedUrlsToViewDTOValidation = Joi.object({
+  userId: Joi.string().required(),
+  cloudFileName: Joi.string()
+    .regex(/\.(jpng|pdf)$/i)
+    .required(),
+  resourceKey: Joi.string()
+    .valid(...Object.values(FileResourceKey))
+    .required(),
 });

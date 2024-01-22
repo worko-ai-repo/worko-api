@@ -15,8 +15,8 @@ class DbUserDetailDto extends BaseDbDto {
   emailList!: { [key: string]: string }; // @todo we should consider removing this. And make the fields are always upto date. Instead use the "UserEmail" SK.
   number!: number;
   userType!: string[];
-  isEmailVerified?: boolean;
-  isNumberVerified?: boolean;
+  isEmailVerified!: boolean;
+  isNumberVerified!: boolean;
   isSubscribed!: boolean;
   referralCount!: number;
   location?: string;
@@ -55,11 +55,11 @@ const UserDetailSchema = new dynamoose.Schema(
     },
     isEmailVerified: {
       type: Boolean,
-      required: false,
+      required: true,
     },
     isNumberVerified: {
       type: Boolean,
-      required: false,
+      required: true,
     },
     isSubscribed: {
       type: Boolean,
