@@ -18,6 +18,10 @@ export const userExperienceDTOValidation = Joi.object({
     "any.required": "Company Name is required.",
     "string.empty": "Company Name should not be empty.",
   }),
+  companySK: Joi.string().required().messages({
+    "any.required": "Company SK is required.",
+    "string.empty": "Company SK should not be empty.",
+  }),
   emailId: Joi.string().email().required().messages({
     "any.required": "Email ID is required.",
     "string.empty": "Email ID should not be empty.",
@@ -43,6 +47,10 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
     companyName: Joi.string().required().messages({
       "any.required": "Company Name is required.",
       "string.empty": "Company Name should not be empty.",
+    }),
+    companySK: Joi.string().required().messages({
+      "any.required": "Company SK is required.",
+      "string.empty": "Company SK should not be empty.",
     }),
     emailId: Joi.string().email().required().messages({
       "any.required": "Email ID is required.",

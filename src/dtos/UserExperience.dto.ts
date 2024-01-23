@@ -7,6 +7,7 @@ export interface UserExperienceDTO {
   startedYear?: number;
   endedYear?: number;
   companyName: string;
+  companySK: string;
   emailId: string;
 }
 

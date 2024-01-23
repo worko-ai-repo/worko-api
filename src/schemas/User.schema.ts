@@ -14,6 +14,11 @@ export const UserSignUpDTOValidation = Joi.object({
     "any.required": "Number is required",
   }),
 
+  linkedinUrl: Joi.string().regex(
+    /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
+    "LinkedIn URL is not valid"
+  ),
+
   ECTC: Joi.number().options({ convert: false }).required().messages({
     "any.required": "ECTC is required",
     "number.base": "ECTC should be a valid number",
@@ -46,10 +51,10 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
     "any.required": "Number is required.",
     "number.base": "Number must be a valid number.",
   }),
-  linkedinUrl: Joi.string().required().messages({
-    "any.required": "LinkedIn URL is required.",
-    "string.empty": "LinkedIn URL cannot be empty.",
-  }),
+  linkedinUrl: Joi.string().regex(
+    /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
+    "LinkedIn URL is not valid"
+  ),
   YOE: Joi.number().options({ convert: false }).integer().required().messages({
     "any.required": "Years of Experience (YOE) is required.",
     "number.base": "YOE must be a valid number.",
@@ -58,6 +63,10 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
   companyName: Joi.string().required().messages({
     "any.required": "Company Name is required.",
     "string.empty": "Company Name cannot be empty.",
+  }),
+  companySK: Joi.string().required().messages({
+    "any.required": "Company SK is required.",
+    "string.empty": "Company SK should not be empty.",
   }),
   companyEmailId: Joi.string().email().required().messages({
     "any.required": "Company Email ID is required.",

@@ -29,6 +29,7 @@ export interface UserEmployeeSignUpDTO {
   linkedinUrl: string;
   YOE: number;
   companyName: string;
+  companySK: string;
   companyEmailId: string;
   department: string;
   designation: string;

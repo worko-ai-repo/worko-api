@@ -246,6 +246,7 @@ class UserController {
       const email = userSingUpDto.email;
       const {
         companyName,
+        companySK,
         companyEmailId,
         department,
         designation,
@@ -259,6 +260,7 @@ class UserController {
         designation,
         designationTag,
         companyName,
+        companySK,
         emailId: companyEmailId,
       };
       const userSocialProfileDTO: UserSocialProfileDTO = {
