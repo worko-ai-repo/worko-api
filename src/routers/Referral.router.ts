@@ -19,4 +19,9 @@ ReferralRouter.get(
   ReferralController.getByGSI1PKAndStatus
 );
 
+ReferralRouter.put(
+  "/:referralId/action",
+  ReferralController.updateStatusByEmployee
+);
+
 export default ReferralRouter;

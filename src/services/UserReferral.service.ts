@@ -97,6 +97,20 @@ class UserReferralService {
   }
 
   /**
+   *
+   * Fetches Referral based on  attribute
+   *
+   * @param GSI1SK
+   * @param attribute
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   *
+   */
+  async getOnlyAttribute(GSI1SK: string, attribute: [string]): Promise<any> {
+    logger.info("Fetching Referrals by GSI1SK  [UserReferralService]");
+    return userReferralDao.getOnlyAttribute(GSI1SK, attribute);
+  }
+
+  /**
    * Retrieves user Referral by status.
    *
    * @param email - Email of the user
@@ -125,6 +139,81 @@ class UserReferralService {
     // Logging the action of getting user Referral by email in the service layer
     global.logger.info("Updating user Referral status [UserReferralService]");
     return userReferralDao.updateStatus(referralId, email, status);
+  }
+
+  /**
+   * updates the status of Referral By GSI
+   *
+   * @param
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async updatePassedByUserIdsByGSI1SK(
+    GSI1SK: string,
+    value: string[]
+  ): Promise<any> {
+    // Logging the action of getting user Referral by email in the service layer
+    global.logger.info("Updating Referral status by GSI [UserReferralService]");
+    return userReferralDao.updatePassedByUserIdsByGSI1SK(GSI1SK, value);
+  }
+
+  /**
+   * updates the status of Referral By GSI
+   *
+   * @param
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async updateRejectedByUserIdsByGSI1SK(
+    GSI1SK: string,
+    value: []
+  ): Promise<any> {
+    // Logging the action of getting user Referral by email in the service layer
+    global.logger.info("Updating Referral status by GSI [UserReferralService]");
+    return userReferralDao.updateRejectedByUserIdsByGSI1SK(GSI1SK, value);
+  }
+
+  /**
+   * updates the status of Referral By GSI
+   *
+   * @param
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async updateAcceptedByUserIdByGSI1SK(
+    GSI1SK: string,
+    value: string
+  ): Promise<any> {
+    // Logging the action of getting user Referral by email in the service layer
+    global.logger.info("Updating Referral status by GSI [UserReferralService]");
+    return userReferralDao.updateAcceptedByUserIdByGSI1SK(GSI1SK, value);
+  }
+
+  /**
+   * updates the status of Referral By GSI
+   *
+   * @param
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async updateDoneByEmployeeByGSI1SK(
+    GSI1SK: string,
+    value: Date
+  ): Promise<any> {
+    // Logging the action of getting user Referral by email in the service layer
+    global.logger.info("Updating Referral status by GSI [UserReferralService]");
+    return userReferralDao.updateDoneByEmployeeByGSI1SK(GSI1SK, value);
+  }
+
+  /**
+   * updates the status of Referral By GSI
+   *
+   * @param
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async updateDoneByCandidateByGSI1SK(
+    GSI1SK: string,
+    value: Date
+  ): Promise<any> {
+    // Logging the action of getting user Referral by email in the service layer
+    global.logger.info("Updating Referral status by GSI [UserReferralService]");
+    return userReferralDao.updateDoneByCandidateByGSI1SK(GSI1SK, value);
   }
 }
 

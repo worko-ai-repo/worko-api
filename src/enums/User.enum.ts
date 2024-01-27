@@ -8,3 +8,16 @@ export enum BankUpiStatus {
   ACTIVE = "ACTIVE",
   DEACTIVATED = "DEACTIVATED",
 }
+
+/**
+ * ReferralActions
+ *
+ * Description: Enum representing the actions of a user referral.
+ */
+export enum ReferralActions {
+  // User Referral related actions
+  PASS = "PASS",
+  REJECT = "REJECT",
+  ACCEPT = "ACCEPT",
+  DONE = "DONE",
+}

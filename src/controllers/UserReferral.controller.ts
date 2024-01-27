@@ -17,6 +17,7 @@ import UserReferralService from "../services/UserReferral.service";
 //Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
+import { ReferralActions } from "../enums/User.enum";
 
 /**
  * UserReferralController
@@ -234,6 +235,135 @@ class UserReferralController {
         status
       );
       res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error) {
+      // Handle errors
+      // Pass other errors to the next error handler
+      next(error);
+    }
+  };
+
+  /**
+   * updateStatusByEmployee
+   *
+   * updates the status of user Referral request
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  updateStatusByEmployee = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      global.logger.info("update referral status  employee  [controller]");
+
+      const { referralId } = req.params;
+      const referralstatusUpdate = req.body;
+      /* const { error } = UserReferralStatusValidation.validate(status, {
+        abortEarly: false,
+      });
+
+      if (error) {
+        throw new RequestValidationError(error);
+      } */
+      // Assuming the type of referral is an array with UserReferral objects
+      const userId = referralstatusUpdate.userId;
+      let referral;
+      switch (referralstatusUpdate.action) {
+        case ReferralActions.PASS:
+          referral = await UserReferralService.getOnlyAttribute(referralId, [
+            "passedByUserIds",
+          ]);
+
+          console.log("referral: ", referral);
+
+          // Update passedByUserIds for PASS action
+          /* let updatedPassedByUserIds: string[] = referral
+            ? referral.count === 0
+              ? (() => {
+                  throw new Error("Wrong referralId");
+                })()
+              : referral[0].passedByUserIds &&
+                Object.keys(referral[0].passedByUserIds).length === 0
+              ? (referral[0].passedByUserIds = [userId])
+              : referral[0].passedByUserIds
+              ? (referral[0].passedByUserIds.push(userId),
+                referral[0].passedByUserIds)
+              : [userId] // Return an array with userId when referral[0].passedByUserIds is falsy
+            : [];
+
+          console.log("updatedPassedByUserIds: -", updatedPassedByUserIds);
+          console.log(typeof updatedPassedByUserIds); */
+
+          console.log("Referral type: ", typeof referral);
+          console.log("Referral value: ", referral);
+
+          let updatedPassedByUserIds: string[] = [];
+
+          if (referral && referral.length > 0) {
+            const firstReferral = referral[0];
+
+            console.log("First referral type: ", typeof firstReferral);
+            console.log("First referral value: ", firstReferral);
+
+            if (!firstReferral || firstReferral.count === 0) {
+              throw new Error("Wrong referralId");
+            }
+
+            if (!firstReferral.passedByUserIds) {
+              firstReferral.passedByUserIds = [userId];
+            } else {
+              if (!Array.isArray(firstReferral.passedByUserIds)) {
+                firstReferral.passedByUserIds = [firstReferral.passedByUserIds];
+              }
+              firstReferral.passedByUserIds.push(userId);
+            }
+
+            updatedPassedByUserIds = firstReferral.passedByUserIds;
+          }
+
+          console.log("updatedPassedByUserIds: -", updatedPassedByUserIds);
+          console.log(
+            "Type of updatedPassedByUserIds: ",
+            typeof updatedPassedByUserIds
+          );
+
+          // Update UserReferral object with the new passedByUserIds
+          var re = await UserReferralService.updatePassedByUserIdsByGSI1SK(
+            referralId,
+            updatedPassedByUserIds
+          );
+
+          console.log("updatedPassedByUserIds: -", updatedPassedByUserIds);
+          break;
+
+        case ReferralActions.REJECT:
+          referral = await UserReferralService.getOnlyAttribute(referralId, [
+            "rejectedByUserIds",
+          ]);
+          break;
+
+        case ReferralActions.ACCEPT:
+          referral = await UserReferralService.getOnlyAttribute(referralId, [
+            "acceptedByUserId",
+          ]);
+          break;
+
+        case ReferralActions.DONE:
+          referral = await UserReferralService.getOnlyAttribute(referralId, [
+            "doneByEmployee",
+          ]);
+          break;
+
+        default:
+          throw new Error("Invalid action provided");
+      }
+
+      console.log("referral: ", referral);
+
+      res.status(HttpStatusCode.OK_200).json(re);
     } catch (error) {
       // Handle errors
       // Pass other errors to the next error handler

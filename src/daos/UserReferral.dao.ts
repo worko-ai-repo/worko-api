@@ -166,6 +166,111 @@ class UserReferralDao implements BaseDao {
       .eq(status)
       .exec();
   }
+
+  /**
+   * Fetches Referral based on GSI1PK, GSI1SK.
+   * @param ReferralSK
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async getByGSI1PKAndGSI1SK(ReferralSK: string) {
+    global.logger.info("Get Referral by GSI1PK and GSI1SK [DAO]");
+    let indexOfID = ReferralSK.indexOf("ID#");
+    const secondVariable = ReferralSK.slice(indexOfID);
+    const GSI1PK = "REF#";
+    return UserReferralModel.query("GSI1PK")
+      .eq(GSI1PK)
+      .where("GSI1SK")
+      .eq(secondVariable)
+      .exec();
+  }
+
+  /**
+   * Fetches Referral based on GSI1PK, GSI1SK.
+   * @param ReferralSK
+   * @param attribute
+   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   */
+  async getOnlyAttribute(GSI1SK: string, attribute: [string]) {
+    global.logger.info("Get Referral by GSI1PK and GSI1SK [DAO]");
+    const GSI1PK = "REF#";
+    const finalGSI1SK = "ID#" + GSI1SK;
+    return UserReferralModel.query("GSI1PK")
+      .eq(GSI1PK)
+      .where("GSI1SK")
+      .eq(finalGSI1SK)
+      .attributes(attribute)
+      .exec();
+  }
+
+  /**
+   *
+   * @param
+   * @returns
+   */
+  async updatePassedByUserIdsByGSI1SK(GSI1SK: string, value: string[]) {
+    global.logger.info("Update user referral status by GSI1SK [DAO]");
+    const finalGSI1SK = "ID#" + GSI1SK;
+    return UserReferralModel.update(
+      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
+      { passedByUserIds: value }
+    );
+  }
+
+  /**
+   *
+   * @param
+   * @returns
+   */
+  async updateRejectedByUserIdsByGSI1SK(GSI1SK: string, value: []) {
+    global.logger.info("Update user referral status by GSI1SK [DAO]");
+    const finalGSI1SK = "ID#" + GSI1SK;
+    return UserReferralModel.update(
+      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
+      { rejectedByUserIds: value }
+    );
+  }
+
+  /**
+   *
+   * @param
+   * @returns
+   */
+  async updateAcceptedByUserIdByGSI1SK(GSI1SK: string, value: string) {
+    global.logger.info("Update user referral status by GSI1SK [DAO]");
+    const finalGSI1SK = "ID#" + GSI1SK;
+    return UserReferralModel.update(
+      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
+      { acceptedByUserId: value }
+    );
+  }
+
+  /**
+   *
+   * @param
+   * @returns
+   */
+  async updateDoneByEmployeeByGSI1SK(GSI1SK: string, value: Date) {
+    global.logger.info("Update user referral status by GSI1SK [DAO]");
+    const finalGSI1SK = "ID#" + GSI1SK;
+    return UserReferralModel.update(
+      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
+      { doneByEmployee: value }
+    );
+  }
+
+  /**
+   *
+   * @param
+   * @returns
+   */
+  async updateDoneByCandidateByGSI1SK(GSI1SK: string, value: Date) {
+    global.logger.info("Update user referral status by GSI1SK [DAO]");
+    const finalGSI1SK = "ID#" + GSI1SK;
+    return UserReferralModel.update(
+      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
+      { doneByCandidate: value }
+    );
+  }
 }
 
 // Export a new instance of UserReferralDao
