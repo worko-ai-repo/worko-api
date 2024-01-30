@@ -1,6 +1,7 @@
 import Joi from "joi";
 
 import { ReferralStatus } from "../enums/UserReferral.enum";
+import { ReferralActions } from "../enums/User.enum";
 
 export const UserReferralRequestDTOValidation = Joi.object({
   companySK: Joi.string().required().messages({
@@ -21,3 +22,19 @@ export const UserReferralStatusValidation = Joi.string()
     ).join(", ")}`,
     "any.required": "Status is required",
   });
+
+export const UserReferralEmployeeStatusValidation = Joi.object({
+  userId: Joi.string().required().messages({
+    "any.required": "User ID is required",
+  }),
+
+  action: Joi.string()
+    .valid(...Object.values(ReferralActions))
+    .required()
+    .messages({
+      "string.valid": `Action must be one of: ${Object.values(
+        ReferralActions
+      ).join(", ")}`,
+      "any.required": "Action is required",
+    }),
+});

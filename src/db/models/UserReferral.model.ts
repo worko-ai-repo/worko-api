@@ -45,11 +45,11 @@ const UserReferralSchema = new dynamoose.Schema(
       required: true,
     },
     passedByUserIds: {
-      type: [String],
+      type: Array,
       required: false,
     },
     rejectedByUserIds: {
-      type: [String],
+      type: Array,
       required: false,
     },
     acceptedByUserId: {

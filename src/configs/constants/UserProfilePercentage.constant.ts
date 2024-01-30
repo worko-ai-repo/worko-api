@@ -50,17 +50,17 @@ export const UserProfilePercentage = {
         {
           field: "designation",
           fieldText: "Designation",
-          expPerc: 7,
+          expPerc: 6,
         },
         {
           field: "department",
           fieldText: "Department",
-          expPerc: 7,
+          expPerc: 6,
         },
         {
           field: "CTC",
           fieldText: "CTC",
-          expPerc: 2,
+          expPerc: 3,
         },
         {
           field: "ECTC",

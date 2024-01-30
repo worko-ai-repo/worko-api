@@ -12,6 +12,7 @@ import { ReferralStatus } from "../enums/UserReferral.enum";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
+import { UserReferralDTO } from "../dtos/UserReferral.dto";
 
 // Class definition for UserReferralDao implementing the BaseDao interface
 class UserReferralDao implements BaseDao {
@@ -54,6 +55,17 @@ class UserReferralDao implements BaseDao {
       .filter("status")
       .eq(status)
       .exec();
+  }
+
+  /**
+   *
+   * @param email
+   * @returns
+   */
+  async update(PK: string, SK: string, userReferralDTO: UserReferralDTO) {
+    global.logger.info("Update user Referral [DAO]");
+    console.log("PK: -", PK, "SK: -", SK);
+    return UserReferralModel.update({ PK: PK, SK: SK }, userReferralDTO);
   }
 
   /**
@@ -133,6 +145,16 @@ class UserReferralDao implements BaseDao {
   }
 
   /**
+   *
+   * @param email
+   * @returns
+   */
+  async updateStatusByPKSK(PK: string, SK: string, status: string) {
+    global.logger.info("Update user referral status by PK and SK [DAO]");
+    return UserReferralModel.update({ PK: PK, SK: SK }, { status: status });
+  }
+
+  /**
    * Fetches Referral based on GSI1PK, companySK.
    * @param companySK - Company sort key
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
@@ -172,15 +194,14 @@ class UserReferralDao implements BaseDao {
    * @param ReferralSK
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getByGSI1PKAndGSI1SK(ReferralSK: string) {
+  async getByGSI1(GSI1SK: string) {
     global.logger.info("Get Referral by GSI1PK and GSI1SK [DAO]");
-    let indexOfID = ReferralSK.indexOf("ID#");
-    const secondVariable = ReferralSK.slice(indexOfID);
     const GSI1PK = "REF#";
+    const finalGSI1SK = "ID#" + GSI1SK;
     return UserReferralModel.query("GSI1PK")
       .eq(GSI1PK)
       .where("GSI1SK")
-      .eq(secondVariable)
+      .eq(finalGSI1SK)
       .exec();
   }
 
@@ -190,7 +211,7 @@ class UserReferralDao implements BaseDao {
    * @param attribute
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getOnlyAttribute(GSI1SK: string, attribute: [string]) {
+  async getOnlyAttribute(GSI1SK: string, attribute: string[]) {
     global.logger.info("Get Referral by GSI1PK and GSI1SK [DAO]");
     const GSI1PK = "REF#";
     const finalGSI1SK = "ID#" + GSI1SK;
@@ -200,76 +221,6 @@ class UserReferralDao implements BaseDao {
       .eq(finalGSI1SK)
       .attributes(attribute)
       .exec();
-  }
-
-  /**
-   *
-   * @param
-   * @returns
-   */
-  async updatePassedByUserIdsByGSI1SK(GSI1SK: string, value: string[]) {
-    global.logger.info("Update user referral status by GSI1SK [DAO]");
-    const finalGSI1SK = "ID#" + GSI1SK;
-    return UserReferralModel.update(
-      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
-      { passedByUserIds: value }
-    );
-  }
-
-  /**
-   *
-   * @param
-   * @returns
-   */
-  async updateRejectedByUserIdsByGSI1SK(GSI1SK: string, value: []) {
-    global.logger.info("Update user referral status by GSI1SK [DAO]");
-    const finalGSI1SK = "ID#" + GSI1SK;
-    return UserReferralModel.update(
-      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
-      { rejectedByUserIds: value }
-    );
-  }
-
-  /**
-   *
-   * @param
-   * @returns
-   */
-  async updateAcceptedByUserIdByGSI1SK(GSI1SK: string, value: string) {
-    global.logger.info("Update user referral status by GSI1SK [DAO]");
-    const finalGSI1SK = "ID#" + GSI1SK;
-    return UserReferralModel.update(
-      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
-      { acceptedByUserId: value }
-    );
-  }
-
-  /**
-   *
-   * @param
-   * @returns
-   */
-  async updateDoneByEmployeeByGSI1SK(GSI1SK: string, value: Date) {
-    global.logger.info("Update user referral status by GSI1SK [DAO]");
-    const finalGSI1SK = "ID#" + GSI1SK;
-    return UserReferralModel.update(
-      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
-      { doneByEmployee: value }
-    );
-  }
-
-  /**
-   *
-   * @param
-   * @returns
-   */
-  async updateDoneByCandidateByGSI1SK(GSI1SK: string, value: Date) {
-    global.logger.info("Update user referral status by GSI1SK [DAO]");
-    const finalGSI1SK = "ID#" + GSI1SK;
-    return UserReferralModel.update(
-      { GSI1PK: "REF#", GSI1SK: finalGSI1SK },
-      { doneByCandidate: value }
-    );
   }
 }
 
