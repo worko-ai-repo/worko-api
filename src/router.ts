@@ -20,6 +20,7 @@ import UserSubscriptionRouter from "./routers/UserSubscription.router";
 import UserServiceRouter from "./routers/UserService.router";
 import UserProfilePercentageRouter from "./routers/UserProfilePercentage.router";
 import UserBankDetailRouter from "./routers/UserBankDetail.router";
+import UserProvidedServiceRouter from "./routers/UserProvidedService.router";
 
 //File routers
 import FileRouter from "./routers/File.router";
@@ -75,6 +76,9 @@ router.use("/user", UserProfilePercentageRouter);
 
 // Regitser the "User BankDetail" routers
 router.use("/user", UserBankDetailRouter);
+
+// Regitser the "User ProvidedService" routers
+router.use("/user", UserProvidedServiceRouter);
 
 // Regitser the "File" router
 router.use("/file", FileRouter);

@@ -74,11 +74,20 @@ class MasterServiceController {
       console.log("Get all mater Service [controller]");
       const servicePlans = await MasterServiceService.get();
       const allServicePlans: ServicePlanResponseDTO[] = servicePlans.map(
-        (plan: { SK: any; name: any; details: any; isActive: any }) => ({
+        (plan: {
+          SK: string;
+          name: string;
+          code: string;
+          serviceScope: string[];
+          details: string;
+          isActive: boolean;
+        }) => ({
           SK: plan.SK,
           name: plan.name,
           details: plan.details ?? "",
           isActive: plan.isActive,
+          code: plan.code,
+          serviceScope: plan.serviceScope,
         })
       );
       res.status(HttpStatusCode.OK_200).json(allServicePlans);

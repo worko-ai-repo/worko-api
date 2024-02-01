@@ -77,7 +77,7 @@ class UserProvidedServiceController {
       const email = req.params.id;
       const userProvidedServiceDTO: UserProvidedServiceDTOWithId[] = req.body;
       logger.debug("userProvidedServiceDTO: ", userProvidedServiceDTO);
-      let { error, value } = userProvidedServiceDTOArrayValidation.validate(
+      /* let { error, value } = userProvidedServiceDTOArrayValidation.validate(
         userProvidedServiceDTO,
         {
           abortEarly: false,
@@ -87,7 +87,7 @@ class UserProvidedServiceController {
       // Validate the user input and throw a validation error if necessary
       if (error) {
         throw new RequestValidationError(error);
-      }
+      } */
 
       /* let userProfilePercentageDTO = await UserProfilePercentageService.get(
         email
@@ -103,13 +103,13 @@ class UserProvidedServiceController {
           ); */
         // If it has an SK, then it is an update, and if it does not have an SK, it is a create
         if (userProvidedServiceDTO[i].SK) {
-          UserProvidedServiceService.update(
+          /* UserProvidedServiceService.update(
             email,
             userProvidedServiceDTO[i].SK,
             value[i]
-          );
+          ); */
         } else {
-          UserProvidedServiceService.create(email, value[i]);
+          // UserProvidedServiceService.create(email, value[i]);
         }
       }
 

@@ -7,14 +7,20 @@ import { BaseDbDto } from "./Base.model";
 
 // Define the structure for Master Service Database Data Transfer Object (DTO)
 class DbMasterServiceDto extends BaseDbDto {
+  code!: string;
   name!: string;
   isActive!: boolean;
   details!: string;
+  serviceScope!: string[];
 }
 
 const MasterServiceSchema = new dynamoose.Schema(
   {
     ...DB_CONSTANTS.WORKO_PK_SK,
+    code: {
+      type: String,
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -25,6 +31,10 @@ const MasterServiceSchema = new dynamoose.Schema(
     },
     details: {
       type: String,
+      required: true,
+    },
+    serviceScope: {
+      type: Array,
       required: true,
     },
     // Add other mater-specific attributes here

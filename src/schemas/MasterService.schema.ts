@@ -2,6 +2,13 @@
 import Joi from "joi";
 
 export const masterServiceDTOValidation = Joi.object({
+  code: Joi.string()
+    .required()
+    .min(3)
+    .message("Code must be at least 3 characters")
+    .max(15)
+    .message("Code cannot exceed 15 characters"),
+
   name: Joi.string()
     .required()
     .min(3)
@@ -17,4 +24,6 @@ export const masterServiceDTOValidation = Joi.object({
     .allow("")
     .max(255)
     .message("Details must be a string with a maximum length of 255"),
+
+  serviceScope: Joi.array().items(Joi.string()).required(),
 });
