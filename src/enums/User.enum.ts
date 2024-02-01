@@ -21,3 +21,14 @@ export enum ReferralActions {
   ACCEPT = "ACCEPT",
   DONE = "DONE",
 }
+
+/**
+ * ProvidedServiceStatus
+ *
+ * Description: Enum representing the status of a user ProvidedService.
+ */
+export enum ProvidedServiceStatus {
+  // User ProvidedService related Status
+  ACTIVE = "ACTIVE",
+  DEACTIVATED = "DEACTIVATED",
+}

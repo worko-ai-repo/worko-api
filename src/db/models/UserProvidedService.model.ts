@@ -8,7 +8,7 @@ import { BaseDbDto } from "./Base.model";
 // Define the structure for User ProvidedService Database Data Transfer Object (DTO)
 class DbUserProvidedServiceDto extends BaseDbDto {
   masterServiceId!: string;
-  status!: string; // Should be 'active'
+  status!: string;
   serviceScope!: string[]; // Additional user scopes
   description!: string; // Max length 256
   durationAndPrices!: {
@@ -51,7 +51,7 @@ const UserProvidedServiceSchema = new dynamoose.Schema(
       //enum: ["active"], // Should be 'active'
     },
     serviceScope: {
-      type: Set, // Assuming serviceScope is an array and you want to ensure uniqueness
+      type: Array, // Assuming serviceScope is an array and you want to ensure uniqueness
       schema: [String],
     },
     description: {

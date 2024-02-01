@@ -2,7 +2,10 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import { UserProvidedServiceDTOWithId } from "../dtos/UserProvidedService.dto";
+import {
+  UserProvidedServiceDTO,
+  UserProvidedServiceDTOWithId,
+} from "../dtos/UserProvidedService.dto";
 // Load the local schema
 import { userProvidedServiceDTOArrayValidation } from "../schemas/UserProvidedService.schema";
 // Load the shared service
@@ -71,13 +74,12 @@ class UserProvidedServiceController {
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Log the action for debugging purposes
-      logger.info("Create/update user ProvidedService by email [controller]");
+      logger.info("Create user ProvidedService by email [controller]");
 
       // Extract email from request parameters
       const email = req.params.id;
-      const userProvidedServiceDTO: UserProvidedServiceDTOWithId[] = req.body;
-      logger.debug("userProvidedServiceDTO: ", userProvidedServiceDTO);
-      /* let { error, value } = userProvidedServiceDTOArrayValidation.validate(
+      const userProvidedServiceDTO: UserProvidedServiceDTO[] = req.body;
+      let { error, value } = userProvidedServiceDTOArrayValidation.validate(
         userProvidedServiceDTO,
         {
           abortEarly: false,
@@ -87,7 +89,7 @@ class UserProvidedServiceController {
       // Validate the user input and throw a validation error if necessary
       if (error) {
         throw new RequestValidationError(error);
-      } */
+      }
 
       /* let userProfilePercentageDTO = await UserProfilePercentageService.get(
         email
@@ -101,16 +103,8 @@ class UserProvidedServiceController {
             userProfilePercentageDTO,
             value[i]
           ); */
-        // If it has an SK, then it is an update, and if it does not have an SK, it is a create
-        if (userProvidedServiceDTO[i].SK) {
-          /* UserProvidedServiceService.update(
-            email,
-            userProvidedServiceDTO[i].SK,
-            value[i]
-          ); */
-        } else {
-          // UserProvidedServiceService.create(email, value[i]);
-        }
+
+        UserProvidedServiceService.create(email, value[i]);
       }
 
       //   UserProfilePercentageService.update(email, userProfilePercentageDTO);
