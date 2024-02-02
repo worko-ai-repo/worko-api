@@ -7,7 +7,10 @@ import {
   UserProvidedServiceDTOWithId,
 } from "../dtos/UserProvidedService.dto";
 // Load the local schema
-import { userProvidedServiceDTOArrayValidation } from "../schemas/UserProvidedService.schema";
+import {
+  userProvidedServiceDTOValidation,
+  userProvidedServiceUpdateDTOValidation,
+} from "../schemas/UserProvidedService.schema";
 // Load the shared service
 import UserProvidedServiceService from "../services/UserProvidedService.service";
 import UserProfilePercentageService from "../services/UserProfilePercentage.service";
@@ -18,6 +21,9 @@ import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+import { TimestampHelper } from "../helpers/timeStamp.helper";
+import { ProvidedServiceStatus } from "../enums/User.enum";
+import { UuidHelper } from "../helpers/uuid.helper";
 
 /**
  * UserProvidedServiceController
@@ -65,7 +71,7 @@ class UserProvidedServiceController {
   /**
    * create
    *
-   * Creates/updates the user's ProvidedService URLs
+   * Creates the user's ProvidedService URLs
    *
    * @param {Request} req
    * @param {Response} res
@@ -78,8 +84,8 @@ class UserProvidedServiceController {
 
       // Extract email from request parameters
       const email = req.params.id;
-      const userProvidedServiceDTO: UserProvidedServiceDTO[] = req.body;
-      let { error, value } = userProvidedServiceDTOArrayValidation.validate(
+      const userProvidedServiceDTO: UserProvidedServiceDTO = req.body;
+      const { error } = userProvidedServiceDTOValidation.validate(
         userProvidedServiceDTO,
         {
           abortEarly: false,
@@ -95,22 +101,94 @@ class UserProvidedServiceController {
         email
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0]; */
-
-      for (let i = 0; i < userProvidedServiceDTO.length; i++) {
-        // checking the fields in profile percentage for UserExperience and updating the current percentage
-        /* userProfilePercentageDTO =
+      // checking the fields in profile percentage for UserExperience and updating the current percentage
+      /* userProfilePercentageDTO =
           UserProfilePercentageOperationHelper.updateCurPerc(
             userProfilePercentageDTO,
             value[i]
           ); */
 
-        UserProvidedServiceService.create(email, value[i]);
+      // Check and add timestamps for each category
+      if (userProvidedServiceDTO.durationAndPrices) {
+        TimestampHelper.addCreatedAtAndUpdatedAt(
+          userProvidedServiceDTO.durationAndPrices
+        );
+        UuidHelper.addUuid(userProvidedServiceDTO.durationAndPrices, "priceId");
       }
+
+      userProvidedServiceDTO.status = ProvidedServiceStatus.ACTIVE;
+      const result = await UserProvidedServiceService.create(
+        email,
+        userProvidedServiceDTO
+      );
 
       //   UserProfilePercentageService.update(email, userProfilePercentageDTO);
 
       // Send a successful response with user data
-      res.status(HttpStatusCode.OK_200).json();
+      res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error: any) {
+      // If it's another type of error, pass it to the next error handler
+      next(error);
+    }
+  };
+
+  /**
+   * create
+   *
+   * Update the user's ProvidedService URLs
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  Update = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Log the action for debugging purposes
+      logger.info("Update user ProvidedService by email [controller]");
+
+      // Extract email from request parameters
+      const email = req.params.id;
+      const userProvidedServiceDTO: UserProvidedServiceDTOWithId = req.body;
+      let { error, value } = userProvidedServiceUpdateDTOValidation.validate(
+        userProvidedServiceDTO,
+        {
+          abortEarly: false,
+        }
+      );
+
+      // Validate the user input and throw a validation error if necessary
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      /* let userProfilePercentageDTO = await UserProfilePercentageService.get(
+        email
+      );
+      userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0]; */
+      // checking the fields in profile percentage for UserExperience and updating the current percentage
+      /* userProfilePercentageDTO =
+          UserProfilePercentageOperationHelper.updateCurPerc(
+            userProfilePercentageDTO,
+            value[i]
+          ); */
+
+      if (userProvidedServiceDTO.durationAndPrices) {
+        TimestampHelper.addCreatedAtAndUpdatedAt(
+          userProvidedServiceDTO.durationAndPrices
+        );
+        UuidHelper.addUuid(userProvidedServiceDTO.durationAndPrices, "priceId");
+      }
+
+      const result = await UserProvidedServiceService.update(
+        email,
+        userProvidedServiceDTO.SK,
+        value
+      );
+
+      //   UserProfilePercentageService.update(email, userProfilePercentageDTO);
+
+      // Send a successful response with user data
+      res.status(HttpStatusCode.OK_200).json(result);
     } catch (error: any) {
       // If it's another type of error, pass it to the next error handler
       next(error);

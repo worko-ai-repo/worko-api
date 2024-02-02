@@ -17,7 +17,7 @@ class DbUserProvidedServiceDto extends BaseDbDto {
     rate: number;
     createdAt?: Date;
     updatedAt?: Date;
-  };
+  }[];
   views?: {
     id: string;
     viewerUserId: string;
@@ -25,6 +25,19 @@ class DbUserProvidedServiceDto extends BaseDbDto {
     createdAt?: Date;
   }[];
 }
+
+const DurationAndPricesSchema = new dynamoose.Schema({
+  durationAndPrices: {
+    type: Object,
+    schema: {
+      priceId: String,
+      durationInMinutes: Number,
+      rate: Number,
+      createdAt: Date,
+      updatedAt: Date,
+    },
+  },
+});
 
 const ViewSchema = new dynamoose.Schema({
   view: {
@@ -51,7 +64,7 @@ const UserProvidedServiceSchema = new dynamoose.Schema(
       //enum: ["active"], // Should be 'active'
     },
     serviceScope: {
-      type: Array, // Assuming serviceScope is an array and you want to ensure uniqueness
+      type: Array,
       schema: [String],
     },
     description: {
@@ -59,29 +72,9 @@ const UserProvidedServiceSchema = new dynamoose.Schema(
       required: true,
     },
     durationAndPrices: {
-      type: Object,
-      schema: {
-        priceId: {
-          type: String,
-          required: true,
-        },
-        durationInMinutes: {
-          type: Number,
-          required: true,
-        },
-        rate: {
-          type: Number,
-          required: true,
-        },
-        createdAt: {
-          type: Date,
-          required: false,
-        },
-        updatedAt: {
-          type: Date,
-          required: false,
-        },
-      },
+      type: Array,
+      required: true,
+      schema: [DurationAndPricesSchema],
     },
     views: {
       type: Array,

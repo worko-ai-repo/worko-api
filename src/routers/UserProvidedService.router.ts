@@ -16,11 +16,16 @@ UserProvidedServiceRouter.get(
   userProvidedServiceController.get
 );
 
-// create/update the user ProvidedService details based on the provided query parameter
-// @todo have separate api for create and update activity
+// create the user ProvidedService details based on the provided query paramete
 UserProvidedServiceRouter.post(
   "/:id/providedService",
   userProvidedServiceController.create
+);
+
+// update the user ProvidedService details based on the provided query paramete
+UserProvidedServiceRouter.put(
+  "/:id/providedService",
+  userProvidedServiceController.Update
 );
 
 export default UserProvidedServiceRouter;

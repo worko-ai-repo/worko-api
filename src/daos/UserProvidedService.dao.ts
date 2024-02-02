@@ -71,6 +71,13 @@ class UserProvidedServiceDao implements BaseDao {
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
+
+    console.log(
+      "userProvidedServiceDTO.durationAndPrices[0].createdAt: -",
+      userProvidedServiceDTO.durationAndPrices[0].createdAt,
+      "userProvidedServiceDTO.durationAndPrices[0].updatedAt: -",
+      userProvidedServiceDTO.durationAndPrices[0].updatedAt
+    );
     return UserProvidedServiceModel.update(
       { PK: PK, SK: SK },
       userProvidedServiceDTO
