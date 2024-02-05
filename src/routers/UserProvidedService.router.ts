@@ -12,19 +12,19 @@ const UserProvidedServiceRouter = Router();
 
 // Get the user ProvidedService details based on the provided query parameter
 UserProvidedServiceRouter.get(
-  "/:id/providedService",
+  "/:id/pservice",
   userProvidedServiceController.get
 );
 
 // create the user ProvidedService details based on the provided query paramete
 UserProvidedServiceRouter.post(
-  "/:id/providedService",
+  "/:id/pservice",
   userProvidedServiceController.create
 );
 
 // update the user ProvidedService details based on the provided query paramete
 UserProvidedServiceRouter.put(
-  "/:id/providedService",
+  "/:id/pservice",
   userProvidedServiceController.Update
 );
 

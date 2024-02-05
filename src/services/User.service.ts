@@ -44,7 +44,7 @@ class UserService {
    * @param email - Email of the user
    */
   async addUser(userSignUpDTO: UserSignUpDTO, userType: string) {
-    console.log("Create candidate/employee [service]");
+    global.logger.info("Create candidate/employee [service]");
     //Creating new user
     const newUser = await userDetailDao.add(userSignUpDTO, userType);
     if (userType === "CAND") {
