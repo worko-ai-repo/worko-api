@@ -63,7 +63,7 @@ class UserServiceDao implements BaseDao {
       | UserServiceInterviewGuidanceRequestDTO
       | UserServiceRequestDTO
   ) {
-    console.log("Create service request [DAO]");
+    global.logger.info("Create service request [DAO]");
     const SK = this.sortKeys.SK_SRVC.strtr({
       "{serviceId}": UlidService.getUlidId(),
     });
@@ -84,7 +84,7 @@ class UserServiceDao implements BaseDao {
       status: ServiceStatus.AWAITING,
       ...userServiceRequestDTO,
     };
-    console.log("newServiceRequest: ", newServiceRequest);
+    global.logger.info("newServiceRequest: ", newServiceRequest);
     // Create a new entry in the UserServiceModel (database model) with the Service request data
     await UserServiceModel.create(newServiceRequest);
     const SKId = SK.split("#")[2];
@@ -97,7 +97,7 @@ class UserServiceDao implements BaseDao {
    * @param email
    */
   async getStatus(ServiceId: string, email: string) {
-    console.log("Get candidate service status [DAO]");
+    global.logger.info("Get candidate service status [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });

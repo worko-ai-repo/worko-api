@@ -12,6 +12,7 @@ import {
   userProvidedServiceUpdateDTOValidation,
 } from "../schemas/UserProvidedService.schema";
 // Load the shared service
+import MasterServiceService from "../services/MasterService.service";
 import UserProvidedServiceService from "../services/UserProvidedService.service";
 import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
@@ -24,6 +25,7 @@ import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercenta
 import { TimestampHelper } from "../helpers/timeStamp.helper";
 import { ProvidedServiceStatus } from "../enums/User.enum";
 import { UuidHelper } from "../helpers/uuid.helper";
+import ServiceHelper from "../helpers/UserService.helper";
 
 /**
  * UserProvidedServiceController
@@ -48,7 +50,11 @@ class UserProvidedServiceController {
       // Extract email from request parameters
       const email = req.params.id;
 
+      const servicePlans = MasterServiceService.get();
+
       const result = await UserProvidedServiceService.get(email);
+
+      ServiceHelper.updateServiceNames(result, await servicePlans);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
