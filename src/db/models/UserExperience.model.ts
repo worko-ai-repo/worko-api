@@ -83,7 +83,7 @@ const UserExperienceSchema = new dynamoose.Schema(
 // Create the UserExperiencesModel using the defined schema
 const UserExperienceModel = dynamoose.model<DbUserExperienceDto>(
   "UserExperience",
-  [UserExperienceSchema] // @todo why it is in [] bracket and everywhere it is without any brackets?
+  UserExperienceSchema
 );
 
 // Export the UserExperienceModel
