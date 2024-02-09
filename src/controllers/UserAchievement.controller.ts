@@ -16,6 +16,7 @@ import { RequestValidationError } from "../utils/errors.util";
 // Load local helper
 import { TimestampHelper } from "../helpers/timeStamp.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+import { EmailDTOValidation } from "../schemas/User.schema";
 
 /**
  * UserAchievementController
@@ -38,8 +39,15 @@ class UserAchievementController {
       logger.info("Get user Achievement by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
-      const result = await UserAchievementService.get(email);
+      const email = req.params;
+      const { error ,value } = EmailDTOValidation.validate(email, {
+        abortEarly: false,
+      });
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+      const result = await UserAchievementService.get(value);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
@@ -74,7 +82,9 @@ class UserAchievementController {
       logger.info("Create/update user Achievement by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
+      const email = req.params;
+      const { error: emailError , value : emailId} = EmailDTOValidation.validate(email);
+
       const userAchievementDTO: UserAchievementDTO = req.body;
       const { error, value } = userAchievementDTOValidation.validate(
         userAchievementDTO,
@@ -84,7 +94,10 @@ class UserAchievementController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
+      if(emailError){
+        throw new RequestValidationError(emailError) 
+      }
+      else if (error) {
         throw new RequestValidationError(error);
       }
 
@@ -109,13 +122,13 @@ class UserAchievementController {
 
       // If it has an SK, then it is an update, and if it does not have an SK, it is a create
       if (req.body.SK) {
-        result = await UserAchievementService.update(email, value);
+        result = await UserAchievementService.update(emailId, value);
       } else {
-        result = await UserAchievementService.create(email, value);
+        result = await UserAchievementService.create(emailId, value);
       }
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
-        email
+        emailId
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
 
@@ -125,7 +138,7 @@ class UserAchievementController {
           value
         );
 
-      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+      UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);

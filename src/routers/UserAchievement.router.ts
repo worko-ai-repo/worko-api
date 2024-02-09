@@ -14,9 +14,6 @@ const UserAchievementRouter = Router();
 UserAchievementRouter.get("/:id/achievement", userAchievementController.get);
 
 // create/update the user Achievement details based on the provided query parameter
-UserAchievementRouter.post(
-  "/:id/achievement",
-  userAchievementController.create
-);
+UserAchievementRouter.post( "/:id/achievement", userAchievementController.create);
 
 export default UserAchievementRouter;

@@ -68,8 +68,7 @@ class DBConfig {
       config = {
         credentials: {
           accessKeyId: process.env.APP_AWS_DYNAMODB_ACCESS_KEY_ID as string,
-          secretAccessKey: process.env
-            .APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
+          secretAccessKey: process.env.APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
         },
         region: "local",
         endpoint: "http://localhost:8000",

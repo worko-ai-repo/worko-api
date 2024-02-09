@@ -5,6 +5,9 @@ import { Request, Response, NextFunction } from "express";
 import { UserBankDetailDTO } from "../dtos/UserBankDetail.dto";
 // Load the local schema
 import { userBankDetailDTOValidation } from "../schemas/UserBankDetail.schema";
+import { EmailDTOValidation } from "../schemas/User.schema";
+
+
 // Load the shared service
 import UserBankDetailService from "../services/UserBankDetail.service";
 import UserProfilePercentageService from "../services/UserProfilePercentage.service";
@@ -39,8 +42,15 @@ class UserBankDetailController {
       logger.info("Get user BankDetail by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
-      const result = await UserBankDetailService.get(email);
+      const email = req.params;
+      const { error ,value } = EmailDTOValidation.validate(email, {
+        abortEarly: false,
+      });
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+      const result = await UserBankDetailService.get(value);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
@@ -75,7 +85,9 @@ class UserBankDetailController {
       logger.info("Create/update user BankDetail by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
+      const email = req.params;
+      const { error: emailError, value: emailId } = EmailDTOValidation.validate(email);
+  
       const userBankDetailDTO: UserBankDetailDTO = req.body;
       const { error, value } = userBankDetailDTOValidation.validate(
         userBankDetailDTO,
@@ -85,17 +97,19 @@ class UserBankDetailController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
-        throw new RequestValidationError(error);
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      }else if(error){
+        throw new RequestValidationError(error)
       }
-      console.log("value 91:- ", value);
+
 
       // Check and add timestamps for BankDetails
       if (value.bankDetails) {
         TimestampHelper.addTimestamps(value.bankDetails);
         TimestampHelper.addTimestamps(value.upiIds);
       }
-      console.log("value 98:- ", value);
+    
 
       let result;
       // Loop through BankDetails and update achievDate to ISO string
@@ -113,15 +127,15 @@ class UserBankDetailController {
 
       // If it has an SK, then it is an update, and if it does not have an SK, it is a create
       if (req.body.SK) {
-        result = await UserBankDetailService.update(email, value);
+        result = await UserBankDetailService.update(emailId, value);
       } else {
         value.bankDetails[0].status = BankUpiStatus.ACTIVE;
         value.upiIds[0].status = BankUpiStatus.ACTIVE;
-        result = await UserBankDetailService.create(email, value);
+        result = await UserBankDetailService.create(emailId, value);
       }
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
-        email
+        emailId
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
 
@@ -131,7 +145,7 @@ class UserBankDetailController {
           value
         );
 
-      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+      UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);

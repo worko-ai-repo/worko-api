@@ -12,9 +12,9 @@ export const userBankDetailDTOValidation = Joi.object({
       ifscCode: Joi.string().required().messages({
         "any.required": "IFSC code is required.",
       }),
-      accNumber: Joi.number().required().messages({
+      accNumber: Joi.string().regex(/^\d+$/).required().messages({
         "any.required": "Account number is required.",
-        "number.base": "Account number must be a number.",
+        "string.pattern.base": "Account number must be of digits.",
       }),
       accType: Joi.string().required().messages({
         "any.required": "Account type is required.",

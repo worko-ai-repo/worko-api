@@ -20,6 +20,7 @@ import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
+import { EmailDTOValidation } from "../schemas/User.schema";
 
 /**
  * UserReferralController
@@ -42,14 +43,21 @@ class UserReferralController {
       logger.info("Get user Referral by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
+      const email = req.params;
+      const { error ,value } = EmailDTOValidation.validate(email, {
+        abortEarly: false,
+      });
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
       const status = req.query.status;
       let result;
 
       if (status && typeof status === "string") {
-        result = await UserReferralService.getByStatus(email, status);
+        result = await UserReferralService.getByStatus(value, status);
       } else {
-        result = await UserReferralService.get(email);
+        result = await UserReferralService.get(value);
       }
 
       /* status && typeof status === "string"
@@ -161,17 +169,20 @@ class UserReferralController {
   createReferral = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Create referral [controller]");
+      const email = req.params;
+      const { error: emailError, value: emailId } = EmailDTOValidation.validate(email);
       const referralRequest: UserReferralRequestDTO = req.body;
       const { error } = UserReferralRequestDTOValidation.validate(
         referralRequest,
         { abortEarly: false }
       );
 
-      if (error) {
-        throw new RequestValidationError(error);
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      }else if(error){
+        throw new RequestValidationError(error)
       }
-
-      const email = req.params.id;
+     
       /* const SK = await UserService.getSK(email);
       const subStatus = await UserService.getSubscriptionStatus(email, SK);
       if (!subStatus[0].isSubscribed) {
@@ -185,7 +196,7 @@ class UserReferralController {
 
       const referralRequestId = await UserReferralService.referralRequest(
         referralRequest,
-        email
+        emailId
       );
       res.status(HttpStatusCode.OK_200).json(referralRequestId);
     } catch (error) {

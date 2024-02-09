@@ -5,6 +5,8 @@ import { Request, Response, NextFunction } from "express";
 import { UserExperienceDTOWithId } from "../dtos/UserExperience.dto";
 
 // Load the local schema
+import { EmailDTOValidation } from "../schemas/User.schema";
+
 import { userExperienceDTOArrayValidation } from "../schemas/UserExperience.schema";
 
 // Load the shared service
@@ -75,7 +77,8 @@ class UserExperienceController {
       logger.info("Create/update user Experience by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
+      const email = req.params;
+      const { error: emailError, value: emailId } = EmailDTOValidation.validate(email);
       const userExperienceDTO: UserExperienceDTOWithId[] = req.body;
       let { error, value } = userExperienceDTOArrayValidation.validate(
         userExperienceDTO,
@@ -85,12 +88,14 @@ class UserExperienceController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
-        throw new RequestValidationError(error);
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      }else if(error){
+        throw new RequestValidationError(error)
       }
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
-        email
+         emailId
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
 
@@ -104,16 +109,16 @@ class UserExperienceController {
         // If it has an SK, then it is an update, and if it does not have an SK, it is a create
         if (userExperienceDTO[i].SK) {
           UserExperienceService.update(
-            email,
+            emailId,
             userExperienceDTO[i].SK,
             value[i]
           );
         } else {
-          UserExperienceService.create(email, value[i]);
+          UserExperienceService.create( emailId, value[i]);
         }
       }
 
-      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+      UserProfilePercentageService.update( emailId, userProfilePercentageDTO);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json();

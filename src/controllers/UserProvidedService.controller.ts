@@ -3,7 +3,9 @@ import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 import { UserProvidedServiceDTOWithId } from "../dtos/UserProvidedService.dto";
+
 // Load the local schema
+import { EmailDTOValidation } from "../schemas/User.schema";
 import { userProvidedServiceDTOArrayValidation } from "../schemas/UserProvidedService.schema";
 // Load the shared service
 import UserProvidedServiceService from "../services/UserProvidedService.service";
@@ -15,6 +17,7 @@ import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+
 
 /**
  * UserProvidedServiceController
@@ -37,9 +40,15 @@ class UserProvidedServiceController {
       logger.info("Get user ProvidedService by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
+      const email = req.params;
+      const { error ,value } = EmailDTOValidation.validate(email, {
+        abortEarly: false,
+      });
 
-      const result = await UserProvidedServiceService.get(email);
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+      const result = await UserProvidedServiceService.get(value);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
@@ -74,7 +83,12 @@ class UserProvidedServiceController {
       logger.info("Create/update user ProvidedService by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
+      const email = req.params;
+      const { error: emailError, value: emailId } = EmailDTOValidation.validate(email);
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } 
+
       const userProvidedServiceDTO: UserProvidedServiceDTOWithId[] = req.body;
       logger.debug("userProvidedServiceDTO: ", userProvidedServiceDTO);
       /* let { error, value } = userProvidedServiceDTOArrayValidation.validate(

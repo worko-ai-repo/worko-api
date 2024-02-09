@@ -1,34 +1,39 @@
 import Joi from "joi";
 
 export const UserSignUpDTOValidation = Joi.object({
-  name: Joi.string().required().messages({
+  name: Joi.string().regex(/^[a-zA-Z]+$/).required().messages({
     "any.required": "Name is required",
+    "string.pattern.base": "Name must contain only alphabetic characters"
   }),
-
   email: Joi.string().email().required().messages({
-    "string.email": "Invalid email format",
-    "any.required": "Email is required",
+    "any.required": "Email is required.",
+    "string.email": "Please provide a valid email address.",
+    "string.empty": "Email cannot be empty.",
   }),
-
-  number: Joi.number().options({ convert: false }).required().messages({
-    "any.required": "Number is required",
-  }),
+  number: Joi.number().integer().required().min(1000000000).max(9999999999).messages({
+    "number.base": "Number must be a valid number",
+    "number.integer": "Number must be an integer",
+    "number.min": "Number must be a 10-digit phone number",
+    "number.max": "Number must be a 10-digit phone number",
+    "any.required": "Number is required"
+}),
 
   linkedinUrl: Joi.string().regex(
     /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
     "LinkedIn URL is not valid"
-  ),
-
-  ECTC: Joi.number().options({ convert: false }).required().messages({
+  ).messages({
+    "string.pattern.base": "Please Provide Valid URL"
+  }),
+  ECTC: Joi.number().min(0).options({ convert: false }).required().messages({
     "any.required": "ECTC is required",
     "number.base": "ECTC should be a valid number",
+    "number.min": "Number must be greater than or equal to 0",
   }),
-
-  YOE: Joi.number().options({ convert: false }).required().messages({
+  YOE: Joi.number().min(0).options({ convert: false }).required().messages({
     "any.required": "YOE is required",
     "number.base": "YOE should be a valid number",
+    "number.min": "Number must be greater than or equal to 0",
   }),
-
   CV: Joi.string().optional().messages({
     "any.required": "CV is required",
   }),
@@ -38,18 +43,19 @@ export const UserSignUpDTOValidation = Joi.object({
 }).options({ stripUnknown: true });
 
 export const userEmployeeSignUpDTOValidation = Joi.object({
-  name: Joi.string().required().messages({
-    "any.required": "Name is required.",
-    "string.empty": "Name cannot be empty.",
+  name: Joi.string().regex(/^[a-zA-Z]+$/).required().messages({
+    "any.required": "Name is required",
+    "string.pattern.base": "Name must contain only alphabetic characters"
   }),
   email: Joi.string().email().required().messages({
     "any.required": "Email is required.",
     "string.email": "Please provide a valid email address.",
     "string.empty": "Email cannot be empty.",
   }),
-  number: Joi.number().options({ convert: false }).required().messages({
+  number: Joi.number().options({ convert: false }).min(1000000000).max(9999999999).required().messages({
     "any.required": "Number is required.",
     "number.base": "Number must be a valid number.",
+    "number.max": "Number must be equal to 10.",
   }),
   linkedinUrl: Joi.string().regex(
     /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
@@ -94,3 +100,10 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
     "any.required": "User ID is required",
   }),
 });
+export const EmailDTOValidation = Joi.object({
+  id: Joi.string().email().required().messages({
+    "any.required": "Email is required.",
+    "string.email": "Please provide a valid email address.",
+    "string.empty": "Email cannot be empty.",
+  }),
+})
