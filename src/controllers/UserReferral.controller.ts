@@ -10,6 +10,7 @@ import {
   UserReferralRequestDTOValidation,
   UserReferralStatusValidation,
 } from "../schemas/UserReferral.schema";
+import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserService from "../services/User.service";
@@ -20,7 +21,6 @@ import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
-import { EmailDTOValidation } from "../schemas/User.schema";
 
 /**
  * UserReferralController
@@ -43,10 +43,9 @@ class UserReferralController {
       logger.info("Get user Referral by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error ,value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);
@@ -169,8 +168,10 @@ class UserReferralController {
   createReferral = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Create referral [controller]");
-      const email = req.params;
-      const { error: emailError, value: emailId } = EmailDTOValidation.validate(email);
+      const email = req.params.id;
+
+      const { error: emailError, value: emailId } = validateEmailField(email);
+
       const referralRequest: UserReferralRequestDTO = req.body;
       const { error } = UserReferralRequestDTOValidation.validate(
         referralRequest,
@@ -179,10 +180,10 @@ class UserReferralController {
 
       if (emailError) {
         throw new RequestValidationError(emailError);
-      }else if(error){
-        throw new RequestValidationError(error)
+      } else if (error) {
+        throw new RequestValidationError(error);
       }
-     
+
       /* const SK = await UserService.getSK(email);
       const subStatus = await UserService.getSubscriptionStatus(email, SK);
       if (!subStatus[0].isSubscribed) {

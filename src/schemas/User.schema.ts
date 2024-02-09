@@ -1,29 +1,39 @@
 import Joi from "joi";
 
 export const UserSignUpDTOValidation = Joi.object({
-  name: Joi.string().regex(/^[a-zA-Z]+$/).required().messages({
-    "any.required": "Name is required",
-    "string.pattern.base": "Name must contain only alphabetic characters"
-  }),
+  name: Joi.string()
+    .regex(/^[a-zA-Z]+$/)
+    .required()
+    .messages({
+      "any.required": "Name is required",
+      "string.pattern.base": "Name must contain only alphabetic characters",
+    }),
   email: Joi.string().email().required().messages({
     "any.required": "Email is required.",
     "string.email": "Please provide a valid email address.",
     "string.empty": "Email cannot be empty.",
   }),
-  number: Joi.number().integer().required().min(1000000000).max(9999999999).messages({
-    "number.base": "Number must be a valid number",
-    "number.integer": "Number must be an integer",
-    "number.min": "Number must be a 10-digit phone number",
-    "number.max": "Number must be a 10-digit phone number",
-    "any.required": "Number is required"
-}),
+  number: Joi.number()
+    .integer()
+    .required()
+    .min(1000000000)
+    .max(9999999999)
+    .messages({
+      "number.base": "Number must be a valid number",
+      "number.integer": "Number must be an integer",
+      "number.min": "Number must be a 10-digit phone number",
+      "number.max": "Number must be a 10-digit phone number",
+      "any.required": "Number is required",
+    }),
 
-  linkedinUrl: Joi.string().regex(
-    /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
-    "LinkedIn URL is not valid"
-  ).messages({
-    "string.pattern.base": "Please Provide Valid URL"
-  }),
+  linkedinUrl: Joi.string()
+    .regex(
+      /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
+      "LinkedIn URL is not valid"
+    )
+    .messages({
+      "string.pattern.base": "Please Provide Valid URL",
+    }),
   ECTC: Joi.number().min(0).options({ convert: false }).required().messages({
     "any.required": "ECTC is required",
     "number.base": "ECTC should be a valid number",
@@ -43,20 +53,28 @@ export const UserSignUpDTOValidation = Joi.object({
 }).options({ stripUnknown: true });
 
 export const userEmployeeSignUpDTOValidation = Joi.object({
-  name: Joi.string().regex(/^[a-zA-Z]+$/).required().messages({
-    "any.required": "Name is required",
-    "string.pattern.base": "Name must contain only alphabetic characters"
-  }),
+  name: Joi.string()
+    .regex(/^[a-zA-Z]+$/)
+    .required()
+    .messages({
+      "any.required": "Name is required",
+      "string.pattern.base": "Name must contain only alphabetic characters",
+    }),
   email: Joi.string().email().required().messages({
     "any.required": "Email is required.",
     "string.email": "Please provide a valid email address.",
     "string.empty": "Email cannot be empty.",
   }),
-  number: Joi.number().options({ convert: false }).min(1000000000).max(9999999999).required().messages({
-    "any.required": "Number is required.",
-    "number.base": "Number must be a valid number.",
-    "number.max": "Number must be equal to 10.",
-  }),
+  number: Joi.number()
+    .options({ convert: false })
+    .min(1000000000)
+    .max(9999999999)
+    .required()
+    .messages({
+      "any.required": "Number is required.",
+      "number.base": "Number must be a valid number.",
+      "number.max": "Number must be equal to 10.",
+    }),
   linkedinUrl: Joi.string().regex(
     /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
     "LinkedIn URL is not valid"
@@ -100,10 +118,13 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
     "any.required": "User ID is required",
   }),
 });
-export const EmailDTOValidation = Joi.object({
-  id: Joi.string().email().required().messages({
+
+export const validateEmailField = (email: string) => {
+  const Email = Joi.string().email().required().messages({
     "any.required": "Email is required.",
     "string.email": "Please provide a valid email address.",
     "string.empty": "Email cannot be empty.",
-  }),
-})
+  });
+
+  return Email.validate(email);
+};

@@ -14,9 +14,9 @@ import { UserProfilePercentageDTO } from "../dtos/UserProfilePercentage.dto";
 
 // Load the local schema
 import {
-  EmailDTOValidation,
   UserSignUpDTOValidation,
   userEmployeeSignUpDTOValidation,
+  validateEmailField,
 } from "../schemas/User.schema";
 
 // Load the shared service
@@ -122,10 +122,9 @@ class UserController {
     try {
       global.logger.info("Get user profile detail by id [controller]");
       // Extract email from request parameters
-      const email = req.params;
-      const { error ,value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);
@@ -335,10 +334,9 @@ class UserController {
   ) => {
     try {
       global.logger.info("update EmailVerify Status [controller]");
-      const email = req.params;
-      const { error ,value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);
@@ -385,10 +383,8 @@ class UserController {
     try {
       global.logger.info("Update user resume [controller]");
       const resume = req.body.resume;
-      const email = req.params;
-      const { error ,value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);

@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import { UserProvidedServiceDTOWithId } from "../dtos/UserProvidedService.dto";
 
 // Load the local schema
-import { EmailDTOValidation } from "../schemas/User.schema";
+import { validateEmailField } from "../schemas/User.schema";
 import { userProvidedServiceDTOArrayValidation } from "../schemas/UserProvidedService.schema";
 // Load the shared service
 import UserProvidedServiceService from "../services/UserProvidedService.service";
@@ -17,7 +17,6 @@ import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
-
 
 /**
  * UserProvidedServiceController
@@ -40,10 +39,9 @@ class UserProvidedServiceController {
       logger.info("Get user ProvidedService by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error ,value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);
@@ -83,11 +81,13 @@ class UserProvidedServiceController {
       logger.info("Create/update user ProvidedService by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error: emailError, value: emailId } = EmailDTOValidation.validate(email);
+      const email = req.params.id;
+
+      const { error: emailError, value: emailId } = validateEmailField(email);
+
       if (emailError) {
         throw new RequestValidationError(emailError);
-      } 
+      }
 
       const userProvidedServiceDTO: UserProvidedServiceDTOWithId[] = req.body;
       logger.debug("userProvidedServiceDTO: ", userProvidedServiceDTO);

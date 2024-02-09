@@ -5,8 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import { UserBankDetailDTO } from "../dtos/UserBankDetail.dto";
 // Load the local schema
 import { userBankDetailDTOValidation } from "../schemas/UserBankDetail.schema";
-import { EmailDTOValidation } from "../schemas/User.schema";
-
+import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserBankDetailService from "../services/UserBankDetail.service";
@@ -42,10 +41,9 @@ class UserBankDetailController {
       logger.info("Get user BankDetail by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error ,value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);
@@ -85,9 +83,10 @@ class UserBankDetailController {
       logger.info("Create/update user BankDetail by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error: emailError, value: emailId } = EmailDTOValidation.validate(email);
-  
+      const email = req.params.id;
+
+      const { error: emailError, value: emailId } = validateEmailField(email);
+
       const userBankDetailDTO: UserBankDetailDTO = req.body;
       const { error, value } = userBankDetailDTOValidation.validate(
         userBankDetailDTO,
@@ -99,17 +98,15 @@ class UserBankDetailController {
       // Validate the user input and throw a validation error if necessary
       if (emailError) {
         throw new RequestValidationError(emailError);
-      }else if(error){
-        throw new RequestValidationError(error)
+      } else if (error) {
+        throw new RequestValidationError(error);
       }
-
 
       // Check and add timestamps for BankDetails
       if (value.bankDetails) {
         TimestampHelper.addTimestamps(value.bankDetails);
         TimestampHelper.addTimestamps(value.upiIds);
       }
-    
 
       let result;
       // Loop through BankDetails and update achievDate to ISO string

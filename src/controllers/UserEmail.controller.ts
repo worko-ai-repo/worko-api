@@ -3,9 +3,8 @@ import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 
-
 // Load the local schema
-import { EmailDTOValidation } from "../schemas/User.schema";
+import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserEmailService from "../services/UserEmail.service";
@@ -37,10 +36,9 @@ class UserEmailController {
       console.log("Get user emails by id [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error ,value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);

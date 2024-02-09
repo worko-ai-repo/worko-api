@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import { UserEducationDTOWithId } from "../dtos/UserEducation.dto";
 // Load the local schema
 import { userEducationDTOArrayValidation } from "../schemas/UserEducation.schema";
-import { EmailDTOValidation } from "../schemas/User.schema";
+import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserEducationService from "../services/UserEducation.service";
@@ -18,7 +18,6 @@ import InvokeLambdaService from "../services/InvokeLambda.service";
 
 // Load local helper
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
-
 
 /**
  * UserEducationController
@@ -41,10 +40,9 @@ class UserEducationController {
       logger.info("Get user Education by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error ,value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);
@@ -84,8 +82,10 @@ class UserEducationController {
       logger.info("Create/update user Education by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error: emailError, value: emailId } = EmailDTOValidation.validate(email);
+      const email = req.params.id;
+
+      const { error: emailError, value: emailId } = validateEmailField(email);
+
       const userEducationDTO: UserEducationDTOWithId[] = req.body;
       logger.debug("userEducationDTO: ", userEducationDTO);
       let { error, value } = userEducationDTOArrayValidation.validate(
@@ -98,8 +98,8 @@ class UserEducationController {
       // Validate the user input and throw a validation error if necessary
       if (emailError) {
         throw new RequestValidationError(emailError);
-      }else if(error){
-        throw new RequestValidationError(error)
+      } else if (error) {
+        throw new RequestValidationError(error);
       }
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
         emailId
@@ -115,7 +115,11 @@ class UserEducationController {
           );
         // If it has an SK, then it is an update, and if it does not have an SK, it is a create
         if (userEducationDTO[i].SK) {
-          UserEducationService.update(emailId, userEducationDTO[i].SK, value[i]);
+          UserEducationService.update(
+            emailId,
+            userEducationDTO[i].SK,
+            value[i]
+          );
         } else {
           UserEducationService.createEducation(emailId, value[i]);
         }

@@ -3,8 +3,11 @@ import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 import { UserAchievementDTO } from "../dtos/UserAchievement.dto";
+
 // Load the local schema
 import { userAchievementDTOValidation } from "../schemas/UserAchievement.schema";
+import { validateEmailField } from "../schemas/User.schema";
+
 // Load the shared service
 import UserAchievementService from "../services/UserAchievement.service";
 import UserProfilePercentageService from "../services/UserProfilePercentage.service";
@@ -16,7 +19,6 @@ import { RequestValidationError } from "../utils/errors.util";
 // Load local helper
 import { TimestampHelper } from "../helpers/timeStamp.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
-import { EmailDTOValidation } from "../schemas/User.schema";
 
 /**
  * UserAchievementController
@@ -39,10 +41,9 @@ class UserAchievementController {
       logger.info("Get user Achievement by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error ,value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);
@@ -82,8 +83,9 @@ class UserAchievementController {
       logger.info("Create/update user Achievement by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error: emailError , value : emailId} = EmailDTOValidation.validate(email);
+      const email = req.params.id;
+
+      const { error: emailError, value: emailId } = validateEmailField(email);
 
       const userAchievementDTO: UserAchievementDTO = req.body;
       const { error, value } = userAchievementDTOValidation.validate(
@@ -94,10 +96,9 @@ class UserAchievementController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if(emailError){
-        throw new RequestValidationError(emailError) 
-      }
-      else if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
 

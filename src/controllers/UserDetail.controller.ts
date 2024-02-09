@@ -6,7 +6,7 @@ import { UserDetailDTO } from "../dtos/UserDetail.dto";
 
 // Load the local schema
 import { userDetailDTOValidation } from "../schemas/UserDetail.schema";
-import { EmailDTOValidation } from "../schemas/User.schema";
+import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserDetailService from "../services/UserDetail.service";
@@ -40,10 +40,9 @@ class UserDetailController {
       console.log("Get user detail by id [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error, value } = EmailDTOValidation.validate(email, {
-        abortEarly: false,
-      });
+      const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
 
       if (error) {
         throw new RequestValidationError(error);
@@ -83,8 +82,10 @@ class UserDetailController {
       logger.info("Create/update user Detail by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params;
-      const { error: emailError, value: emailId } = EmailDTOValidation.validate(email);
+      const email = req.params.id;
+
+      const { error: emailError, value: emailId } = validateEmailField(email);
+
       const userDetailDTO: UserDetailDTO = req.body;
       logger.debug("userDetailDTO: ", userDetailDTO);
       let { error, value } = userDetailDTOValidation.validate(userDetailDTO, {
@@ -94,8 +95,8 @@ class UserDetailController {
       // Validate the user input and throw a validation error if necessary
       if (emailError) {
         throw new RequestValidationError(emailError);
-      }else if(error){
-        throw new RequestValidationError(error)
+      } else if (error) {
+        throw new RequestValidationError(error);
       }
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
@@ -103,7 +104,11 @@ class UserDetailController {
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
 
-      const result = await UserDetailService.update(emailId, req.body.SK, value);
+      const result = await UserDetailService.update(
+        emailId,
+        req.body.SK,
+        value
+      );
 
       userProfilePercentageDTO =
         UserProfilePercentageOperationHelper.updateCurPerc(
