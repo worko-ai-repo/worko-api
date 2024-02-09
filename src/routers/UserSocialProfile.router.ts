@@ -11,15 +11,11 @@ const userSocialProfileController = new UserSocialProfileController();
 const UserSocialProfileRouter = Router();
 
 // Get the user SocialProfile details based on the provided query parameter
-UserSocialProfileRouter.get(
-  "/:id/socialprofile",
-  userSocialProfileController.get
+UserSocialProfileRouter.get("/:id/socialprofile", userSocialProfileController.get
 );
 
 // create/update the user SocialProfile details based on the provided query parameter
-UserSocialProfileRouter.post(
-  "/:id/socialprofile",
-  userSocialProfileController.create
+UserSocialProfileRouter.post("/:id/socialprofile",userSocialProfileController.create
 );
 
 export default UserSocialProfileRouter;

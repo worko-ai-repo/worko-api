@@ -12,19 +12,20 @@ export const userBankDetailDTOValidation = Joi.object({
       ifscCode: Joi.string().required().messages({
         "any.required": "IFSC code is required.",
       }),
-      accNumber: Joi.string().regex(/^\d+$/).required().messages({
+      accNumber: Joi.number().integer().required().messages({
         "any.required": "Account number is required.",
-        "string.pattern.base": "Account number must be of digits.",
+        "number.base": "Account number must be a number.",
+        "number.integer": "Account number must be an integer."
       }),
       accType: Joi.string().required().messages({
         "any.required": "Account type is required.",
       }),
-      status: Joi.string(),
-      verifiedAt: Joi.date(),
+      status: Joi.string().optional(),
+      verifiedAt: Joi.string().isoDate().optional(),
       timestamps: Joi.object({
-        createdAt: Joi.date(),
-        updatedAt: Joi.date(),
-      }),
+        createdAt: Joi.string().isoDate().optional(),
+        updatedAt: Joi.string().isoDate().optional(),
+      }).optional(),
     })
   ),
   upiIds: Joi.array().items(
@@ -32,12 +33,12 @@ export const userBankDetailDTOValidation = Joi.object({
       upiId: Joi.string().required().messages({
         "any.required": "UPI ID is required.",
       }),
-      status: Joi.string(),
-      verifiedAt: Joi.date(),
+      status: Joi.string().optional(),
+      verifiedAt: Joi.string().isoDate().optional(),
       timestamps: Joi.object({
-        createdAt: Joi.date(),
-        updatedAt: Joi.date(),
-      }),
+        createdAt: Joi.string().isoDate().optional(),
+        updatedAt: Joi.string().isoDate().optional(),
+      }).optional(),
     })
   ),
 }).options({ stripUnknown: true });

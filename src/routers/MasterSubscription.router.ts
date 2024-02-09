@@ -11,9 +11,7 @@ const masterSubscriptionController = new MasterSubscriptionController();
 const MasterSubscriptionRouter = Router();
 
 // create master subscription plan [Admin]
-MasterSubscriptionRouter.post(
-  "/create",
-  masterSubscriptionController.createMasterSubscription
+MasterSubscriptionRouter.post("/create", masterSubscriptionController.createMasterSubscription
 );
 
 // get master subscription plan [ui]

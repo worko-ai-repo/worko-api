@@ -11,6 +11,7 @@ import UserSocialProfileService from "../services/UserSocialProfile.service";
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
+import { validateEmailField } from "../schemas/User.schema";
 
 // Load local helper
 
@@ -36,6 +37,12 @@ class UserSocialProfileController {
 
       // Extract email from request parameters
       const email = req.params.id;
+
+      const { error} = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
       const result = await UserSocialProfileService.get(email);
 
       // Send a successful response with user data
@@ -72,6 +79,9 @@ class UserSocialProfileController {
 
       // Extract email from request parameters
       const email = req.params.id;
+
+      const { error: emailError } = validateEmailField(email);
+
       const userSocialProfileDTO: UserSocialProfileDTO = req.body;
       const { error, value } = userSocialProfileDTOValidation.validate(
         userSocialProfileDTO,
@@ -81,7 +91,9 @@ class UserSocialProfileController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
 

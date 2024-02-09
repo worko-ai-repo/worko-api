@@ -11,18 +11,14 @@ const userSubscriptionController = new UserSubscriptionController();
 const UserSubscriptionRouter = Router();
 
 // Create subscription for user
-UserSubscriptionRouter.post(
-  "/:id/subscription",
-  userSubscriptionController.create
+UserSubscriptionRouter.post("/:id/subscription", userSubscriptionController.create
 );
 
 // Get the user subscription details based on the provided query parameter
 UserSubscriptionRouter.get("/:id/subscription", userSubscriptionController.get);
 
 // Get the user subscription Status based on the provided query parameter
-UserSubscriptionRouter.get(
-  "/:id/subscription/status",
-  userSubscriptionController.getStatus
+UserSubscriptionRouter.get("/:id/subscription/status",userSubscriptionController.getStatus
 );
 
 export default UserSubscriptionRouter;
