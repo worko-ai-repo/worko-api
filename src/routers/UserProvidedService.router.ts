@@ -11,12 +11,21 @@ const userProvidedServiceController = new UserProvidedServiceController();
 const UserProvidedServiceRouter = Router();
 
 // Get the user ProvidedService details based on the provided query parameter
-UserProvidedServiceRouter.get("/:id/providedService", userProvidedServiceController.get
+UserProvidedServiceRouter.get(
+  "/:id/pservice",
+  userProvidedServiceController.get
 );
 
-// create/update the user ProvidedService details based on the provided query parameter
-// @todo have separate api for create and update activity
-UserProvidedServiceRouter.post("/:id/providedService",userProvidedServiceController.create
+// create the user ProvidedService details based on the provided query paramete
+UserProvidedServiceRouter.post(
+  "/:id/pservice",
+  userProvidedServiceController.create
+);
+
+// update the user ProvidedService details based on the provided query paramete
+UserProvidedServiceRouter.put(
+  "/:id/pservice",
+  userProvidedServiceController.Update
 );
 
 export default UserProvidedServiceRouter;

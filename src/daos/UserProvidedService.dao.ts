@@ -15,7 +15,7 @@ import { UserProvidedServiceDTO } from "../dtos/UserProvidedService.dto";
 class UserProvidedServiceDao implements BaseDao {
   modelName = "userProvidedService";
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
-  sortKeys = { SK_ID: "EDU#ID#{eduId}" }; // Sort key structure using unique IDs
+  sortKeys = { SK_ID: "PVD#SRVC#ID#{srvcId}" }; // Sort key structure using unique IDs
 
   /**
    * Fetches user ProvidedService based on the provided email.
@@ -31,7 +31,7 @@ class UserProvidedServiceDao implements BaseDao {
     return UserProvidedServiceModel.query("PK")
       .eq(PK)
       .where("SK")
-      .beginsWith("EDU#ID#")
+      .beginsWith("PVD#SRVC#ID#")
       .exec();
   }
 
@@ -44,7 +44,7 @@ class UserProvidedServiceDao implements BaseDao {
   async create(email: string, userProvidedServiceDTO: UserProvidedServiceDTO) {
     logger.info("Create employee Work ProvidedService [DAO]");
     const SK = this.sortKeys.SK_ID.strtr({
-      "{eduId}": UlidService.getUlidId(),
+      "{srvcId}": UlidService.getUlidId(),
     });
     console.log("SK: ", SK);
     const userProvidedService = {
@@ -54,7 +54,7 @@ class UserProvidedServiceDao implements BaseDao {
       SK: SK,
       ...userProvidedServiceDTO,
     };
-    return await UserProvidedServiceModel.create(userProvidedService);
+    return UserProvidedServiceModel.create(userProvidedService);
   }
 
   /**
@@ -71,6 +71,13 @@ class UserProvidedServiceDao implements BaseDao {
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
+
+    console.log(
+      "userProvidedServiceDTO.durationAndPrices[0].createdAt: -",
+      userProvidedServiceDTO.durationAndPrices[0].createdAt,
+      "userProvidedServiceDTO.durationAndPrices[0].updatedAt: -",
+      userProvidedServiceDTO.durationAndPrices[0].updatedAt
+    );
     return UserProvidedServiceModel.update(
       { PK: PK, SK: SK },
       userProvidedServiceDTO
