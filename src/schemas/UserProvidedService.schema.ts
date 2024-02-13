@@ -107,3 +107,16 @@ export const userProvidedServiceViewDTOValidation = Joi.object({
 export const userProvidedServiceDTOArrayValidation = Joi.array()
   .items(userProvidedServiceDTOValidation)
   .options({ stripUnknown: true });
+
+export const userProvidedServiceIdValidation = Joi.object({
+  id: Joi.string().required().email().messages({
+    "any.required": "Email is required",
+    "string.empty": "Email should not be empty.",
+    "string.email": "Email must be a valid email address",
+  }),
+
+  pserviceId: Joi.string().required().messages({
+    "any.required": "Pservice ID is required",
+    "string.empty": "Pservice ID should not be empty.",
+  }),
+});

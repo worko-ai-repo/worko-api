@@ -13,7 +13,7 @@ import UlidService from "../services/Ulid.service";
 // Class definition for MasterServiceDao implementing BaseDao
 class MasterServiceDao implements BaseDao {
   modelName = "MasterService";
-  partitianKey = "SRVC#";
+  partitianKey = "MSRVC#";
   sortKeys = { SK_SRVC: "ID#{ID}" };
 
   /**

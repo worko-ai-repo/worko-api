@@ -16,6 +16,12 @@ UserProvidedServiceRouter.get(
   userProvidedServiceController.get
 );
 
+// Get the user ProvidedService details based on the provided query parameter
+UserProvidedServiceRouter.get(
+  "/:id/pservice/:pserviceId",
+  userProvidedServiceController.getById
+);
+
 // create the user ProvidedService details based on the provided query paramete
 UserProvidedServiceRouter.post(
   "/:id/pservice",
