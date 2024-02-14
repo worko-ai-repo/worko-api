@@ -5,6 +5,8 @@ import { Request, Response, NextFunction } from "express";
 import { UserEducationDTOWithId } from "../dtos/UserEducation.dto";
 // Load the local schema
 import { userEducationDTOArrayValidation } from "../schemas/UserEducation.schema";
+import { validateEmailField } from "../schemas/User.schema";
+
 // Load the shared service
 import UserEducationService from "../services/UserEducation.service";
 import UserProfilePercentageService from "../services/UserProfilePercentage.service";
@@ -40,7 +42,12 @@ class UserEducationController {
       // Extract email from request parameters
       const email = req.params.id;
 
-      const result = await UserEducationService.get(email);
+      const { error, value } = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+      const result = await UserEducationService.get(value);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
@@ -76,6 +83,9 @@ class UserEducationController {
 
       // Extract email from request parameters
       const email = req.params.id;
+
+      const { error: emailError, value: emailId } = validateEmailField(email);
+
       const userEducationDTO: UserEducationDTOWithId[] = req.body;
       logger.debug("userEducationDTO: ", userEducationDTO);
       let { error, value } = userEducationDTOArrayValidation.validate(
@@ -86,12 +96,13 @@ class UserEducationController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
-
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
-        email
+        emailId
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
 
@@ -104,13 +115,17 @@ class UserEducationController {
           );
         // If it has an SK, then it is an update, and if it does not have an SK, it is a create
         if (userEducationDTO[i].SK) {
-          UserEducationService.update(email, userEducationDTO[i].SK, value[i]);
+          UserEducationService.update(
+            emailId,
+            userEducationDTO[i].SK,
+            value[i]
+          );
         } else {
-          UserEducationService.createEducation(email, value[i]);
+          UserEducationService.createEducation(emailId, value[i]);
         }
       }
 
-      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+      UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json();

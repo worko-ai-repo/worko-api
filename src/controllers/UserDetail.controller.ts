@@ -6,6 +6,7 @@ import { UserDetailDTO } from "../dtos/UserDetail.dto";
 
 // Load the local schema
 import { userDetailDTOValidation } from "../schemas/UserDetail.schema";
+import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserDetailService from "../services/UserDetail.service";
@@ -40,7 +41,13 @@ class UserDetailController {
 
       // Extract email from request parameters
       const email = req.params.id;
-      const result = await UserDetailService.get(email);
+
+      const { error, value } = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+      const result = await UserDetailService.get(value);
 
       // Send successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
@@ -76,6 +83,9 @@ class UserDetailController {
 
       // Extract email from request parameters
       const email = req.params.id;
+
+      const { error: emailError, value: emailId } = validateEmailField(email);
+
       const userDetailDTO: UserDetailDTO = req.body;
       logger.debug("userDetailDTO: ", userDetailDTO);
       let { error, value } = userDetailDTOValidation.validate(userDetailDTO, {
@@ -83,16 +93,22 @@ class UserDetailController {
       });
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
-        email
+        emailId
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
 
-      const result = await UserDetailService.update(email, req.body.SK, value);
+      const result = await UserDetailService.update(
+        emailId,
+        req.body.SK,
+        value
+      );
 
       userProfilePercentageDTO =
         UserProfilePercentageOperationHelper.updateCurPerc(
@@ -100,7 +116,7 @@ class UserDetailController {
           value
         );
 
-      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+      UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
 
       // If it has an SK, then it is an update, and if it does not have an SK, it is a create
       /* if (req.body.SK) {

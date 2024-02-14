@@ -16,6 +16,7 @@ import { UserProfilePercentageDTO } from "../dtos/UserProfilePercentage.dto";
 import {
   UserSignUpDTOValidation,
   userEmployeeSignUpDTOValidation,
+  validateEmailField,
 } from "../schemas/User.schema";
 
 // Load the shared service
@@ -123,7 +124,12 @@ class UserController {
       // Extract email from request parameters
       const email = req.params.id;
 
-      const SK = await UserService.getSK(email);
+      const { error, value } = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+      const SK = await UserService.getSK(value);
 
       // Check if SK is null or indicates an error
       if (SK === null || SK === undefined) {
@@ -131,7 +137,7 @@ class UserController {
       }
 
       // Call the UserService to get user by email
-      const result = await UserService.getUserDetailByEmail(email, SK);
+      const result = await UserService.getUserDetailByEmail(value, SK);
 
       // Transform the result to the desired format
       const userProfileResponse: UserProfileResponse = {
@@ -329,10 +335,16 @@ class UserController {
     try {
       global.logger.info("update EmailVerify Status [controller]");
       const email = req.params.id;
-      const verify = await UserService.verifyEmail(email);
+
+      const { error, value } = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+      const verify = await UserService.verifyEmail(value);
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
-        email
+        value
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
 
@@ -342,7 +354,7 @@ class UserController {
           [profilePercentageField.isEmailVerified]
         );
 
-      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+      UserProfilePercentageService.update(value, userProfilePercentageDTO);
 
       res.status(HttpStatusCode.OK_200).json(verify);
     } catch (error) {
@@ -372,10 +384,15 @@ class UserController {
       global.logger.info("Update user resume [controller]");
       const resume = req.body.resume;
       const email = req.params.id;
-      const update = await UserService.updateUserCV(email, resume);
+      const { error, value } = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+      const update = await UserService.updateUserCV(value, resume);
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
-        email
+        value
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
 
@@ -385,7 +402,7 @@ class UserController {
           [profilePercentageField.CV]
         );
 
-      UserProfilePercentageService.update(email, userProfilePercentageDTO);
+      UserProfilePercentageService.update(value, userProfilePercentageDTO);
 
       res.status(HttpStatusCode.OK_200).json(update);
     } catch (error) {

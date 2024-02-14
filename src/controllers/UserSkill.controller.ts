@@ -16,6 +16,7 @@ import { RequestValidationError } from "../utils/errors.util";
 // Load local helper
 import { TimestampHelper } from "../helpers/timeStamp.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+import { validateEmailField } from "../schemas/User.schema";
 
 /**
  * UserSkillController
@@ -39,6 +40,12 @@ class UserSkillController {
 
       // Extract email from request parameters
       const email = req.params.id;
+
+      const { error} = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
       const result = await UserSkillService.get(email);
 
       // Send a successful response with user data
@@ -74,17 +81,22 @@ class UserSkillController {
       logger.info("Create/update user Skill by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
+     // Extract email from request parameters
+     const email = req.params.id;
+
+     const { error: emailError } = validateEmailField(email);
+
       const userSkillDTO: UserSkillDTO = req.body;
       const { error, value } = userSkillDTOValidation.validate(userSkillDTO, {
         abortEarly: false,
       });
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
-
       // Check and add timestamps for each category
       if (value.coreSkills) {
         TimestampHelper.addTimestamps(value.coreSkills);

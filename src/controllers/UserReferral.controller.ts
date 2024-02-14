@@ -10,6 +10,7 @@ import {
   UserReferralRequestDTOValidation,
   UserReferralStatusValidation,
 } from "../schemas/UserReferral.schema";
+import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserService from "../services/User.service";
@@ -43,13 +44,19 @@ class UserReferralController {
 
       // Extract email from request parameters
       const email = req.params.id;
+
+      const { error, value } = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
       const status = req.query.status;
       let result;
 
       if (status && typeof status === "string") {
-        result = await UserReferralService.getByStatus(email, status);
+        result = await UserReferralService.getByStatus(value, status);
       } else {
-        result = await UserReferralService.get(email);
+        result = await UserReferralService.get(value);
       }
 
       /* status && typeof status === "string"
@@ -161,17 +168,22 @@ class UserReferralController {
   createReferral = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Create referral [controller]");
+      const email = req.params.id;
+
+      const { error: emailError, value: emailId } = validateEmailField(email);
+
       const referralRequest: UserReferralRequestDTO = req.body;
       const { error } = UserReferralRequestDTOValidation.validate(
         referralRequest,
         { abortEarly: false }
       );
 
-      if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
 
-      const email = req.params.id;
       /* const SK = await UserService.getSK(email);
       const subStatus = await UserService.getSubscriptionStatus(email, SK);
       if (!subStatus[0].isSubscribed) {
@@ -185,7 +197,7 @@ class UserReferralController {
 
       const referralRequestId = await UserReferralService.referralRequest(
         referralRequest,
-        email
+        emailId
       );
       res.status(HttpStatusCode.OK_200).json(referralRequestId);
     } catch (error) {

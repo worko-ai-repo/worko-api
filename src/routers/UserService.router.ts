@@ -13,24 +13,16 @@ const UserServiceRouter = Router();
 UserServiceRouter.get("/:emailAddress/service", userServiceController.get);
 
 // Create Service based on the provided query parameter
-UserServiceRouter.post(
-  "/:emailAddress/service",
-  userServiceController.requestService
+UserServiceRouter.post("/:emailAddress/service",userServiceController.requestService
 );
 
-UserServiceRouter.post(
-  "/:emailAddress/service/interview",
-  userServiceController.requestServiceInterviewGuidance
+UserServiceRouter.post("/:emailAddress/service/interview", userServiceController.requestServiceInterviewGuidance
 );
 
-UserServiceRouter.get(
-  "/:emailAddress/service/:serviceId",
-  userServiceController.getServiceStatus
+UserServiceRouter.get("/:emailAddress/service/:serviceId",userServiceController.getServiceStatus
 );
 
-UserServiceRouter.patch(
-  "/:emailAddress/service/:serviceId/:status",
-  userServiceController.updateStatus
+UserServiceRouter.patch("/:emailAddress/service/:serviceId/:status",userServiceController.updateStatus
 );
 
 export default UserServiceRouter;

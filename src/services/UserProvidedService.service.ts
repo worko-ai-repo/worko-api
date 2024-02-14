@@ -23,6 +23,19 @@ class UserProvidedServiceService {
   }
 
   /**
+   * Retrieves user ProvidedService by Id.
+   *
+   * @param email - Email of the user
+   * @param Id - id of the ProvidedService
+   * @returns {Promise<any>} - A Promise that resolves to the ProvidedService of the user
+   */
+  async getById(email: string, id: string): Promise<any> {
+    // Logging the action of getting user ProvidedService by id in the service layer
+    logger.info("Fetching ProvidedService by id [UserProvidedServiceService]");
+    return userProvidedServiceDao.getById(email, id);
+  }
+
+  /**
    * Creates a new user ProvidedService.
    *
    * @param email - Email of the user

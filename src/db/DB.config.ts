@@ -24,6 +24,7 @@ import { UserServiceModel } from "./models/UserService.model";
 import { UserProfilePercentageModel } from "./models/UserProfilePercentage.model";
 import { UserBankDetailModel } from "./models/UserBankDetail.model";
 import { UserProvidedServiceModel } from "./models/UserProvidedService.model";
+import { UserAvailabilityModel } from "./models/UserAvailability.model";
 import { MasterSubscriptionModel } from "./models/MasterSubscription.model";
 import { MasterServiceModel } from "./models/MasterService.model";
 
@@ -69,8 +70,7 @@ class DBConfig {
       config = {
         credentials: {
           accessKeyId: process.env.APP_AWS_DYNAMODB_ACCESS_KEY_ID as string,
-          secretAccessKey: process.env
-            .APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
+          secretAccessKey: process.env.APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
         },
         region: "local",
         endpoint: "http://localhost:8000",
@@ -110,6 +110,7 @@ class DBConfig {
       UserProfilePercentageModel,
       UserBankDetailModel,
       UserProvidedServiceModel,
+      UserAvailabilityModel,
       CompanyModel,
       CompanyDetailModel,
       CompanyRequestModel,

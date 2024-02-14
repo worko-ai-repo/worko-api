@@ -6,11 +6,15 @@ import {
   UserProvidedServiceDTO,
   UserProvidedServiceDTOWithId,
 } from "../dtos/UserProvidedService.dto";
+
 // Load the local schema
 import {
   userProvidedServiceDTOValidation,
+  userProvidedServiceIdValidation,
   userProvidedServiceUpdateDTOValidation,
 } from "../schemas/UserProvidedService.schema";
+import { validateEmailField } from "../schemas/User.schema";
+
 // Load the shared service
 import MasterServiceService from "../services/MasterService.service";
 import UserProvidedServiceService from "../services/UserProvidedService.service";
@@ -50,9 +54,67 @@ class UserProvidedServiceController {
       // Extract email from request parameters
       const email = req.params.id;
 
+      const { error } = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
       const servicePlans = MasterServiceService.get();
 
       const result = await UserProvidedServiceService.get(email);
+
+      ServiceHelper.updateServiceNames(result, await servicePlans);
+
+      // Send a successful response with user data
+      res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error: any) {
+      // Handle errors
+
+      // Check if the error is due to user not found
+      if (error.message === "User not found") {
+        // If user not found, send a 404 response with an informative error message
+        res
+          .status(HttpStatusCode.NOT_FOUND_404)
+          .json({ error: "User not found. Please check the email." });
+      } else {
+        // If it's another type of error, pass it to the next error handler
+        next(error);
+      }
+    }
+  };
+
+  /**
+   * getById
+   *
+   * Retrieves the provided service based on the ID
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  getById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Log the action for debugging purposes
+      logger.info("Get user ProvidedService by Id [controller]");
+
+      // Extract email from request parameters
+      const param = req.params;
+
+      const { error } = userProvidedServiceIdValidation.validate(param, {
+        abortEarly: false,
+      });
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      const servicePlans = MasterServiceService.get();
+
+      const result = await UserProvidedServiceService.getById(
+        param.id,
+        param.pserviceId
+      );
 
       ServiceHelper.updateServiceNames(result, await servicePlans);
 
@@ -90,6 +152,9 @@ class UserProvidedServiceController {
 
       // Extract email from request parameters
       const email = req.params.id;
+
+      const { error: emailError } = validateEmailField(email);
+
       const userProvidedServiceDTO: UserProvidedServiceDTO = req.body;
       const { error } = userProvidedServiceDTOValidation.validate(
         userProvidedServiceDTO,
@@ -99,7 +164,9 @@ class UserProvidedServiceController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
 
@@ -154,6 +221,9 @@ class UserProvidedServiceController {
 
       // Extract email from request parameters
       const email = req.params.id;
+
+      const { error: emailError } = validateEmailField(email);
+
       const userProvidedServiceDTO: UserProvidedServiceDTOWithId = req.body;
       let { error, value } = userProvidedServiceUpdateDTOValidation.validate(
         userProvidedServiceDTO,
@@ -163,7 +233,9 @@ class UserProvidedServiceController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
 

@@ -15,6 +15,7 @@ import UserService from "../services/User.service";
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 import MasterSubscriptionService from "../services/MasterSubscription.service";
+import { validateEmailField } from "../schemas/User.schema";
 
 /**
  * UserSubscriptionController
@@ -34,6 +35,12 @@ class UserSubscriptionController {
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const email = req.params.id;
+
+      const { error } = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
       const result = await UserSubscriptionService.get(email);
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error) {
@@ -56,6 +63,12 @@ class UserSubscriptionController {
   getStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const email = req.params.id;
+
+      const { error} = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
       const SK = await UserService.getSK(email);
       const subStatus = await UserService.getSubscriptionStatus(email, SK);
       /* if (!subStatus[0].isSubscribed) {
@@ -92,6 +105,12 @@ class UserSubscriptionController {
       global.logger.info("create subscription for user [controller]");
       const masterSubscriptionId = req.body.masterSubscriptionId;
       const email = req.params.id;
+
+      const { error} = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
 
       /* const { error, value } = SubscriptionDTOValidation.validate(
         subscriptionDto,

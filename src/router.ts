@@ -21,6 +21,7 @@ import UserServiceRouter from "./routers/UserService.router";
 import UserProfilePercentageRouter from "./routers/UserProfilePercentage.router";
 import UserBankDetailRouter from "./routers/UserBankDetail.router";
 import UserProvidedServiceRouter from "./routers/UserProvidedService.router";
+import UserAvailabilityRouter from "./routers/UserAvailability.router";
 
 //File routers
 import FileRouter from "./routers/File.router";
@@ -81,6 +82,9 @@ router.use("/user", UserBankDetailRouter);
 // Regitser the "User ProvidedService" routers
 router.use("/user", UserProvidedServiceRouter);
 
+// Regitser the "User AvailabilityRouter" routers
+router.use("/user", UserAvailabilityRouter);
+
 // Regitser the "File" router
 router.use("/file", FileRouter);
 
@@ -88,10 +92,10 @@ router.use("/file", FileRouter);
 router.use("/referral", ReferralRouter);
 
 // Regitser the "Master Subscription" routers
-router.use("/subscription", MasterSubscriptionRouter);
+router.use("/msubscription", MasterSubscriptionRouter);
 
 // Regitser the "Master Service" routers
-router.use("/service", MasterServiceRouter);
+router.use("/mservice", MasterServiceRouter);
 
 // Register the "Email Template" routers.
 // Note: These actions are only for users with "admin" role. @todo add required authorizations.
