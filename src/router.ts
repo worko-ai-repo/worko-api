@@ -91,10 +91,10 @@ router.use("/file", FileRouter);
 router.use("/referral", ReferralRouter);
 
 // Regitser the "Master Subscription" routers
-router.use("/subscription", MasterSubscriptionRouter);
+router.use("/msubscription", MasterSubscriptionRouter);
 
 // Regitser the "Master Service" routers
-router.use("/service", MasterServiceRouter);
+router.use("/mservice", MasterServiceRouter);
 
 // Export the router
 export default router;

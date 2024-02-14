@@ -24,11 +24,7 @@ class UserAvailabilityDao implements BaseDao {
       "{primaryEmail}": email,
     });
     const SK = this.sortKeys.SK_ID;
-    return UserAvailabilityModel.query("PK")
-      .eq(PK)
-      .where("SK")
-      .beginsWith(SK)
-      .exec();
+    return UserAvailabilityModel.query("PK").eq(PK).where("SK").eq(SK).exec();
   }
 
   /**

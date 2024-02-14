@@ -6,6 +6,7 @@ import { UserAvailabilityDTO } from "../dtos/UserAvailability.dto";
 
 // Load the local schema
 import { UserAvailabilityDTOValidation } from "../schemas/UserAvailability.schema";
+import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserAvailabilityService from "../services/UserAvailability.service";
@@ -41,14 +42,23 @@ class UserAvailabilityController {
 
       // Extract email from request parameters
       const email = req.params.id;
+
+      const { error } = validateEmailField(email);
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
       const result = await UserAvailabilityService.get(email);
 
       // Add the "day" field to each availability item
-      result[0].availability.forEach(
-        (availabilityItem: { day: string; dayCode: number }) => {
-          availabilityItem.day = DayCodes[availabilityItem.dayCode];
-        }
-      );
+      if (result.count > 0) {
+        result[0].availability.forEach(
+          (availabilityItem: { day: string; dayCode: number }) => {
+            availabilityItem.day = DayCodes[availabilityItem.dayCode];
+          }
+        );
+      }
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);
@@ -84,6 +94,7 @@ class UserAvailabilityController {
 
       // Extract email from request parameters
       const email = req.params.id;
+      const { error: emailError } = validateEmailField(email);
       const userAvailabilityDTO: UserAvailabilityDTO = req.body;
       const { error, value } = UserAvailabilityDTOValidation.validate(
         userAvailabilityDTO,
@@ -93,7 +104,9 @@ class UserAvailabilityController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
 
@@ -130,6 +143,7 @@ class UserAvailabilityController {
 
       // Extract email from request parameters
       const email = req.params.id;
+      const { error: emailError } = validateEmailField(email);
       const userAvailabilityDTO: UserAvailabilityDTO = req.body;
       const { error, value } = UserAvailabilityDTOValidation.validate(
         userAvailabilityDTO,
@@ -139,7 +153,9 @@ class UserAvailabilityController {
       );
 
       // Validate the user input and throw a validation error if necessary
-      if (error) {
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
         throw new RequestValidationError(error);
       }
 
