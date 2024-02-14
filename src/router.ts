@@ -31,6 +31,7 @@ import ReferralRouter from "./routers/Referral.router";
 //Master routers
 import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
 import MasterServiceRouter from "./routers/MasterService.router";
+import EmailTemplateRouter from "./routers/EmailTemplate.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -91,6 +92,10 @@ router.use("/subscription", MasterSubscriptionRouter);
 
 // Regitser the "Master Service" routers
 router.use("/service", MasterServiceRouter);
+
+// Register the "Email Template" routers.
+// Note: These actions are only for users with "admin" role. @todo add required authorizations.
+router.use("/email-template", EmailTemplateRouter);
 
 // Export the router
 export default router;
