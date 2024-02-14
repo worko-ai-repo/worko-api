@@ -1,7 +1,7 @@
 export interface UserDetailDTO {
   name: string;
   emailList: { [key: string]: string };
-  number: number;
+  number: string;
   userType: string[];
   isEmailVerified: boolean;
   isNumberVerified: boolean;

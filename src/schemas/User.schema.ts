@@ -2,27 +2,25 @@ import Joi from "joi";
 
 export const UserSignUpDTOValidation = Joi.object({
   name: Joi.string()
-    .regex(/^[a-zA-Z]+$/)
+    .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
     .required()
     .messages({
       "any.required": "Name is required",
-      "string.pattern.base": "Name must contain only alphabetic characters",
+      "string.pattern.base":
+        "Name must contain only alphabetic characters, spaces, dots, apostrophes, or hyphens",
     }),
   email: Joi.string().email().required().messages({
     "any.required": "Email is required.",
     "string.email": "Please provide a valid email address.",
     "string.empty": "Email cannot be empty.",
   }),
-  number: Joi.number()
-    .integer()
+  number: Joi.string()
     .required()
-    .min(1000000000)
-    .max(9999999999)
+    .regex(/^\+?\d{2,16}$/)
     .messages({
-      "number.base": "Number must be a valid number",
-      "number.integer": "Number must be an integer",
-      "number.min": "Number must be a 10-digit phone number",
-      "number.max": "Number must be a 10-digit phone number",
+      "string.base": "Number must be a string",
+      "string.empty": "Number cannot be empty",
+      "string.pattern.base": "Number must be a valid phone number",
       "any.required": "Number is required",
     }),
 
@@ -54,27 +52,28 @@ export const UserSignUpDTOValidation = Joi.object({
 
 export const userEmployeeSignUpDTOValidation = Joi.object({
   name: Joi.string()
-    .regex(/^[a-zA-Z]+$/)
+    .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
     .required()
     .messages({
       "any.required": "Name is required",
-      "string.pattern.base": "Name must contain only alphabetic characters",
+      "string.pattern.base":
+        "Name must contain only alphabetic characters, spaces, dots, apostrophes, or hyphens",
     }),
   email: Joi.string().email().required().messages({
     "any.required": "Email is required.",
     "string.email": "Please provide a valid email address.",
     "string.empty": "Email cannot be empty.",
   }),
-  number: Joi.number()
-    .options({ convert: false })
-    .min(1000000000)
-    .max(9999999999)
+  number: Joi.string()
     .required()
+    .regex(/^\+?\d{2,16}$/)
     .messages({
-      "any.required": "Number is required.",
-      "number.base": "Number must be a valid number.",
-      "number.max": "Number must be equal to 10.",
+      "string.base": "Number must be a string",
+      "string.empty": "Number cannot be empty",
+      "string.pattern.base": "Number must be a valid phone number",
+      "any.required": "Number is required",
     }),
+
   linkedinUrl: Joi.string().regex(
     /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
     "LinkedIn URL is not valid"

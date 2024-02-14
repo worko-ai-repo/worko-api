@@ -172,14 +172,21 @@ class UserController {
   createCandidate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       global.logger.info("Create candidate [controller]");
-      const userSingUpDto: UserSignUpDTO = req.body;
-      const { error, value } = UserSignUpDTOValidation.validate(userSingUpDto, {
+      const userSignUpDto: UserSignUpDTO = req.body;
+      const { error, value } = UserSignUpDTOValidation.validate(userSignUpDto, {
         abortEarly: false,
       });
 
       if (error) {
         throw new RequestValidationError(error);
       }
+
+    //
+     const count = await UserService.getCount(userSignUpDto.email);
+     if(count.count > 0){
+      res.status(HttpStatusCode.CONFLICT_409).json({ error: "User Already Exits!." });
+     }
+
       const linkedinUrl = req.body.linkedinUrl;
       const userSocialProfileDTO: UserSocialProfileDTO = {
         linkedin: [linkedinUrl],
@@ -187,7 +194,7 @@ class UserController {
       const userType = UserType.CAND;
       const newUser = await UserService.addUser(value, userType);
       UserSocialProfileService.create(
-        userSingUpDto.email,
+        userSignUpDto.email,
         userSocialProfileDTO
       );
 
@@ -210,7 +217,7 @@ class UserController {
 
       //creating profile percentage SK for user
       UserProfilePercentageService.create(
-        userSingUpDto.email,
+        userSignUpDto.email,
         userProfilePercentageDTO
       );
 
@@ -236,10 +243,10 @@ class UserController {
   createEmployee = async (req: Request, res: Response, next: NextFunction) => {
     try {
       global.logger.info("Create employee [controller]");
-      const userSingUpDto: UserEmployeeSignUpDTO = req.body;
+      const userSignUpDto: UserEmployeeSignUpDTO = req.body;
 
       const { error } = userEmployeeSignUpDTOValidation.validate(
-        userSingUpDto,
+        userSignUpDto,
         {
           abortEarly: false,
         }
@@ -248,8 +255,13 @@ class UserController {
       if (error) {
         throw new RequestValidationError(error);
       }
-
-      const email = userSingUpDto.email;
+      //
+      const count = await UserService.getCount(userSignUpDto.email);
+      if(count.count > 0){
+       res.status(HttpStatusCode.CONFLICT_409).json({ error: "User Already Exists!." });
+      }
+//
+      const email = userSignUpDto.email;
       const {
         companyName,
         companySK,
@@ -259,7 +271,7 @@ class UserController {
         designationTag,
         linkedinUrl,
         ...copyUserSignUpDTO
-      } = userSingUpDto;
+      } = userSignUpDto;
 
       const userExperienceDto: UserExperienceDTO = {
         department,
@@ -304,7 +316,7 @@ class UserController {
 
       //creating profile percentage SK for user
       UserProfilePercentageService.create(
-        userSingUpDto.email,
+        userSignUpDto.email,
         userProfilePercentageDTO
       );
 

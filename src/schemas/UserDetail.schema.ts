@@ -1,10 +1,14 @@
 import Joi from "joi";
 
 export const userDetailDTOValidation = Joi.object({
-  name: Joi.string().regex(/^[a-zA-Z]+$/).required().messages({
-    "any.required": "Name is required",
-    "string.pattern.base": "Name must contain only alphabetic characters"
-  }),
+  name: Joi.string()
+    .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
+    .required()
+    .messages({
+      "any.required": "Name is required",
+      "string.pattern.base":
+        "Name must contain only alphabetic characters, spaces, dots, apostrophes, or hyphens",
+    }),
   emailList: Joi.object()
     .pattern(Joi.string(), Joi.string().email().required())
     .required()
@@ -12,13 +16,15 @@ export const userDetailDTOValidation = Joi.object({
       "any.required": "Email list is required.",
       "object.base": "Email list must be an object.",
     }),
-    number: Joi.number().integer().required().min(1000000000).max(9999999999).messages({
-      "number.base": "Number must be a valid number",
-      "number.integer": "Number must be an integer",
-      "number.min": "Number must be a 10-digit phone number",
-      "number.max": "Number must be a 10-digit phone number",
-      "any.required": "Number is required"
-  }),
+  number: Joi.string()
+    .required()
+    .regex(/^\+?\d{2,16}$/)
+    .messages({
+      "string.base": "Number must be a string",
+      "string.empty": "Number cannot be empty",
+      "string.pattern.base": "Number must be a valid phone number",
+      "any.required": "Number is required",
+    }),
   userType: Joi.array()
     .items(Joi.string().valid("CAND", "EMP"))
     .required()

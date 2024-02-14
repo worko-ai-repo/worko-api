@@ -20,6 +20,18 @@ class UserDao implements BaseDao {
     });
     return UserModel.query("PK").eq(PK).exec();
   }
+    /**
+   *Find Existing User
+   * @param email - Email address of the user
+   * @returns User details corresponding to the email
+   */
+  async getCount(email: string) {
+    console.log("Get user info by email [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserModel.query("PK").eq(PK).attributes(["PK"]).exec();
+  }
 }
 
 const userDao = new UserDao();
