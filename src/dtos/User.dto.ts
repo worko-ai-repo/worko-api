@@ -1,7 +1,7 @@
 export interface UserSignUpDTO {
   name: string;
   email: string;
-  number: number;
+  number: string;
   linkedinUrl?: string;
   ECTC?: number;
   YOE: number;
@@ -25,7 +25,7 @@ export interface UserDetailResponseDto {
 export interface UserEmployeeSignUpDTO {
   name: string;
   email: string;
-  number: number;
+  number: string;
   linkedinUrl: string;
   YOE: number;
   companyName: string;

@@ -11,9 +11,7 @@ const userExperienceController = new UserExperienceController();
 const UserExperienceRouter = Router();
 
 // Get the user detail based on the provided query parameter
-UserExperienceRouter.get(
-  "/:id/experience",
-  userExperienceController.getByEmail
+UserExperienceRouter.get("/:id/experience", userExperienceController.getByEmail
 );
 
 UserExperienceRouter.post("/:id/experience", userExperienceController.create);

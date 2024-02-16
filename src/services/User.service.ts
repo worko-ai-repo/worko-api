@@ -36,6 +36,17 @@ class UserService {
     global.logger.info("Get user detail by id [service]");
     return userDetailDao.getUserDetails(email, SK);
   }
+  
+  /**
+   *Get Count(pk)
+   *
+   * @param email - Email of the user
+   * @returns {Promise<any>} - Details of the user
+   */
+  async getCount(email: string) {
+    global.logger.info("Get count by id [service]");
+    return userDao.getCount(email);
+  }
 
   /**
    * create a new user with provided details.

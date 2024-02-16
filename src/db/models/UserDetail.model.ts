@@ -13,7 +13,7 @@ import { DB_CONSTANTS } from "../DB.constants";
 class DbUserDetailDto extends BaseDbDto {
   name!: string;
   emailList!: { [key: string]: string }; // @todo we should consider removing this. And make the fields are always upto date. Instead use the "UserEmail" SK.
-  number!: number;
+  number!: string;
   userType!: string[];
   isEmailVerified!: boolean;
   isNumberVerified!: boolean;
@@ -45,7 +45,7 @@ const UserDetailSchema = new dynamoose.Schema(
       required: true,
     },
     number: {
-      type: Number,
+      type: String,
       required: true,
     },
     userType: {
