@@ -19,6 +19,8 @@ class UserReferralDao implements BaseDao {
   modelName = "user"; // The model name used for user referrals
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key format for user referrals
   sortKeys = { SK_REFERRAL: "REF#ID#{reqId}" }; // Sort key format for user referrals
+  GSI1PK = "REF#";
+  GSI1SK = "ID#{refId}";
 
   /**
    * Fetches user Referral based on the provided email.
@@ -161,10 +163,9 @@ class UserReferralDao implements BaseDao {
    */
   async getByGSI1PK(companySK: string) {
     global.logger.info("Get Referral by GSI1PK and companySK [DAO]");
-    const GSI1PK = "REF#";
     const cSK = "ID#" + companySK;
     return UserReferralModel.query("GSI1PK")
-      .eq(GSI1PK)
+      .eq(this.GSI1PK)
       .where("companySK")
       .eq(cSK)
       .exec();
@@ -178,10 +179,9 @@ class UserReferralDao implements BaseDao {
    */
   async getByGSI1PKAndStatus(companySK: string, status: string) {
     global.logger.info("Get Referral by GSI1PK and status [DAO]");
-    const GSI1PK = "REF#";
     const cSK = "ID#" + companySK;
     return UserReferralModel.query("GSI1PK")
-      .eq(GSI1PK)
+      .eq(this.GSI1PK)
       .where("companySK")
       .eq(cSK)
       .where("status")
@@ -198,6 +198,7 @@ class UserReferralDao implements BaseDao {
     global.logger.info("Get Referral by GSI1PK and GSI1SK [DAO]");
     const GSI1PK = "REF#";
     const finalGSI1SK = "ID#" + GSI1SK;
+    console.log("GSI1PK & SK", GSI1PK, finalGSI1SK);
     return UserReferralModel.query("GSI1PK")
       .eq(GSI1PK)
       .where("GSI1SK")
@@ -213,13 +214,44 @@ class UserReferralDao implements BaseDao {
    */
   async getOnlyAttribute(GSI1SK: string, attribute: string[]) {
     global.logger.info("Get Referral by GSI1PK and GSI1SK [DAO]");
-    const GSI1PK = "REF#";
     const finalGSI1SK = "ID#" + GSI1SK;
     return UserReferralModel.query("GSI1PK")
-      .eq(GSI1PK)
+      .eq(this.GSI1PK)
       .where("GSI1SK")
       .eq(finalGSI1SK)
       .attributes(attribute)
+      .exec();
+  }
+
+  /**
+   * Fetches Referral based on GSI1PK and employe userId for accepted referrals.
+   * @param userId
+   * @returns {Promise<any>} - A Promise that resolves
+   */
+  async getByAcceptedUserId(userId: string) {
+    global.logger.info("Get Referral by GSI1PK and AcceptedUserId  [DAO]");
+    return UserReferralModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("status")
+      .eq(ReferralStatus.ACCEPTED)
+      .where("acceptedByUserId")
+      .eq(userId)
+      .exec();
+  }
+
+  /**
+   * Fetches Referral based on GSI1PK and employe userId for DONE referrals.
+   * @param userId
+   * @returns {Promise<any>} - A Promise that resolves
+   */
+  async getByDoneByUserId(userId: string) {
+    global.logger.info("Get Referral by GSI1PK and DoneByUserId  [DAO]");
+    return UserReferralModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("status")
+      .eq(ReferralStatus.DONE)
+      .where("doneByUserId")
+      .eq(userId)
       .exec();
   }
 }

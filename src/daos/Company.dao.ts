@@ -16,7 +16,7 @@ class CompanyDao implements BaseDao {
 
   /**
    * companyList
-   * 
+   *
    * Get the companies based on the provided filters.
    *
    * @param {RecordListingFilterOptions} filterOptions
@@ -35,8 +35,7 @@ class CompanyDao implements BaseDao {
     ];
 
     // Get "query" reference for the operation
-    let query = CompanyModel
-      .query("PK")
+    let query = CompanyModel.query("PK")
       .eq(this.partitianKey)
       .attributes(attributesToInclude);
 
@@ -45,9 +44,7 @@ class CompanyDao implements BaseDao {
       query = query.startAt(filterOptions.lastKey);
     }
 
-    return query
-      .limit(filterOptions.pageSize)
-      .exec();
+    return query.limit(filterOptions.pageSize).exec();
   }
 }
 

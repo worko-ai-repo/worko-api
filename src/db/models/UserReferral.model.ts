@@ -15,6 +15,7 @@ class DbUserReferralDto extends BaseDbDto {
   passedByUserIds?: String[];
   rejectedByUserIds?: String[];
   acceptedByUserId?: String;
+  doneByUserId?: String;
   doneByEmployee?: Date;
   doneByCandidate?: Date;
   GSI1PK!: string;
@@ -53,6 +54,10 @@ const UserReferralSchema = new dynamoose.Schema(
       required: false,
     },
     acceptedByUserId: {
+      type: String,
+      required: false,
+    },
+    doneByUserId: {
       type: String,
       required: false,
     },

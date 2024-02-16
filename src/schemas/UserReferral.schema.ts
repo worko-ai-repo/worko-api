@@ -37,4 +37,10 @@ export const UserReferralEmployeeStatusValidation = Joi.object({
       ).join(", ")}`,
       "any.required": "Action is required",
     }),
+
+  emailId: Joi.string().email().required().messages({
+    "any.required": "Email is required.",
+    "string.email": "Please provide a valid email address.",
+    "string.empty": "Email cannot be empty.",
+  }),
 });

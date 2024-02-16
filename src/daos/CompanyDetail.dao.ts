@@ -15,6 +15,8 @@ class CompanyDetailDao implements BaseDao {
   modelName = "Company"; // Model name for Company
   partitianKey = "COMP#"; // Partition key for Company
   sortKeys = { SK_INIT: "ID#{companyId}" }; // Sort keys for Company
+  GSI1PK = "COMP#INDS#{industryId}";
+  GSI1SK = "ID#{companyId}";
 
   /**
    *

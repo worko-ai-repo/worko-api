@@ -6,7 +6,7 @@
 export default interface BaseDao {
   /**
    * modelName
-   * 
+   *
    * The model associated with this name would be used for performing the CRUD operations.
    */
   modelName: string;
@@ -27,4 +27,18 @@ export default interface BaseDao {
    * }
    */
   sortKeys: { [key: string]: string };
+
+  /**
+   * GSI1 partitianKey
+   *
+   * GSI1 Partitian key from the DynamoDB
+   */
+  GSI1PK?: string;
+
+  /**
+   * GSI1 sortKeys
+   *
+   * GSI1 sortKeys from the DynamoDB
+   */
+  GSI1SK?: string;
 }
