@@ -17,7 +17,7 @@ class CompanyDao implements BaseDao {
 
   /**
    * companyList
-   * 
+   *
    * Get the companies based on the provided filters.
    *
    * @param {RecordListingFilterOptions} filterOptions
@@ -48,33 +48,18 @@ class CompanyDao implements BaseDao {
       "carrierPage",
     ];
 
+    // Get "query" reference for the operation
     let query = CompanyModel
       .query("PK")
-      .eq(this.partitianKey);
-
-    if (filterOptions.industryId) {
-      query = 
-        query
-          .where("industry")
-          .eq(filterOptions.industryId)
-    }
-    if (filterOptions.teamSize){
-      const teamSizeNum = parseInt(filterOptions.teamSize);
-
-      query = 
-        query
-          .where("teamSize")
-          .eq(teamSizeNum)
-    }
+      .eq(this.partitianKey)
+      .attributes(attributesToInclude);
 
     // If "lastKey" (offset) is present then the records should be retrived after provided "lastKey".
     if (filterOptions.lastKey) {
       query = query.startAt(filterOptions.lastKey);
     }
 
-    return query
-      .limit(filterOptions.pageSize)
-      .exec();
+    return query.limit(filterOptions.pageSize).exec();
   }
 
   getCompanyByName(name: string) {

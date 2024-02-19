@@ -6,6 +6,7 @@ import APP_CONSTANTS from "./constants.config";
 
 // Import libraries
 import { AwsS3ClientLibrary } from "../libraries/aws-s3-client.library";
+import { AwsSesClientLibrary } from "../libraries/aws-ses-client.library";
 
 /**
  * awsConfigOptions
@@ -15,7 +16,7 @@ import { AwsS3ClientLibrary } from "../libraries/aws-s3-client.library";
 let awsConfigOptions: AWS.ConfigurationOptions = {};
 
 // For the "local" env/stage use the credentials from the environment config, 
-// and for all other envs/stages use permissions from the lambda function would be used.
+// and for all other envs/stages the permissions from the lambda function would be used.
 if (process.env.APP_STAGE == APP_CONSTANTS.STAGES.LOCAL) {
     awsConfigOptions = {
         accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
@@ -23,6 +24,13 @@ if (process.env.APP_STAGE == APP_CONSTANTS.STAGES.LOCAL) {
         region: process.env.APP_AWS_REGION,
     }
 }
+
+
+/**
+ * ****************************************************************************************************
+ * AWS S3 Client Library
+ * ****************************************************************************************************
+ */
 
 /**
  * awsS3ConfigOptions
@@ -42,12 +50,38 @@ const awsS3ConfigOptions: AWS.S3.ClientConfiguration = {
 const awsS3ClientLibrary: AwsS3ClientLibrary = new AwsS3ClientLibrary(awsS3ConfigOptions);
 console.log("The 'awsS3ClientLibrary' is initialised.", { filePath: __filename, });
 
+/**
+ * ****************************************************************************************************
+ * AWS SES Client Library
+ * ****************************************************************************************************
+ */
+
+/**
+ * awsSesConfigOptions
+ * 
+ * AWS SES specific configurations extending the "awsConfigOptions".
+ */
+const awsSesConfigOptions: AWS.SES.ClientConfiguration = {
+    ...awsConfigOptions,
+    apiVersion: "2010-12-01"
+}
+
+/**
+ * awsSesClientLibrary
+ * 
+ * Application/local SES wrapper client to interact with AWS SES service to perform regular activities
+ */
+const awsSesClientLibrary: AwsSesClientLibrary = new AwsSesClientLibrary(awsSesConfigOptions);
+console.log("The 'awsSesClientLibrary' is initialised.", { filePath: __filename, });
+
 // Export the required resourses
 export {
     // Configurations
     awsConfigOptions,
     awsS3ConfigOptions,
+    awsSesConfigOptions,
 
     // Service Clients
     awsS3ClientLibrary,
+    awsSesClientLibrary,
 }

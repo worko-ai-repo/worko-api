@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
+import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
 
 // Load the local schema
 import {
@@ -15,6 +16,7 @@ import { validateEmailField } from "../schemas/User.schema";
 // Load the shared service
 import UserService from "../services/User.service";
 import UserReferralService from "../services/UserReferral.service";
+import UserReferralResponseService from "../services/UserReferralResponse.service";
 
 //Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -285,9 +287,33 @@ class UserReferralController {
       if (error) {
         throw new RequestValidationError(error);
       }
-      // Assuming the type of referral is an array with UserReferral objects
+
       const userId = referralstatusUpdate.userId;
-      let referral = await UserReferralService.getByGSI1(referralId);
+      let referral = await UserReferralService.getByGSI1(referralId); //Featching the referral details
+
+      let referralResponse;
+      let updateReferralResponse: boolean = false;
+
+      // Check if the referral status update action is either 'PASS' or 'REJECT'.
+      if (
+        referralstatusUpdate.action === ReferralActions.PASS ||
+        referralstatusUpdate.action === ReferralActions.REJECT
+      ) {
+        // Retrieve the existing referral response for the specified email ID.
+        referralResponse = await UserReferralResponseService.get(
+          referralstatusUpdate.emailId
+        );
+
+        // Determine whether an existing referral response is found based on the count.
+        // If count is non-zero, set updateReferralResponse to true; otherwise, set it to false.
+        updateReferralResponse = referralResponse.count !== 0;
+      }
+
+      let userReferralResponseDTO: UserReferralResponseDTO = {
+        passedRefIds: [],
+        rejectedRefIds: [],
+      };
+
       switch (referralstatusUpdate.action) {
         case ReferralActions.PASS:
           // Update passedByUserIds for PASS action
@@ -306,6 +332,17 @@ class UserReferralController {
             : [];
 
           referral[0].passedByUserIds = updatedPassedByUserIds;
+
+          // If updateReferralResponse is true, indicating an existing referral response,
+          // add the current referralId to the passedRefIds array of the first referralResponse entry.
+          if (updateReferralResponse) {
+            referralResponse[0].passedRefIds.push(referralId);
+          } else {
+            // If updateReferralResponse is false, implying no existing referral response,
+            // add the referralId to the passedRefIds array of the userReferralResponseDTO.
+            userReferralResponseDTO.passedRefIds.push(referralId);
+          }
+
           break;
 
         case ReferralActions.REJECT:
@@ -324,6 +361,17 @@ class UserReferralController {
             : [];
 
           referral[0].rejectedByUserIds = updatedRejectedByUserIds;
+
+          // If updateReferralResponse is true, indicating an existing referral response,
+          // add the current referralId to the rejectedRefIds array of the first referralResponse entry.
+          if (updateReferralResponse) {
+            referralResponse[0].rejectedRefIds.push(referralId);
+          } else {
+            // If updateReferralResponse is false, implying no existing referral response,
+            // add the referralId to the rejectedRefIds array of the userReferralResponseDTO.
+            userReferralResponseDTO.rejectedRefIds.push(referralId);
+          }
+
           break;
 
         case ReferralActions.ACCEPT:
@@ -361,6 +409,7 @@ class UserReferralController {
               })();
 
           referral[0].doneByEmployee = updatedDoneByEmployee;
+          referral[0].doneByUserId = userId;
           referral[0].status = ReferralStatus.DONE;
           break;
 
@@ -370,6 +419,23 @@ class UserReferralController {
 
       const { PK, SK, updatedAt, ...userReferralDTO } = referral[0];
       const result = await UserReferralService.update(PK, SK, userReferralDTO);
+
+      if (updateReferralResponse) {
+        // extract the passedRefIds and rejectedRefIds from the first entry of referralResponse.
+        const { passedRefIds, rejectedRefIds } = referralResponse[0];
+
+        // Update the existing referral response for the specified email ID with the current passedRefIds and rejectedRefIds.
+        UserReferralResponseService.update(referralstatusUpdate.emailId, {
+          passedRefIds,
+          rejectedRefIds,
+        });
+        // create a new referral response for the specified email ID using the userReferralResponseDTO.
+      } else {
+        UserReferralResponseService.create(
+          referralstatusUpdate.emailId,
+          userReferralResponseDTO
+        );
+      }
 
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error) {
