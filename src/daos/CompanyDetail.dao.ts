@@ -15,7 +15,7 @@ class CompanyDetailDao implements BaseDao {
   modelName = "Company"; // Model name for Company
   partitianKey = "COMP#"; // Partition key for Company
   sortKeys = { SK_INIT: "ID#{companyId}" }; // Sort keys for Company
-  GSI1PK = "COMP#INDS#{industryId}";
+  GSI1PK = "COMP#INDS#{industryName}";
   GSI1SK = "ID#{companyId}";
 
   /**
@@ -40,20 +40,19 @@ class CompanyDetailDao implements BaseDao {
    * @param companyDto
    */
   async add(companyDto: CompanyDTO) {
-    try {
-      const newCompanyDto = {
-        PK: this.partitianKey,
-        SK: this.sortKeys.SK_INIT.strtr({
-          "{companyId}": UlidService.getUlidId(),
-        }),
-        ...companyDto,
-      };
-      console.log(newCompanyDto); // Log the company DTO
-      return CompanyDetailModel.create(newCompanyDto); // Create a new CompanyDetailModel entry
-    } catch (error) {
-      console.log(error); // Log any errors that occur during the process
-      throw error; // Throw the error for handling at a higher level
-    }
+    const SK = this.sortKeys.SK_INIT.strtr({
+      "{companyId}": UlidService.getUlidId(),
+    });
+    const newCompanyDto = {
+      PK: this.partitianKey,
+      SK: SK,
+      GSI1PK: this.GSI1PK.strtr({
+        "{industryName}": companyDto.industry,
+      }),
+      GSI1SK: SK,
+      ...companyDto,
+    };
+    return CompanyDetailModel.create(newCompanyDto); // Create a new CompanyDetailModel entry
   }
 }
 

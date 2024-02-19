@@ -13,6 +13,8 @@ class DbCompanyDetailDto extends BaseDbDto {
   carrierPage!: string;
   linkedIn!: string;
   logoUrl!: string;
+  GSI1PK!: string;
+  GSI1SK!: string;
 }
 
 // Creating a DynamoDB schema for the 'Company' model with specified attributes and their types
@@ -42,6 +44,22 @@ const CompanySchema = new dynamoose.Schema(
     logoUrl: {
       type: String,
       required: true,
+    },
+    GSI1PK: {
+      //@todo Add required true to GSI1
+      type: String,
+      index: {
+        name: "GSI1",
+        type: "global",
+        rangeKey: "GSI1SK",
+      },
+    },
+    GSI1SK: {
+      type: String,
+      index: {
+        name: "GSI1",
+        type: "global",
+      },
     },
   },
   {
