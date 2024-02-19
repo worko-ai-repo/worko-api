@@ -4,6 +4,7 @@ import APP_CONSTANTS from "../configs/constants.config";
 
 // Import DTOs
 import { RecordListingFilterOptions, RecordListingFilterRequestDTO } from "../dtos/Common.dto"
+import { CompanyListingFilterOptions, CompanyListingFilterRequestDTO } from "../dtos/Company.dto";
 
 // Import helper
 import { base64EncodeStrToLastKey } from "./dynamoose.helper";
@@ -19,7 +20,7 @@ class RequestHelper {
      * 
      * It reads the "filterOptions" received from the request and parses it in a way we/backend is expecting it to be.
      */
-    static parseFilterOptions(filterOptions: RecordListingFilterRequestDTO): RecordListingFilterOptions {
+    static parseFilterOptions(filterOptions: CompanyListingFilterRequestDTO): CompanyListingFilterOptions {
         // pageSize
         let pageSize = parseInt(filterOptions.pageSize as unknown as string);
         if (APP_CONSTANTS.PAGE_LENGTH_OPTIONS.indexOf(pageSize) === -1) {
@@ -36,11 +37,14 @@ class RequestHelper {
             }
         }
 
-        let newFilterOptions: RecordListingFilterOptions = {
-            pageSize: pageSize,
-            lastKey: lastKey,
-        };
-
+        let newFilterOptions: CompanyListingFilterOptions = filterOptions as any;
+        newFilterOptions = {
+            ...newFilterOptions,
+            ... {
+                pageSize: pageSize,
+                lastKey: lastKey,
+            }
+        }
         return newFilterOptions;
     }
 }

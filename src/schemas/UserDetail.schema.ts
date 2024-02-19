@@ -64,4 +64,9 @@ export const userDetailDTOValidation = Joi.object({
     "string.empty": "Last accessed dashboard date cannot be empty.",
   }),
   profileImage: Joi.string().optional(),
+  //country
+  country: Joi.string().required().messages({
+    "any.required": "Country is Required.",
+    "string.empty": "Country Cannot be Empty !",
+  }),
 }).options({ stripUnknown: true });

@@ -4,7 +4,7 @@ import companyDetailDao from "../daos/CompanyDetail.dao";
 import companyRequestDao from "../daos/CompanyRequest.dao";
 
 // Load the local dto
-import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
+import { CompanyDTO, AddCompanyDTO, CompanyListingFilterOptions } from "../dtos/Company.dto";
 import { RecordListingFilterOptions } from "../dtos/Common.dto";
 
 // @todo update the method return type, request payload types, etc for all methods.
@@ -23,7 +23,7 @@ class CompanyService {
    *
    * @returns
    */
-  async getCompanyList(filterOptions: RecordListingFilterOptions) {
+  async getCompanyList(filterOptions: CompanyListingFilterOptions) {
     return companyDao.companyList(filterOptions);
   }
 

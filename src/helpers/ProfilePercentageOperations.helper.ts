@@ -20,7 +20,7 @@ export class UserProfilePercentageOperationHelper {
     const fields: FieldDTO[] = fieldGroup.fields.map((field) => ({
       field: field.field,
       expPerc: field.expPerc,
-      curPerc: 0,
+      curPerc:  0,
     }));
 
     return {
@@ -91,6 +91,18 @@ export class UserProfilePercentageOperationHelper {
   ): FieldGroupDTO[] {
     return fieldGroups.map((fieldGroup) => {
       const updatedFields: FieldDTO[] = fieldGroup.fields.map((field) => {
+        // Checking  if the field is 'isEmailVerified' or 'isNumberVerified' is true or false
+        if (field.field === 'isEmailVerified' || field.field === 'isNumberVerified') {
+          // If isEmailVerified or isNumberVerified is false,so set curPerc to 0.
+          if (!updateObject[field.field]) {
+            return {
+              ...field,
+              curPerc: 0,
+            };
+          }
+   
+        }
+        //and if its true so 
         const key = Object.keys(updateObject).find(
           (updateKey) => updateKey === field.field
         );

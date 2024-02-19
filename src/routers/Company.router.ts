@@ -26,6 +26,7 @@ CompanyRouter.get("/new", companyController.getRequestedCompanyList);
 // @todo here we should not use "list", we can just have "/" and it should be helpful and consistent without naming convenstions/syntax.
 CompanyRouter.get("/", companyController.getCompanyList);
 
+//@todo remove beginsWith Api 
 CompanyRouter.get("/:beginsWith", companyController.getByBeginsWith);
 
 // Export the "CompanyRouter"

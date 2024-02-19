@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import { CompanyDTO, AddCompanyDTO } from "../dtos/Company.dto";
+import { CompanyDTO, AddCompanyDTO, CompanyListingFilterOptions, CompanyListingFilterRequestDTO } from "../dtos/Company.dto";
 import {
   RecordListingFilterOptions,
   RecordListingFilterRequestDTO,
@@ -82,9 +82,9 @@ class CompanyController {
   getCompanyList = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Only the filter condition/details required for filtering the records
-      const recordListingFilterRequest: RecordListingFilterOptions =
+      const recordListingFilterRequest: CompanyListingFilterOptions =
         RequestHelper.parseFilterOptions(
-          req.query as unknown as RecordListingFilterRequestDTO
+          req.query as unknown as CompanyListingFilterRequestDTO
         );
 
       // Call the CompanyService to get company list

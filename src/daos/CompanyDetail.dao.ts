@@ -27,7 +27,7 @@ class CompanyDetailDao implements BaseDao {
       .eq(this.partitianKey)
       .where("name")
       .beginsWith(beginsWith)
-      .attributes(["name", "SK"])
+      .attributes(["name", "SK" ])
       .exec();
   }
 
