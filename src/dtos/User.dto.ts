@@ -7,6 +7,7 @@ export interface UserSignUpDTO {
   YOE: number;
   CV?: string;
   userId: string;
+  acceptedTermsAndConditions: boolean;
 }
 
 export interface UserReferralRequestDTO {
@@ -32,9 +33,11 @@ export interface UserEmployeeSignUpDTO {
   companySK: string;
   companyEmailId: string;
   department: string;
+  /* Ui removed these field from sign-up page
   designation: string;
-  designationTag: number;
+  designationTag: number; */
   userId: string;
+  acceptedTermsAndConditions: boolean;
 }
 
 export interface UserProfileResponse {

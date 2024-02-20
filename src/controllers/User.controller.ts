@@ -181,11 +181,13 @@ class UserController {
         throw new RequestValidationError(error);
       }
 
-    //
-     const count = await UserService.getCount(userSignUpDto.email);
-     if(count.count > 0){
-      res.status(HttpStatusCode.CONFLICT_409).json({ error: "User Already Exits!." });
-     }
+      //
+      const count = await UserService.getCount(userSignUpDto.email);
+      if (count.count > 0) {
+        res
+          .status(HttpStatusCode.CONFLICT_409)
+          .json({ error: "User Already Exits!." });
+      }
 
       const linkedinUrl = req.body.linkedinUrl;
       const userSocialProfileDTO: UserSocialProfileDTO = {
@@ -257,26 +259,24 @@ class UserController {
       }
       //
       const count = await UserService.getCount(userSignUpDto.email);
-      if(count.count > 0){
-       res.status(HttpStatusCode.CONFLICT_409).json({ error: "User Already Exists!." });
+      if (count.count > 0) {
+        res
+          .status(HttpStatusCode.CONFLICT_409)
+          .json({ error: "User Already Exists!." });
       }
-//
+      //
       const email = userSignUpDto.email;
       const {
         companyName,
         companySK,
         companyEmailId,
         department,
-        designation,
-        designationTag,
         linkedinUrl,
         ...copyUserSignUpDTO
       } = userSignUpDto;
 
       const userExperienceDto: UserExperienceDTO = {
         department,
-        designation,
-        designationTag,
         companyName,
         companySK,
         emailId: companyEmailId,

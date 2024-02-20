@@ -64,4 +64,9 @@ export const userDetailDTOValidation = Joi.object({
     "string.empty": "Last accessed dashboard date cannot be empty.",
   }),
   profileImage: Joi.string().optional(),
+  acceptedTermsAndConditions: Joi.boolean().valid(true).required().messages({
+    "any.required": "acceptedTermsAndConditions is required.",
+    "boolean.base": "acceptedTermsAndConditions must be a boolean.",
+    "any.only": "acceptedTermsAndConditions must be true.",
+  }),
 }).options({ stripUnknown: true });

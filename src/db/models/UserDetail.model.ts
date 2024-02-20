@@ -29,6 +29,7 @@ class DbUserDetailDto extends BaseDbDto {
   coverLetter?: string;
   lastAccessedDash!: string;
   profileImage?: string;
+  acceptedTermsAndConditions!: boolean;
 }
 
 // Define the schema for the User Details model using DynamoDB
@@ -113,6 +114,10 @@ const UserDetailSchema = new dynamoose.Schema(
       type: String,
       required: false,
     },
+    acceptedTermsAndConditions: {
+      type: Boolean,
+      required: true,
+    },
   },
   {
     ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,
@@ -121,7 +126,7 @@ const UserDetailSchema = new dynamoose.Schema(
 
 // Create the UserDetailsModel using the defined schema
 const UserDetailModel = dynamoose.model<DbUserDetailDto>("UserDetail", [
-  UserDetailSchema, // @todo why it is in [] bracket and everywhere it is without any brackets?
+  UserDetailSchema,
 ]);
 
 // Export the UserDetailsModel

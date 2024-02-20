@@ -17,4 +17,5 @@ export interface UserDetailDTO {
   coverLetter?: string;
   lastAccessedDash: string;
   profileImage?: string;
+  acceptedTermsAndConditions: boolean;
 }
