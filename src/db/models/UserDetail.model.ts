@@ -29,6 +29,8 @@ class DbUserDetailDto extends BaseDbDto {
   coverLetter?: string;
   lastAccessedDash!: string;
   profileImage?: string;
+  country?: string;
+  acceptedTermsAndConditions!: boolean;
 }
 
 // Define the schema for the User Details model using DynamoDB
@@ -112,6 +114,15 @@ const UserDetailSchema = new dynamoose.Schema(
     profileImage: {
       type: String,
       required: false,
+    },
+    country: {
+      type: String,
+      required: false,
+    },
+
+    acceptedTermsAndConditions: {
+      type: Boolean,
+      required: true,
     },
   },
   {
