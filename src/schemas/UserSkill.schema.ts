@@ -27,6 +27,8 @@ export const userSkillDTOValidation = Joi.object({
     .items(
       Joi.object({
         certName: Joi.string().required().empty(""),
+        issuedInstitution: Joi.string().required().empty(""),
+        completionDate: Joi.date().iso().required(),
         timestamps: Joi.object({
           createdAt: Joi.string().required(),
         }).optional(),

@@ -23,6 +23,8 @@ class DbUserSkillDto extends BaseDbDto {
   }[];
   certifications?: {
     certName?: string;
+    issuedInstitution?: string;
+    completionDate?: Date;
     timestamps?: {
       createdAt: string;
     };
