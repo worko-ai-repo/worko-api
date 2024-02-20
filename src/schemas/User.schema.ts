@@ -48,6 +48,11 @@ export const UserSignUpDTOValidation = Joi.object({
   userId: Joi.string().required().messages({
     "any.required": "User ID is required",
   }),
+  acceptedTermsAndConditions: Joi.boolean().valid(true).required().messages({
+    "any.required": "acceptedTermsAndConditions is required.",
+    "boolean.base": "acceptedTermsAndConditions must be a boolean.",
+    "any.only": "acceptedTermsAndConditions must be true.",
+  }),
 }).options({ stripUnknown: true });
 
 export const userEmployeeSignUpDTOValidation = Joi.object({
@@ -100,7 +105,8 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
     "any.required": "Department is required.",
     "string.empty": "Department cannot be empty.",
   }),
-  designation: Joi.string().required().messages({
+  // UI removed the `designation` & `designationTag` fields from sign-up page
+  /* designation: Joi.string().required().messages({
     "any.required": "Designation is required.",
     "string.empty": "Designation cannot be empty.",
   }),
@@ -112,9 +118,14 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
       "any.required": "designationTag is required.",
       "number.base": "designationTag must be a valid number.",
       "number.integer": "designationTag must be an integer.",
-    }),
+    }), */
   userId: Joi.string().required().messages({
     "any.required": "User ID is required",
+  }),
+  acceptedTermsAndConditions: Joi.boolean().valid(true).required().messages({
+    "any.required": "acceptedTermsAndConditions is required.",
+    "boolean.base": "acceptedTermsAndConditions must be a boolean.",
+    "any.only": "acceptedTermsAndConditions must be true.",
   }),
 });
 
