@@ -24,7 +24,7 @@ class CompanyService {
    * @returns
    */
   async getCompanyList(filterOptions: CompanyListingFilterOptions) {
-    return companyDao.companyList(filterOptions);
+    return companyDetailDao.companyList(filterOptions);
   }
 
   /**

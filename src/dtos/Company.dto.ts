@@ -9,12 +9,14 @@ import {
 
 // We can come up with our own JS DOC properties like resource, action, etc. ANd update the same for all DTOs.
 export interface CompanyDTO {
-  name: string;
-  industry: string;
-  teamSize: number;
-  carrierPage: string;
-  linkedIn: string;
-  logoUrl: string;
+  // Represents the data structure for creating or updating a company.
+  // Should be used in requests where a new company needs to be created or an existing one updated.
+  name: string; // Company name
+  industry: string; // Industry the company belongs to
+  teamSize: number; // Size of the company's team
+  carrierPage: string; // Carrier page URL
+  linkedIn: string; // LinkedIn page URL
+  logoUrl: string; // URL of the company's logo
 }
 
 interface CompanyObject {
@@ -27,20 +29,22 @@ interface CompanyObject {
 }
 
 export enum UserType {
-  EMP = "EMP",
-  CAND = "CAND",
+  EMP = "EMP", // Employee user type
+  CAND = "CAND", // Candidate user type
 }
 
 export enum Status {
-  NEW = "new",
-  APPROVED = "approved",
-  DENIED = "denied",
+  NEW = "new", // New status
+  APPROVED = "approved", // Approved status
+  DENIED = "denied", // Denied status
 }
 
 export interface AddCompanyDTO {
-  userType: UserType;
-  companyDetail: Partial<CompanyObject>;
-  status: Status;
+  // Represents the data structure for adding a new company.
+  // Should be used when creating a new company request.
+  userType: UserType; // Type of user adding the company
+  companyDetail: Partial<CompanyObject>; // Details of the company to be added
+  status: Status; // Status of the company request
 }
 
 interface Company {
@@ -54,31 +58,34 @@ interface Company {
 }
 
 export interface CompanyListResponseDto {
-  companies: Company[];
-  count: number;
+  // Represents the response structure for a list of companies.
+  // Should be used when retrieving a list of companies.
+  companies: Company[]; // Array of companies
+  count: number; // Total count of companies
 }
+
 /**
  * CompanyListingFilterOptions
  *
  * It is similar to "RecordListingFilterRequestDTO" but it would be used in the backend to perform business logic.
  */
 export interface CompanyListingFilterOptions extends RecordListingFilterOptions {
-
-  companyName?: string;
-  industryId?: string;
-  teamSize?: string;
-  
+  // Represents the filter options for querying companies.
+  // Should be used when filtering company records.
+  companyName?: string; // Filter by company name
+  industryName: string; // Filter by industry name
+  teamSize?: string; // Filter by team size
 }
-
 
 /**
  * CompanyListingFilterRequestDTO
-*
+ *
  * It is similar to "RecordListingFilterRequestDTO" but it would be used in the backend to perform business logic.
  */
 export interface CompanyListingFilterRequestDTO extends RecordListingFilterRequestDTO {
-  companyName?: string;
-  industryId?: string;
-  teamSize?: string;
+  // Represents the filter request DTO for querying companies.
+  // Should be used when requesting to filter company records.
+  companyName?: string; // Filter by company name
+  industryName: string; // Filter by industry name
+  teamSize?: string; // Filter by team size
 }
-
