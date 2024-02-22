@@ -9,7 +9,7 @@ import { BaseDbDto } from "./Base.model";
 class DbUserAchievementDto extends BaseDbDto {
   achievements?: {
     title: string;
-    desc?: string;
+    acquiredFrom: string;
     achievDate: Date;
     timestamps?: {
       createdAt: Date;
@@ -23,7 +23,7 @@ const AchievementSchema = new dynamoose.Schema({
     type: Object,
     schema: {
       title: String,
-      desc: String,
+      acquiredFrom: String,
       achievDate: Date,
       timestamps: Object,
     },

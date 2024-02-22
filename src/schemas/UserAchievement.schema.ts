@@ -23,8 +23,9 @@ export const userAchievementDTOValidation = Joi.object({
           "string.base": "Title must be a string",
           "any.required": "Title is required",
         }),
-        desc: Joi.string().optional().messages({
-          "string.base": "Description must be a string",
+        acquiredFrom: Joi.string().required().messages({
+          "string.base": "acquiredFrom must be a string",
+          "any.required": "acquiredFrom is required",
         }),
         achievDate: Joi.date().required().messages({
           "date.base": "Achievement date must be a valid date",

@@ -15,6 +15,8 @@ export interface UserSkillDTO {
   }[];
   certifications?: {
     certName?: string;
+    issuedInstitution?: string;
+    completionDate?: Date;
     timestamps?: {
       createdAt: string;
     };

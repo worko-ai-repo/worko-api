@@ -166,7 +166,7 @@ class UserDetailDao implements BaseDao {
    * @returns
    */
   async updateEmailVerify(SK: String, email: string) {
-    global.logger.info("Update user primary email verify status [DAO]");
+    global.logger.info("Update user primary email status to true [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });

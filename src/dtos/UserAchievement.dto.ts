@@ -1,7 +1,7 @@
 export interface UserAchievementDTO {
   achievements?: {
     title: string;
-    desc?: string;
+    acquiredFrom: string;
     achievDate: Date;
     timestamps?: {
       createdAt: Date;
