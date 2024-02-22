@@ -101,7 +101,7 @@ class CompanyDetailDao implements BaseDao {
     return CompanyDetailModel.query("PK")
       .eq(this.partitianKey)
       .where("name")
-      .beginsWith(beginsWith)
+      .contains(beginsWith.toUpperCase())
       .attributes(["name", "SK"])
       .exec();
   }

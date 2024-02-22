@@ -128,15 +128,13 @@ class CompanyController {
   getByBeginsWith = async (req: Request, res: Response, next: NextFunction) => {
     try {
       let beginsWith = req.params.beginsWith;
-      // Capitalizing  the first letter if it's in lowercase :
 
-      if (beginsWith[0] === beginsWith[0].toLowerCase()) {
-        beginsWith = beginsWith.charAt(0).toUpperCase() + beginsWith.slice(1);
-      }
-      console.log(`company is ${beginsWith}`);
+        // Convert the input to uppercase
+      beginsWith = beginsWith.toUpperCase();
 
-      // Call the CompanyService to get company list
-      const companyList = await CompanyService.getByBeginsWith(beginsWith);
+
+    // Call the CompanyService to get the company list
+    const companyList = await CompanyService.getByBeginsWith(beginsWith);
 
       // Send successful response with company list data
       res.status(HttpStatusCode.OK_200).json(companyList);
