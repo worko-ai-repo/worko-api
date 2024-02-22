@@ -2,7 +2,12 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import { CompanyDTO, AddCompanyDTO, CompanyListingFilterOptions, CompanyListingFilterRequestDTO } from "../dtos/Company.dto";
+import {
+  CompanyDTO,
+  AddCompanyDTO,
+  CompanyListingFilterOptions,
+  CompanyListingFilterRequestDTO,
+} from "../dtos/Company.dto";
 import {
   RecordListingFilterOptions,
   RecordListingFilterRequestDTO,

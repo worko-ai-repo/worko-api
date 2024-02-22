@@ -14,6 +14,7 @@ class DbUserExperienceDto extends BaseDbDto {
   endedMonth?: number;
   startedYear?: number;
   endedYear?: number;
+  experienceInMonths?: number;
   companyName!: string;
   companySK!: string;
   emailId!: String;
@@ -51,6 +52,10 @@ const UserExperienceSchema = new dynamoose.Schema(
       required: false,
     },
     endedYear: {
+      type: Number,
+      required: false,
+    },
+    experienceInMonths: {
       type: Number,
       required: false,
     },
