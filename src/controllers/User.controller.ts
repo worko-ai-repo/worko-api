@@ -345,7 +345,9 @@ class UserController {
     next: NextFunction
   ) => {
     try {
-      global.logger.info("update EmailVerify Status [controller]");
+      global.logger.info(
+        "update user primary Email status to true [controller]"
+      );
       const email = req.params.id;
 
       const { error, value } = validateEmailField(email);

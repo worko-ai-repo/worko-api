@@ -36,7 +36,7 @@ class UserService {
     global.logger.info("Get user detail by id [service]");
     return userDetailDao.getUserDetails(email, SK);
   }
-  
+
   /**
    *Get Count(pk)
    *
@@ -95,7 +95,7 @@ class UserService {
    * @param email - Email of the user making the request
    */
   async verifyEmail(email: string) {
-    global.logger.info("update EmailVerify Status [service]");
+    global.logger.info("update user Email status to true [service]");
     const SK = await userDetailDao.getUserDetailSK(email);
     userDetailDao.updateEmailVerify(SK, email);
   }
