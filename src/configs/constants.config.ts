@@ -55,6 +55,7 @@ const APP_CONSTANTS = {
   // If "pageSize" from the request does not match with one of the "PAGE_LENGTH_OPTIONS" value, then this value would be used.
   PAGE_LENGTH_DEFAULT: 25,
 
+  RESUME_EXTRACTION_LAMBDA_NAME: "resume-parser",
   MATCHING_SCORE_LAMBDA_NAME: "worko-jd-resume-matching",
   MATCHING_SCORE_PROMPT:
     "From above mentioned Resume and Job description, please match on following parameters and provide score(out of 10) and brief explanation for every parameters and also provide overall matching score.\n1. experience in year\n2. Role \n3.  skills(technical, soft and core)\n4. education\n5. industry experience\n6. responsibilities\n7. certifications\nAssistant:",

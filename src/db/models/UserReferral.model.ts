@@ -10,7 +10,7 @@ class DbUserReferralDto extends BaseDbDto {
   status!: string;
   companySK!: string;
   jobUrl!: string;
-  jdExtracted?: object;
+  jdExtracted?: string;
   matchingScore!: number;
   passedByUserIds?: String[];
   rejectedByUserIds?: String[];
@@ -38,7 +38,7 @@ const UserReferralSchema = new dynamoose.Schema(
       required: true,
     },
     jdExtracted: {
-      type: Object, // Use the Map data type
+      type: String, // Use the Map data type
       required: false,
     },
     matchingScore: {

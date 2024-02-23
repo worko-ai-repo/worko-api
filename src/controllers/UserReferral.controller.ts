@@ -23,6 +23,7 @@ import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
+import InvokeLambdaService from "../services/InvokeLambda.service";
 
 /**
  * UserReferralController
@@ -201,6 +202,9 @@ class UserReferralController {
         referralRequest,
         emailId
       );
+      // invoke score matching lambda function
+      await InvokeLambdaService.triggerMatchingScoreCalculation(email, referralRequestId.referralRequestId);
+
       res.status(HttpStatusCode.OK_200).json(referralRequestId);
     } catch (error) {
       // Handle errors

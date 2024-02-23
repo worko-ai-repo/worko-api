@@ -19,6 +19,7 @@ import { RequestValidationError } from "../utils/errors.util";
 // Load local helper
 import { GroupingHelper } from "../helpers/grouping.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+import InvokeLambdaService from "../services/InvokeLambda.service";
 
 /**
  * UserDetailController
@@ -124,6 +125,9 @@ class UserDetailController {
       } else {
         UserDetailService.create(email, value);
       } */
+
+      if(userDetailDTO.CV)    // trigger the resume extraction if cv is extracted
+        InvokeLambdaService.triggerResumeExtraction(email)    
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);

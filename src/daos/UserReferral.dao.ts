@@ -91,7 +91,8 @@ class UserReferralDao implements BaseDao {
     // @todo add these along with other propertise of class like "primaryKey" and "sortKeys"; And refer them from there.
     const GSI1PK = `${refPrefix}#`;
     const GSI1SK = `${refId}#${refNum}`;
-    const mScore = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
+    // const mScore = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
+    const mScore = 0;
     const newReferralRequest = {
       PK: this.partitianKey.strtr({
         "{primaryEmail}": email,

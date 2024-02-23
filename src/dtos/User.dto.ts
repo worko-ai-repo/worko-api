@@ -13,6 +13,7 @@ export interface UserSignUpDTO {
 export interface UserReferralRequestDTO {
   companySK: string;
   jobUrl: string;
+  jdExtracted?: string;
 }
 
 export interface UserDetailResponseDto {

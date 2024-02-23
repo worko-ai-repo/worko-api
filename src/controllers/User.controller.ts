@@ -35,6 +35,7 @@ import { RequestValidationError } from "../utils/errors.util";
 import { GroupingHelper } from "../helpers/grouping.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 import { profilePercentageField } from "../configs/constants/UserProfilePercentage.constant";
+import InvokeLambdaService from "../services/InvokeLambda.service";
 
 /**
  * UserController
@@ -222,6 +223,10 @@ class UserController {
         userSignUpDto.email,
         userProfilePercentageDTO
       );
+
+      //extract resume if cv is present
+      if(userSignUpDto.CV)
+        InvokeLambdaService.triggerResumeExtraction(userSignUpDto.email)
 
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
@@ -417,6 +422,8 @@ class UserController {
         );
 
       UserProfilePercentageService.update(value, userProfilePercentageDTO);
+        // Trigger for Resume extraction
+      InvokeLambdaService.triggerResumeExtraction(email)
 
       res.status(HttpStatusCode.OK_200).json(update);
     } catch (error) {

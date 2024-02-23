@@ -11,6 +11,10 @@ export const UserReferralRequestDTOValidation = Joi.object({
   jobUrl: Joi.string().required().messages({
     "any.required": "jobUrl is required",
   }),
+
+  jdExtracted: Joi.string().required().messages({
+    "any.required": "jdExtracted is required",
+  }),
 });
 
 export const UserReferralStatusValidation = Joi.string()

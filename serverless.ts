@@ -29,7 +29,10 @@ const serverlessConfiguration: AWS = {
           "dynamodb:PutItem",
           "dynamodb:UpdateItem"
         ],
-        Resource: "arn:aws:dynamodb:ap-south-1:*:table/worko",
+        Resource: [
+          "arn:aws:dynamodb:ap-south-1:*:table/worko",
+          "arn:aws:dynamodb:ap-south-1:*:table/worko/index/GSI1",
+        ]
       },
       {
         Effect: "Allow",

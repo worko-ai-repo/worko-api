@@ -2,7 +2,7 @@ export interface UserReferralDTO {
   status: string;
   companySK: string;
   jobUrl: string;
-  jdExtracted?: object;
+  jdExtracted?: string;
   matchingScore: number;
   passedByUserIds?: string[];
   rejectedByUserIds?: string[];
