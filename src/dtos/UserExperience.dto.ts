@@ -9,7 +9,7 @@ export interface UserExperienceDTO {
   experienceInMonths?: number;
   companyName: string;
   companySK: string;
-  emailId: string;
+  emailId?: string;
 }
 
 export interface UserExperienceDTOWithId extends UserExperienceDTO {

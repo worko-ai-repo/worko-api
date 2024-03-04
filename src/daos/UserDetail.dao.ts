@@ -157,6 +157,7 @@ class UserDetailDao implements BaseDao {
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
+   
     return UserDetailModel.update({ PK: PK, SK: SK }, userDetailDTO);
   }
 

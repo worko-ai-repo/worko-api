@@ -69,9 +69,4 @@ export const userDetailDTOValidation = Joi.object({
       "any.required": "Country is Required.",
       "string.empty": "Country Cannot be Empty !",
     }),
-    acceptedTermsAndConditions: Joi.boolean().valid(true).required().messages({
-      "any.required": "acceptedTermsAndConditions is required.",
-      "boolean.base": "acceptedTermsAndConditions must be a boolean.",
-      "any.only": "acceptedTermsAndConditions must be true.",
-    }),
 }).options({ stripUnknown: true });

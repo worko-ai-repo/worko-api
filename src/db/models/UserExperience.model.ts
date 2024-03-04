@@ -17,7 +17,7 @@ class DbUserExperienceDto extends BaseDbDto {
   experienceInMonths?: number;
   companyName!: string;
   companySK!: string;
-  emailId!: String;
+  emailId?: String;
   isEmailVerified?: boolean;
   isCurrentCompany?: boolean;
 }
@@ -69,7 +69,7 @@ const UserExperienceSchema = new dynamoose.Schema(
     },
     emailId: {
       type: String,
-      required: true,
+      required: false
     },
     isEmailVerified: {
       type: Boolean,

@@ -18,5 +18,4 @@ export interface UserDetailDTO {
   lastAccessedDash: string;
   profileImage?: string;
   country: string;
-  acceptedTermsAndConditions: boolean;
 }
