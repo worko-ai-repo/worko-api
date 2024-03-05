@@ -65,11 +65,11 @@ class MasterSubscriptionDao implements BaseDao {
 
     const PK = this.partitianKey;
     return MasterSubscriptionModel.query("PK")
-      .eq(PK)
-      .where("name")
-      .beginsWith(plan)
-      .attributes(["SK", "amount", "duration", "referralCount"])
-      .exec();
+    .eq(PK)
+    .where("name")
+    .eq(plan)
+    .attributes(["SK", "amount", "duration", "referralCount"])
+    .exec();
   }
 
   /**
