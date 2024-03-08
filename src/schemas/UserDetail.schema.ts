@@ -69,4 +69,9 @@ export const userDetailDTOValidation = Joi.object({
       "any.required": "Country is Required.",
       "string.empty": "Country Cannot be Empty !",
     }),
+    isCandidateFresher: Joi.boolean().required().default(false).messages({
+      "any.required": "isCandidateFresher is required.",
+      "boolean.base": "Invalid isCandidateFresher status.",
+    }),
+
 }).options({ stripUnknown: true });

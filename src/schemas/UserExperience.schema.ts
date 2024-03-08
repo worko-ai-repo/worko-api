@@ -93,7 +93,12 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
 
     // Optional field for designation tag
     designationTag: Joi.number(),
+    // Validation for isCurrent
+    isCurrent : Joi.boolean().required().messages({
+      "any.required": "isCurrent is required.",
+      "string.empty": "isCurrent should not be empty.",
 
+    }),
     // Validation for startedMonth field
     startedMonth: Joi.number().integer().min(1).max(12),
 

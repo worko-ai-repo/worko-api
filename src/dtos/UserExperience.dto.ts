@@ -10,6 +10,7 @@ export interface UserExperienceDTO {
   companyName: string;
   companySK: string;
   emailId?: string;
+  isCurrent?: boolean;
 }
 
 export interface UserExperienceDTOWithId extends UserExperienceDTO {

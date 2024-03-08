@@ -19,7 +19,7 @@ class DbUserExperienceDto extends BaseDbDto {
   companySK!: string;
   emailId?: String;
   isEmailVerified?: boolean;
-  isCurrentCompany?: boolean;
+  isCurrent?: boolean;
 }
 
 // Define the schema for the User Experience model using DynamoDB
@@ -75,7 +75,7 @@ const UserExperienceSchema = new dynamoose.Schema(
       type: Boolean,
       required: false,
     },
-    isCurrentCompany: {
+    isCurrent: {
       type: Boolean,
       required: false,
     },
