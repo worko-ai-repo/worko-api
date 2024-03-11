@@ -20,6 +20,8 @@ import { RequestValidationError } from "../utils/errors.util";
 import { GroupingHelper } from "../helpers/grouping.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 import InvokeLambdaService from "../services/InvokeLambda.service";
+import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
+import APP_CONSTANTS from "../configs/constants.config";
 
 /**
  * UserDetailController
@@ -38,20 +40,62 @@ class UserDetailController {
    */
   getByEmail = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("Get user detail by id [controller]");
+      global.logger.info("Get user detail by id [controller]");
 
       // Extract email from request parameters
       const email = req.params.id;
 
       const { error, value } = validateEmailField(email);
-
       if (error) {
         throw new RequestValidationError(error);
       }
-      const result = await UserDetailService.get(value);
+
+      const userDetails = await UserDetailService.get(value);
+      if (!userDetails.count) {
+        throw new Error("User not found");
+      }
+
+      // Prepare the user id
+      let userId: string = userDetails[0].SK?.split("#").pop() ?? "";
+      let cvAwsS3SignedUrl = null;
+      let profileImageAwsS3SignedUrl = null;
+
+      // Check if CV is present
+      if (userDetails[0].CV) {
+        // Construct the file path in the cloud storage
+        const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_RESUME.strtr({
+          "{userId}": userId,
+        });
+
+        // Assume that you have a method to generate the object URL
+        cvAwsS3SignedUrl = await awsS3ClientLibrary.generateObjectUrl(
+          process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+          filePath + "/" + userDetails[0].CV
+        );
+      }
+
+      // Gnereta e signed url to view the Profile
+      if (userDetails[0].profileImage) {
+        // Construct the file path in the cloud storage
+        const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_PROFILE_PIC.strtr({
+          "{userId}": userId,
+        });
+
+        // Assume that you have a method to generate the object URL
+        profileImageAwsS3SignedUrl = await awsS3ClientLibrary.generateObjectUrl(
+          process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+          filePath + "/" + userDetails[0].profileImage
+        );
+      }
 
       // Send successful response with user data
-      res.status(HttpStatusCode.OK_200).json(result);
+      res.status(HttpStatusCode.OK_200).json([
+        {
+          ...userDetails[0],
+          cvAwsS3SignedUrl,
+          profileImageAwsS3SignedUrl,
+        },
+      ]);
     } catch (error: any) {
       // Handle errors
 
@@ -80,7 +124,7 @@ class UserDetailController {
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Log the action for debugging purposes
-      logger.info("Create/update user Detail by email [controller]");
+      global.logger.info("Create/update user Detail by email [controller]");
 
       // Extract email from request parameters
       const email = req.params.id;
@@ -125,12 +169,50 @@ class UserDetailController {
       } else {
         UserDetailService.create(email, value);
       } */
+      // Get the Email-Value from user Detail Service to generate signed URL 
+      let userDetails = await UserDetailService.get(emailId);
+      // Generate signed URLs for CV and profile image
+      let cvAwsS3SignedUrl = null;
+      let profileImageAwsS3SignedUrl = null;
+      // Prepare the user id
+      let userId: string = userDetails[0].SK?.split("#").pop() ?? "";
+      // Check if CV is present
+      if (userDetails[0].CV) {
+        // Construct the file path in the cloud storage
+        const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_RESUME.strtr({
+          "{userId}": userId,
+        });
 
-      if(userDetailDTO.CV)    // trigger the resume extraction if cv is extracted
-        InvokeLambdaService.triggerResumeExtraction(email)    
+        // Generate signed URL
+        cvAwsS3SignedUrl = await awsS3ClientLibrary.generateObjectUrl(
+          process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+          filePath + "/" + userDetails[0].CV
+        );
+      }
+
+      // Generate signed URL for profile image
+      if (userDetails[0].profileImage) {
+        // Construct the file path in the cloud storage
+        const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_PROFILE_PIC.strtr({
+          "{userId}": userId,
+        });
+
+        // Generate signed URL
+        profileImageAwsS3SignedUrl = await awsS3ClientLibrary.generateObjectUrl(
+          process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+          filePath + "/" + userDetails[0].profileImage
+        );
+      }
+      if (userDetails[0].CV)
+        // trigger the resume extraction if cv is extracted
+        InvokeLambdaService.triggerResumeExtraction(email);
 
       // Send a successful response with user data
-      res.status(HttpStatusCode.OK_200).json(result);
+      res.status(HttpStatusCode.OK_200).json({
+        ...result,
+        cvAwsS3SignedUrl,
+        profileImageAwsS3SignedUrl,
+      });
     } catch (error: any) {
       // If it's another type of error, pass it to the next error handler
       next(error);

@@ -58,10 +58,15 @@ export const userExperienceDTOValidation = Joi.object({
   }),
 
   // Validation for email ID
-  emailId: Joi.string().email().required().messages({
-    "any.required": "Email ID is required.",
-    "string.empty": "Email ID should not be empty.",
-    "string.email": "Email ID must be a valid email address.",
+  emailId: Joi.when("userType", {
+    is: "EMP",
+    then: Joi.string().email().required().messages({
+      "any.required": "Email ID is required.",
+      "string.empty": "Email ID should not be empty.",
+      "string.email": "Email ID must be a valid email address.",
+      
+    }),
+    otherwise: Joi.forbidden(),
   }),
 });
 
@@ -88,7 +93,12 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
 
     // Optional field for designation tag
     designationTag: Joi.number(),
+    // Validation for isCurrent
+    isCurrent : Joi.boolean().required().messages({
+      "any.required": "isCurrent is required.",
+      "string.empty": "isCurrent should not be empty.",
 
+    }),
     // Validation for startedMonth field
     startedMonth: Joi.number().integer().min(1).max(12),
 
@@ -124,10 +134,16 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
     }),
 
     // Validation for email ID
-    emailId: Joi.string().email().required().messages({
-      "any.required": "Email ID is required.",
-      "string.empty": "Email ID should not be empty.",
-      "string.email": "Email ID must be a valid email address.",
+    emailId: Joi.when("userType", {
+      is: "EMP",
+      then: Joi.string().email().required().messages({
+        "any.required": "Email ID is required.",
+        "string.empty": "Email ID should not be empty.",
+        "string.email": "Email ID must be a valid email address.",
+        
+      }),
+      otherwise: Joi.forbidden(),
     }),
   }).options({ stripUnknown: true })
 );
+

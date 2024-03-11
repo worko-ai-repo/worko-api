@@ -19,12 +19,12 @@ export const userSocialProfileDTOValidation = Joi.object({
     )
     .default([]),
 
-  linkedin: Joi.array()
+    linkedin: Joi.array()
     .items(
       Joi.string().regex(
         /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
         "LinkedIn URL is not valid"
       )
     )
-    .default([]),
-}).options({ stripUnknown: true });
+    .required(),
+  }).options({ stripUnknown: true });

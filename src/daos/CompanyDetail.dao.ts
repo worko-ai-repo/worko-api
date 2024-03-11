@@ -9,6 +9,8 @@ import { CompanyDTO, CompanyListingFilterOptions } from "../dtos/Company.dto";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
+
+// Import necessary types from dynamoose library
 import { AnyItem } from "dynamoose/dist/Item";
 import { Query } from "dynamoose/dist/ItemRetriever";
 
@@ -70,11 +72,22 @@ class CompanyDetailDao implements BaseDao {
         // If no specific filter is provided, retrieve all companies for the partition key
         query = CompanyDetailModel.query("PK").eq(this.partitianKey);
       }
-
-      // Conditionally add filter for teamSize
+      
+      // Get TeamSize filter from filterOptions
       if (filterOptions.teamSize) {
-        // If teamSize filter is provided, filter the companies by teamSize
-        query.where("teamSize").eq(parseInt(filterOptions.teamSize));
+        // If teamSize filter is provided, filter the companies by teamSize range
+        let teamSizeRange = filterOptions.teamSize.split("-");
+        if (teamSizeRange.length === 2) {
+          // If range has two values, SO filter the companies within the range
+          let minRange = parseInt(teamSizeRange[0]);
+          let maxRange = parseInt(teamSizeRange[1]);
+          query.where("teamSize").between(minRange, maxRange);
+        } 
+        else if (teamSizeRange.length === 1) {
+          // If range has only one value(single value), so filter companies with teamSize equal to that value 
+          let singleTeamSize = parseInt(teamSizeRange[0]);
+          query.where("teamSize").eq(singleTeamSize);
+        }
       }
     }
 

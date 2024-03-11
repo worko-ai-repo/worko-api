@@ -56,13 +56,30 @@ class UserService {
    */
   async addUser(userSignUpDTO: UserSignUpDTO, userType: string) {
     global.logger.info("Create candidate/employee [service]");
-    //Creating new user
+    
+    // Creating new user
     const newUser = await userDetailDao.add(userSignUpDTO, userType);
     if (userType === "CAND") {
-      //Adding the FREE subscription plan for Candidate
-      const subPlan = await MasterSubscriptionService.getByPlan("Free");
-      UserSubscriptionService.create(subPlan.SK, userSignUpDTO.email);
+      // Adding the FREE subscription plan for Candidate
+      let planName = "Free";
+      const subPlan = await MasterSubscriptionService.getByPlan(planName);
+      console.log("This is the subplan : ", subPlan);
+      if(subPlan)
+      {
+        UserSubscriptionService.create(subPlan.SK, userSignUpDTO.email)
+      }
+      else
+      {
+        // Logger message
+        global.logger.info("The default/free subscription was not found therefore could not add free subscription to candidate while creating account.", {
+          filePath: __filename,
+          methodName: this.addUser.name,
+          userEmail : userSignUpDTO.email,
+          plan : planName
+        });
+      }
     }
+    
     return newUser;
   }
 

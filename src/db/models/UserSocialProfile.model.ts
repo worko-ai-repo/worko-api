@@ -25,7 +25,7 @@ const UserSocialProfileSchema = new dynamoose.Schema(
     },
     linkedin: {
       type: Array, // Updated to an array of strings
-      required: false,
+      required: true,
     },
     // Add other user-specific attributes here
   },
