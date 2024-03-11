@@ -28,6 +28,7 @@ import { UserAvailabilityModel } from "./models/UserAvailability.model";
 import { UserReferralResponseModel } from "./models/UserReferralResponse.model";
 import { MasterSubscriptionModel } from "./models/MasterSubscription.model";
 import { MasterServiceModel } from "./models/MasterService.model";
+import { EmailTemplateModel } from "./models/EmailTemplate.model";
 
 /**
  * DBConfig
@@ -120,6 +121,7 @@ class DBConfig {
       CompanyJobModel,
       MasterSubscriptionModel,
       MasterServiceModel,
+      EmailTemplateModel,
     ]);
   }
 }

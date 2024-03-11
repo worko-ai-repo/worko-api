@@ -13,6 +13,27 @@ import { BaseError, RequestValidationError } from "./errors.util";
  */
 class ErrorHandler {
     /**
+     * logError
+     * 
+     * Log the error (original) on server with appropriate level based on the different error classes.
+     * 
+     * @param err any
+     */
+    public logError(err: any) {
+        // Error level
+        const level = "error";
+
+        // @todo
+        // Define the level based on the different error classes
+        // ---------
+        // ---------
+        // ---------
+
+        // Log the error
+        global.logger.log(level, "%s", err);
+    }
+
+    /**
      * handleError
      * 
      * This method basically logs the error as of now.
@@ -23,9 +44,14 @@ class ErrorHandler {
      * @param res Response [Optional] It is to respond back to the user's request with appropriate error/exception details.
      */
     public handleError(err: any, res?: Response) {
+        // Log the actual error that was thrown 
+        // and return the customised error to the user in the response later in the code
+        this.logError(err);
+
         // Check if "res" param is set, if then then respond to the user's request
-        if (typeof res != "undefined") {
-            // An object to hold the new error object
+        if (res) {
+            // An object to hold the new/custom error object if required.
+            // Note: The value should be object of our own custom error class, that has "errorCode", "errorMsg", and "timeStamp" properties
             let newErrorObj = null;
 
             // When object is instance of the provided classes then no changes/parsing required
@@ -35,17 +61,14 @@ class ErrorHandler {
             ) {
                 newErrorObj = err;
             }
-            else {
+
+            // Check if "newErrorObj" is not set then set it with our base error class to have standard response
+            if (!newErrorObj) {
                 // Prepare the necessary details to respond to the user's request
                 let responseStatus = err.status ?? HttpStatusCode.INTERNAL_SERVER_ERROR_500;
                 let responseMessage = err.message ?? APP_CONSTANTS.ERROR_MESSAGE_UNKNOWN_EXCEPTION;
                 newErrorObj = new BaseError(responseMessage, responseStatus);
             }
-
-            // Logger message
-            /* global.logger.error("%s", newErrorObj, {
-                filePath: __filename,
-            }); */
 
             // Respond to the user's request with generic error class that has standard response
             return res

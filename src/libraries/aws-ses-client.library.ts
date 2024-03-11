@@ -51,6 +51,14 @@ class AwsSesClientLibrary {
    * @returns {Promise<AWS.SES.Types.CreateTemplateResponse>}
    */
   async createEmailTemplate(emailTemplate: AWS.SES.Types.CreateTemplateRequest): Promise<AWS.SES.Types.CreateTemplateResponse> {
+    // Logger message
+    global.logger.info("Creating master email template in AWS SES (data).", {
+      filePath: __filename,
+      methodName: this.createEmailTemplate.name,
+      emailTemplate: emailTemplate,
+    });
+
+    // Creae the email template in AWS SES
     return this.ses.createTemplate(emailTemplate).promise();
   }
 

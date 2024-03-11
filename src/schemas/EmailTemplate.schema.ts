@@ -22,6 +22,14 @@ export const EmailTemplateCreateValidation = Joi.object({
   bodyText: Joi.string().required().messages({
     "any.required": "The 'Email Body Text' field is required",
   }),
+
+  placeholders: Joi.array()
+    .items(Joi.string())
+    .required().messages({
+      "any.required": "The placeholders field is required.",
+      "array.includesRequiredUnknowns": "The placeholder items must be valid strings.",
+      "array.empty": "The placeholders field is required.",
+    }),
 });
 
 /**

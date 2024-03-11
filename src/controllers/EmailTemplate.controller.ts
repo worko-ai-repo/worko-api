@@ -29,7 +29,7 @@ class EmailTemplateController {
   createEmailTemplate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Extract email template data from the request body
-      const emailTemplateCreateDto: EmailTemplateCreateDto = req.body;
+      const emailTemplateCreateDto: EmailTemplateCreateDtoApi = req.body;
 
       // Logger message
       global.logger.info("Request received to create an email template.", {
@@ -55,7 +55,7 @@ class EmailTemplateController {
 
       // Create email template
       const createdEmailTemplateRes = await emailTemplateService.createEmailTemplate(emailTemplateCreateDto);
-
+      
       // Logger message
       global.logger.info("Email Template created successfully.", {
         filePath: __filename,
@@ -82,7 +82,7 @@ class EmailTemplateController {
   updateEmailTemplate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Extract email template data from the request body
-      const emailTemplateUpdateDto: EmailTemplateUpdateDto = req.body;
+      const emailTemplateUpdateDto: EmailTemplateUpdateDtoApi = req.body;
 
       // Logger message
       global.logger.info("Request received to update an existing email template.", {

@@ -55,7 +55,7 @@ class App {
    * This method define some of the globals required in the application.
    */
   defineGlobals(): void {
-    
+
   }
 
   /**
@@ -63,7 +63,7 @@ class App {
    * 
    * Initialise the database configurations
    */
-  initDatabaseConfig(){
+  initDatabaseConfig() {
     const dbConf = new DBConfig();
     dbConf.init();
   }
@@ -74,7 +74,7 @@ class App {
    * This method registers the required middlewares to handle/customise the requests, responses, etc.
    */
   registerMiddleWares() {
-    this.app.use(cors({origin: '*'}));    //{origin: ['localhost:4200', 'api.worko.ai']}
+    this.app.use(cors({ origin: '*' })); // {origin: ['localhost:4200', 'api.worko.ai']}
     this.app.use(express.json());
   }
 
@@ -95,36 +95,41 @@ class App {
   registerErrorHandlingRoutes() {
     // Route to handle the 404 Not Found error/exception
     this.app.use((req: Request, res: Response, next: NextFunction) => {
+      global.logger.error("The endpoint '%s' not found.", req.originalUrl, {
+        filePath: __filename,
+        methodName: this.registerErrorHandlingRoutes.name
+      });
       res.status(404).send();
     });
 
     // Route to handle the exceptions
-    this.app.use(
-      async (err: any, req: Request, res: Response, next: NextFunction) => {
-        // Check if it is trusted/known/expected error, meaning known to the developer.
-        if (errorHandler.isTrustedError(err)) {
-          // Handle the error manually
-          // @todo here some improvements might required depending upon the situation
-          errorHandler.handleError(err, res);
-        }
-
-        // Otherwise pass the error to the express and the error would be handled by the express exception handler
-        next(err);
+    this.app.use(async (err: any, req: Request, res: Response, next: NextFunction) => {
+      // Check if it is trusted/known/expected error, meaning known to the developer.
+      if (errorHandler.isTrustedError(err)) {
+        // Handle the error manually
+        return errorHandler.handleError(err, res);
       }
-    );
+
+      // Otherwise pass the error to the express and the error would be handled by the express exception handler
+      // It will throw error back to the user as it is an unhandled exception.
+      return next(err);
+    });
 
     // Handle error/exception on the "unhandledRejection" event
-    process.on("unhandledRejection", (reason: Error, promise: Promise<any>) => {
-      throw reason;
+    process.on('unhandledRejection', (error: Error, promise: Promise<any>) => {
+      errorHandler.handleError(error);
+      if (!errorHandler.isTrustedError(error)) {
+        process.exit(1);
+      }
     });
 
     /**
-     * @todo The below 2 events stops the execustion of the application,
+     * @todo The below 2 events stops the execustion of the application, 
      * investigate and let our handler handle the error and respond back to the user.
      */
 
     // Handle error/exception on the "uncaughtException" event
-    process.on("uncaughtException", (error: Error) => {
+    process.on('uncaughtException', (error: Error) => {
       errorHandler.handleError(error);
       if (!errorHandler.isTrustedError(error)) {
         process.exit(1);

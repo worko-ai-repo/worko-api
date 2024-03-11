@@ -51,7 +51,7 @@ const customFormatter = format.printf((info: any) => {
     const fileName = filePath ? FileHelper.getFileName(filePath) : undefined;
 
     // Final error message
-    return `${timestamp} [${level}] [${fileName}] [${methodName}]: ${message}; ${meta ? JSON.stringify(meta) : ''}`;
+    return `${timestamp} [${level}] [${fileName}] [${methodName}]: ${message}; ${meta ? JSON.stringify(meta, null, 4) : ''}`;
 });
 
 // Create and export the Logger instance
