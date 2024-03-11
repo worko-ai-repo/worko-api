@@ -16,4 +16,7 @@ UserEducationRouter.get("/:id/education", userEducationController.get);
 // create/update the user Education details based on the provided query parameter
 UserEducationRouter.post("/:id/education", userEducationController.create);
 
+// delete the user Education details based on the provided query parameter
+UserEducationRouter.delete("/:id/education/:entryId", userEducationController.delete);
+
 export default UserEducationRouter;
