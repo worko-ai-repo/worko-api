@@ -11,7 +11,13 @@ class DbEmailTemplateDto extends BaseDbDto {
   GSI1PK!: string;
   GSI1SK!: string;
   templateName!: string;
+  status!: string;
+  subject!: string;
+  title!: string;
+  bodyHtml!: string;
+  bodyText!: string;
   placeholders!: string[];
+  description!: string;
   createdByUserId!: string;
   updatedByUserId?: string;
 }
@@ -46,8 +52,32 @@ const EmailTemplateSchema = new dynamoose.Schema(
       type: String,
       required: true,
     },
+    status: {
+      type: String,
+      required: true,
+    },
+    subject: {
+      type: String,
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    bodyHtml: {
+      type: String,
+      required: true,
+    },
+    bodyText: {
+      type: String,
+      required: true,
+    },
     placeholders: {
       type: Array,
+      required: true,
+    },
+    description: {
+      type: String,
       required: true,
     },
     createdByUserId: {

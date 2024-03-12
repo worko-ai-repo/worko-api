@@ -12,7 +12,7 @@ const EmailTemplateRouter = Router();
 
 // Create Email Template
 EmailTemplateRouter.post("/", emailTemplateController.createEmailTemplate);
-EmailTemplateRouter.put("/", emailTemplateController.updateEmailTemplate);
+EmailTemplateRouter.put("/:templateName", emailTemplateController.updateEmailTemplate);
 EmailTemplateRouter.get("/:templateName", emailTemplateController.getEmailTemplateByTemplateName);
 
 // Export the "EmailTemplateRouter"

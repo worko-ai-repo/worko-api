@@ -1,5 +1,11 @@
+// Installed packages
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 // Load the base dao
 import BaseDao from "./Base.dao";
+
+// Import enums
+import { EmailTemplateStatusEnum } from "../enums/EmailTemplate.enum";
 
 // Load the local models
 import { DbEmailTemplateDto, EmailTemplateModel } from "../db/models/EmailTemplate.model";
@@ -37,15 +43,23 @@ class EmailTemplateDao implements BaseDao {
    * Get a master email template by the provided template name
    * 
    * @param {string} templateName
-   * @returns {}
+   * @returns {Promise<QueryResponse<DbEmailTemplateDto>>}
    */
-  /* async getEmailTemplateByTemplateName(templateName: string) {
+  async getEmailTemplateByTemplateName(templateName: string): Promise<QueryResponse<DbEmailTemplateDto>> {
+    // Logger message
+    global.logger.info("Get the master email template details for the provided template name (request).", {
+      filePath: __filename,
+      methodName: this.getEmailTemplateByTemplateName.name,
+      templateName: templateName,
+    });
+
+    // Get the template details and return
     return EmailTemplateModel.query("PK")
       .eq(this.partitianKey)
       .where("templateName")
       .eq(templateName)
       .exec();
-  } */
+  }
 
   /**
    * createEmailTemplate
@@ -65,14 +79,20 @@ class EmailTemplateDao implements BaseDao {
       SK: this.sortKeys.SK_INIT.strtr({
         "{templateName}": template.templateName
       }),
+      id: id,
       GSI1PK: this.GSI1PK,
       GSI1SK: this.GSI1SK.strtr({
         "{templateName}": template.templateName
       }),
-      id: id,
       templateName: template.templateName,
-      placeholders: template.placeholders.map(ph => `{${ph}}`), // Wrap the placeholders in "{}".
-      createdByUserId: "1", // @todo fix this by using user's read id
+      status: EmailTemplateStatusEnum.ENABLED,
+      subject: template.subject,
+      title: template.title,
+      bodyHtml: template.bodyHtml,
+      bodyText: template.bodyText,
+      placeholders: template.placeholders,
+      description: template.description,
+      createdByUserId: template.createdByUserId,
     };
 
     // Logger message
@@ -85,6 +105,43 @@ class EmailTemplateDao implements BaseDao {
 
     // Create a new master email template local db entry
     return EmailTemplateModel.create(templateDbDetails);
+  }
+  
+  /**
+   * updateEmailTemplate
+   * 
+   * Update Email Template in local database
+   * 
+   * @param {EmailTemplateUpdateDto} template
+   * @returns {Promise<DbEmailTemplateDto>}
+   */
+  async updateEmailTemplate(template: EmailTemplateUpdateDto): Promise<DbEmailTemplateDto> {
+    // Prepare the email template details to update in the database    
+    const templateDbDetails = {
+      status: template.status,
+      subject: template.subject,
+      title: template.title,
+      bodyHtml: template.bodyHtml,
+      bodyText: template.bodyText,
+      placeholders: template.placeholders,
+      description: template.description,
+      updatedByUserId: template.updatedByUserId,
+    };
+
+    // Logger message
+    global.logger.info("Updating master email template in local db (request).", {
+      filePath: __filename,
+      methodName: this.updateEmailTemplate.name,
+      templateParamDetails: template,
+      templateDbDetails: templateDbDetails,
+    });
+
+    // Update the master email template local db entry
+    let PK: string = this.partitianKey;
+    let SK: string = this.sortKeys.SK_INIT.strtr({
+      "{templateName}": template.templateName
+    });
+    return EmailTemplateModel.update({ PK: PK, SK: SK }, templateDbDetails);
   }
 }
 

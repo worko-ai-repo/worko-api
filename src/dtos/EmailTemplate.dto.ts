@@ -6,9 +6,11 @@
 interface EmailTemplateCreateDtoApi {
   templateName: string,
   subject: string,
+  title: string,
   bodyHtml: string,
   bodyText: string,
   placeholders: string[],
+  description: string,
 };
 
 /**
@@ -19,9 +21,12 @@ interface EmailTemplateCreateDtoApi {
 interface EmailTemplateCreateDto {
   templateName: string,
   subject: string,
+  title: string,
   bodyHtml: string,
   bodyText: string,
   placeholders: string[],
+  description: string,
+  createdByUserId: string,
 };
 
 /**
@@ -31,9 +36,13 @@ interface EmailTemplateCreateDto {
  */
 interface EmailTemplateUpdateDtoApi {
   templateName: string,
+  status: string,
   subject: string,
+  title: string,
   bodyHtml: string,
   bodyText: string,
+  placeholders: string[],
+  description: string,
 };
 
 /**
@@ -43,19 +52,12 @@ interface EmailTemplateUpdateDtoApi {
  */
 interface EmailTemplateUpdateDto {
   templateName: string,
+  status: string,
   subject: string,
+  title: string,
   bodyHtml: string,
   bodyText: string,
-};
-
-/**
- * EmailTemplateGetDtoApi
- * 
- * Structure for Getting Email Template API action.
- */
-interface EmailTemplateGetDtoApi {
-  templateName: string,
-  subject?: string,
-  bodyHtml?: string,
-  bodyText?: string,
+  placeholders: string[],
+  description: string,
+  updatedByUserId: string,
 };

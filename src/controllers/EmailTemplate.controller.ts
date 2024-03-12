@@ -29,7 +29,7 @@ class EmailTemplateController {
   createEmailTemplate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Extract email template data from the request body
-      const emailTemplateCreateDto: EmailTemplateCreateDtoApi = req.body;
+      const requestBody: EmailTemplateCreateDtoApi = req.body;
 
       // Logger message
       global.logger.info("Request received to create an email template.", {
@@ -38,7 +38,7 @@ class EmailTemplateController {
       });
 
       // Validate the incoming data using the defined validation schema in "EmailTemplateCreateValidation"
-      const { error } = EmailTemplateCreateValidation.validate(emailTemplateCreateDto, {
+      const { error } = EmailTemplateCreateValidation.validate(requestBody, {
         abortEarly: false,
       });
 
@@ -54,8 +54,12 @@ class EmailTemplateController {
       }
 
       // Create email template
+      const emailTemplateCreateDto: EmailTemplateCreateDto = {
+        ...requestBody,
+        createdByUserId: "1", // @todo fix this with real id of the user from the token.
+      }
       const createdEmailTemplateRes = await emailTemplateService.createEmailTemplate(emailTemplateCreateDto);
-      
+
       // Logger message
       global.logger.info("Email Template created successfully.", {
         filePath: __filename,
@@ -69,7 +73,7 @@ class EmailTemplateController {
       next(error);
     }
   };
-  
+
   /**
    * updateEmailTemplate
    *
@@ -81,17 +85,21 @@ class EmailTemplateController {
    */
   updateEmailTemplate = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Get mail template name
+      const templateName: string = req.params["templateName"];
+
       // Extract email template data from the request body
-      const emailTemplateUpdateDto: EmailTemplateUpdateDtoApi = req.body;
+      const requestBody: EmailTemplateUpdateDtoApi = req.body;
 
       // Logger message
       global.logger.info("Request received to update an existing email template.", {
         filePath: __filename,
-        methodName: this.updateEmailTemplate.name
+        methodName: this.updateEmailTemplate.name,
+        templateName: templateName,
       });
 
       // Validate the incoming data using the defined validation schema in "EmailTemplateUpdateValidation"
-      const { error } = EmailTemplateUpdateValidation.validate(emailTemplateUpdateDto, {
+      const { error } = EmailTemplateUpdateValidation.validate(requestBody, {
         abortEarly: false,
       });
 
@@ -107,6 +115,10 @@ class EmailTemplateController {
       }
 
       // Update email template
+      const emailTemplateUpdateDto: EmailTemplateUpdateDto = {
+        ...requestBody,
+        updatedByUserId: "1", // @todo fix this with real id of the user from the token.
+      }
       const updateEmailTemplateRes = await emailTemplateService.updateEmailTemplate(emailTemplateUpdateDto);
 
       // Logger message
@@ -122,7 +134,7 @@ class EmailTemplateController {
       next(error);
     }
   };
-  
+
   /**
    * getEmailTemplateByTemplateName
    *
@@ -138,17 +150,18 @@ class EmailTemplateController {
       const templateName: string = req.params["templateName"];
 
       // Logger message
-      global.logger.info("Request received to get an existing email template details.", {
+      global.logger.info(`Request received to get an "${templateName}" existing email template details.`, {
         filePath: __filename,
         methodName: this.getEmailTemplateByTemplateName.name
       });
 
       // Check if value is not present
-      if (!templateName){
+      if (!templateName) {
         // Logger message
         global.logger.error("Request data validation failed.", {
           filePath: __filename,
-          methodName: this.getEmailTemplateByTemplateName.name
+          methodName: this.getEmailTemplateByTemplateName.name,
+          templateName: templateName,
         });
 
         throw new BaseError("Template name is required.", HttpStatusCode.BAD_REQUEST_400);
