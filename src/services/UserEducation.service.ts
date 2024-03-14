@@ -53,6 +53,21 @@ class UserEducationService {
 
     return userEducationDao.update(email, SK, userEducationDTO);
   }
+
+  /**
+   * Deletes an existing user Education or Entries.
+   * @param email - Email of the user
+   * @param SK - Secondary key of the user
+   * @returns {Promise<any>} - A Promise that resolves when the Education is successfully deleted
+   * or Entries are successfully deleted
+   */
+
+  async delete(email: string, id: string): Promise<any> {
+    // Logging the action of deleting  user Education in the service layer
+    logger.info("Deleting user Education Entries [UserEducationService]");
+    // return the Promise that resolves when the Education is successfully deleted
+    return userEducationDao.delete(email, id);
+  }
 }
 
 // Exporting an instance of the UserEducationService class

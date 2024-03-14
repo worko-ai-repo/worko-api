@@ -12,11 +12,13 @@ import { UserEducationDTO } from "../dtos/UserEducation.dto";
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
 
+
 // UserEducationDao class implementing the BaseDao interface
 class UserEducationDao implements BaseDao {
   modelName = "userEducation";
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
   sortKeys = { SK_ID: "EDU#ID#{eduId}" }; // Sort key structure using unique IDs
+
 
   /**
    * Fetches user Education based on the provided email.
@@ -28,6 +30,7 @@ class UserEducationDao implements BaseDao {
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
+
     // const SK = this.sortKeys.SK_ID;
     return UserEducationModel.query("PK")
       .eq(PK)
@@ -47,7 +50,7 @@ class UserEducationDao implements BaseDao {
     const SK = this.sortKeys.SK_ID.strtr({
       "{eduId}": UlidService.getUlidId(),
     });
-    console.log("SK: ", SK);
+
     const userEducation = {
       PK: this.partitianKey.strtr({
         "{primaryEmail}": email,
@@ -69,6 +72,25 @@ class UserEducationDao implements BaseDao {
       "{primaryEmail}": email,
     });
     return UserEducationModel.update({ PK: PK, SK: SK }, userEducationDTO);
+  }
+
+  //delete
+  async delete(email: string ,id : string ) {
+    
+    logger.info("Delete user education [DAO]");
+
+    // Generate the PK and SK
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    // generate SK 
+    let  Edu_SK = this.sortKeys.SK_ID.strtr(
+      {"{eduId}": id});
+    
+
+    // Delete the item 
+    return  UserEducationModel.delete({ PK: PK, SK: Edu_SK });
+
   }
 }
 

@@ -19,6 +19,9 @@ import InvokeLambdaService from "../services/InvokeLambda.service";
 // Load local helper
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 
+//import DAOs
+import userEducationDao from "../daos/UserEducation.dao";
+
 /**
  * UserEducationController
  *
@@ -129,6 +132,36 @@ class UserEducationController {
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json();
+    } catch (error: any) {
+      // If it's another type of error, pass it to the next error handler
+      next(error);
+    }
+  };
+
+  /**
+   * Deletes a user's education entry.
+   *
+   * @param req The request object
+   * @param res The response object
+   * @param next The next function
+   */
+  delete = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      logger.info("Delete user education [controller]");
+
+      const email = req.params.id;
+      // EntryId is the SK
+      const id = req.params.entryId;
+
+      // Validate Email 
+      const { error: emailError } = validateEmailField(email);
+
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } 
+      await UserEducationService.delete(email, id);
+      //  Return No Content (204) status code with no content
+      res.status(HttpStatusCode.NO_CONTENT_204).json();
     } catch (error: any) {
       // If it's another type of error, pass it to the next error handler
       next(error);
