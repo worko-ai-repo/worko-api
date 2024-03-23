@@ -1,3 +1,4 @@
+
 // Import
 import * as dynamoose from "dynamoose";
 
@@ -29,6 +30,8 @@ import { UserReferralResponseModel } from "./models/UserReferralResponse.model";
 import { MasterSubscriptionModel } from "./models/MasterSubscription.model";
 import { MasterServiceModel } from "./models/MasterService.model";
 import { EmailTemplateModel } from "./models/EmailTemplate.model";
+import { UserReviewModel } from "./models/UserReview.model";
+import { UserRatingAvgModel } from "./models/UserRatingAvg.model";
 
 /**
  * DBConfig
@@ -122,6 +125,8 @@ class DBConfig {
       MasterSubscriptionModel,
       MasterServiceModel,
       EmailTemplateModel,
+      UserReviewModel,
+      UserRatingAvgModel,
     ]);
   }
 }

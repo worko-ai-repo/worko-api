@@ -32,3 +32,28 @@ export enum ProvidedServiceStatus {
   ACTIVE = "ACTIVE",
   DEACTIVATED = "DEACTIVATED",
 }
+
+export enum UserType {
+  EMP = 'EMP',
+  CAND = 'CAND',
+}
+
+/**
+ * UserReviewEmpContext
+ * 
+ * Possible contexts for which user review can be created for Employee Role.
+ */
+export enum UserReviewEmpContext {
+  EMP_USER = 'EMP_USER',
+  EMP_REFERRAL = 'EMP_REFERRAL',
+  EMP_PROVIDED_SERVICE = 'EMP_PROVIDED_SERVICE',
+}
+
+/**
+ * UserReviewCandContext
+ * 
+ * Possible contexts for which user review can be created for Candidate Role.
+ */
+export enum UserReviewCandContext {
+  CAND_USER = 'CAND_USER',
+}
