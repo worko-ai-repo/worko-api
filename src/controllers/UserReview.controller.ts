@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load local DTOs
-import { GetUserReceivedReviewRequestApiDto, UserReviewCreateApiDto } from "../dtos/UserReview.dto";
+import { GetUserReceivedReviewRequestApiDto, UserReviewCreateApiDto, UserReviewCreateDto } from "../dtos/UserReview.dto";
 
 // Import Enum
 import { UserReviewCandContext, UserReviewEmpContext, UserType } from "../enums/User.enum";
@@ -40,12 +40,8 @@ class UserReviewController {
             // Review request details
             const requestBody: UserReviewCreateApiDto = req.body;
 
-            // Validate email format
-            // reviewReceiverEmail: User's email address for whom the review is being created
-            const { error: emailError, value: reviewReceiverEmail } = validateEmailField(req.params.emailId);
-            if (emailError) {
-                throw new RequestValidationError(emailError);
-            }
+            // Get UserId
+            const userId = req.params.userId;
 
             // Validate the user input and throw a validation error if necessary
             let { error, value: reviewReceiverApiDto } = userReviewCreateApiDtoValidation.validate(requestBody, { abortEarly: false });
@@ -53,16 +49,23 @@ class UserReviewController {
                 throw new RequestValidationError(error);
             }
 
-            // Get the user's detail for whom the review is being created
-            const reviewReceiverDetail = await userDetailService.get(reviewReceiverEmail);
+            // create a new dto from the existing
+            const userReviewCreateDto: UserReviewCreateDto = {
+                ...reviewReceiverApiDto,
+                ratingForUserId: userId,
+            }
 
-            // If the user does not exist, send a 404 response
-            if (!reviewReceiverDetail) {
+            // Retrieve user details by userId
+            const userDetail = await userDetailService.getByUserId(userId);
+            if (!userDetail) {
                 return res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found" });
             }
 
+            // Extract email from userDetail
+            const userEmail = userDetail[0].emailList.primary;
+
             // Create review as requested
-            const result = await userReviewService.createReview(reviewReceiverEmail, reviewReceiverApiDto);
+            const result = await userReviewService.createReview(userEmail, userReviewCreateDto);
 
             // Send response indicating success
             res.status(HttpStatusCode.CREATED_201).json(result);
@@ -85,7 +88,7 @@ class UserReviewController {
     getUserReceivedReviews = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user email id from url path for whom review has to be retrived
-            const receiverEmailId = req.params.emailId;
+            const userId = req.params.userId;
 
             // Construct the request body from the query parameters
             // @todo Review this to see , if validation has to be added
@@ -97,22 +100,20 @@ class UserReviewController {
                 serviceReqId: req.query.serviceReqId as string
             };
 
-            // Validate emailId
-            const { error, value } = validateEmailField(receiverEmailId);
 
-            // If emailId is invalid, return a 400 Bad Request response
-            if (error) {
-                return res.status(HttpStatusCode.BAD_REQUEST_400).json({ error: "Invalid email format." });
-            }
-
-            // Check if the user exists with the given email address in the database
-            const receiverUserDetails = await userDetailService.get(value);
-            if (!receiverUserDetails.count) {
+            // Retrieve user details by userId
+            const userDetail = await userDetailService.getByUserId(userId);
+            if (!userDetail) {
                 return res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found" });
             }
 
+            // Extract email from userDetail
+            const userEmail = userDetail[0].emailList.primary;
+
+            // Create review as requested
+
             // Retrieve reviews based on the provided filter 
-            let result = await userReviewService.getUserReceivedReviews(value, reviewFilters);
+            let result = await userReviewService.getUserReceivedReviews(userEmail, reviewFilters);
 
             // Log information about the action
             global.logger.info("Get review received by user [controller]");
@@ -137,24 +138,20 @@ class UserReviewController {
     getUserReviewRatingAverage = async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get user email id from url path for whom review has to be retrived
-            const receiverEmailId = req.params.emailId;
-
-            // Validate emailId
-            const { error, value } = validateEmailField(receiverEmailId);
-
-            // If emailId is invalid, return a 400 Bad Request response
-            if (error) {
-                return res.status(HttpStatusCode.BAD_REQUEST_400).json({ error: "Invalid email format." });
-            }
-
-            // Check if the user exists with the given email address in the database
-            const receiverUserDetails = await userDetailService.get(value);
-            if (!receiverUserDetails.count) {
+            const userId = req.params.userId;
+            // Retrieve user details by userId
+            const userDetail = await userDetailService.getByUserId(userId);
+            if (!userDetail) {
                 return res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found" });
             }
 
+            // Extract email from userDetail
+            const userEmail = userDetail[0].emailList.primary;
+
+            // Create review as requested
+
             // Retrieve reviews based on the provided filter 
-            let result = await userReviewService.getUserReviewRatingAverage(value);
+            let result = await userReviewService.getUserReviewRatingAverage(userEmail);
 
             // Log information about the action
             global.logger.info("Get review received by user [controller]");

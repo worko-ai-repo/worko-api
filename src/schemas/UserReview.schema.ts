@@ -17,12 +17,6 @@ export const userReviewCreateApiDtoValidation = Joi.object({
         "string.empty": "Rating by User ID should not be empty.",
     }),
 
-    // Validate ratingForUserId field
-    ratingForUserId: Joi.string().required().messages({
-        "any.required": "Rating for User ID is required.",
-        "string.empty": "Rating for User ID should not be empty.",
-    }),
-
     // Validate ratingForUserType field
     ratingForUserType: Joi.string().valid(UserType.CAND, UserType.EMP).optional().messages({
         "any.only": "Invalid user type.",

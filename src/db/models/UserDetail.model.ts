@@ -11,6 +11,9 @@ import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the structure for User Details Database Data Transfer Object (DTO)
 class DbUserDetailDto extends BaseDbDto {
+  id!: string; // Cognito Provided UserId for registered user
+  GSI1PK!: string;
+  GSI1SK!: string;
   name!: string;
   emailList!: { [key: string]: string }; // @todo we should consider removing this. And make the fields are always upto date. Instead use the "UserEmail" SK.
   number!: string;
@@ -38,6 +41,28 @@ const UserDetailSchema = new dynamoose.Schema(
   {
     // ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
     ...DB_CONSTANTS.WORKO_PK_SK,
+    id: {
+      type: String,
+      required: true,
+    },
+    GSI1PK: {
+      //@todo Add required true to GSI1
+      type: String,
+      index: {
+        name: "GSI1",
+        type: "global",
+        rangeKey: "GSI1SK",
+      },
+      required: true,
+    },
+    GSI1SK: {
+      type: String,
+      index: {
+        name: "GSI1",
+        type: "global",
+      },
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -135,4 +160,4 @@ const UserDetailModel = dynamoose.model<DbUserDetailDto>("UserDetail", [
 ]);
 
 // Export the UserDetailsModel
-export { UserDetailModel };
+export { UserDetailModel, DbUserDetailDto };

@@ -2,7 +2,7 @@
 import BaseDao from "./Base.dao";
 
 // Import the dtos
-import { GetUserReceivedReviewRequestApiDto, UserReviewCreateApiDto } from "../dtos/UserReview.dto";
+import { GetUserReceivedReviewRequestApiDto, UserReviewCreateApiDto, UserReviewCreateDto } from "../dtos/UserReview.dto";
 
 // Import the models
 import { DbUserReviewDto, UserReviewModel } from "../db/models/UserReview.model";
@@ -37,17 +37,17 @@ class UserReviewDao implements BaseDao {
    * Creates a new user review for the user
    *
    * @param {string} reviewReceiverEmail - Email of the user for whom the review is being created
-   * @param {UserReviewDTO} reviewData - Data for the review
+   * @param {UserReviewCreateDto} userReviewCreateDto - Data for the review
    * @returns {Promise<DbUserReviewDto>} - Promise resolving to the created review object
    */
-  async createReview(reviewReceiverEmail: string, reviewData: UserReviewCreateApiDto): Promise<DbUserReviewDto> {
+  async createReview(userEmail: string, userReviewCreateDto: UserReviewCreateDto): Promise<DbUserReviewDto> {
     // Unqiue id of the entry
     let id = UlidService.getUlidId();
 
     // Prepare the required details to create entry in the database
-    const PK = this.partitianKey.strtr({ "{emailId}": reviewReceiverEmail });
+    const PK = this.partitianKey.strtr({ "{emailId}": userEmail });
     const SK = this.sortKeys.SK_INIT.strtr({
-      "{userType}": reviewData.ratingForUserType,
+      "{userType}": userReviewCreateDto.ratingForUserType,
       "{id}": id,
     });
     const reviewDbDetails = {
@@ -58,15 +58,15 @@ class UserReviewDao implements BaseDao {
         "{id}": id
       }),
       id: id,
-      ...reviewData,
+      ...userReviewCreateDto,
     };
 
     // Logger message
     global.logger.info("Creating review entry (request).", {
       filePath: __filename,
       methodName: this.createReview.name,
-      reviewReceiverEmail: reviewReceiverEmail,
-      reviewData: reviewData,
+      userEmail: userEmail,
+      reviewData: userReviewCreateDto,
       reviewDbDetails: reviewDbDetails,
     });
 

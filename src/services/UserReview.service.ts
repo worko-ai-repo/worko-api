@@ -6,7 +6,7 @@ import userReviewDao from "../daos/UserReview.dao";
 import userRatingAvgDao from "../daos/UserRatingAvg.dao";
 
 // Import DTOs
-import { GetUserReceivedReviewRequestApiDto, UserReviewCreateApiDto } from "../dtos/UserReview.dto";
+import { GetUserReceivedReviewRequestApiDto, UserReviewCreateApiDto, UserReviewCreateDto } from "../dtos/UserReview.dto";
 
 // Import Services
 import UserRatingAvgService from "./UserRatingAvg.service";
@@ -26,24 +26,24 @@ class UserReviewService {
      * 
      * Creates a new review for a user
      *
-     * @param {string} reviewReceiverEmail - Email of the user for whom the review is being created.
-     * @param {UserReviewCreateApiDto} userReviewDTO - Review data
+     * @param {string} userEmail - Email of the user for whom the review is being created.
+     * @param {UserReviewCreateDto} userReviewCreateDto - Review data
      * @returns {Promise<DbUserReviewDto>} - A Promise that resolves to the created review object
      */
-    async createReview(reviewReceiverEmail: string, userReviewDTO: UserReviewCreateApiDto): Promise<DbUserReviewDto> {
+    async createReview(userEmail: string, userReviewCreateDto: UserReviewCreateDto): Promise<DbUserReviewDto> {
         // Create review
-        const createdReview = await userReviewDao.createReview(reviewReceiverEmail, userReviewDTO);
+        const createdReview = await userReviewDao.createReview(userEmail, userReviewCreateDto);
 
         // Logger message for creating review
         global.logger.info("Creating review entry", {
             filePath: __filename,
             methodName: this.createReview.name,
-            userEmail: reviewReceiverEmail,
-            reviewData: userReviewDTO,
+            userEmail: userEmail,
+            reviewData: userReviewCreateDto,
         });
 
         // Calculate and save the rating
-        await UserRatingAvgService.calculateAndSaveRating(reviewReceiverEmail, userReviewDTO);
+        await UserRatingAvgService.calculateAndSaveRating(userEmail, userReviewCreateDto);
 
         // Return the created review details
         return createdReview;

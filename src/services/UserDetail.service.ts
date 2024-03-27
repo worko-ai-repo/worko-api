@@ -23,16 +23,14 @@ class UserDetailService {
   }
 
   /**
-   * Creates a new user Detail.
+   * Retrieves user details by user id.
    *
    * @param email - Email of the user
-   * @param userDetailDTO - Data Transfer Object containing user Detail details
-   * @returns {Promise<any>} - A Promise that resolves when the Detail is successfully created
+   * @returns {Promise<any>} - Details of the user
    */
-  async create(email: string, userDetailDTO: UserDetailDTO): Promise<any> {
-    // Logging the action of creating user Detail in the service layer
-    logger.info("Creating user Detail [UserDetailService]");
-    return userDetailDao.create(email, userDetailDTO);
+  async getByUserId(userId: string) {
+    console.log("Get user detail by email [service]");
+    return userDetailDao.getByUserId(userId);
   }
 
   /**

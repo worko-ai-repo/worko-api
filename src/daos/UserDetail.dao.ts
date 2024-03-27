@@ -16,9 +16,13 @@ import { UserType } from "../dtos/Company.dto";
 
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
-  modelName = "userDetail";
+  modelName = "UserDetail";
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
-  sortKeys = { SK_ID: "ID#{uuid}" }; // Sort key structure using unique IDs
+  sortKeys = {
+    SK_ID: "ID#{userId}" // where userId is cognito provided userId for registered user
+  };
+  GSI1PK: string = "USR#";
+  GSI1SK = "ID#{userId}"; // where userId is cognito provided userId for registered user
 
   /**
    * Fetches user details based on the provided email.
@@ -39,24 +43,24 @@ class UserDetailDao implements BaseDao {
   }
 
   /**
-   * @param email
-   * @returns
+   * Fetches user details based on the provided email.
+   * @param userId - userId  of the user
+   * @returns User details corresponding to the email
    */
-  async create(email: string, userDetailDTO: UserDetailDTO) {
-    logger.info("Create user detail [DAO]");
-    const SK = this.sortKeys.SK_ID.strtr({
-      "{uuid}": UlidService.getUlidId(),
+  async getByUserId(userId: string) {
+    global.logger.info("Get user getByUserId id [DAO]");
+    const GSI1PK = this.GSI1PK;
+    const GSI1SK = this.GSI1SK.strtr({
+      "{userId}": userId,
     });
-    console.log("SK: ", SK);
-    const userDetail = {
-      PK: this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      }),
-      SK: SK,
-      ...userDetailDTO,
-    };
-    global.logger.debug("userDetail", userDetail);
-    return UserDetailModel.create(userDetail);
+
+    // return UserDetailModel.get({ GSI1PK: GSI1PK, GSI1SK: GSI1SK })
+
+    return UserDetailModel.query("GSI1PK")
+      .eq(GSI1PK)
+      .where("GSI1SK")
+      .eq(GSI1SK)
+      .exec();
   }
 
   /**
@@ -132,7 +136,12 @@ class UserDetailDao implements BaseDao {
         "{primaryEmail}": email,
       }),
       SK: this.sortKeys.SK_ID.strtr({
-        "{uuid}": userId,
+        "{userId}": userId,
+      }),
+      id: userId,
+      GSI1PK: this.GSI1PK,
+      GSI1SK: this.GSI1SK.strtr({
+        "{userId}": userId
       }),
       ...copyUserSignUpDTO,
       emailList: emailList,
@@ -157,7 +166,7 @@ class UserDetailDao implements BaseDao {
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-   
+
     return UserDetailModel.update({ PK: PK, SK: SK }, userDetailDTO);
   }
 
