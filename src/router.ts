@@ -23,6 +23,7 @@ import UserBankDetailRouter from "./routers/UserBankDetail.router";
 import UserProvidedServiceRouter from "./routers/UserProvidedService.router";
 import UserAvailabilityRouter from "./routers/UserAvailability.router";
 import UserReviewRouter from "./routers/UserReview.router";
+import UserSupportRouter from "./routers/UserSupport.router";
 
 //File routers
 import FileRouter from "./routers/File.router";
@@ -104,6 +105,9 @@ router.use("/mservice", MasterServiceRouter);
 // Register the "Email Template" routers.
 // Note: These actions are only for users with "admin" role. @todo add required authorizations.
 router.use("/email-template", EmailTemplateRouter);
+
+// Register the "User Support " routers
+router.use("/user", UserSupportRouter);
 
 // Export the router
 export default router;

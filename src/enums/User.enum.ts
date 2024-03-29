@@ -57,3 +57,19 @@ export enum UserReviewEmpContext {
 export enum UserReviewCandContext {
   CAND_USER = 'CAND_USER',
 }
+
+/**
+ * UserSupportStatus
+ * 
+ * Possible contexts for which user support's status can be created.
+ */
+export enum UserSupportStatusEnum {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  RESOLVED = 'RESOLVED',
+}
+
+export enum UserSupportContextTypeEnum {
+  REFERRAL = 'REFERRAL',
+  SERVICE = 'SERVICE',
+}

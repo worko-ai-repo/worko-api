@@ -32,6 +32,7 @@ import { MasterServiceModel } from "./models/MasterService.model";
 import { EmailTemplateModel } from "./models/EmailTemplate.model";
 import { UserReviewModel } from "./models/UserReview.model";
 import { UserRatingAvgModel } from "./models/UserRatingAvg.model";
+import { UserSupportModel } from "./models/UserSupport.model";
 
 /**
  * DBConfig
@@ -127,6 +128,7 @@ class DBConfig {
       EmailTemplateModel,
       UserReviewModel,
       UserRatingAvgModel,
+      UserSupportModel,
     ]);
   }
 }
