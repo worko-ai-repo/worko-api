@@ -7,20 +7,41 @@ import { BaseDbDto } from "./Base.model";
 
 // Declaring a class 'CompanyDetailsDbDto' that extends 'BaseDbDto' with specific properties for company details
 class DbCompanyDetailDto extends BaseDbDto {
+  id! : string;
+  GSI1PK!: string;
+  GSI1SK!: string;
   name!: string;
   industry!: string;
   teamSize!: number;
   carrierPage!: string;
   linkedIn!: string;
   logoUrl!: string;
-  GSI1PK!: string;
-  GSI1SK!: string;
 }
 
 // Creating a DynamoDB schema for the 'Company' model with specified attributes and their types
 const CompanySchema = new dynamoose.Schema(
   {
     ...DB_CONSTANTS.WORKO_PK_SK,
+    id: {
+      type: String,
+      required: true,
+    },
+    GSI1PK: {
+      //@todo Add required true to GSI1
+      type: String,
+      index: {
+        name: "GSI1",
+        type: "global",
+        rangeKey: "GSI1SK",
+      },
+    },
+    GSI1SK: {
+      type: String,
+      index: {
+        name: "GSI1",
+        type: "global",
+      },
+    },
     name: {
       type: String,
       required: true,
@@ -44,22 +65,6 @@ const CompanySchema = new dynamoose.Schema(
     logoUrl: {
       type: String,
       required: true,
-    },
-    GSI1PK: {
-      //@todo Add required true to GSI1
-      type: String,
-      index: {
-        name: "GSI1",
-        type: "global",
-        rangeKey: "GSI1SK",
-      },
-    },
-    GSI1SK: {
-      type: String,
-      index: {
-        name: "GSI1",
-        type: "global",
-      },
     },
   },
   {

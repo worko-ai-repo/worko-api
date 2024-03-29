@@ -105,6 +105,23 @@ class CompanyDetailDao implements BaseDao {
   }
 
   /**
+   * 
+   * @param ids 
+   * Returns the list of companies having the InputKeys
+   */
+  getCompanyDetailsByIds(ids: string[]) {
+    let inputKeys = ids.map((id) => {
+      return {
+        PK: this.partitianKey,
+        SK: this.sortKeys.SK_INIT.strtr({
+          "{companyId}": id,
+        }),
+      }
+    });
+    return CompanyDetailModel.batchGet(inputKeys)
+  }
+
+  /**
    *
    * Get a list of specific company name and SK
    *
@@ -120,15 +137,21 @@ class CompanyDetailDao implements BaseDao {
   }
 
   /**
-   *
+   * 
    * Add a company based on provided DTO
    *
    * @param companyDto
    */
   async add(companyDto: CompanyDTO) {
+    // Generate ULID id for company
+    let id = UlidService.getUlidId();
+
+    // Prepare the PK SK the company
     const SK = this.sortKeys.SK_INIT.strtr({
-      "{companyId}": UlidService.getUlidId(),
+      "{companyId}": id,
     });
+
+    // Prepare the data required to create a new company
     const newCompanyDto = {
       PK: this.partitianKey,
       SK: SK,
@@ -136,9 +159,12 @@ class CompanyDetailDao implements BaseDao {
         "{industryName}": companyDto.industry,
       }),
       GSI1SK: SK,
+      id: id,
       ...companyDto,
     };
-    return CompanyDetailModel.create(newCompanyDto); // Create a new CompanyDetailModel entry
+
+    // Create the company with the above data
+    return CompanyDetailModel.create(newCompanyDto);
   }
 }
 

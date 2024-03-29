@@ -39,15 +39,18 @@ class UserExperienceDao implements BaseDao {
    */
   async create(email: string, userExperienceDto: UserExperienceDTO) {
     global.logger.info("Create employee Work Experience [DAO]");
+    const id = UlidService.getUlidId();
     const userExperienceDTO = {
       PK: this.partitianKey.strtr({
         "{primaryEmail}": email,
       }),
       SK: this.sortKeys.SK_ID.strtr({
-        "{uuid}": UlidService.getUlidId(),
+        "{uuid}": id,
       }),
+      id : id,
       isEmailVerified: false,
       ...userExperienceDto,
+      companyId: userExperienceDto.companySK.split("#").pop()
     };
     return UserExperienceModel.create(userExperienceDTO);
   }

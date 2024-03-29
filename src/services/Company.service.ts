@@ -32,6 +32,15 @@ class CompanyService {
   }
 
   /**
+   * 
+   * @param ids 
+   * Returns the list of companies having the InputKeys
+   */
+  async getCompanyDetailsByIds(ids: string[])
+  {
+    return companyDetailDao.getCompanyDetailsByIds(ids)
+  }
+  /**
    *
    * Retrieves a list of existing companies.
    *

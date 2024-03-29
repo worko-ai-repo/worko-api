@@ -20,6 +20,10 @@ import { RequestValidationError } from "../utils/errors.util";
 // Load local helper
 import { GroupingHelper } from "../helpers/grouping.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+import { CompanyListingFilterOptions, CompanyListingFilterRequestDTO } from "../dtos/Company.dto";
+import { RequestHelper } from "../helpers/request.helper";
+import CompanyService from "../services/Company.service";
+import { CompanyDetailModel } from "../db/models/CompanyDetail.model";
 
 /**
  * UserExperienceController
@@ -49,10 +53,16 @@ class UserExperienceController {
         throw new RequestValidationError(error);
       }
 
-      const result = await UserExperienceService.get(email);
-
+      const userExperience = await UserExperienceService.get(email);
+      const companyIDs: string[] = userExperience.map(obj => obj.companyId);
+      const companyDetails  = await CompanyService.getCompanyDetailsByIds(companyIDs);
+      
+      const finalUserExperience = userExperience.map((item, index) => ({
+        ...item,
+        companyLogoUrl: companyDetails[index].logoUrl
+      }));
       // Send successful response with user data
-      res.status(HttpStatusCode.OK_200).json(result);
+      res.status(HttpStatusCode.OK_200).json(finalUserExperience);
     } catch (error: any) {
       // Handle errors
 

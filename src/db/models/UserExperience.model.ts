@@ -7,6 +7,7 @@ import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the structure for User Experience Database Data Transfer Object (DTO)
 class DbUserExperienceDto extends BaseDbDto {
+  id! : string;
   department!: string;
   designation?: string;
   designationTag?: number;
@@ -16,6 +17,7 @@ class DbUserExperienceDto extends BaseDbDto {
   endedYear?: number;
   experienceInMonths?: number;
   companyName!: string;
+  companyId! : string;
   companySK!: string;
   emailId?: String;
   isEmailVerified?: boolean;
@@ -27,6 +29,10 @@ const UserExperienceSchema = new dynamoose.Schema(
   {
     // ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
     ...DB_CONSTANTS.WORKO_PK_SK,
+    id: {
+      type: String,
+      required: true,
+    },
     department: {
       type: String,
       required: true,
@@ -60,6 +66,10 @@ const UserExperienceSchema = new dynamoose.Schema(
       required: false,
     },
     companyName: {
+      type: String,
+      required: true,
+    },
+    companyId: {
       type: String,
       required: true,
     },
