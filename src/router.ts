@@ -3,10 +3,10 @@ import { Router } from "express";
 
 // Load local packages
 
-//Company routers
+// Company routers
 import CompanyRouter from "./routers/Company.router";
 
-//User routers
+// User routers
 import UserRouter from "./routers/User.router";
 import UserDetailRouter from "./routers/UserDetail.router";
 import UserExperienceRouter from "./routers/UserExperience.router";
@@ -25,16 +25,19 @@ import UserAvailabilityRouter from "./routers/UserAvailability.router";
 import UserReviewRouter from "./routers/UserReview.router";
 import UserSupportRouter from "./routers/UserSupport.router";
 
-//File routers
+// File routers
 import FileRouter from "./routers/File.router";
 
-//Referral routers
+// Referral routers
 import ReferralRouter from "./routers/Referral.router";
 
-//Master routers
+// Master routers
 import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
 import MasterServiceRouter from "./routers/MasterService.router";
 import EmailTemplateRouter from "./routers/EmailTemplate.router";
+
+// Other
+import TestRouter from "./routers/Test.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -105,6 +108,9 @@ router.use("/mservice", MasterServiceRouter);
 // Register the "Email Template" routers.
 // Note: These actions are only for users with "admin" role. @todo add required authorizations.
 router.use("/email-template", EmailTemplateRouter);
+
+// Just a test controller to perform some testing operations required to confirm the changes made in the application.
+router.use("/test", TestRouter);
 
 // Register the "User Support " routers
 router.use("/support", UserSupportRouter);

@@ -240,8 +240,8 @@ class UserReferralController {
     try {
       global.logger.info("update referral status [controller]");
 
-      const { emailAddress, referralId, status } = req.params;
-      const { error } = UserReferralStatusValidation.validate(status, {
+      const { candEmail, referralId, newStatus } = req.params;
+      const { error } = UserReferralStatusValidation.validate(newStatus, {
         abortEarly: false,
       });
 
@@ -251,8 +251,8 @@ class UserReferralController {
 
       const result = await UserReferralService.updateStatus(
         referralId,
-        emailAddress,
-        status
+        candEmail,
+        newStatus
       );
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error) {

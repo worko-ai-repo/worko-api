@@ -184,6 +184,52 @@ class EmailTemplateController {
       next(error);
     }
   };
+
+  /**
+   * deleteEmailTemplateByName
+   *
+   * Delete the already created email template from AWS SES and local database.
+   * 
+   * Note: The delete should not be allowed usually.
+   * If you really want to delete the template then know that once it is deleted it cannot be used or recovered.
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  deleteEmailTemplateByName = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Get mail template name
+      const templateName: string = req.params["templateName"];
+
+      // Logger message
+      global.logger.info(`Request received to delete "${templateName}" master email template.`, {
+        filePath: __filename,
+        methodName: this.deleteEmailTemplateByName.name
+      });
+
+      // Check if value is not present
+      if (!templateName) {
+        // Logger message
+        global.logger.error("Request data validation failed.", {
+          filePath: __filename,
+          methodName: this.deleteEmailTemplateByName.name,
+          templateName: templateName,
+        });
+
+        throw new BaseError("Template name is required.", HttpStatusCode.BAD_REQUEST_400);
+      }
+
+      // Delete the email template from AWS SES and local db
+      const deleteTemplateRes = await emailTemplateService.deleteEmailTemplateByName(templateName);
+
+      // Send response with with the status
+      res.status(HttpStatusCode.OK_200).json(deleteTemplateRes);
+    } catch (error) {
+      // Pass the error to the next error handler
+      next(error);
+    }
+  };
 }
 
 export default EmailTemplateController;

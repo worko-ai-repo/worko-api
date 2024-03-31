@@ -30,6 +30,7 @@ import { UserReferralResponseModel } from "./models/UserReferralResponse.model";
 import { MasterSubscriptionModel } from "./models/MasterSubscription.model";
 import { MasterServiceModel } from "./models/MasterService.model";
 import { EmailTemplateModel } from "./models/EmailTemplate.model";
+import { EmailLogModel } from "./models/EmailLog.model";
 import { UserReviewModel } from "./models/UserReview.model";
 import { UserRatingAvgModel } from "./models/UserRatingAvg.model";
 import { UserSupportModel } from "./models/UserSupport.model";
@@ -126,6 +127,7 @@ class DBConfig {
       MasterSubscriptionModel,
       MasterServiceModel,
       EmailTemplateModel,
+      EmailLogModel,
       UserReviewModel,
       UserRatingAvgModel,
       UserSupportModel,

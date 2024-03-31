@@ -55,10 +55,27 @@ const APP_CONSTANTS = {
   // If "pageSize" from the request does not match with one of the "PAGE_LENGTH_OPTIONS" value, then this value would be used.
   PAGE_LENGTH_DEFAULT: 25,
 
+  /**
+   * AWS Lambada Configurations related to triggering "Resume Extraction" and "Matching JS Score" Lambda functions.
+   */
   RESUME_EXTRACTION_LAMBDA_NAME: "resume-parser",
   MATCHING_SCORE_LAMBDA_NAME: "worko-jd-resume-matching",
   MATCHING_SCORE_PROMPT:
     "From above mentioned Resume and Job description, please match on following parameters and provide score(out of 10) and brief explanation for every parameters and also provide overall matching score.\n1. experience in year\n2. Role \n3.  skills(technical, soft and core)\n4. education\n5. industry experience\n6. responsibilities\n7. certifications\nAssistant:",
+
+  /**
+   * SOURCE_EMAIL_ADDRESS
+   * 
+   * Possible source email addresses & names would be used as sender while sending emails outside the application.
+   * 
+   * Here you may consider adding additional sources for different use cases and use them in the application.
+   */
+  SOURCE_EMAIL_ADDRESS: {
+    WORKO_DEFAULT: {
+      email: "suraj@worko.ai",
+      fullName: "Suraj Yadav"
+    },
+  },
 };
 
 export default APP_CONSTANTS;

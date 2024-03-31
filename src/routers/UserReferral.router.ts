@@ -20,7 +20,7 @@ UserReferralRouter.post("/:id/referral/request", userReferralController.createRe
 UserReferralRouter.get("/:id/referral/:referralId/score",userReferralController.getMatchingScore
 );
 
-UserReferralRouter.patch("/:emailAddress/referral/:referralId/:status", userReferralController.updateStatus
+UserReferralRouter.patch("/:candEmail/referral/:referralId/:newStatus", userReferralController.updateStatus
 );
 
 export default UserReferralRouter;

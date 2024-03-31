@@ -14,6 +14,7 @@ const EmailTemplateRouter = Router();
 EmailTemplateRouter.post("/", emailTemplateController.createEmailTemplate);
 EmailTemplateRouter.put("/:templateName", emailTemplateController.updateEmailTemplate);
 EmailTemplateRouter.get("/:templateName", emailTemplateController.getEmailTemplateByTemplateName);
+EmailTemplateRouter.delete("/:templateName", emailTemplateController.deleteEmailTemplateByName);
 
 // Export the "EmailTemplateRouter"
 export default EmailTemplateRouter;

@@ -1,6 +1,3 @@
-// Installed packages
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-
 // Load the base dao
 import BaseDao from "./Base.dao";
 
@@ -25,40 +22,31 @@ class EmailTemplateDao implements BaseDao {
   GSI1SK = "EMAIL#{templateName}";
 
   /**
-   * getEmailTemplate
-   * 
-   * Get master email templates
-   * 
-   * @returns {}
-   */
-  /* async getEmailTemplate() {
-    return EmailTemplateModel.query("PK")
-      .eq(this.partitianKey)
-      .exec();
-  } */
-
-  /**
    * getEmailTemplateByTemplateName
    * 
    * Get a master email template by the provided template name
    * 
    * @param {string} templateName
-   * @returns {Promise<QueryResponse<DbEmailTemplateDto>>}
+   * @returns {Promise<DbEmailTemplateDto | undefined>}
    */
-  async getEmailTemplateByTemplateName(templateName: string): Promise<QueryResponse<DbEmailTemplateDto>> {
+  async getEmailTemplateByTemplateName(templateName: string): Promise<DbEmailTemplateDto | undefined> {
+    // Prepare the PK & SK
+    const PK = this.partitianKey;
+    const SK = this.sortKeys.SK_INIT.strtr({
+      "{templateName}": templateName
+    })
+
     // Logger message
     global.logger.info("Get the master email template details for the provided template name (request).", {
       filePath: __filename,
       methodName: this.getEmailTemplateByTemplateName.name,
       templateName: templateName,
+      PK: PK,
+      SK: SK,
     });
 
     // Get the template details and return
-    return EmailTemplateModel.query("PK")
-      .eq(this.partitianKey)
-      .where("templateName")
-      .eq(templateName)
-      .exec();
+    return EmailTemplateModel.get({ PK, SK });
   }
 
   /**
@@ -142,6 +130,33 @@ class EmailTemplateDao implements BaseDao {
       "{templateName}": template.templateName
     });
     return EmailTemplateModel.update({ PK: PK, SK: SK }, templateDbDetails);
+  }
+  
+  /**
+   * deleteEmailTemplateByName
+   * 
+   * Delete the already created email template from local database.
+   * 
+   * Note: The delete should not be allowed usually.
+   * If you really want to delete the template then know that once it is deleted it cannot be used or recovered.
+   * 
+   * @param {string} templateName
+   * @returns {Promise<void>}
+   */
+  async deleteEmailTemplateByName(templateName: string): Promise<void> {
+    // Logger message
+    global.logger.warn("Deleting master email template from local database (data).", {
+      filePath: __filename,
+      methodName: this.deleteEmailTemplateByName.name,
+      templateName: templateName,
+    });
+
+    // Prepare details required to delete the email template and actually delete it
+    let PK: string = this.partitianKey;
+    let SK: string = this.sortKeys.SK_INIT.strtr({
+      "{templateName}": templateName
+    });
+    return EmailTemplateModel.delete({ PK: PK, SK: SK });
   }
 }
 

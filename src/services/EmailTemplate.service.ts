@@ -146,10 +146,53 @@ class EmailTemplateService {
    * Get existing email template details from the local database
    *
    * @param {string} templateName
-   * @returns {Promise<QueryResponse<DbEmailTemplateDto>>}
+   * @returns {Promise<DbEmailTemplateDto | undefined>}
    */
-  async getEmailTemplateByTemplateName(templateName: string): Promise<QueryResponse<DbEmailTemplateDto>> {
+  async getEmailTemplateByTemplateName(templateName: string): Promise<DbEmailTemplateDto | undefined> {
     return emailTemplateDao.getEmailTemplateByTemplateName(templateName);
+  }
+
+  /**
+   * deleteEmailTemplateByName
+   * 
+   * Delete the already created email template from AWS SES and local database.
+   * 
+   * Note: The delete should not be allowed usually.
+   * If you really want to delete the template then know that once it is deleted it cannot be used or recovered.
+   *
+   * @param {string} templateName
+   * @returns {Promise<boolean>}
+   */
+  async deleteEmailTemplateByName(templateName: string): Promise<boolean> {
+    // == Delete the email template from AES SES
+    let deleteTemplateSesResponse: any = await awsSesClientLibrary.deleteEmailTemplateByName(templateName);
+    
+    // Logger message
+    global.logger.warn("Deleting master email template from AWS SES (response).", {
+      filePath: __filename,
+      methodName: this.deleteEmailTemplateByName.name,
+      templateName: templateName,
+      deleteTemplateSesResponse: deleteTemplateSesResponse,
+    });
+
+    // Check if the Email Template was not deleted in the AWS SES
+    // Note: It is just requestId returned by AWS, it does not indicate whether the email is deleted or not.
+    // But it can help to get more information from the AWS if required.
+    if (!deleteTemplateSesResponse?.ResponseMetadata?.RequestId) {
+      return false;
+    }
+
+    // == Delete the email template from local database
+    let deleteTemplateDbResponse = await emailTemplateDao.deleteEmailTemplateByName(templateName);
+
+    // Logger message
+    global.logger.warn("Deleting master email template from local database (response).", {
+      filePath: __filename,
+      methodName: this.deleteEmailTemplateByName.name,
+      deleteTemplateDbResponse: deleteTemplateDbResponse,
+    });
+
+    return true;
   }
 }
 

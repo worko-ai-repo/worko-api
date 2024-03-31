@@ -43,6 +43,12 @@ class AwsSesClientLibrary {
   }
 
   /**
+   * ********************************************************************************************************************************************
+   * Manage Email Templates
+   * ********************************************************************************************************************************************
+   */
+
+  /**
    * createEmailTemplate
    * 
    * Create a new email template in AWS SES based on the data provided
@@ -75,15 +81,86 @@ class AwsSesClientLibrary {
   }
   
   /**
+   * deleteEmailTemplateByName
+   * 
+   * Delete the provided email template from AWS SES.
+   * 
+   * Note: The delete should not be allowed usually.
+   * It you really want to delete the template then know that once it is deleted it cannot be used or recovered.
+   * 
+   * @param {string} templateName
+   * @returns {Promise<AWS.SES.Types.DeleteTemplateResponse>}
+   */
+  async deleteEmailTemplateByName(templateName: string): Promise<AWS.SES.Types.DeleteTemplateResponse> {
+    // Logger message
+    global.logger.warn("Deleting master email template from AWS SES (data).", {
+      filePath: __filename,
+      methodName: this.deleteEmailTemplateByName.name,
+      templateName: templateName,
+    });
+
+    // Delete the email template from AWS SES
+    return this.ses.deleteTemplate({ TemplateName: templateName }).promise();
+  }
+  
+  /**
    * getEmailTemplateByTemplateName
    * 
    * Get existing email template from AWS SES for the provided Template name
    * 
-   * @param {string} emailTemplate 
+   * @param {string} templateName 
    * @returns {Promise<AWS.SES.Types.GetTemplateResponse>}
    */
-  async getEmailTemplateByTemplateName(emailTemplate: string): Promise<AWS.SES.Types.GetTemplateResponse> {
-    return this.ses.getTemplate({ TemplateName: emailTemplate }).promise();
+  async getEmailTemplateByTemplateName(templateName: string): Promise<AWS.SES.Types.GetTemplateResponse> {
+    return this.ses.getTemplate({ TemplateName: templateName }).promise();
+  }
+
+  /**
+   * ********************************************************************************************************************************************
+   * Manage Sending Emails
+   * ********************************************************************************************************************************************
+   */
+
+  /**
+   * sendEmail
+   * 
+   * Send email using AWS SES with the provided details
+   * 
+   * @param {AWS.SES.Types.SendEmailRequest} emailDetails 
+   * @returns {Promise<AWS.SES.Types.SendEmailResponse>}
+   */
+  async sendEmail(emailDetails: AWS.SES.Types.SendEmailRequest): Promise<AWS.SES.Types.SendEmailResponse> {
+    // Logger message
+    global.logger.info("Sending email using AWS SES (data).", {
+      filePath: __filename,
+      methodName: this.sendEmail.name,
+      emailDetails: emailDetails,
+    });
+
+    // Send the email and return the response
+    return this.ses.sendEmail(emailDetails).promise();
+  }
+  
+  /**
+   * sendTemplatedEmail
+   * 
+   * Send email using AWS SES with the provided details (with template)
+   * 
+   * @param {AWS.SES.Types.SendTemplatedEmailRequest} emailDetails 
+   * @returns {Promise<AWS.SES.Types.SendTemplatedEmailResponse>}
+   */
+  async sendTemplatedEmail(emailDetails: AWS.SES.Types.SendTemplatedEmailRequest): Promise<AWS.SES.Types.SendTemplatedEmailResponse> {
+    // Logger message
+    global.logger.info("Sending email using AWS SES (data).", {
+      filePath: __filename,
+      methodName: this.sendTemplatedEmail.name,
+      templateName: emailDetails.Template,
+      toEmail: emailDetails.Destination.ToAddresses,
+      fromEmail: emailDetails.Source,
+    });
+
+    // Send the email and return the response
+    return this.ses.sendTemplatedEmail(emailDetails).promise();
   }
 }
 
