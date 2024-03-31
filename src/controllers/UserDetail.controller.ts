@@ -57,6 +57,7 @@ class UserDetailController {
 
       // Prepare the user id
       let userId: string = userDetails[0].SK?.split("#").pop() ?? "";
+      console.log("userId60: ", userId);
       let cvAwsS3SignedUrl = null;
       let profileImageAwsS3SignedUrl = null;
 
@@ -111,6 +112,84 @@ class UserDetailController {
       }
     }
   };
+  /**
+  * getByUserId
+  *
+  * Get the user based on the provided userId query parameters
+  *
+  * @param {Request} req
+  * @param {Response} res
+  * @param {NextFunction} next
+  */
+  getUserById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      global.logger.info("Get user detail by user id [controller]");
+
+      // Extract userId from request parameters
+      const userId = req.params.userId;
+
+      const userDetails = await UserDetailService.getUserById(userId);
+      if (!userDetails.count) {
+        throw new Error("User not found");
+      }
+
+      // Prepare the user id
+      let cvAwsS3SignedUrl = null;
+      let profileImageAwsS3SignedUrl = null;
+
+      // Check if CV is present
+      if (userDetails[0].CV) {
+        // Construct the file path in the cloud storage
+        const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_RESUME.strtr({
+          "{userId}": userId,
+        });
+
+        // Assume that you have a method to generate the object URL
+        cvAwsS3SignedUrl = await awsS3ClientLibrary.generateObjectUrl(
+          process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+          filePath + "/" + userDetails[0].CV
+        );
+      }
+
+      // Generate signed URL for profile image
+      if (userDetails[0].profileImage) {
+        // Construct the file path in the cloud storage
+        const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_PROFILE_PIC.strtr({
+          "{userId}": userId,
+        });
+
+        // Assume that you have a method to generate the object URL
+        profileImageAwsS3SignedUrl = await awsS3ClientLibrary.generateObjectUrl(
+          process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+          filePath + "/" + userDetails[0].profileImage
+        );
+      }
+
+      // Send successful response with user data
+      res.status(HttpStatusCode.OK_200).json([
+        {
+          ...userDetails[0],
+          cvAwsS3SignedUrl,
+          profileImageAwsS3SignedUrl,
+        },
+      ]);
+    } catch (error: any) {
+      // Handle errors
+
+      // Check if the error is due to user not found
+      if (error.message === "User not found") {
+        // If user not found, send a 404 response with an informative error message
+        res
+          .status(HttpStatusCode.NOT_FOUND_404)
+          .json({ error: "User not found. Please check the user ID." });
+      } else {
+        // If it's another type of error, pass it to the next error handler
+        next(error);
+      }
+    }
+  };
+
+
 
   /**
    * create

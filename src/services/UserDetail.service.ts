@@ -28,9 +28,9 @@ class UserDetailService {
    * @param email - Email of the user
    * @returns {Promise<any>} - Details of the user
    */
-  async getByUserId(userId: string) {
+  async getUserById(userId: string) {
     console.log("Get user detail by email [service]");
-    return userDetailDao.getByUserId(userId);
+    return userDetailDao.getUserById(userId);
   }
 
   /**

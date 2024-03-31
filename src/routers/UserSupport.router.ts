@@ -10,17 +10,16 @@ const userSupportController = new UserSupportController();
 // Route to hold the routes (CRUD, etc) related to "UserSupport" table
 const UserSupportRouter = Router();
 
-// Create support 
-UserSupportRouter.post("/support", userSupportController.createSupport);
+// Create support router , "/" is the base url acutal will be (api/support/)
+UserSupportRouter.post("/", userSupportController.createSupport);
 
 // Get all support details raised by user 
-UserSupportRouter.get("/support", userSupportController.getUserSupportList);
+UserSupportRouter.get("/", userSupportController.getUserSupportList);
 
 // Get support details for mention supportId 
-UserSupportRouter.get("/support/:supportId", userSupportController.getSupportById);
+UserSupportRouter.get("/:supportId", userSupportController.getSupportById);
 
 // Updates support for mention supportId 
-UserSupportRouter.put("/support/:supportId", userSupportController.updateSupportById);
-
+UserSupportRouter.put("/:supportId", userSupportController.updateSupportById);
 
 export default UserSupportRouter;

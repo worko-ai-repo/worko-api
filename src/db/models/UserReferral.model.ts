@@ -7,6 +7,7 @@ import { BaseDbDto } from "./Base.model";
 
 // Define the structure for User Experience Database Data Transfer Object (DTO)
 class DbUserReferralDto extends BaseDbDto {
+  id!: string;
   status!: string;
   companySK!: string;
   jobUrl!: string;
@@ -25,6 +26,10 @@ class DbUserReferralDto extends BaseDbDto {
 const UserReferralSchema = new dynamoose.Schema(
   {
     ...DB_CONSTANTS.WORKO_PK_SK,
+    id: {
+      type: String,
+      required: true,
+    },
     status: {
       type: String,
       required: true,

@@ -47,15 +47,13 @@ class UserDetailDao implements BaseDao {
    * @param userId - userId  of the user
    * @returns User details corresponding to the email
    */
-  async getByUserId(userId: string) {
+  async getUserById(userId: string) {
     global.logger.info("Get user getByUserId id [DAO]");
     const GSI1PK = this.GSI1PK;
     const GSI1SK = this.GSI1SK.strtr({
       "{userId}": userId,
     });
-
     // return UserDetailModel.get({ GSI1PK: GSI1PK, GSI1SK: GSI1SK })
-
     return UserDetailModel.query("GSI1PK")
       .eq(GSI1PK)
       .where("GSI1SK")

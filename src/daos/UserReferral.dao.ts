@@ -81,8 +81,13 @@ class UserReferralDao implements BaseDao {
     email: string
   ) {
     global.logger.info("Create referral [DAO]");
+
+    // Prepare id 
+    const id = UlidService.getUlidId();
+
+    // Prepare the SK
     const SK = this.sortKeys.SK_REFERRAL.strtr({
-      "{reqId}": UlidService.getUlidId(),
+      "{reqId}": id,
     });
     // Splitting referralRequest.SK into three parts using '#' delimiter
     const [refPrefix, refId, refNum] = SK.split("#");
@@ -94,6 +99,7 @@ class UserReferralDao implements BaseDao {
     // const mScore = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
     const mScore = 0;
     const newReferralRequest = {
+      id: id,
       PK: this.partitianKey.strtr({
         "{primaryEmail}": email,
       }),

@@ -107,7 +107,7 @@ router.use("/mservice", MasterServiceRouter);
 router.use("/email-template", EmailTemplateRouter);
 
 // Register the "User Support " routers
-router.use("/user", UserSupportRouter);
+router.use("/support", UserSupportRouter);
 
 // Export the router
 export default router;

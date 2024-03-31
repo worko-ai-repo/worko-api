@@ -56,7 +56,7 @@ class UserReviewController {
             }
 
             // Retrieve user details by userId
-            const userDetail = await userDetailService.getByUserId(userId);
+            const userDetail = await userDetailService.getUserById(userId);
             if (!userDetail) {
                 return res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found" });
             }
@@ -102,7 +102,7 @@ class UserReviewController {
 
 
             // Retrieve user details by userId
-            const userDetail = await userDetailService.getByUserId(userId);
+            const userDetail = await userDetailService.getUserById(userId);
             if (!userDetail) {
                 return res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found" });
             }
@@ -140,7 +140,7 @@ class UserReviewController {
             // Get user email id from url path for whom review has to be retrived
             const userId = req.params.userId;
             // Retrieve user details by userId
-            const userDetail = await userDetailService.getByUserId(userId);
+            const userDetail = await userDetailService.getUserById(userId);
             if (!userDetail) {
                 return res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found" });
             }
