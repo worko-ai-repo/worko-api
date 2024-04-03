@@ -15,7 +15,7 @@ class DbUserSupportDto extends BaseDbDto {
     userId!: string;
     userEmail!: string;
     userFirstName!: string;
-    userLastName!: string;
+    userLastName?: string;
     userRole!: UserType;
     userSupportType!: string;
     userMessage!: string;
@@ -68,7 +68,7 @@ const UserSupportSchema = new dynamoose.Schema(
         },
         userFirstName: {
             type: String,
-            required: true
+            required: false
         },
         userLastName: {
             type: String,

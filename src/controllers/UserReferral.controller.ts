@@ -10,6 +10,7 @@ import {
   UserReferralEmployeeStatusValidation,
   UserReferralRequestDTOValidation,
   UserReferralStatusValidation,
+  userReferralDataForWithdrawnValidation,
 } from "../schemas/UserReferral.schema";
 import { validateEmailField } from "../schemas/User.schema";
 
@@ -24,10 +25,14 @@ import { RequestValidationError } from "../utils/errors.util";
 import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import InvokeLambdaService from "../services/InvokeLambda.service";
+
+import CompanyService from "../services/Company.service";
+import { UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
+
 import { EmailSourceDestinationAddress } from "../libraries/email.library";
 import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED } from "../dtos/EmailTemplatePlaceholder.dto";
-import { UserModel } from "../db/models/User.model";
 import UserDetailService from "../services/UserDetail.service";
+
 
 /**
  * UserReferralController
@@ -65,15 +70,30 @@ class UserReferralController {
       } else {
         result = await UserReferralService.get(value);
       }
+      console.log("result : 65 ", result);
+
+      const companyIDs: string[] = result.map(obj => obj.companyId);
+
+      //  Fetch company details for each unique company ID
+      let uniqueCompanyIds = companyIDs.map(companyID => CompanyService.getCompanyDetailsByIds([companyID]));
+      let companyDetailsResults = await Promise.all(uniqueCompanyIds);
+      const finalUserReferral = result.map((item, index) => {
+        const companyDetails = companyDetailsResults[index][0];
+        const companyName = companyDetails ? companyDetails.name : null;
+        return {
+          ...item,
+          companyName: companyName,
+        };
+      });
 
       /* status && typeof status === "string"
         ? result = await UserReferralService.getByStatus(email, status)
         : result = await UserReferralService.get(email); */
 
       // Send a successful response with user data
-      res.status(HttpStatusCode.OK_200).json(result);
+      res.status(HttpStatusCode.OK_200).json(finalUserReferral);
     } catch (error: any) {
-      // Handle errors
+      // Handle errors  
 
       // Check if the error is due to user not found
       if (error.message === "User not found") {
@@ -107,17 +127,16 @@ class UserReferralController {
       logger.info("Get Referral by GSI1PK and status [controller]");
 
       // Extract email from request parameters
-      const companySK = req.params.companySK;
+      const companyId = req.params.companyId;
       const status = req.query.status;
       let result;
-
       if (status && typeof status === "string") {
         result = await UserReferralService.getByGSI1PKAndStatus(
-          companySK,
+          companyId,
           status
         );
       } else {
-        result = await UserReferralService.getByGSI1PK(companySK);
+        result = await UserReferralService.getByGSI1PK(companyId);
       }
 
       /* status && typeof status === "string"
@@ -207,6 +226,7 @@ class UserReferralController {
         emailId
       );
       // invoke score matching lambda function
+      // @todo : add logic code to check if  it has been tested on local or not 
       await InvokeLambdaService.triggerMatchingScoreCalculation(email, referralRequestId.referralRequestId);
 
       res.status(HttpStatusCode.OK_200).json(referralRequestId);
@@ -244,6 +264,8 @@ class UserReferralController {
     try {
       global.logger.info("update referral status [controller]");
 
+      let userReferralDataForWithdrawn: UserReferralStatusChangeByCandDTO = req.body;
+
       const { candEmail, referralId, newStatus } = req.params;
       const { error } = UserReferralStatusValidation.validate(newStatus, {
         abortEarly: false,
@@ -252,12 +274,22 @@ class UserReferralController {
       if (error) {
         throw new RequestValidationError(error);
       }
-
+      if (newStatus === "WITHDRAWN") {
+        const { error } = userReferralDataForWithdrawnValidation.validate(userReferralDataForWithdrawn, {
+          abortEarly: false,
+        });
+        if (error) {
+          throw new RequestValidationError(error);
+        }
+      }
+      // Call the service method to update the referral status
       const result = await UserReferralService.updateStatus(
         referralId,
         candEmail,
-        newStatus
+        newStatus,
+        userReferralDataForWithdrawn
       );
+
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error) {
       // Handle errors
@@ -265,6 +297,7 @@ class UserReferralController {
       next(error);
     }
   };
+
 
   /**
    * updateStatusByEmployee
@@ -281,7 +314,7 @@ class UserReferralController {
     next: NextFunction
   ) => {
     try {
-      global.logger.info("update referral status  employee  [controller]");
+      global.logger.info("update referral status employee [controller]");
 
       const { referralId } = req.params;
       const referralstatusUpdate = req.body;
@@ -297,7 +330,7 @@ class UserReferralController {
       }
 
       const userId = referralstatusUpdate.userId;
-      let referral = await UserReferralService.getByGSI1(referralId); //Featching the referral details
+      let referral = await UserReferralService.getByGSI1(referralId); //Fetching the referral details
 
       // From the referral, get the candidate's name and email for sending email
       const candPK: string = referral[0].PK;
@@ -328,21 +361,24 @@ class UserReferralController {
         rejectedRefIds: [],
       };
 
+      // Define currentDate variable
+      const currentDate = new Date().toISOString();
+
       switch (referralstatusUpdate.action) {
         case ReferralActions.PASS:
           // Update passedByUserIds for PASS action
           let updatedPassedByUserIds: string[] = referral
             ? referral.count === 0
               ? (() => {
-                  throw new Error("Wrong referralId");
-                })()
+                throw new Error("Wrong referralId");
+              })()
               : referral[0].passedByUserIds &&
                 Object.keys(referral[0].passedByUserIds).length === 0
-              ? (referral[0].passedByUserIds = [userId])
-              : referral[0].passedByUserIds
-              ? (referral[0].passedByUserIds.push(userId),
-                referral[0].passedByUserIds)
-              : [userId] // Return an array with userId when referral[0].passedByUserIds is falsy
+                ? (referral[0].passedByUserIds = [{ userId, actionDate: currentDate }])
+                : referral[0].passedByUserIds
+                  ? (referral[0].passedByUserIds.push({ userId, actionDate: currentDate }),
+                    referral[0].passedByUserIds)
+                  : [{ userId, actionDate: currentDate }] // Return an array with userId when referral[0].passedByUserIds is falsy
             : [];
 
           referral[0].passedByUserIds = updatedPassedByUserIds;
@@ -363,18 +399,28 @@ class UserReferralController {
           let updatedRejectedByUserIds: string[] = referral
             ? referral.count === 0
               ? (() => {
-                  throw new Error("Wrong referralId");
-                })()
+                throw new Error("Wrong referralId");
+              })()
               : referral[0].rejectedByUserIds &&
                 Object.keys(referral[0].rejectedByUserIds).length === 0
-              ? (referral[0].rejectedByUserIds = [userId])
-              : referral[0].rejectedByUserIds
-              ? (referral[0].rejectedByUserIds.push(userId),
-                referral[0].rejectedByUserIds)
-              : [userId] // Return an array with userId when referral[0].passedByUserIds is falsy
+                ? (referral[0].rejectedByUserIds = [{
+                  userId, actionDate: currentDate,
+                  reason: referralstatusUpdate.reason, userComment: referralstatusUpdate.userComment
+                }])
+                : referral[0].rejectedByUserIds
+                  ? (referral[0].rejectedByUserIds.push({
+                    userId, actionDate: currentDate,
+                    reason: referralstatusUpdate.reason, userComment: referralstatusUpdate.userComment
+                  }),
+                    referral[0].rejectedByUserIds)
+                  : [{
+                    userId, actionDate: currentDate, reason: referralstatusUpdate.reason,
+                    userComment: referralstatusUpdate.userComment,
+                  }] // Return an array with userId when referral[0].passedByUserIds is falsy
             : [];
 
           referral[0].rejectedByUserIds = updatedRejectedByUserIds;
+          referral.status = ReferralStatus.REJECTED;
 
           // If updateReferralResponse is true, indicating an existing referral response,
           // add the current referralId to the rejectedRefIds array of the first referralResponse entry.
@@ -392,39 +438,42 @@ class UserReferralController {
           let updatedAcceptedByUserId: string = referral
             ? referral.count === 0
               ? (() => {
-                  throw new Error("Wrong referralId");
-                })()
+                throw new Error("Wrong referralId");
+              })()
               : referral[0].acceptedByUserId
-              ? (() => {
+                ? (() => {
                   throw new Error(
                     "Referral already accepted by other employee"
                   );
                 })()
-              : userId
+                : userId
             : "";
 
           referral[0].acceptedByUserId = updatedAcceptedByUserId;
           referral[0].status = ReferralStatus.ACCEPTED;
+          referral[0].acceptedAtByUser = currentDate; // Set acceptedAtByUser property
+
           break;
 
         case ReferralActions.DONE:
           let updatedDoneByEmployee: Date = referral
             ? referral.count === 0
               ? (() => {
-                  throw new Error("Wrong referralId");
-                })()
+                throw new Error("Wrong referralId");
+              })()
               : referral[0].doneByEmployee
-              ? (() => {
+                ? (() => {
                   throw new Error("Referral already done by you");
                 })()
-              : new Date()
+                : new Date()
             : (() => {
-                throw new Error("unable to featch referral");
-              })();
+              throw new Error("unable to fetch referral");
+            })();
 
           referral[0].doneByEmployee = updatedDoneByEmployee;
           referral[0].doneByUserId = userId;
           referral[0].status = ReferralStatus.DONE;
+
           break;
 
         default:
@@ -475,6 +524,12 @@ class UserReferralController {
       next(error);
     }
   };
+
+
+
+
+
+
 }
 
 export default UserReferralController;

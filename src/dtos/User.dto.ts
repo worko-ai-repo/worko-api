@@ -11,7 +11,7 @@ export interface UserSignUpDTO {
 }
 
 export interface UserReferralRequestDTO {
-  companySK: string;
+  companyId: string;
   jobUrl: string;
   jdExtracted?: string;
 }

@@ -27,10 +27,7 @@ export const userSupportCreateApiDtoValidation = Joi.object({
     }),
 
     // Validate userLastName field
-    userLastName: Joi.string().required().messages({
-        "any.required": "User last name is required.",
-        "string.empty": "User last name should not be empty.",
-    }),
+    userLastName: Joi.string().optional(),
 
     // Validate userRole field
     userRole: Joi.string().valid(...Object.values(UserType)).required().messages({

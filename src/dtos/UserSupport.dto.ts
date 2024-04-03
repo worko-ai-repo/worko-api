@@ -10,7 +10,7 @@ export interface UserSupportCreateApiDto {
     userId: string;
     userEmail: string;
     userFirstName: string;
-    userLastName: string;
+    userLastName?: string;
     userRole: UserType;
     userSupportType: string; // This is Predefined Type in Ui and it should be from Dropdown .
     userMessage: string;
@@ -29,7 +29,7 @@ export interface UserSupportCreateDto {
     userId: string;
     userEmail: string;
     userFirstName: string;
-    userLastName: string;
+    userLastName?: string;
     userRole: UserType;
     userSupportType: string;
     userMessage: string;

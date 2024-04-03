@@ -5,7 +5,7 @@ import UserService from "./User.service";
 // Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
 import CompanyJobService from "./CompanyJob.service";
-import { UserReferralDTO } from "../dtos/UserReferral.dto";
+import { UserReferralDTO, UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED, EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED } from "../dtos/EmailTemplatePlaceholder.dto";
 import { EmailTemplateNameEnum } from "../enums/EmailTemplate.enum";
@@ -85,7 +85,7 @@ class UserReferralService {
    * @param email - Email of the user
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async get(email: string): Promise<any> {
+  async get(email: string) {
     // Logging the action of getting user Referral by email in the service layer
     logger.info("Fetching user Referral by email [UserReferralService]");
     return userReferralDao.get(email);
@@ -95,14 +95,14 @@ class UserReferralService {
    *
    * Fetches Referral based on  companySK
    *
-   * @param companySK - Company sort key
+   * @param companyId - Company sort key
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    *
    */
-  async getByGSI1PK(companySK: string): Promise<any> {
-    // Logging the action of getting user Referral by companySK in the service layer
-    logger.info("Fetching Referrals by companySK  [UserReferralService]");
-    return userReferralDao.getByGSI1PK(companySK);
+  async getByGSI1PK(companyId: string): Promise<any> {
+    // Logging the action of getting user Referral by companyId in the service layer
+    logger.info("Fetching Referrals by companyId  [UserReferralService]");
+    return userReferralDao.getByGSI1PK(companyId);
   }
 
   /**
@@ -155,9 +155,10 @@ class UserReferralService {
    * @param status - referral status
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getByStatus(email: string, status: string): Promise<any> {
+  async getByStatus(email: string, status: string) {
     // Logging the action of getting user Referral by status in the service layer
     logger.info("Fetching user Referral by status [UserReferralService]");
+
     return userReferralDao.getByStatus(email, status);
   }
 
@@ -172,15 +173,26 @@ class UserReferralService {
   async updateStatus(
     referralId: string,
     candEmail: string,
-    newStatus: string
-  ): Promise<any> {
-    // Logging the action of getting user Referral by email in the service layer
+    newStatus: string,
+    userReferralDataForWithdrawn?: UserReferralStatusChangeByCandDTO
+  ) {
+
+    // Logging the action of updating user Referral status in the service layer
     global.logger.info("Updating user Referral status [UserReferralService]");
-    let result = await userReferralDao.updateStatus(referralId, candEmail, newStatus);
+
+    let result;
+
+    // Check if userReferralDataForWithdrawn are provided and the newStatus is "WITHDRAWN"
+    if (userReferralDataForWithdrawn && newStatus === ReferralStatus.WITHDRAWN) {
+      userReferralDataForWithdrawn.actionDate = new Date();
+      result = await userReferralDao.updateStatusForWithdrawal(referralId, candEmail, newStatus, userReferralDataForWithdrawn);
+    } else {
+      // If userReferralDataForWithdrawn are not provided or the status is not "WITHDRAWN", update status without withdrawal details
+      result = await userReferralDao.updateStatus(referralId, candEmail, newStatus);
+    }
 
     // If the details are updated and newStatus is "ACCEPTED", then email should be sent to the candidate saying that his referral request has been accepted
-    if(result && newStatus === ReferralStatus.ACCEPTED)
-    {
+    if (result && newStatus === ReferralStatus.ACCEPTED) {
       // Get the Candidate Details from his candEmail
       const userDetails = await UserService.getUserByEmail(candEmail);
       const candName: string = userDetails[0].name;
@@ -195,10 +207,14 @@ class UserReferralService {
       }
 
       // Function responsible for sending the email to the candidate saying that his referral request has been accepted
-      const sendEmailResponse = await this.sendEmailToCandWhenReferralRequestAccepted(emailPlaceholders,toAddress);
+      const sendEmailResponse = await this.sendEmailToCandWhenReferralRequestAccepted(emailPlaceholders, toAddress);
     }
+
     return result;
   }
+
+
+
 
   /**
    * updates the status of user Referral
@@ -235,9 +251,9 @@ class UserReferralService {
   ): Promise<{ awsMessageId: string | null }> {
     // Send email using the email library with the specified template, recipient, and placeholders
     return emailLibrary.sendEmail(
-        EmailTemplateNameEnum.CAND_REFERRAL_REQ_ACCEPTED,
-        toAddress,
-        emailPlaceholders,
+      EmailTemplateNameEnum.CAND_REFERRAL_REQ_ACCEPTED,
+      toAddress,
+      emailPlaceholders,
     );
   }
 

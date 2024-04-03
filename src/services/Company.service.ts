@@ -19,7 +19,7 @@ import { RecordListingFilterOptions } from "../dtos/Common.dto";
  * CompanyService class responsible for managing company-related operations.
  */
 class CompanyService {
-  constructor() {}
+  constructor() { }
 
   /**
    *
@@ -36,8 +36,7 @@ class CompanyService {
    * @param ids 
    * Returns the list of companies having the InputKeys
    */
-  async getCompanyDetailsByIds(ids: string[])
-  {
+  async getCompanyDetailsByIds(ids: string[]) {
     return companyDetailDao.getCompanyDetailsByIds(ids)
   }
   /**

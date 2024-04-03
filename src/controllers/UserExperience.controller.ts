@@ -53,15 +53,22 @@ class UserExperienceController {
         throw new RequestValidationError(error);
       }
 
+      // retrive the user experience based on the email 
       const userExperience = await UserExperienceService.get(email);
+      // get the company Id
       const companyIDs: string[] = userExperience.map(obj => obj.companyId);
-      const companyDetails  = await CompanyService.getCompanyDetailsByIds(companyIDs);
-      
+
+      //  Fetch company details for each unique company ID
+      let uniqueCompanyIds = companyIDs.map(companyID => CompanyService.getCompanyDetailsByIds([companyID]));
+      let companyDetailsResults = await Promise.all(uniqueCompanyIds);
+
+      // Prepare response data
       const finalUserExperience = userExperience.map((item, index) => ({
         ...item,
-        companyLogoUrl: companyDetails[index].logoUrl
+        companyLogoUrl: companyDetailsResults[index][0]?.logoUrl || null,
       }));
-      // Send successful response with user data
+
+      // Send successful response with user data and company details
       res.status(HttpStatusCode.OK_200).json(finalUserExperience);
     } catch (error: any) {
       // Handle errors
@@ -69,15 +76,14 @@ class UserExperienceController {
       // Check if the error is due to user not found
       if (error.message === "User not found") {
         // If user not found, send a 404 response with an informative error message
-        res
-          .status(HttpStatusCode.NOT_FOUND_404)
-          .json({ error: "User not found. Please check the email." });
+        res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found. Please check the email." });
       } else {
         // If it's another type of error, pass it to the next error handler
         next(error);
       }
     }
   };
+
 
   /**
    * create
@@ -95,7 +101,7 @@ class UserExperienceController {
 
       // Extract email from request parameters
       const email = req.params.id;
-     
+
       const { error: emailError, value: emailId } = validateEmailField(email);
 
       const userExperienceDTO: UserExperienceDTOWithId[] = req.body;

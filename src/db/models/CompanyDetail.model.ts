@@ -7,7 +7,7 @@ import { BaseDbDto } from "./Base.model";
 
 // Declaring a class 'CompanyDetailsDbDto' that extends 'BaseDbDto' with specific properties for company details
 class DbCompanyDetailDto extends BaseDbDto {
-  id! : string;
+  id!: string;
   GSI1PK!: string;
   GSI1SK!: string;
   name!: string;

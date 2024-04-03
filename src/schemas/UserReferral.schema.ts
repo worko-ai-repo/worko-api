@@ -4,8 +4,8 @@ import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ReferralActions } from "../enums/User.enum";
 
 export const UserReferralRequestDTOValidation = Joi.object({
-  companySK: Joi.string().required().messages({
-    "any.required": "CompanySK is required",
+  companyId: Joi.string().required().messages({
+    "any.required": "companyId is required",
   }),
 
   jobUrl: Joi.string().required().messages({
@@ -27,6 +27,14 @@ export const UserReferralStatusValidation = Joi.string()
     "any.required": "Status is required",
   });
 
+export const userReferralDataForWithdrawnValidation = Joi.object({
+  actionDate: Joi.date().optional(),
+  reason: Joi.string().required().messages({
+    "any.required": "Reason is required"
+  }),
+  userComment: Joi.string().optional()
+});
+
 export const UserReferralEmployeeStatusValidation = Joi.object({
   userId: Joi.string().required().messages({
     "any.required": "User ID is required",
@@ -47,4 +55,21 @@ export const UserReferralEmployeeStatusValidation = Joi.object({
     "string.email": "Please provide a valid email address.",
     "string.empty": "Email cannot be empty.",
   }),
+
+  // Additional fields for the REJECT action
+  reason: Joi.when("action", {
+    is: ReferralActions.REJECT,
+    then: Joi.string().required().messages({
+      "any.required": "Reason is required for rejection",
+    }),
+    otherwise: Joi.optional(),
+  }),
+
+  userComment: Joi.when("action", {
+    is: ReferralActions.REJECT,
+    then: Joi.string().required().messages({
+      "any.required": "User comment is required for rejection",
+    }),
+    otherwise: Joi.optional(),
+  })
 });

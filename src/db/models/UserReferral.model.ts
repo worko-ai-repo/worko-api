@@ -7,20 +7,49 @@ import { BaseDbDto } from "./Base.model";
 
 // Define the structure for User Experience Database Data Transfer Object (DTO)
 class DbUserReferralDto extends BaseDbDto {
+  // Id and referances
   id!: string;
+  GSI1PK!: string;
+  GSI1SK!: string;
+  companyId!: string;
+
+  // The main referaal body related to referal
   status!: string;
-  companySK!: string;
   jobUrl!: string;
   jdExtracted?: string;
   matchingScore!: number;
-  passedByUserIds?: String[];
-  rejectedByUserIds?: String[];
+
+  // Below are only for when status is WITHDRAWN
+  withdrawnByUser?: {
+    actionDate: Date;
+    reason: string;
+    userComment?: string;
+  };
+
+  // The userIds (and other contextual details) of the employees who have passed the referral request
+  passedByUserIds?: Array<{
+    userId: string;
+    actionDate: Date
+  }>; // Updated property to store both userId and actionDate
+
+  // The userIds (and other contextual details) of the employees who have rejected the referral request
+  rejectedByUserIds?: Array<{
+    userId: string;
+    actionDate: Date;
+    reason: string;
+    userComment: string;
+  }>; // Updated property to store userId, actionDate, reason, and userComment
+
+  // The userId of the emp who has accepted the referral requests and time when it was accepted
   acceptedByUserId?: String;
+  acceptedAtByUser?: Date;
+
+  // The userId of the emp who has done the referral request and time when it was accepted
   doneByUserId?: String;
   doneByEmployee?: Date;
+
+  // If the referal is marked as done by cand then this will be updated with the time when it was done
   doneByCandidate?: Date;
-  GSI1PK!: string;
-  GSI1SK!: string;
 }
 
 const UserReferralSchema = new dynamoose.Schema(
@@ -34,7 +63,7 @@ const UserReferralSchema = new dynamoose.Schema(
       type: String,
       required: true,
     },
-    companySK: {
+    companyId: {
       type: String,
       required: true,
     },
@@ -62,6 +91,10 @@ const UserReferralSchema = new dynamoose.Schema(
       type: String,
       required: false,
     },
+    acceptedAtByUser: {
+      type: Date,
+      required: false,
+    },
     doneByUserId: {
       type: String,
       required: false,
@@ -73,6 +106,24 @@ const UserReferralSchema = new dynamoose.Schema(
     doneByCandidate: {
       type: Date,
       required: false,
+    },
+    withdrawnByUser: {
+      type: Object,
+      schema: {
+        actionDate: {
+          type: Date,
+          required: true
+        },
+        reason: {
+          type: String,
+          required: true
+        },
+        userComment: {
+          type: String,
+          required: false
+        }
+      },
+      required: false
     },
     GSI1PK: {
       type: String,
@@ -103,4 +154,4 @@ const UserReferralModel = dynamoose.model<DbUserReferralDto>(
 );
 
 // Export the UserReferralModel
-export { UserReferralModel };
+export { UserReferralModel, DbUserReferralDto };

@@ -2,7 +2,7 @@
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { UserReferralModel } from "../db/models/UserReferral.model";
+import { DbUserReferralDto, UserReferralModel } from "../db/models/UserReferral.model";
 
 //Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
@@ -12,7 +12,10 @@ import { ReferralStatus } from "../enums/UserReferral.enum";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
-import { UserReferralDTO } from "../dtos/UserReferral.dto";
+import {
+  UserReferralDTO,
+  UserReferralStatusChangeByCandDTO,
+} from "../dtos/UserReferral.dto";
 
 // Class definition for UserReferralDao implementing the BaseDao interface
 class UserReferralDao implements BaseDao {
@@ -82,7 +85,7 @@ class UserReferralDao implements BaseDao {
   ) {
     global.logger.info("Create referral [DAO]");
 
-    // Prepare id 
+    // Prepare id
     const id = UlidService.getUlidId();
 
     // Prepare the SK
@@ -143,14 +146,38 @@ class UserReferralDao implements BaseDao {
    * @returns
    */
   async updateStatus(referralId: string, email: string, status: string) {
-    global.logger.info("Update user referral status status [DAO]");
+    global.logger.info("Update user referral status [DAO]");
+
+    // Construct PK and SK based on referralId and email
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
     const SK = this.sortKeys.SK_REFERRAL.strtr({
       "{reqId}": referralId,
     });
+
+    // Update the referral status in the database
     return UserReferralModel.update({ PK: PK, SK: SK }, { status: status });
+  }
+
+  async updateStatusForWithdrawal(
+    referralId: string,
+    candEmail: string,
+    newStatus: string,
+    userReferralDataForWithdrawn?: UserReferralStatusChangeByCandDTO
+  ): Promise<DbUserReferralDto> {
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": candEmail,
+    });
+    const SK = this.sortKeys.SK_REFERRAL.strtr({
+      "{reqId}": referralId,
+    });
+
+    // prepare the update object with the properties tbe updated
+    const updateObj = { status: newStatus, withdrawnByUser: userReferralDataForWithdrawn };
+
+    // Perform the update operation
+    return UserReferralModel.update({ PK: PK, SK: SK }, updateObj);
   }
 
   /**
@@ -165,32 +192,30 @@ class UserReferralDao implements BaseDao {
 
   /**
    * Fetches Referral based on GSI1PK, companySK.
-   * @param companySK - Company sort key
+   * @param companyId - Company sort key
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getByGSI1PK(companySK: string) {
-    global.logger.info("Get Referral by GSI1PK and companySK [DAO]");
-    const cSK = "ID#" + companySK;
+  async getByGSI1PK(companyId: string) {
+    global.logger.info("Get Referral by GSI1PK and companyId [DAO]");
     return UserReferralModel.query("GSI1PK")
       .eq(this.GSI1PK)
-      .where("companySK")
-      .eq(cSK)
+      .where("companyId")
+      .eq(companyId)
       .exec();
   }
 
   /**
    * Fetches Referral based on GSI1PK, companySK, and status.
-   * @param companySK - Company sort key
+   * @param companyId - Company sort key
    * @param status - Referral status
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getByGSI1PKAndStatus(companySK: string, status: string) {
+  async getByGSI1PKAndStatus(companyId: string, status: string) {
     global.logger.info("Get Referral by GSI1PK and status [DAO]");
-    const cSK = "ID#" + companySK;
     return UserReferralModel.query("GSI1PK")
       .eq(this.GSI1PK)
-      .where("companySK")
-      .eq(cSK)
+      .where("companyId")
+      .eq(companyId)
       .where("status")
       .eq(status)
       .exec();

@@ -9,5 +9,6 @@ export enum ReferralStatus {
   ACCEPTED = "ACCEPTED",
   REJECTED = "REJECTED",
   CANCELLED = "CANCELLED",
+  WITHDRAWN = "WITHDRAWN",
   DONE = "DONE",
 }

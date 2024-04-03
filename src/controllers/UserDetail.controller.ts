@@ -22,6 +22,8 @@ import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercenta
 import InvokeLambdaService from "../services/InvokeLambda.service";
 import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
 import APP_CONSTANTS from "../configs/constants.config";
+import UserExperienceService from "../services/UserExperience.service";
+import userExperienceDao from '../daos/UserExperience.dao';
 
 /**
  * UserDetailController
@@ -132,7 +134,9 @@ class UserDetailController {
       if (!userDetails.count) {
         throw new Error("User not found");
       }
-
+      let userEmail = userDetails[0].emailList.primary;
+      const userExperience = await UserExperienceService.get(userEmail);
+      const currentExperience = userExperience.find(exp => exp.isCurrent);
       // Prepare the user id
       let cvAwsS3SignedUrl = null;
       let profileImageAwsS3SignedUrl = null;
@@ -164,11 +168,17 @@ class UserDetailController {
           filePath + "/" + userDetails[0].profileImage
         );
       }
-
-      // Send successful response with user data
+      const userExperienceDetails = {
+        comapnyName: currentExperience?.companyName,
+        department: currentExperience?.department,
+        designation: currentExperience?.designation,
+        designationTag: currentExperience?.designationTag,
+      }
+      // Send successful response with user userExperienceDetails
       res.status(HttpStatusCode.OK_200).json([
         {
           ...userDetails[0],
+          userExperienceDetails,
           cvAwsS3SignedUrl,
           profileImageAwsS3SignedUrl,
         },

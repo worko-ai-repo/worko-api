@@ -15,7 +15,7 @@ const ReferralRouter = Router();
 
 // Get the referral based on the provided query parameter
 ReferralRouter.get(
-  "/company/:companySK",
+  "/company/:companyId",
   ReferralController.getByGSI1PKAndStatus
 );
 
