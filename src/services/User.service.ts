@@ -2,9 +2,12 @@
 import userDao from "../daos/User.dao";
 import userDetailDao from "../daos/UserDetail.dao";
 import userSubscriptionDao from "../daos/UserSubscription.dao";
+import { EmailTemplatePlaceholderCAND_WELCOME_MSG } from "../dtos/EmailTemplatePlaceholder.dto";
 
 // Load the local dtos
 import { UserSignUpDTO } from "../dtos/User.dto";
+import { EmailTemplateNameEnum } from "../enums/EmailTemplate.enum";
+import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 import MasterSubscriptionService from "./MasterSubscription.service";
 import UserSubscriptionService from "./UserSubscription.service";
 
@@ -157,6 +160,27 @@ class UserService {
     // updating referral count
     return userDetailDao.updateReferralCount(SK, email, currRefCount);
   }
+
+  /** 
+   * sendEmailToCandWelcomeMessage
+   * 
+   * Sends a candidate welcome email.
+   * 
+   * @param {EmailTemplatePlaceholderCAND_WELCOME_MSG} emailPlaceholders - Placeholders for the email template.
+   * @param {EmailSourceDestinationAddress} toAddress - Object containing the name and email address of the recipient.
+   * @returns { Promise<{ awsMessageId: string | null }> }
+   */
+  async sendEmailToCandWelcomeMessage(
+    emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG,
+    toAddress: EmailSourceDestinationAddress
+  ): Promise<{ awsMessageId: string | null }> {
+    // Send email using the email library with the specified template, recipient, and placeholders
+      return emailLibrary.sendEmail(
+        EmailTemplateNameEnum.CAND_WELCOME_MSG,
+        toAddress,
+        emailPlaceholders,
+    );
+  }  
 }
 
 // Export an instance of the UserService class

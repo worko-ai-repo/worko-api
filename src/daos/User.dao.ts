@@ -20,6 +20,7 @@ class UserDao implements BaseDao {
     });
     return UserModel.query("PK").eq(PK).exec();
   }
+  
     /**
    *Find Existing User
    * @param email - Email address of the user

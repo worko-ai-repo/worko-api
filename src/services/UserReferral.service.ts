@@ -7,7 +7,7 @@ import { UserReferralRequestDTO } from "../dtos/User.dto";
 import CompanyJobService from "./CompanyJob.service";
 import { UserReferralDTO } from "../dtos/UserReferral.dto";
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
-import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED } from "../dtos/EmailTemplatePlaceholder.dto";
+import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED, EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED } from "../dtos/EmailTemplatePlaceholder.dto";
 import { EmailTemplateNameEnum } from "../enums/EmailTemplate.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 
@@ -240,6 +240,27 @@ class UserReferralService {
         emailPlaceholders,
     );
   }
+
+  /** 
+   * sendEmailToCandWhenReferralRequestCompleted
+   * 
+   * Sends a candidate referral request completed email.
+   * 
+   * @param {EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED} emailPlaceholders - Placeholders for the email template.
+   * @param {EmailSourceDestinationAddress} toAddress - Object containing the name and email address of the recipient.
+   * @returns { Promise<{ awsMessageId: string | null }> }
+   */
+  async sendEmailToCandWhenReferralRequestCompleted(
+    emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED,
+    toAddress: EmailSourceDestinationAddress
+  ): Promise<{ awsMessageId: string | null }> {
+    // Send email using the email library with the specified template, recipient, and placeholders
+    return emailLibrary.sendEmail(
+        EmailTemplateNameEnum.CAND_REFERRAL_REQ_COMPLETED,
+        toAddress,
+        emailPlaceholders,
+    );
+  }  
 }
 
 // Export an instance of the UserService class

@@ -24,6 +24,10 @@ import { RequestValidationError } from "../utils/errors.util";
 import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import InvokeLambdaService from "../services/InvokeLambda.service";
+import { EmailSourceDestinationAddress } from "../libraries/email.library";
+import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED } from "../dtos/EmailTemplatePlaceholder.dto";
+import { UserModel } from "../db/models/User.model";
+import UserDetailService from "../services/UserDetail.service";
 
 /**
  * UserReferralController
@@ -295,6 +299,12 @@ class UserReferralController {
       const userId = referralstatusUpdate.userId;
       let referral = await UserReferralService.getByGSI1(referralId); //Featching the referral details
 
+      // From the referral, get the candidate's name and email for sending email
+      const candPK: string = referral[0].PK;
+      const candEmail: string = candPK.split('#').pop() ?? ""; // for valid PK, there will be valid email id
+      const candDetails = await UserDetailService.get(candEmail);
+      const candName = candDetails[0].name;
+ 
       let referralResponse;
       let updateReferralResponse: boolean = false;
 
@@ -423,6 +433,23 @@ class UserReferralController {
 
       const { PK, SK, updatedAt, ...userReferralDTO } = referral[0];
       const result = await UserReferralService.update(PK, SK, userReferralDTO);
+
+      // If the details are updated and action is "DONE", then email should be sent to the candidate saying that his referral request has been completed
+      if(result && referralstatusUpdate.action === ReferralActions.DONE)
+      {
+        // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestCompleted function
+        const toAddress: EmailSourceDestinationAddress = {
+          email: candEmail,
+          fullName: candName
+        };
+        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED = {
+          candName: candName
+        }
+
+        // Function responsible for sending the email to the candidate saying that his referral request has been completed
+        const sendEmailResponse = await UserReferralService.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders,toAddress);
+      }
+
 
       if (updateReferralResponse) {
         // extract the passedRefIds and rejectedRefIds from the first entry of referralResponse.
