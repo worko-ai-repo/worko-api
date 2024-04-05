@@ -27,7 +27,7 @@ export const UserReferralStatusValidation = Joi.string()
     "any.required": "Status is required",
   });
 
-export const userReferralDataForWithdrawnValidation = Joi.object({
+export const withdrawnReferralPayloadValidation = Joi.object({
   actionDate: Joi.date().optional(),
   reason: Joi.string().required().messages({
     "any.required": "Reason is required"

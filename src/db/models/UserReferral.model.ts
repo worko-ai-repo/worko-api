@@ -20,6 +20,7 @@ class DbUserReferralDto extends BaseDbDto {
   matchingScore!: number;
 
   // Below are only for when status is WITHDRAWN
+  // @todo Fix the attributes structures as per this in Dyamoose Schema below
   withdrawnByUser?: {
     actionDate: Date;
     reason: string;
@@ -27,12 +28,14 @@ class DbUserReferralDto extends BaseDbDto {
   };
 
   // The userIds (and other contextual details) of the employees who have passed the referral request
+  // @todo Fix the attributes structures as per this in Dyamoose Schema below
   passedByUserIds?: Array<{
     userId: string;
     actionDate: Date
   }>; // Updated property to store both userId and actionDate
 
   // The userIds (and other contextual details) of the employees who have rejected the referral request
+  // @todo Fix the attributes structures as per this in Dyamoose Schema below
   rejectedByUserIds?: Array<{
     userId: string;
     actionDate: Date;

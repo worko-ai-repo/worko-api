@@ -2,20 +2,23 @@
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { DbUserReferralDto, UserReferralModel } from "../db/models/UserReferral.model";
+import {
+  DbUserReferralDto,
+  UserReferralModel,
+} from "../db/models/UserReferral.model";
 
 //Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
+import {
+  UserReferralDTO,
+  UserReferralStatusChangeByCandDTO,
+} from "../dtos/UserReferral.dto";
 
 //Load the local enums
 import { ReferralStatus } from "../enums/UserReferral.enum";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
-import {
-  UserReferralDTO,
-  UserReferralStatusChangeByCandDTO,
-} from "../dtos/UserReferral.dto";
 
 // Class definition for UserReferralDao implementing the BaseDao interface
 class UserReferralDao implements BaseDao {
@@ -139,22 +142,22 @@ class UserReferralDao implements BaseDao {
       .attributes(["matchingScore"])
       .exec();
   }
-
   /**
-   *
-   * @param email
-   * @returns
+   * @param referralId - The ID of the referral
+   * @param email - The email address of the user
+   * @param status - The new status of the referral
+   * @returns Promise<DbUserReferralDto>
    */
-  async updateStatus(referralId: string, email: string, status: string) {
+  async updateStatus(
+    referralId: string,
+    email: string,
+    status: string
+  ): Promise<DbUserReferralDto> {
     global.logger.info("Update user referral status [DAO]");
 
     // Construct PK and SK based on referralId and email
-    const PK = this.partitianKey.strtr({
-      "{primaryEmail}": email,
-    });
-    const SK = this.sortKeys.SK_REFERRAL.strtr({
-      "{reqId}": referralId,
-    });
+    const PK = this.partitianKey.strtr({ "{primaryEmail}": email });
+    const SK = this.sortKeys.SK_REFERRAL.strtr({ "{reqId}": referralId });
 
     // Update the referral status in the database
     return UserReferralModel.update({ PK: PK, SK: SK }, { status: status });
@@ -178,6 +181,38 @@ class UserReferralDao implements BaseDao {
 
     // Perform the update operation
     return UserReferralModel.update({ PK: PK, SK: SK }, updateObj);
+  }
+
+  /**
+   * @param referralId - The ID of the referral
+   * @param candEmail - The email address of the candidate
+   * @param withdrawnReferralPayload - The payload containing information about the withdrawn referral
+   * @returns Promise<DbUserReferralDto>
+   */
+  async updateStatusForWithdrawnReferral(
+    referralId: string,
+    candEmail: string,
+    withdrawnReferralPayload: UserReferralStatusChangeByCandDTO
+  ): Promise<DbUserReferralDto> {
+    global.logger.info("Update user referral withdrawal status [DAO]");
+
+    const PK = this.partitianKey.strtr({ "{primaryEmail}": candEmail });
+    const SK = this.sortKeys.SK_REFERRAL.strtr({ "{reqId}": referralId });
+
+    // Set the actionDate for the withdrawal payload
+    withdrawnReferralPayload.actionDate = new Date();
+
+    // Prepare the update object with the withdrawal properties
+    const updateReferralStatusForWithdrawn = {
+      status: ReferralStatus.WITHDRAWN,
+      withdrawnByUser: withdrawnReferralPayload,
+    };
+
+    // Perform the update operation
+    return UserReferralModel.update(
+      { PK: PK, SK: SK },
+      updateReferralStatusForWithdrawn
+    );
   }
 
   /**

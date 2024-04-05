@@ -7,7 +7,7 @@ import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the structure for User Experience Database Data Transfer Object (DTO)
 class DbUserExperienceDto extends BaseDbDto {
-  id! : string;
+  id!: string;
   department!: string;
   designation?: string;
   designationTag?: number;
@@ -17,7 +17,7 @@ class DbUserExperienceDto extends BaseDbDto {
   endedYear?: number;
   experienceInMonths?: number;
   companyName!: string;
-  companyId! : string;
+  companyId!: string;
   companySK!: string;
   emailId?: String;
   isEmailVerified?: boolean;

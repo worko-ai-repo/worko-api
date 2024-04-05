@@ -1,15 +1,32 @@
 // Load the local daos
 import userReferralDao from "../daos/UserReferral.dao";
+
+// import Services
 import UserService from "./User.service";
 
 // Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
+import {
+  UserReferralDTO,
+  UserReferralStatusChangeByCandDTO,
+} from "../dtos/UserReferral.dto";
+
+import {
+  EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED,
+  EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED
+} from "../dtos/EmailTemplatePlaceholder.dto";
+
+// Import Libraries
+import {
+  EmailSourceDestinationAddress,
+  emailLibrary,
+} from "../libraries/email.library";
+
+// Import Enums
 import CompanyJobService from "./CompanyJob.service";
-import { UserReferralDTO, UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
-import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
-import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED, EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED } from "../dtos/EmailTemplatePlaceholder.dto";
 import { EmailTemplateNameEnum } from "../enums/EmailTemplate.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
+import { DbUserReferralDto } from "../db/models/UserReferral.model";
 
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
@@ -28,7 +45,7 @@ class UserReferralService {
     console.log("Create referral [service]");
 
     // To decrease the referral count by 1 every time the candidate request for referral
-    // UserService.decreaseReferralCount(email);
+    UserService.decreaseReferralCount(email);
 
     //below block checks gets the ExtractedJd from db if it is there
     /* const jdExtract = await CompanyJobService.getJdUrl(
@@ -170,47 +187,65 @@ class UserReferralService {
    * @param status - status
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async updateStatus(
-    referralId: string,
-    candEmail: string,
-    newStatus: string,
-    userReferralDataForWithdrawn?: UserReferralStatusChangeByCandDTO
-  ) {
-
+  async updateStatus(referralId: string, candEmail: string, newStatus: string): Promise<DbUserReferralDto> {
     // Logging the action of updating user Referral status in the service layer
     global.logger.info("Updating user Referral status [UserReferralService]");
 
-    let result;
-
-    // Check if userReferralDataForWithdrawn are provided and the newStatus is "WITHDRAWN"
-    if (userReferralDataForWithdrawn && newStatus === ReferralStatus.WITHDRAWN) {
-      userReferralDataForWithdrawn.actionDate = new Date();
-      result = await userReferralDao.updateStatusForWithdrawal(referralId, candEmail, newStatus, userReferralDataForWithdrawn);
-    } else {
-      // If userReferralDataForWithdrawn are not provided or the status is not "WITHDRAWN", update status without withdrawal details
-      result = await userReferralDao.updateStatus(referralId, candEmail, newStatus);
-    }
+    // Update status without withdrawal details
+    const updatedReferralStatus = await userReferralDao.updateStatus(
+      referralId,
+      candEmail,
+      newStatus
+    );
 
     // If the details are updated and newStatus is "ACCEPTED", then email should be sent to the candidate saying that his referral request has been accepted
-    if (result && newStatus === ReferralStatus.ACCEPTED) {
-      // Get the Candidate Details from his candEmail
-      const userDetails = await UserService.getUserByEmail(candEmail);
-      const candName: string = userDetails[0].name;
-
-      // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestAccepted function
-      const toAddress: EmailSourceDestinationAddress = {
-        email: candEmail,
-        fullName: candName
-      };
-      const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED = {
-        candName: candName
-      }
-
-      // Function responsible for sending the email to the candidate saying that his referral request has been accepted
-      const sendEmailResponse = await this.sendEmailToCandWhenReferralRequestAccepted(emailPlaceholders, toAddress);
+    if (updatedReferralStatus && newStatus === ReferralStatus.ACCEPTED) {
+      await this.sendEmailOnReferralAccepted(candEmail);
     }
+    return updatedReferralStatus;
+  }
 
-    return result;
+  async updateStatusForWithdrawnReferral(
+    referralId: string,
+    candEmail: string,
+    withdrawnReferralPayload: UserReferralStatusChangeByCandDTO
+  ): Promise<DbUserReferralDto> {
+    // Logging the action of withdrawing a referral in the service layer
+    global.logger.info("Withdrawing user Referral [UserReferralService]");
+
+    // Set the actionDate for the withdrawal payload
+    withdrawnReferralPayload.actionDate = new Date();
+
+
+    // Update status with withdrawal details
+    const updatedReferralStatus = userReferralDao.updateStatusForWithdrawnReferral(
+      referralId,
+      candEmail,
+      withdrawnReferralPayload
+    );
+
+    return updatedReferralStatus;
+  }
+
+  async sendEmailOnReferralAccepted(candEmail: string) {
+    // Get the Candidate Details from his candEmail
+    const userDetails = await UserService.getUserByEmail(candEmail);
+    const candName: string = userDetails[0].name;
+
+    // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestAccepted function
+    const toAddress: EmailSourceDestinationAddress = {
+      email: candEmail,
+      fullName: candName,
+    };
+    const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED =
+      { candName: candName };
+
+    // Function responsible for sending the email to the candidate saying that his referral request has been accepted
+    const sendEmailResponse =
+      await this.sendEmailToCandWhenReferralRequestAccepted(
+        emailPlaceholders,
+        toAddress
+      );
   }
 
 
@@ -236,11 +271,11 @@ class UserReferralService {
     return userReferralDao.updateStatusByPKSK(PK, SK, status);
   }
 
-  /** 
+  /**
    * sendEmailToCandWhenReferralRequestAccepted
-   * 
+   *
    * Sends a candidate referral request acceptance email.
-   * 
+   *
    * @param {EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED} emailPlaceholders - Placeholders for the email template.
    * @param {EmailSourceDestinationAddress} toAddress - Object containing the name and email address of the recipient.
    * @returns { Promise<{ awsMessageId: string | null }> }

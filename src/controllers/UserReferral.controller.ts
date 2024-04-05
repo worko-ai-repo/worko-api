@@ -4,30 +4,31 @@ import { Request, Response, NextFunction } from "express";
 // Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
 import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
+import { UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
 
 // Load the local schema
 import {
   UserReferralEmployeeStatusValidation,
   UserReferralRequestDTOValidation,
   UserReferralStatusValidation,
-  userReferralDataForWithdrawnValidation,
+  withdrawnReferralPayloadValidation,
 } from "../schemas/UserReferral.schema";
 import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
-import UserService from "../services/User.service";
 import UserReferralService from "../services/UserReferral.service";
 import UserReferralResponseService from "../services/UserReferralResponse.service";
+import InvokeLambdaService from "../services/InvokeLambda.service";
+import CompanyService from "../services/Company.service";
 
 //Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
+
+// Load the Enums
 import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
-import InvokeLambdaService from "../services/InvokeLambda.service";
-
-import CompanyService from "../services/Company.service";
-import { UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
+import UserService from "../services/User.service";
 
 import { EmailSourceDestinationAddress } from "../libraries/email.library";
 import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED } from "../dtos/EmailTemplatePlaceholder.dto";
@@ -57,44 +58,51 @@ class UserReferralController {
       // Extract email from request parameters
       const email = req.params.id;
 
+      // Validate the email field
       const { error, value } = validateEmailField(email);
-
       if (error) {
         throw new RequestValidationError(error);
       }
+
+      // Check if a specific status is requested
       const status = req.query.status;
       let result;
 
+      // Fetch referrals based on the status query
       if (status && typeof status === "string") {
         result = await UserReferralService.getByStatus(value, status);
       } else {
         result = await UserReferralService.get(value);
       }
-      console.log("result : 65 ", result);
 
-      const companyIDs: string[] = result.map(obj => obj.companyId);
+      // Get company IDs from the fetched referrals
+      const companyIDs: string[] = result.map((obj) => obj.companyId);
 
-      //  Fetch company details for each unique company ID
-      let uniqueCompanyIds = companyIDs.map(companyID => CompanyService.getCompanyDetailsByIds([companyID]));
-      let companyDetailsResults = await Promise.all(uniqueCompanyIds);
-      const finalUserReferral = result.map((item, index) => {
-        const companyDetails = companyDetailsResults[index][0];
+      // Get unique company IDs using a Set
+      const uniqueCompanyIDs: string[] = Array.from(new Set(companyIDs));
+
+      // Fetch company details for each unique company ID
+      const companyDetailsResults = await CompanyService.getCompanyDetailsByIds(
+        uniqueCompanyIDs
+      );
+
+      // Map over the referrals and include company name
+      const finalUserReferral = result.map((item) => {
+        // Find the company details corresponding to the current referral item
+        const companyDetails = companyDetailsResults.find(
+          (companyDetail) => companyDetail.id === item.companyId
+        );
+
+        // Extract the company name if company details are found, otherwise set it to null
         const companyName = companyDetails ? companyDetails.name : null;
-        return {
-          ...item,
-          companyName: companyName,
-        };
-      });
 
-      /* status && typeof status === "string"
-        ? result = await UserReferralService.getByStatus(email, status)
-        : result = await UserReferralService.get(email); */
+        return { ...item, companyName: companyName };
+      });
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(finalUserReferral);
     } catch (error: any) {
-      // Handle errors  
-
+      // Handle errors
       // Check if the error is due to user not found
       if (error.message === "User not found") {
         // If user not found, send a 404 response with an informative error message
@@ -226,8 +234,11 @@ class UserReferralController {
         emailId
       );
       // invoke score matching lambda function
-      // @todo : add logic code to check if  it has been tested on local or not 
-      await InvokeLambdaService.triggerMatchingScoreCalculation(email, referralRequestId.referralRequestId);
+      // @todo : add logic code to check if  it has been tested on local or not
+      await InvokeLambdaService.triggerMatchingScoreCalculation(
+        email,
+        referralRequestId.referralRequestId
+      );
 
       res.status(HttpStatusCode.OK_200).json(referralRequestId);
     } catch (error) {
@@ -262,35 +273,63 @@ class UserReferralController {
    */
   updateStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Log the action for debugging purposes
       global.logger.info("update referral status [controller]");
 
-      let userReferralDataForWithdrawn: UserReferralStatusChangeByCandDTO = req.body;
-
+      // Destructure the required parameters from the request params
       const { candEmail, referralId, newStatus } = req.params;
+
+      // Validate the newStatus parameter
       const { error } = UserReferralStatusValidation.validate(newStatus, {
         abortEarly: false,
       });
 
+      // If the newStatus validation fails, throw a RequestValidationError
       if (error) {
         throw new RequestValidationError(error);
       }
-      if (newStatus === "WITHDRAWN") {
-        const { error } = userReferralDataForWithdrawnValidation.validate(userReferralDataForWithdrawn, {
-          abortEarly: false,
-        });
+
+      let updatedReferralStatus;
+
+      // If the newStatus is 'WITHDRAWN', handle the withdrawal process
+      if (newStatus === ReferralStatus.WITHDRAWN) {
+        // Extract the payload from the request body
+        let withdrawnReferralPayload: UserReferralStatusChangeByCandDTO =
+          req.body;
+
+        // Validate the withdrawnReferralPayload
+        const { error } = withdrawnReferralPayloadValidation.validate(
+          withdrawnReferralPayload,
+          {
+            abortEarly: false,
+          }
+        );
+
+        // If the withdrawnReferralPayload validation fails, throw a RequestValidationError
         if (error) {
           throw new RequestValidationError(error);
         }
-      }
-      // Call the service method to update the referral status
-      const result = await UserReferralService.updateStatus(
-        referralId,
-        candEmail,
-        newStatus,
-        userReferralDataForWithdrawn
-      );
+        // To inscrease the referral count every time the candidate request for referral is withdrawn
+        UserService.increaseReferralCount(candEmail);
 
-      res.status(HttpStatusCode.OK_200).json(result);
+        // Call the service method to withdraw the referral
+        updatedReferralStatus =
+          await UserReferralService.updateStatusForWithdrawnReferral(
+            referralId,
+            candEmail,
+            withdrawnReferralPayload
+          );
+      } else {
+        // Call the service method to update the referral status
+        updatedReferralStatus = await UserReferralService.updateStatus(
+          referralId,
+          candEmail,
+          newStatus
+        );
+      }
+
+      // Send a successful response with the updated referral data
+      res.status(HttpStatusCode.OK_200).json(updatedReferralStatus);
     } catch (error) {
       // Handle errors
       // Pass other errors to the next error handler
@@ -300,13 +339,11 @@ class UserReferralController {
 
 
   /**
-   * updateStatusByEmployee
+   * Updates the status of a user referral request by an employee.
    *
-   * updates the status of user Referral request
-   *
-   * @param {Request} req
-   * @param {Response} res
-   * @param {NextFunction} next
+   * @param {Request} req - The request object containing parameters and body.
+   * @param {Response} res - The response object to send back to the client.
+   * @param {NextFunction} next - The next function to pass control to the next middleware.
    */
   updateStatusByEmployee = async (
     req: Request,
@@ -314,21 +351,25 @@ class UserReferralController {
     next: NextFunction
   ) => {
     try {
+      // Log the action for debugging purposes
       global.logger.info("update referral status employee [controller]");
 
+      // Extract referralId from request parameters
       const { referralId } = req.params;
+
+      // Extract and validate the request body
       const referralstatusUpdate = req.body;
       const { error } = UserReferralEmployeeStatusValidation.validate(
         referralstatusUpdate,
-        {
-          abortEarly: false,
-        }
+        { abortEarly: false }
       );
 
+      // Handle validation errors
       if (error) {
         throw new RequestValidationError(error);
       }
 
+      // Extract userId from request body
       const userId = referralstatusUpdate.userId;
       let referral = await UserReferralService.getByGSI1(referralId); //Fetching the referral details
 
@@ -339,9 +380,9 @@ class UserReferralController {
       const candName = candDetails[0].name;
  
       let referralResponse;
-      let updateReferralResponse: boolean = false;
+      let updateReferralResponse = false;
 
-      // Check if the referral status update action is either 'PASS' or 'REJECT'.
+      // Check if action is PASS or REJECT to determine if referral response needs to be updated
       if (
         referralstatusUpdate.action === ReferralActions.PASS ||
         referralstatusUpdate.action === ReferralActions.REJECT
@@ -350,127 +391,114 @@ class UserReferralController {
         referralResponse = await UserReferralResponseService.get(
           referralstatusUpdate.emailId
         );
-
         // Determine whether an existing referral response is found based on the count.
         // If count is non-zero, set updateReferralResponse to true; otherwise, set it to false.
         updateReferralResponse = referralResponse.count !== 0;
       }
 
+      // Initialize DTO for user referral response
       let userReferralResponseDTO: UserReferralResponseDTO = {
         passedRefIds: [],
         rejectedRefIds: [],
       };
 
-      // Define currentDate variable
-      const currentDate = new Date().toISOString();
+      // Get current date
+      const currentDate = new Date();
 
+      // Update referral based on action provided
       switch (referralstatusUpdate.action) {
+        // Handle when action is PASS
         case ReferralActions.PASS:
-          // Update passedByUserIds for PASS action
-          let updatedPassedByUserIds: string[] = referral
-            ? referral.count === 0
-              ? (() => {
-                throw new Error("Wrong referralId");
-              })()
-              : referral[0].passedByUserIds &&
-                Object.keys(referral[0].passedByUserIds).length === 0
-                ? (referral[0].passedByUserIds = [{ userId, actionDate: currentDate }])
-                : referral[0].passedByUserIds
-                  ? (referral[0].passedByUserIds.push({ userId, actionDate: currentDate }),
-                    referral[0].passedByUserIds)
-                  : [{ userId, actionDate: currentDate }] // Return an array with userId when referral[0].passedByUserIds is falsy
-            : [];
+          if (!referral || referral.count === 0) {
+            throw new Error("Wrong referralId");
+          }
 
-          referral[0].passedByUserIds = updatedPassedByUserIds;
+          // Update passedByUserIds array with current userId and actionDate
+          if (
+            !referral[0].passedByUserIds ||
+            referral[0].passedByUserIds.length === 0
+          ) {
+            referral[0].passedByUserIds = [
+              { userId, actionDate: currentDate.toISOString() },
+            ];
+          } else {
+            referral[0].passedByUserIds.push({
+              userId,
+              actionDate: currentDate,
+            });
+          }
 
-          // If updateReferralResponse is true, indicating an existing referral response,
-          // add the current referralId to the passedRefIds array of the first referralResponse entry.
+          // Update referral response or DTO based on whether response exists
           if (updateReferralResponse) {
             referralResponse[0].passedRefIds.push(referralId);
-          } else {
             // If updateReferralResponse is false, implying no existing referral response,
             // add the referralId to the passedRefIds array of the userReferralResponseDTO.
+          } else {
             userReferralResponseDTO.passedRefIds.push(referralId);
           }
 
           break;
 
+        // Handle when action is REJECT
         case ReferralActions.REJECT:
-          let updatedRejectedByUserIds: string[] = referral
-            ? referral.count === 0
-              ? (() => {
-                throw new Error("Wrong referralId");
-              })()
-              : referral[0].rejectedByUserIds &&
-                Object.keys(referral[0].rejectedByUserIds).length === 0
-                ? (referral[0].rejectedByUserIds = [{
-                  userId, actionDate: currentDate,
-                  reason: referralstatusUpdate.reason, userComment: referralstatusUpdate.userComment
-                }])
-                : referral[0].rejectedByUserIds
-                  ? (referral[0].rejectedByUserIds.push({
-                    userId, actionDate: currentDate,
-                    reason: referralstatusUpdate.reason, userComment: referralstatusUpdate.userComment
-                  }),
-                    referral[0].rejectedByUserIds)
-                  : [{
-                    userId, actionDate: currentDate, reason: referralstatusUpdate.reason,
-                    userComment: referralstatusUpdate.userComment,
-                  }] // Return an array with userId when referral[0].passedByUserIds is falsy
-            : [];
+          if (!referral || referral.count === 0) {
+            throw new Error("Wrong referralId");
+          }
 
-          referral[0].rejectedByUserIds = updatedRejectedByUserIds;
-          referral.status = ReferralStatus.REJECTED;
+          // Update rejectedByUserIds array with userId, actionDate, reason, and userComment
+          if (
+            !referral[0].rejectedByUserIds ||
+            referral[0].rejectedByUserIds.length === 0
+          ) {
+            referral[0].rejectedByUserIds = [
+              {
+                userId: userId,
+                actionDate: currentDate.toISOString(),
+                reason: referralstatusUpdate.reason,
+                userComment: referralstatusUpdate.userComment,
+              },
+            ];
+          } else {
+            referral[0].rejectedByUserIds.push({
+              userId: userId,
+              actionDate: currentDate.toISOString(),
+              reason: referralstatusUpdate.reason,
+              userComment: referralstatusUpdate.userComment,
+            });
+          }
 
-          // If updateReferralResponse is true, indicating an existing referral response,
-          // add the current referralId to the rejectedRefIds array of the first referralResponse entry.
+          // Update referral response or DTO based on whether response exists
           if (updateReferralResponse) {
             referralResponse[0].rejectedRefIds.push(referralId);
           } else {
-            // If updateReferralResponse is false, implying no existing referral response,
-            // add the referralId to the rejectedRefIds array of the userReferralResponseDTO.
             userReferralResponseDTO.rejectedRefIds.push(referralId);
           }
 
           break;
 
+        // Handle when action is ACCEPT
         case ReferralActions.ACCEPT:
-          let updatedAcceptedByUserId: string = referral
-            ? referral.count === 0
-              ? (() => {
-                throw new Error("Wrong referralId");
-              })()
-              : referral[0].acceptedByUserId
-                ? (() => {
-                  throw new Error(
-                    "Referral already accepted by other employee"
-                  );
-                })()
-                : userId
-            : "";
+          if (!referral || referral.count === 0) {
+            throw new Error("Wrong referralId");
+          } else if (referral[0].acceptedByUserId) {
+            throw new Error("Referral already accepted by other employee");
+          }
 
-          referral[0].acceptedByUserId = updatedAcceptedByUserId;
+          referral[0].acceptedByUserId = userId;
           referral[0].status = ReferralStatus.ACCEPTED;
-          referral[0].acceptedAtByUser = currentDate; // Set acceptedAtByUser property
+          referral[0].acceptedAtByUser = currentDate;
 
           break;
 
+        // Handle when action is DONE
         case ReferralActions.DONE:
-          let updatedDoneByEmployee: Date = referral
-            ? referral.count === 0
-              ? (() => {
-                throw new Error("Wrong referralId");
-              })()
-              : referral[0].doneByEmployee
-                ? (() => {
-                  throw new Error("Referral already done by you");
-                })()
-                : new Date()
-            : (() => {
-              throw new Error("unable to fetch referral");
-            })();
+          if (!referral || referral.count === 0) {
+            throw new Error("Wrong referralId");
+          } else if (referral[0].doneByEmployee) {
+            throw new Error("Referral already done by you");
+          }
 
-          referral[0].doneByEmployee = updatedDoneByEmployee;
+          referral[0].doneByEmployee = currentDate;
           referral[0].doneByUserId = userId;
           referral[0].status = ReferralStatus.DONE;
 
@@ -480,9 +508,13 @@ class UserReferralController {
           throw new Error("Invalid action provided");
       }
 
+      // Extract unnecessary properties before updating referral
       const { PK, SK, updatedAt, ...userReferralDTO } = referral[0];
+
+      // Update referral in the database
       const result = await UserReferralService.update(PK, SK, userReferralDTO);
 
+      // Update or create user referral response based on whether response exists
       // If the details are updated and action is "DONE", then email should be sent to the candidate saying that his referral request has been completed
       if(result && referralstatusUpdate.action === ReferralActions.DONE)
       {
@@ -501,15 +533,11 @@ class UserReferralController {
 
 
       if (updateReferralResponse) {
-        // extract the passedRefIds and rejectedRefIds from the first entry of referralResponse.
         const { passedRefIds, rejectedRefIds } = referralResponse[0];
-
-        // Update the existing referral response for the specified email ID with the current passedRefIds and rejectedRefIds.
         UserReferralResponseService.update(referralstatusUpdate.emailId, {
           passedRefIds,
           rejectedRefIds,
         });
-        // create a new referral response for the specified email ID using the userReferralResponseDTO.
       } else {
         UserReferralResponseService.create(
           referralstatusUpdate.emailId,
@@ -517,10 +545,10 @@ class UserReferralController {
         );
       }
 
+      // Send a successful response with the updated referral data
       res.status(HttpStatusCode.OK_200).json(result);
     } catch (error) {
-      // Handle errors
-      // Pass other errors to the next error handler
+      // Pass any errors to the next error handler
       next(error);
     }
   };

@@ -6,35 +6,30 @@ import { UserExperienceDTOWithId } from "../dtos/UserExperience.dto";
 
 // Load the local schema
 import { validateEmailField } from "../schemas/User.schema";
-
 import { userExperienceDTOArrayValidation } from "../schemas/UserExperience.schema";
 
 // Load the shared service
 import UserExperienceService from "../services/UserExperience.service";
 import UserProfilePercentageService from "../services/UserProfilePercentage.service";
+import CompanyService from "../services/Company.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
-import { GroupingHelper } from "../helpers/grouping.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
-import { CompanyListingFilterOptions, CompanyListingFilterRequestDTO } from "../dtos/Company.dto";
-import { RequestHelper } from "../helpers/request.helper";
-import CompanyService from "../services/Company.service";
-import { CompanyDetailModel } from "../db/models/CompanyDetail.model";
 
 /**
  * UserExperienceController
  *
- * Class to perform related/relevent action/activities related to the "UserExperience" table
+ * Class to perform related/relevant action/activities related to the "UserExperience" table
  */
 class UserExperienceController {
   /**
    * getByEmail
    *
-   * Get the user based on the provided quesry parameters
+   * Get the user based on the provided query parameters
    *
    * @param {Request} req
    * @param {Response} res
@@ -43,36 +38,38 @@ class UserExperienceController {
   getByEmail = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Get user experience by id [controller]");
-
       // Extract email from request parameters
       const email = req.params.id;
-
       const { error } = validateEmailField(email);
-
       if (error) {
         throw new RequestValidationError(error);
       }
 
-      // retrive the user experience based on the email 
+      // Retrieve the user experience based on the email
       const userExperience = await UserExperienceService.get(email);
-      // get the company Id
+
+      // Get company IDs
       const companyIDs: string[] = userExperience.map(obj => obj.companyId);
 
-      //  Fetch company details for each unique company ID
-      let uniqueCompanyIds = companyIDs.map(companyID => CompanyService.getCompanyDetailsByIds([companyID]));
-      let companyDetailsResults = await Promise.all(uniqueCompanyIds);
+      // Get unique company IDs using a Set
+      const uniqueCompanyIDs: string[] = Array.from(new Set(companyIDs));
+
+      // Fetch company details for each unique company ID
+      const companyDetailsResults = await CompanyService.getCompanyDetailsByIds(uniqueCompanyIDs);
 
       // Prepare response data
-      const finalUserExperience = userExperience.map((item, index) => ({
-        ...item,
-        companyLogoUrl: companyDetailsResults[index][0]?.logoUrl || null,
-      }));
+      const finalUserExperience = userExperience.map(item => {
+        const companyDetails = companyDetailsResults.find(companyDetail => companyDetail.id === item.companyId);
+        return {
+          ...item,
+          companyLogoUrl: companyDetails?.logoUrl || null,
+        };
+      });
 
       // Send successful response with user data and company details
       res.status(HttpStatusCode.OK_200).json(finalUserExperience);
     } catch (error: any) {
       // Handle errors
-
       // Check if the error is due to user not found
       if (error.message === "User not found") {
         // If user not found, send a 404 response with an informative error message

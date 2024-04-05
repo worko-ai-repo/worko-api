@@ -47,7 +47,7 @@ class UserExperienceDao implements BaseDao {
       SK: this.sortKeys.SK_ID.strtr({
         "{uuid}": id,
       }),
-      id : id,
+      id: id,
       isEmailVerified: false,
       ...userExperienceDto,
       companyId: userExperienceDto.companySK.split("#").pop()

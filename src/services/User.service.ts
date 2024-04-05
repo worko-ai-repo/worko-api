@@ -59,7 +59,7 @@ class UserService {
    */
   async addUser(userSignUpDTO: UserSignUpDTO, userType: string) {
     global.logger.info("Create candidate/employee [service]");
-    
+
     // Creating new user
     const newUser = await userDetailDao.add(userSignUpDTO, userType);
     if (userType === "CAND") {
@@ -67,22 +67,22 @@ class UserService {
       let planName = "Free";
       const subPlan = await MasterSubscriptionService.getByPlan(planName);
       console.log("This is the subplan : ", subPlan);
-      if(subPlan)
-      {
-        UserSubscriptionService.create(subPlan.SK, userSignUpDTO.email)
-      }
-      else
-      {
+      if (subPlan) {
+        UserSubscriptionService.create(subPlan.SK, userSignUpDTO.email);
+      } else {
         // Logger message
-        global.logger.info("The default/free subscription was not found therefore could not add free subscription to candidate while creating account.", {
-          filePath: __filename,
-          methodName: this.addUser.name,
-          userEmail : userSignUpDTO.email,
-          plan : planName
-        });
+        global.logger.info(
+          "The default/free subscription was not found therefore could not add free subscription to candidate while creating account.",
+          {
+            filePath: __filename,
+            methodName: this.addUser.name,
+            userEmail: userSignUpDTO.email,
+            plan: planName,
+          }
+        );
       }
     }
-    
+
     return newUser;
   }
 
@@ -160,6 +160,40 @@ class UserService {
     // updating referral count
     return userDetailDao.updateReferralCount(SK, email, currRefCount);
   }
+
+  /**
+   *
+   * Increase referral when Candidate referal requests is Withdrawn
+   */
+
+  async increaseReferralCount(candEmail: string) {
+    global.logger.info("Increase referral count [service]");
+
+    // Get SK
+    const SK = await this.getSK(candEmail);
+
+    // Get referral count
+    const userSubscriptions = await userDetailDao.getUserSubscriptionStatus(candEmail, SK);
+
+    let currRefCount = 0;
+
+    // Check if referral count exists
+    if (userSubscriptions.length > 0) {
+      currRefCount = userSubscriptions[0].referralCount;
+      global.logger.info(`Current referral count: ${currRefCount}`);
+    }
+
+    // Increment referral count
+    currRefCount++;
+    global.logger.info(`New referral count: ${currRefCount}`);
+
+    // Update referral count
+    const updateResult = await userDetailDao.updateReferralCount(SK, candEmail, currRefCount);
+    global.logger.info(`Update result: ${updateResult}`);
+
+    return updateResult;
+  }
+
 
   /** 
    * sendEmailToCandWelcomeMessage
