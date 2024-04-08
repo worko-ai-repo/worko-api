@@ -73,3 +73,16 @@ export enum UserSupportContextTypeEnum {
   REFERRAL = 'REFERRAL',
   SERVICE = 'SERVICE',
 }
+
+/**
+ * UserCorporateRequest
+ * 
+ * Possible statuses for which user corporate request can be created.
+ */
+
+export enum UserCorporateRequestStatusEnum {
+  OPEN = "OPEN",
+  IN_PROGRESS = "IN_PROGRESS",
+  REJECTED = "REJECTED",
+  CLOSED = "CLOSED"
+}

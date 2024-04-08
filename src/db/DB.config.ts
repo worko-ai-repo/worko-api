@@ -34,6 +34,7 @@ import { EmailLogModel } from "./models/EmailLog.model";
 import { UserReviewModel } from "./models/UserReview.model";
 import { UserRatingAvgModel } from "./models/UserRatingAvg.model";
 import { UserSupportModel } from "./models/UserSupport.model";
+import { UserCorporateRequestModel } from "./models/UserCorporateRequest.model";
 
 /**
  * DBConfig
@@ -131,6 +132,7 @@ class DBConfig {
       UserReviewModel,
       UserRatingAvgModel,
       UserSupportModel,
+      UserCorporateRequestModel,
     ]);
   }
 }

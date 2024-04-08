@@ -24,6 +24,7 @@ import UserProvidedServiceRouter from "./routers/UserProvidedService.router";
 import UserAvailabilityRouter from "./routers/UserAvailability.router";
 import UserReviewRouter from "./routers/UserReview.router";
 import UserSupportRouter from "./routers/UserSupport.router";
+import UserCorporateRequestRouter from "./routers/UserCorporateRequest.router";
 
 // File routers
 import FileRouter from "./routers/File.router";
@@ -114,6 +115,9 @@ router.use("/test", TestRouter);
 
 // Register the "User Support " routers
 router.use("/support", UserSupportRouter);
+
+// Register the "User Support " routers
+router.use("/corporate", UserCorporateRequestRouter);
 
 // Export the router
 export default router;
