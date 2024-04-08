@@ -47,7 +47,7 @@ class UserReferralService {
     console.log("Create referral [service]");
 
     // To decrease the referral count by 1 every time the candidate request for referral
-    UserService.decreaseReferralCount(email);
+    // UserService.decreaseReferralCount(email);
 
     //below block checks gets the ExtractedJd from db if it is there
     /* const jdExtract = await CompanyJobService.getJdUrl(

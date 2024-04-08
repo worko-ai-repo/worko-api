@@ -378,7 +378,7 @@ class UserReferralController {
       const candEmail: string = candPK.split('#').pop() ?? ""; // for valid PK, there will be valid email id
       const candDetails = await UserDetailService.get(candEmail);
       const candName = candDetails[0].name;
- 
+
       let referralResponse;
       let updateReferralResponse = false;
 
@@ -412,7 +412,15 @@ class UserReferralController {
           if (!referral || referral.count === 0) {
             throw new Error("Wrong referralId");
           }
+          // Check if the referral has already been passed by the current user
+          const alreadyPassedByCurrentUser = referral[0].passedByUserIds && referral[0].passedByUserIds.some(
+            (passedUser: { userId: string }) => passedUser.userId === userId
+          );
 
+          // if user has already passed the referral then throw error message 
+          if (alreadyPassedByCurrentUser) {
+            throw new Error("The referral has already been passed by you.")
+          }
           // Update passedByUserIds array with current userId and actionDate
           if (
             !referral[0].passedByUserIds ||
@@ -424,7 +432,7 @@ class UserReferralController {
           } else {
             referral[0].passedByUserIds.push({
               userId,
-              actionDate: currentDate,
+              actionDate: currentDate.toISOString(),
             });
           }
 
@@ -444,7 +452,16 @@ class UserReferralController {
           if (!referral || referral.count === 0) {
             throw new Error("Wrong referralId");
           }
+          // Check if the referral has already been rejected by the current user
+          const alreadyRejectedByCurrentUser = referral[0].rejectedByUserIds &&
+            referral[0].rejectedByUserIds.some(
+              (rejectedUserId: { userId: string }) => rejectedUserId.userId === userId
+            );
 
+          // if user has already rejected the referral then throw error message 
+          if (alreadyRejectedByCurrentUser) {
+            throw new Error("The referral has already been rejected by you.")
+          }
           // Update rejectedByUserIds array with userId, actionDate, reason, and userComment
           if (
             !referral[0].rejectedByUserIds ||
@@ -516,8 +533,7 @@ class UserReferralController {
 
       // Update or create user referral response based on whether response exists
       // If the details are updated and action is "DONE", then email should be sent to the candidate saying that his referral request has been completed
-      if(result && referralstatusUpdate.action === ReferralActions.DONE)
-      {
+      if (result && referralstatusUpdate.action === ReferralActions.DONE) {
         // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestCompleted function
         const toAddress: EmailSourceDestinationAddress = {
           email: candEmail,
@@ -528,7 +544,7 @@ class UserReferralController {
         }
 
         // Function responsible for sending the email to the candidate saying that his referral request has been completed
-        const sendEmailResponse = await UserReferralService.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders,toAddress);
+        const sendEmailResponse = await UserReferralService.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders, toAddress);
       }
 
 
