@@ -47,7 +47,7 @@ class EmailLibrary {
   async sendEmail(
     templateName: string,
     toAddress: EmailSourceDestinationAddress,
-    placeholders: { [key: string]: string },
+    placeholders: { [key: string]: any },
     replyToAddresses?: EmailSourceDestinationAddress[],
     ccAddresses?: EmailSourceDestinationAddress[],
     bccAddresses?: EmailSourceDestinationAddress[],

@@ -226,25 +226,6 @@ class UserController {
         userProfilePercentageDTO
       );
 
-      // Prepare details required for sending the Email
-      const candName : string = userSignUpDto.name;
-      const candEmail : string = userSignUpDto.email;
-      
-      if(newUser.userType.includes(UserType.CAND))
-      {
-        // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
-        const toAddress: EmailSourceDestinationAddress = {
-          email: candEmail,
-          fullName: candName
-        };
-        const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
-          candName: candName
-        }
-
-        // Function responsible for sending a welcome email to the candidate 
-        const sendEmailResponse = await UserService.sendEmailToCandWelcomeMessage(emailPlaceholders,toAddress); 
-      }
-
       //extract resume if cv is present
       if(userSignUpDto.CV)
         InvokeLambdaService.triggerResumeExtraction(userSignUpDto.email)

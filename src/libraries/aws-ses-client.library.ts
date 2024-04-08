@@ -157,6 +157,7 @@ class AwsSesClientLibrary {
       templateName: emailDetails.Template,
       toEmail: emailDetails.Destination.ToAddresses,
       fromEmail: emailDetails.Source,
+      placeholders: emailDetails.TemplateData,
     });
 
     // Send the email and return the response

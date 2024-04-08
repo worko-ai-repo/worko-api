@@ -26,6 +26,8 @@ import {
 import CompanyJobService from "./CompanyJob.service";
 import { EmailTemplateNameEnum } from "../enums/EmailTemplate.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
+import UserDetailService from "./UserDetail.service";
+import { ReferralActions } from "../enums/User.enum";
 import { DbUserReferralDto } from "../db/models/UserReferral.model";
 
 /**
@@ -75,12 +77,33 @@ class UserReferralService {
   async update(
     PK: string,
     SK: string,
-    userReferralDTO: UserReferralDTO
+    userReferralDTO: UserReferralDTO,
+    status: string
   ): Promise<any> {
     // Logging the action of updating user Referral in the service layer
     logger.info("Updating user Referral [UserReferralService]");
+    const candEmail: string = PK.split('#').pop() ?? ""; // for valid PK, there will be valid email id
+    const candDetails = await UserDetailService.get(candEmail);
+    const candName = candDetails[0].name;
 
-    return userReferralDao.update(PK, SK, userReferralDTO);
+    let result = await userReferralDao.update(PK, SK, userReferralDTO);
+
+    if(result && status === ReferralActions.DONE)
+    {
+      // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestCompleted function
+      const toAddress: EmailSourceDestinationAddress = {
+        email: candEmail,
+        fullName: candName
+      };
+      const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED = {
+        candName: candName
+      }
+
+      // Function responsible for sending the email to the candidate saying that his referral request has been completed
+      const sendEmailResponse = await this.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders,toAddress);
+    }
+
+    return result;
   }
 
   /**

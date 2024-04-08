@@ -510,9 +510,9 @@ class UserReferralController {
 
       // Extract unnecessary properties before updating referral
       const { PK, SK, updatedAt, ...userReferralDTO } = referral[0];
-
+      
       // Update referral in the database
-      const result = await UserReferralService.update(PK, SK, userReferralDTO);
+      const result = await UserReferralService.update(PK, SK, userReferralDTO, referralstatusUpdate.action);
 
       // Update or create user referral response based on whether response exists
       // If the details are updated and action is "DONE", then email should be sent to the candidate saying that his referral request has been completed

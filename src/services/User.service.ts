@@ -1,14 +1,18 @@
 // Load the local daos
+import APP_CONSTANTS from "../configs/constants.config";
 import userDao from "../daos/User.dao";
 import userDetailDao from "../daos/UserDetail.dao";
 import userSubscriptionDao from "../daos/UserSubscription.dao";
-import { EmailTemplatePlaceholderCAND_WELCOME_MSG } from "../dtos/EmailTemplatePlaceholder.dto";
+import { EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER, EmailTemplatePlaceholderCAND_WELCOME_MSG } from "../dtos/EmailTemplatePlaceholder.dto";
 
 // Load the local dtos
 import { UserSignUpDTO } from "../dtos/User.dto";
 import { EmailTemplateNameEnum } from "../enums/EmailTemplate.enum";
+import { UserType } from "../enums/User.enum";
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 import MasterSubscriptionService from "./MasterSubscription.service";
+import UserDetailService from "./UserDetail.service";
+import UserProfilePercentageService from "./UserProfilePercentage.service";
 import UserSubscriptionService from "./UserSubscription.service";
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
@@ -62,7 +66,24 @@ class UserService {
 
     // Creating new user
     const newUser = await userDetailDao.add(userSignUpDTO, userType);
-    if (userType === "CAND") {
+
+    if (userType === UserType.CAND) {
+      // Prepare details required for sending the Email
+      const candName : string = userSignUpDTO.name;
+      const candEmail : string = userSignUpDTO.email;
+
+      // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
+      const toAddress: EmailSourceDestinationAddress = {
+        email: candEmail,
+        fullName: candName
+      };
+      const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
+        candName: candName
+      }
+
+      // Function responsible for sending a welcome email to the candidate 
+      const sendEmailResponse = await this.sendEmailToCandWelcomeMessage(emailPlaceholders,toAddress);
+      
       // Adding the FREE subscription plan for Candidate
       let planName = "Free";
       const subPlan = await MasterSubscriptionService.getByPlan(planName);
@@ -118,6 +139,64 @@ class UserService {
     global.logger.info("update user Email status to true [service]");
     const SK = await userDetailDao.getUserDetailSK(email);
     userDetailDao.updateEmailVerify(SK, email);
+  }
+
+  /**
+   * sendProfileReminderEmailtoCand
+   * 
+   * This function sends email to the candidate a profile completion reminder
+   * @param email - Email of the candidate
+   */
+  async sendProfileReminderEmailtoCand(email: string) {
+
+    // Get the User details to get his email and name
+    const userDetails = await UserDetailService.get(email);
+    if(!userDetails)
+    {
+      console.log("User with the email doesn't exist");
+      return false;
+    }
+    const candEmail = userDetails[0].emailList.primary;
+    const candName = userDetails[0].name;
+    
+    // Get the User Profile data for calculating percentage
+    const userProfileData = await UserProfilePercentageService.get(email);
+    const percArr = userProfileData[0].candidate
+    const totalCurPerc = percArr.reduce((acc: any, item: { curPerc: any; }) => acc + item.curPerc, 0);
+
+    /**
+     * Getting the creation time from User Profile Service
+     * Although this is correct data, it is not correct process
+     * It should be fetched from UserDetails
+     * Fix the issue of accessing createdAt from UserDetails
+     */
+    const creationDate = userProfileData[0].createdAt;
+    // Get the current date and time
+    const currentDate = new Date();
+    // Calculate the time difference in days
+    const timeDifference = currentDate.getTime() - creationDate.getTime();
+    const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+    // If the user profile completion percentage is less than 80%, then an email should be sent to the user
+    if(totalCurPerc <= APP_CONSTANTS.expProfileperc)
+    {
+      if( (daysDifference >= 1 && daysDifference < 2) 
+      || (daysDifference >= 3 && daysDifference < 4) 
+      || (daysDifference >= 6 && daysDifference < 7))
+      {
+        const toAddress: EmailSourceDestinationAddress = {
+          email: candEmail,
+          fullName: candName
+        };
+        const emailPlaceholders: EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER = {
+          candName: candName
+        }
+        // Function responsible for sending the email to the candidate a profile completion reminder
+        const sendEmailResponse = await this.sendEmailToCandProfileCompletionReminder(emailPlaceholders,toAddress);
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -214,7 +293,28 @@ class UserService {
         toAddress,
         emailPlaceholders,
     );
-  }  
+  }
+  
+  /** 
+   * sendEmailToCandProfileCompletionRemainder
+   * 
+   * Sends candidate a profile completion reminder email.
+   * 
+   * @param {EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER} emailPlaceholders - Placeholders for the email template.
+   * @param {EmailSourceDestinationAddress} toAddress - Object containing the name and email address of the recipient.
+   * @returns { Promise<{ awsMessageId: string | null }> }
+   */
+  async sendEmailToCandProfileCompletionReminder(
+    emailPlaceholders: EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER,
+    toAddress: EmailSourceDestinationAddress
+  ): Promise<{ awsMessageId: string | null }> {
+    // Send email using the email library with the specified template, recipient, and placeholders
+    return emailLibrary.sendEmail(
+        EmailTemplateNameEnum.CAND_PROFILE_COMPLETION_REMINDER,
+        toAddress,
+        emailPlaceholders,
+    );
+  }
 }
 
 // Export an instance of the UserService class

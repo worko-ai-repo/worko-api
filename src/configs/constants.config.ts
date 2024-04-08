@@ -76,6 +76,8 @@ const APP_CONSTANTS = {
       fullName: "Suraj Yadav"
     },
   },
+
+  expProfileperc : 80,
 };
 
 export default APP_CONSTANTS;

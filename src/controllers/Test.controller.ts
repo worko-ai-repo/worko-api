@@ -2,10 +2,11 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local libraries
-import { emailLibrary } from "../libraries/email.library";
+import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 
 // Import Utils
 import HttpStatusCode from "../utils/http-codes.util";
+import UserService from "../services/User.service";
 
 /**
  * TestController
@@ -62,6 +63,31 @@ class TestController {
       next(error);
     }
   };
+
+  /**
+   * sendCandProfileReminderEmail
+   *
+   * Send email to the candidate to remind him to complete his profile
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  sendCandProfileReminderEmail = async (req: Request, res: Response, next: NextFunction) => {
+    
+    try {
+
+      // Get the email of the candidate
+      const email = req.params.id;
+      // Call the service to send profile reminder email
+      const emailResponse = await UserService.sendProfileReminderEmailtoCand(email);
+
+      res.status(HttpStatusCode.OK_200).json(emailResponse);
+      
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 
 export default TestController;
