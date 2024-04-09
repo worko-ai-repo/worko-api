@@ -27,11 +27,38 @@ const serverlessConfiguration: AWS = {
           "dynamodb:Query",
           "dynamodb:GetItem",
           "dynamodb:PutItem",
-          "dynamodb:UpdateItem"
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:BatchGetItem"
         ],
         Resource: [
           "arn:aws:dynamodb:ap-south-1:*:table/worko",
           "arn:aws:dynamodb:ap-south-1:*:table/worko/index/GSI1",
+        ]
+      },
+      {
+        Effect: "Allow",
+        Action: [
+          "ses:SendEmail",
+          "ses:GetContactList",
+          "ses:SendCustomVerificationEmail",
+          "ses:UpdateContactList",
+          "ses:UpdateEmailTemplate",
+          "ses:GetEmailIdentityPolicies",
+          "ses:GetEmailTemplate",
+          "ses:CreateEmailTemplate",
+          "ses:SendBulkEmail",
+          "ses:GetEmailIdentity",
+          "ses:CreateTemplate",
+          "ses:UpdateTemplate",
+          "ses:GetTemplate",
+          "ses:DeleteTemplate",
+          "ses:SendTemplatedEmail"
+        ],
+        Resource: [
+          "arn:aws:ses:ap-south-1:787066054733:configuration-set/*",
+          "arn:aws:ses:ap-south-1:787066054733:identity/worko.ai",
+          "arn:aws:ses:ap-south-1:787066054733:template/*"
         ]
       },
       {
@@ -53,7 +80,8 @@ const serverlessConfiguration: AWS = {
           "lambda:InvokeAsync"
         ],
         Resource: [
-          "rn:aws:lambda:ap-south-1:787066054733:function:worko-jd-resume-matching"
+          "arn:aws:lambda:ap-south-1:787066054733:function:worko-jd-resume-matching",
+          "arn:aws:lambda:ap-south-1:787066054733:function:resume-parser"
         ]
       }
     ],

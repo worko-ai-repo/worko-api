@@ -17,6 +17,7 @@ export interface CompanyDTO {
   carrierPage: string; // Carrier page URL
   linkedIn: string; // LinkedIn page URL
   logoUrl: string; // URL of the company's logo
+  logo:  string;  // logo name
 }
 
 interface CompanyObject {
