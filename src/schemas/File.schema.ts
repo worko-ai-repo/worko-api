@@ -37,6 +37,20 @@ export const FileGeneratePsuToUploadUserProfilePicDTOValidation = Joi.object({
 });
 
 /**
+ * FileGeneratePsuToUploadCareerResumeDTOValidation
+ *
+ * Joi validation schema to validate the request data.
+ */
+export const FileGeneratePsuToUploadCareerResumeDTOValidation = Joi.object({
+  careerCVFileName: Joi.string().required().messages({
+    "any.required": "The 'careerCVFileName' field is required",
+  }),
+  careerCVFileMimeType: Joi.string().required().messages({
+    "any.required": "The 'careerCVFileMimeType' field is required",
+  }),
+});
+
+/**
  * FileGeneratePreSignedUrlsToViewDTOValidation
  *
  * Joi validation schema to validate the request data.

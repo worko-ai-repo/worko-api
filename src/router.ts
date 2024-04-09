@@ -25,6 +25,7 @@ import UserAvailabilityRouter from "./routers/UserAvailability.router";
 import UserReviewRouter from "./routers/UserReview.router";
 import UserSupportRouter from "./routers/UserSupport.router";
 import UserCorporateRequestRouter from "./routers/UserCorporateRequest.router";
+import UserCareerRequestRouter from "./routers/UserCareerRequest.router";
 
 // File routers
 import FileRouter from "./routers/File.router";
@@ -116,8 +117,11 @@ router.use("/test", TestRouter);
 // Register the "User Support " routers
 router.use("/support", UserSupportRouter);
 
-// Register the "User Support " routers
+// Register the "User Corporate " routers
 router.use("/corporate", UserCorporateRequestRouter);
+
+// Register the "User Career Request " routers
+router.use("/career", UserCareerRequestRouter);
 
 // Export the router
 export default router;

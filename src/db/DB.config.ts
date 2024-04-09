@@ -35,6 +35,7 @@ import { UserReviewModel } from "./models/UserReview.model";
 import { UserRatingAvgModel } from "./models/UserRatingAvg.model";
 import { UserSupportModel } from "./models/UserSupport.model";
 import { UserCorporateRequestModel } from "./models/UserCorporateRequest.model";
+import { UserCareerRequestModel } from "./models/UserCareerRequest.model";
 
 /**
  * DBConfig
@@ -133,6 +134,7 @@ class DBConfig {
       UserRatingAvgModel,
       UserSupportModel,
       UserCorporateRequestModel,
+      UserCareerRequestModel,
     ]);
   }
 }

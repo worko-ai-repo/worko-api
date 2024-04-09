@@ -17,6 +17,7 @@ import UlidService from "../services/Ulid.service";
 // Import Schemas
 import {
   FileGeneratePreSignedUrlsToViewDTOValidation,
+  FileGeneratePsuToUploadCareerResumeDTOValidation,
   FileGeneratePsuToUploadUserProfilePicDTOValidation,
   FileGeneratePsuToUploadUserResumeDTOValidation,
 } from "../schemas/File.schema";
@@ -68,6 +69,10 @@ class FileController {
       // Frontend wants to generate the pre-signed url to upload the user's profilepic
       else if (resourceKey == FileResourceKey.USER_PROFILE_PIC) {
         return this.generatePsuToUploadUserProfilePic(req, res, next);
+      }
+      // Frontend wants to generate the pre-signed URL to upload the user's career CV
+      else if (resourceKey == FileResourceKey.CAREER_RESUME) {
+        return this.generatePsuToUploadCareerResume(req, res, next);
       }
 
       // As resource keys are not matched above, let frontend know about the same.
@@ -122,6 +127,10 @@ class FileController {
       // Frontend wants to get the user's profilePic
       else if (resourceKey === FileResourceKey.USER_PROFILE_PIC) {
         return this.getUserProfilePic(req, res, next);
+      }
+      // Frontend wants to get the user's profilePic
+      else if (resourceKey === FileResourceKey.CAREER_RESUME) {
+        return this.getUserCareerResume(req, res, next);
       }
 
       // As resource keys are not matched above, let frontend know about the same.
@@ -291,6 +300,82 @@ class FileController {
   };
 
   /**
+ * generatePsuToUploadCareerResume
+ *
+ * Generate the Pre-signed URL to upload user's career CV.
+ * The frontend will upload the user's career CV to the cloud using the provided pre-signed URL.
+ *
+ * Note: Here the file mime type and extension of the file is expected in the request to provide flexibility.
+ *
+ * @param req Request
+ * @param res Response
+ * @param next NextFunction
+ * @returns {Promise<any>}
+ */
+  private generatePsuToUploadCareerResume = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> => {
+    try {
+      // Get the request body
+      let requestBodyObject = req.body;
+
+      // Validate the request data
+      const { error } =
+        FileGeneratePsuToUploadCareerResumeDTOValidation.validate(
+          requestBodyObject,
+          {
+            abortEarly: false,
+          }
+        );
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Get the base path where the user's career CV file would be uploaded
+      const uploadPath =
+        APP_CONSTANTS.AWS_S3_DIR_PATHS.CAREER_RESUME;
+
+      // Get the career CV file extension
+      const careerCVFileExtension = requestBodyObject.careerCVFileName
+        .split(".")
+        .pop() as string; // It is expected in request payload to provide flexibility
+
+      // Prepare the career CV file name
+      const careerCvCloudFileName =
+        UlidService.getUlidId() + "." + careerCVFileExtension;
+
+      // Generate the AWS S3 Signed Url
+      const signedUrl = await awsS3ClientLibrary.getSignedUrlForUploadingObject(
+        process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+        uploadPath + "/" + careerCvCloudFileName,
+        APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
+        {
+          ContentType: requestBodyObject.careerCVFileMimeType,
+        }
+      );
+
+      // Prepare the response object
+      const resObject: PreSignedUrlToUploadFileResponseDto = {
+        userFileName: requestBodyObject.careerCVFileName,
+        cloudFileName: careerCvCloudFileName,
+        fileMimeType: requestBodyObject.careerCVFileMimeType,
+        fileExtension: careerCVFileExtension,
+        awsS3SignedUrl: signedUrl,
+      };
+
+      // Return the response
+      return res.status(HttpStatusCode.OK_200).json(resObject);
+    } catch (error) {
+      // Let global error handler handle the exception (app.ts)
+      next(error);
+    }
+  };
+
+
+  /**
    * getUserResume
    *
    * Get the user's resume from cloud storage.
@@ -365,6 +450,43 @@ class FileController {
       next(error);
     }
   };
+  
+  /**
+ * getUserCareerResume
+ *
+ * Get the user's career resume from cloud storage.
+ *
+ * @param req Request
+ * @param res Response
+ * @param next NextFunction
+ * @returns {Promise<any>}
+ */
+private getUserCareerResume = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+     // get cloudFile name to create Signed URL
+    const cloudFileName = req.params["cloudFileName"];
+    
+    // Construct the file path in the cloud storage
+    const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.CAREER_RESUME;
+
+    // Assume that you have a method to generate the object URL
+    const objectUrl = await awsS3ClientLibrary.generateObjectUrl(
+      process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+      filePath + "/" + cloudFileName
+    );
+
+    // Return the object URL to the frontend
+    return res.status(HttpStatusCode.OK_200).json({ objectUrl });
+  } catch (error) {
+    // Let global error handler handle the exception (app.ts)
+    next(error);
+  }
+};
+
 }
 
 export default FileController;

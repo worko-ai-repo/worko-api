@@ -10,4 +10,7 @@ export enum FileResourceKey {
 
     // Company related recorce keys
     COMPANY_LOGO = "COMPANY_LOGO",
+
+    // career related resource keys
+    CAREER_RESUME = "CAREER_RESUME",
 }

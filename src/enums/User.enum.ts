@@ -86,3 +86,18 @@ export enum UserCorporateRequestStatusEnum {
   REJECTED = "REJECTED",
   CLOSED = "CLOSED"
 }
+
+/**
+ * UserCareerRequest
+ * 
+ * Possible statuses for which user career request can be created.
+ */
+
+export enum UserCareerRequestStatusEnum {
+  APPLIED = "APPLIED",
+  SHORTLISTED = "SHORTLISTED",
+  REJECTED = "REJECTED",
+  INTERVIEW_SCHEDULED = "INTERVIEW_SCHEDULED",
+  UNDER_CONSIDERATION = "UNDER_CONSIDERATION",
+  HIRED = "HIRED",
+}

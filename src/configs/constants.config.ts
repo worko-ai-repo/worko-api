@@ -41,7 +41,10 @@ const APP_CONSTANTS = {
   AWS_S3_DIR_PATHS: {
     USER_RESUME: "users/{userId}/resumes", // To upload the individual user's resume
     USER_PROFILE_PIC: "users/{userId}/profilePics", // To upload the individual user's profile pics
+    CAREER_RESUME: "career-resumes" // To upload the resumes uplaoded via career page
   },
+
+
 
   /**
    * AWS S3 file names for different types of files.
