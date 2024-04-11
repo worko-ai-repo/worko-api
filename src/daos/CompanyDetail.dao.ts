@@ -41,6 +41,7 @@ class CompanyDetailDao implements BaseDao {
       "linkedIn",
       "logoUrl",
       "carrierPage",
+      "logo",
     ];
 
     let query: Query<AnyItem>;
