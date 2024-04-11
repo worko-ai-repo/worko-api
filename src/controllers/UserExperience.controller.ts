@@ -38,6 +38,7 @@ class UserExperienceController {
   getByEmail = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Get user experience by id [controller]");
+
       // Extract email from request parameters
       const email = req.params.id;
       const { error } = validateEmailField(email);
@@ -47,6 +48,11 @@ class UserExperienceController {
 
       // Retrieve the user experience based on the email
       const userExperience = await UserExperienceService.get(email);
+
+      // If not experience found for the user, then return an empty array
+      if (!userExperience.count){
+        return res.status(HttpStatusCode.OK_200).json([]);
+      }
 
       // Get company IDs
       const companyIDs: string[] = userExperience.map(obj => obj.companyId);
@@ -67,7 +73,7 @@ class UserExperienceController {
       });
 
       // Send successful response with user data and company details
-      res.status(HttpStatusCode.OK_200).json(finalUserExperience);
+      return res.status(HttpStatusCode.OK_200).json(finalUserExperience);
     } catch (error: any) {
       // Handle errors
       // Check if the error is due to user not found
