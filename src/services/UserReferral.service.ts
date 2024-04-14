@@ -23,8 +23,7 @@ import {
 } from "../libraries/email.library";
 
 // Import Enums
-import CompanyJobService from "./CompanyJob.service";
-import { EmailTemplateNameEnum } from "../enums/EmailTemplate.enum";
+import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import UserDetailService from "./UserDetail.service";
 import { ReferralActions } from "../enums/User.enum";
@@ -309,7 +308,7 @@ class UserReferralService {
   ): Promise<{ awsMessageId: string | null }> {
     // Send email using the email library with the specified template, recipient, and placeholders
     return emailLibrary.sendEmail(
-      EmailTemplateNameEnum.CAND_REFERRAL_REQ_ACCEPTED,
+      EmailTemplateEnum.CAND_REFERRAL_REQ_ACCEPTED,
       toAddress,
       emailPlaceholders,
     );
@@ -330,7 +329,7 @@ class UserReferralService {
   ): Promise<{ awsMessageId: string | null }> {
     // Send email using the email library with the specified template, recipient, and placeholders
     return emailLibrary.sendEmail(
-        EmailTemplateNameEnum.CAND_REFERRAL_REQ_COMPLETED,
+        EmailTemplateEnum.CAND_REFERRAL_REQ_COMPLETED,
         toAddress,
         emailPlaceholders,
     );

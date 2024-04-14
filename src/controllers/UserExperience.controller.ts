@@ -15,7 +15,7 @@ import CompanyService from "../services/Company.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
-import { RequestValidationError } from "../utils/errors.util";
+import { BaseError, RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
@@ -55,17 +55,21 @@ class UserExperienceController {
       }
 
       // Get company IDs
-      const companyIDs: string[] = userExperience.map(obj => obj.companyId);
+      const companyIDs: string[] = userExperience.map((obj) => obj.companyId);
 
       // Get unique company IDs using a Set
       const uniqueCompanyIDs: string[] = Array.from(new Set(companyIDs));
 
       // Fetch company details for each unique company ID
-      const companyDetailsResults = await CompanyService.getCompanyDetailsByIds(uniqueCompanyIDs);
+      const companyDetailsResults = await CompanyService.getCompanyDetailsByIds(
+        uniqueCompanyIDs
+      );
 
       // Prepare response data
-      const finalUserExperience = userExperience.map(item => {
-        const companyDetails = companyDetailsResults.find(companyDetail => companyDetail.id === item.companyId);
+      const finalUserExperience = userExperience.map((item) => {
+        const companyDetails = companyDetailsResults.find(
+          (companyDetail) => companyDetail.id === item.companyId
+        );
         return {
           ...item,
           companyLogoUrl: companyDetails?.logoUrl || null,
@@ -79,14 +83,15 @@ class UserExperienceController {
       // Check if the error is due to user not found
       if (error.message === "User not found") {
         // If user not found, send a 404 response with an informative error message
-        res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found. Please check the email." });
+        res
+          .status(HttpStatusCode.NOT_FOUND_404)
+          .json({ error: "User not found. Please check the email." });
       } else {
         // If it's another type of error, pass it to the next error handler
         next(error);
       }
     }
   };
-
 
   /**
    * create
@@ -152,6 +157,114 @@ class UserExperienceController {
       res.status(HttpStatusCode.OK_200).json();
     } catch (error: any) {
       // If it's another type of error, pass it to the next error handler
+      next(error);
+    }
+  };
+
+  /**
+   * sendOtptoVerifyUserWorkEmail
+   *
+   * Sends a One-Time Password (OTP) to a user's work email address for verification.
+   *
+   * @param {Request} req - The request object containing user email address and ID.
+   * @param {Response} res - The response object to send back to the client.
+   * @param {NextFunction} next - The next middleware function in the request-response cycle.
+   * @returns {Promise<void>} - A Promise that resolves when the OTP is sent successfully.
+   */
+  sendOtptoVerifyUserWorkEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      // Extract primary email address from request parameters
+      const primaryEmail = req.params.primaryEmail;
+
+      // Extract user experience ID from request parameters
+      const experienceId = req.params.id;
+
+      // Get user's IP address from request
+      const userIpAddress: string = req.ip as string;
+
+      // Validate email address, If email validation fails throw a validation error
+      const { error } = validateEmailField(primaryEmail);
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Checking whether the email and experience id are of the same user or not
+      const userExperience = await UserExperienceService.getByUserPrimaryEmailAndId(primaryEmail, experienceId);
+      if (!userExperience.length) {
+        throw new BaseError("The experience doesn't belong to the logged in user.", HttpStatusCode.BAD_REQUEST_400);
+      }
+      
+      // Send an email to the user to verify their work email address.
+      const userOtpDetails = await UserExperienceService.sendOtptoVerifyUserWorkEmail(
+        primaryEmail,
+        experienceId,
+        userIpAddress,
+      );
+
+      // Send success response with user OTP object
+      res.status(HttpStatusCode.OK_200).json({
+        id: userOtpDetails.id
+      });
+    } catch (error: any) {
+      next(error);
+    }
+  };
+
+  /**
+   * verifyWorkEmail
+   *
+   * Verifies the One-Time Password (OTP) provided by the user.
+   *
+   * @param {Request} req - The request object containing user ID, email address, and OTP.
+   * @param {Response} res - The response object to send back to the client.
+   * @param {NextFunction} next - The next middleware function in the request-response cycle.
+   * @returns {Promise<void>} - A Promise that resolves when OTP verification is complete.
+   */
+  verifyWorkEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      // Extract user primary email address from request parameters
+      const primaryEmail = req.params.primaryEmail;
+
+      // Extract user experience ID from request parameters
+      const experienceId = req.params.id;
+
+      // Extract OTP from request body
+      const otp = req.body.otp;
+
+      // Validate email address, If email validation fails throw a validation error
+      const { error } = validateEmailField(primaryEmail);
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Checking whether the email and experience id are of the same user or not
+      const userExperience = await UserExperienceService.getByUserPrimaryEmailAndId(primaryEmail, experienceId);
+      if (!userExperience.length) {
+        throw new BaseError("The experience doesn't belong to the logged in user.", HttpStatusCode.BAD_REQUEST_400);
+      }
+
+      // Verify the OTP received from user to make sure the work email belogs to the user only.
+      const isOtpVerified = await UserExperienceService.verifyOtpforUserWorkEmail(
+        primaryEmail,
+        experienceId,
+        otp,
+      );
+
+      // Send OTP verification details in the response
+      res
+        .status(HttpStatusCode.OK_200)
+        .json({
+          verificationStatus: isOtpVerified
+        });
+    } catch (error: any) {
       next(error);
     }
   };

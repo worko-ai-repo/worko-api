@@ -102,4 +102,4 @@ const UserExperienceModel = dynamoose.model<DbUserExperienceDto>(
 );
 
 // Export the UserExperienceModel
-export { UserExperienceModel };
+export { UserExperienceModel, DbUserExperienceDto };

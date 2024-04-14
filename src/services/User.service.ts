@@ -2,12 +2,14 @@
 import APP_CONSTANTS from "../configs/constants.config";
 import userDao from "../daos/User.dao";
 import userDetailDao from "../daos/UserDetail.dao";
-import userSubscriptionDao from "../daos/UserSubscription.dao";
-import { EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER, EmailTemplatePlaceholderCAND_WELCOME_MSG } from "../dtos/EmailTemplatePlaceholder.dto";
+import { 
+  EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER, 
+  EmailTemplatePlaceholderCAND_WELCOME_MSG
+} from "../dtos/EmailTemplatePlaceholder.dto";
 
 // Load the local dtos
 import { UserSignUpDTO } from "../dtos/User.dto";
-import { EmailTemplateNameEnum } from "../enums/EmailTemplate.enum";
+import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { UserType } from "../enums/User.enum";
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 import MasterSubscriptionService from "./MasterSubscription.service";
@@ -63,7 +65,7 @@ class UserService {
    */
   async addUser(userSignUpDTO: UserSignUpDTO, userType: string) {
     global.logger.info("Create candidate/employee [service]");
-
+    
     // Creating new user
     const newUser = await userDetailDao.add(userSignUpDTO, userType);
 
@@ -103,7 +105,7 @@ class UserService {
         );
       }
     }
-
+    
     return newUser;
   }
 
@@ -289,7 +291,7 @@ class UserService {
   ): Promise<{ awsMessageId: string | null }> {
     // Send email using the email library with the specified template, recipient, and placeholders
       return emailLibrary.sendEmail(
-        EmailTemplateNameEnum.CAND_WELCOME_MSG,
+        EmailTemplateEnum.CAND_WELCOME_MSG,
         toAddress,
         emailPlaceholders,
     );
@@ -310,7 +312,7 @@ class UserService {
   ): Promise<{ awsMessageId: string | null }> {
     // Send email using the email library with the specified template, recipient, and placeholders
     return emailLibrary.sendEmail(
-        EmailTemplateNameEnum.CAND_PROFILE_COMPLETION_REMINDER,
+        EmailTemplateEnum.CAND_PROFILE_COMPLETION_REMINDER,
         toAddress,
         emailPlaceholders,
     );

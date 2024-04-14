@@ -52,7 +52,10 @@ class EmailLibrary {
     ccAddresses?: EmailSourceDestinationAddress[],
     bccAddresses?: EmailSourceDestinationAddress[],
     fromAddress?: EmailSourceDestinationAddress,
-  ): Promise<{ awsMessageId: string | null }> {
+  ): Promise<{ 
+    awsMessageId: string | null, 
+    systemLogId: string | null 
+  }> {
     // Get the email template details from the local DB to send the email
     let templateDetails = await emailTemplateService.getEmailTemplateByTemplateName(templateName);
 
@@ -64,7 +67,10 @@ class EmailLibrary {
         methodName: this.sendEmail.name,
       });
 
-      return { awsMessageId: null };
+      return { 
+        awsMessageId: null, 
+        systemLogId: null 
+      };
     }
 
     // Check if the status is not ENABLED then email cannot be sent, so add necessary logging, and return appropriate response
@@ -76,7 +82,10 @@ class EmailLibrary {
         templateStatus: templateDetails.status,
       });
 
-      return { awsMessageId: null };
+      return { 
+        awsMessageId: null, 
+        systemLogId: null 
+      };
     }
 
     // Prepare from address
@@ -124,7 +133,10 @@ class EmailLibrary {
         sendTemplatedEmailAwsSesResponse: sendTemplatedEmailAwsSesResponse,
       });
 
-      return { awsMessageId: null };
+      return { 
+        awsMessageId: null, 
+        systemLogId: null 
+      };
     }
 
     // As the email has been ent, so create email log in the local database for future reference
@@ -156,7 +168,10 @@ class EmailLibrary {
     });
 
     // Return the AWS SES response
-    return { awsMessageId: sendTemplatedEmailAwsSesResponse.MessageId }
+    return { 
+      awsMessageId: sendTemplatedEmailAwsSesResponse.MessageId,
+      systemLogId: emailLogCreateResponse.id 
+    }
   }
 }
 

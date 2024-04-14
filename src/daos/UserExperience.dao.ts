@@ -2,11 +2,14 @@
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { UserExperienceModel } from "../db/models/UserExperience.model";
+import { DbUserExperienceDto, UserExperienceModel } from "../db/models/UserExperience.model";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
+
+// Load dtos and other packages
 import { UserExperienceDTO } from "../dtos/UserExperience.dto";
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // UserExperienceDao class implementing the BaseDao interface
 class UserExperienceDao implements BaseDao {
@@ -33,6 +36,35 @@ class UserExperienceDao implements BaseDao {
   }
 
   /**
+   * getByUserPrimaryEmailAndId
+   *
+   * Retrieves user experience data by primary email and ID asynchronously.
+   *
+   * @param {string} email - The primary email of the user.
+   * @param {string} id - The ID of the experience to retrieve.
+   * @returns {Promise<QueryResponse<DbUserExperienceDto>>} A promise that resolves with the query response containing the user's experience data.
+   */
+  async getByUserPrimaryEmailAndId(
+    email: string,
+    id: string
+  ): Promise<QueryResponse<DbUserExperienceDto>> {
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    
+    const SK = this.sortKeys.SK_ID.strtr({
+      "{uuid}": id,
+    });
+
+    return UserExperienceModel
+      .query("PK")
+      .eq(PK)
+      .where("SK")
+      .eq(SK)
+      .exec();
+  }
+
+  /**
    * @param email
    * @param UserExperienceDto
    * @returns
@@ -50,7 +82,7 @@ class UserExperienceDao implements BaseDao {
       id: id,
       isEmailVerified: false,
       ...userExperienceDto,
-      companyId: userExperienceDto.companySK.split("#").pop()
+      companyId: userExperienceDto.companySK.split("#").pop(),
     };
     return UserExperienceModel.create(userExperienceDTO);
   }
@@ -70,6 +102,30 @@ class UserExperienceDao implements BaseDao {
       "{primaryEmail}": email,
     });
     return UserExperienceModel.update({ PK: PK, SK: SK }, userExperienceDTO);
+  }
+  
+  /**
+   * verifyWorkEmail
+   * 
+   * A description of the entire function.
+   *
+   * @param {string} primaryEmail - description of parameter
+   * @param {string} id - description of parameter
+   * @return {Promise<DbUserExperienceDto>} description of return value
+   */
+  async verifyWorkEmail(
+    primaryEmail: string,
+    id: string
+  ): Promise<DbUserExperienceDto> {
+    let inputKey = {
+      PK: this.partitianKey.strtr({
+        "{primaryEmail}": primaryEmail,
+      }),
+      SK: this.sortKeys.SK_ID.strtr({
+        "{uuid}": id,
+      }),
+    };
+    return UserExperienceModel.update(inputKey, { isEmailVerified: true });
   }
 }
 

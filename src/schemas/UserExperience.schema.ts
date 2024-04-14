@@ -147,3 +147,22 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
   }).options({ stripUnknown: true })
 );
 
+export const workEmailVerificationRequestApiDtovalidation = Joi.object({
+
+    // Validate userId field
+    userId: Joi.string().required().messages({
+        "any.required": "User ID is required.",
+        "string.empty": "User ID should not be empty.",
+    }),
+
+    // Validate userEmailAddress field
+    userEmailAddress: Joi.string().required().messages({
+        "any.required": "User Email Address is required.",
+        "string.empty": "User Email Address should not be empty.",
+    }),
+
+    otp: Joi.string().required().messages({
+        "any.required": "OTP is required.",
+        "string.empty": "OTP should not be empty.",
+    }),
+})

@@ -13,3 +13,8 @@ export interface EmailTemplatePlaceholderCAND_WELCOME_MSG {
 export interface EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER {
     candName: string;
 }
+
+export interface EmailTemplatePlaceholderUSER_WORK_EMAIL_VERIFICATION_OTP {
+    userFullName: string;
+    otp: string;
+}

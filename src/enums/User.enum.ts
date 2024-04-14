@@ -74,12 +74,22 @@ export enum UserSupportContextTypeEnum {
   SERVICE = 'SERVICE',
 }
 
+export enum UserOtpStatusEnum {
+  ACTIVE = 'ACTIVE',
+  USED = 'USED',
+  EXPIRED = 'EXPIRED'
+}
+
+export enum UserOtpSentViaEnum {
+  SMS = "SMS",
+  EMAIL = "EMAIL"
+}
+
 /**
  * UserCorporateRequest
  * 
  * Possible statuses for which user corporate request can be created.
  */
-
 export enum UserCorporateRequestStatusEnum {
   OPEN = "OPEN",
   IN_PROGRESS = "IN_PROGRESS",
@@ -92,7 +102,6 @@ export enum UserCorporateRequestStatusEnum {
  * 
  * Possible statuses for which user career request can be created.
  */
-
 export enum UserCareerRequestStatusEnum {
   APPLIED = "APPLIED",
   SHORTLISTED = "SHORTLISTED",
