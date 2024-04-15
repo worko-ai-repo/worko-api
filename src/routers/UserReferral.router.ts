@@ -11,17 +11,17 @@ const userReferralController = new UserReferralController();
 const UserReferralRouter = Router();
 
 // Create referral based on the provided query parameter
-UserReferralRouter.post("/:id/referral/request", userReferralController.createReferral
+UserReferralRouter.post("/:userEmail/referral/request", userReferralController.createReferralByCand
 );
 
 // Create referral based on the provided query parameter
-UserReferralRouter.get("/:id/referral", userReferralController.get);
+UserReferralRouter.get("/:userEmail/referral", userReferralController.getReferralsForCand);
 
 // Get matching Score
-UserReferralRouter.get("/:id/referral/:referralId/score", userReferralController.getMatchingScore
+UserReferralRouter.get("/:id/referral/:referralId/score", userReferralController.getReferralScoreForCand
 );
 
-UserReferralRouter.put("/:candEmail/referral/:referralId/:newStatus", userReferralController.updateStatus
+UserReferralRouter.put("/:candEmail/referral/:referralId/:newStatus", userReferralController.updateReferralStatusByCand
 );
 
 export default UserReferralRouter;

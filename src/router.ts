@@ -31,7 +31,7 @@ import UserCareerRequestRouter from "./routers/UserCareerRequest.router";
 import FileRouter from "./routers/File.router";
 
 // Referral routers
-import ReferralRouter from "./routers/Referral.router";
+import EmpReferralRouter from "./routers/EmpReferral.router";
 
 // Master routers
 import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
@@ -99,7 +99,7 @@ router.use("/user", UserReviewRouter);
 router.use("/file", FileRouter);
 
 // Regitser the "Referral" router
-router.use("/referral", ReferralRouter);
+router.use("/emp", EmpReferralRouter);
 
 // Regitser the "Master Subscription" routers
 router.use("/msubscription", MasterSubscriptionRouter);

@@ -1,8 +1,10 @@
 // Load the local daos
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import userReferralResponseDao from "../daos/UserReferralResponse.dao";
 
 //Load the local dto
 import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
+import { DbUserReferralResponseDto } from "../db/models/UserReferralResponse.model";
 
 /**
  * UserReferralResponseService class is responsible for managing user ReferralResponse-related operations.
@@ -21,6 +23,23 @@ class UserReferralResponseService {
     );
     return userReferralResponseDao.get(email);
   }
+
+  /**
+   * getByEmailWithSpecifiedAttributes
+   * 
+   * Retrieves user ReferralResponse by email.
+   *
+   * @param email - Email of the user
+   * @returns {Promise<any>} - A Promise that resolves to the ReferralResponse of the user
+   */
+  async getByEmailWithSpecifiedAttributes(email: string, attributes: string[]): Promise<any> {
+    // Logging the action of getting user ReferralResponse by email in the service layer
+    global.logger.info(
+      "Fetching user ReferralResponse by email [UserReferralResponseService]"
+    );
+    return userReferralResponseDao.getByEmailWithSpecifiedAttributes(email, attributes);
+  }
+
 
   /**
    * Creates a new user ReferralResponse.

@@ -3,6 +3,8 @@ import userReferralDao from "../daos/UserReferral.dao";
 
 // import Services
 import UserService from "./User.service";
+import UserReferralResponseService from "./UserReferralResponse.service";
+import UserDetailService from "./UserDetail.service";
 
 // Load the local dtos
 import { UserReferralRequestDTO } from "../dtos/User.dto";
@@ -16,18 +18,20 @@ import {
   EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED
 } from "../dtos/EmailTemplatePlaceholder.dto";
 
+// import models
+import { DbUserReferralDto } from "../db/models/UserReferral.model";
+
 // Import Libraries
 import {
   EmailSourceDestinationAddress,
   emailLibrary,
 } from "../libraries/email.library";
+import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import Enums
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
-import UserDetailService from "./UserDetail.service";
 import { ReferralActions } from "../enums/User.enum";
-import { DbUserReferralDto } from "../db/models/UserReferral.model";
 
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
@@ -39,7 +43,7 @@ class UserReferralService {
    * @param referralRequest - Referral request Referrals
    * @param email - Email of the user making the referral request
    */
-  async referralRequest(
+  async create(
     referralRequest: UserReferralRequestDTO,
     email: string
   ) {
@@ -62,7 +66,7 @@ class UserReferralService {
     }
 
     console.log("cTesting: ", jdExtract); */
-    return userReferralDao.requestReferral(referralRequest, email);
+    return userReferralDao.create(referralRequest, email);
   }
 
   /**
@@ -81,7 +85,7 @@ class UserReferralService {
   ): Promise<any> {
     // Logging the action of updating user Referral in the service layer
     logger.info("Updating user Referral [UserReferralService]");
-    const candEmail: string = PK.split('#').pop() ?? ""; // for valid PK, there will be valid email id
+    const candEmail: string = PK.split("#").pop() ?? ""; // for valid PK, there will be valid email id
     const candDetails = await UserDetailService.get(candEmail);
     const candName = candDetails[0].name;
 
@@ -113,9 +117,9 @@ class UserReferralService {
    * @param email Email of the user
    * @returns matchingScore
    */
-  async matchingScore(referralId: string, email: string) {
+  async getReferralScoreForCand(referralId: string, email: string) {
     console.log("Get referral matching score [service]");
-    return userReferralDao.getScore(email, referralId);
+    return userReferralDao.getReferralScoreForCand(email, referralId);
   }
 
   /**
@@ -138,10 +142,12 @@ class UserReferralService {
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    *
    */
-  async getByGSI1PK(companyId: string): Promise<any> {
+  async getEmpReferralsByCompanyId(
+    companyId: string
+  ): Promise<QueryResponse<DbUserReferralDto>> {
     // Logging the action of getting user Referral by companyId in the service layer
     logger.info("Fetching Referrals by companyId  [UserReferralService]");
-    return userReferralDao.getByGSI1PK(companyId);
+    return userReferralDao.getEmpReferralsByCompanyId(companyId);
   }
 
   /**
@@ -167,10 +173,14 @@ class UserReferralService {
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    *
    */
-  async getByGSI1PKAndStatus(companySK: string, status: string): Promise<any> {
+  async getByGSI1PKAndStatus(
+    companyId: string,
+    status: string
+  ): Promise<QueryResponse<DbUserReferralDto>> {
     // Logging the action of getting user Referral by GSI1PK & status in the service layer
     logger.info("Fetching Referral by GSI1PK and status [UserReferralService]");
-    return userReferralDao.getByGSI1PKAndStatus(companySK, status);
+
+    return userReferralDao.getByGSI1PKAndStatus(companyId, status);
   }
 
   /**
@@ -194,11 +204,10 @@ class UserReferralService {
    * @param status - referral status
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getByStatus(email: string, status: string) {
+  async getReferralsForCand(email: string, status: string):Promise<QueryResponse<DbUserReferralDto>> {
     // Logging the action of getting user Referral by status in the service layer
     logger.info("Fetching user Referral by status [UserReferralService]");
-
-    return userReferralDao.getByStatus(email, status);
+    return userReferralDao.getReferralsForCand(email, status);
   }
 
   /**
@@ -209,7 +218,11 @@ class UserReferralService {
    * @param status - status
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async updateStatus(referralId: string, candEmail: string, newStatus: string): Promise<DbUserReferralDto> {
+  async updateStatus(
+    referralId: string,
+    candEmail: string,
+    newStatus: string
+  ): Promise<DbUserReferralDto> {
     // Logging the action of updating user Referral status in the service layer
     global.logger.info("Updating user Referral status [UserReferralService]");
 
@@ -238,13 +251,13 @@ class UserReferralService {
     // Set the actionDate for the withdrawal payload
     withdrawnReferralPayload.actionDate = new Date();
 
-
     // Update status with withdrawal details
-    const updatedReferralStatus = userReferralDao.updateStatusForWithdrawnReferral(
-      referralId,
-      candEmail,
-      withdrawnReferralPayload
-    );
+    const updatedReferralStatus =
+      userReferralDao.updateStatusForWithdrawnReferral(
+        referralId,
+        candEmail,
+        withdrawnReferralPayload
+      );
 
     return updatedReferralStatus;
   }
@@ -269,9 +282,6 @@ class UserReferralService {
         toAddress
       );
   }
-
-
-
 
   /**
    * updates the status of user Referral
@@ -333,7 +343,145 @@ class UserReferralService {
         toAddress,
         emailPlaceholders,
     );
-  }  
+  }
+
+  /**
+   * getReferralsByIdsUsingGsis
+   * 
+   * Fetches referrals based on array of referral IDs.
+   *
+   * @param {string[]} referralIds - Array of referral IDs
+   * @return { Promise<QueryResponse<DbUserReferralDto>[]> } - A Promise that resolves to the Referrals
+   */
+  async getReferralsByIdsUsingGsis(referralIds: string[]): Promise<QueryResponse<DbUserReferralDto>[]> {
+    return userReferralDao.getReferralsByIdsUsingGsis(referralIds);
+  }
+
+  /**
+   * getEmployeeReferrals
+   * 
+   * Retrieves employee referrals based on their primary email, company ID, and referral status.
+   * 
+   * @param {string} empPrimaryEmail - Employee's primary email
+   * @param {string} companyId - Company ID
+   * @param {string} referralStatus - Referral status
+   */
+  async getEmployeeReferrals(
+    empPrimaryEmail: string,
+    companyId: string,
+    referralStatus: string
+  ) {
+    // If referralStatus is AWAITING then fetch the details 
+    if (referralStatus === ReferralStatus.AWAITING) {
+      // If status is awaiting, call the function to get awaiting referrals
+      return this.getEmployeeAwaitingReferrals(
+        empPrimaryEmail,
+        companyId,
+        referralStatus
+      );
+    } else {
+      // Otherwise, call the function to get referrals by status
+      return this.getEmployeeReferralsByStatus(empPrimaryEmail, referralStatus);
+    }
+  }
+
+  /**
+   * getEmployeeAwaitingReferrals
+   * 
+   * Retrieves employee awaiting referrals based on their primary email and company ID.
+   * 
+   * @param {string} empPrimaryEmail - Employee's primary email
+   * @param {string} companyId - Company ID
+   * @param {string} referralStatus - Referral status
+   * @returns {Promise<DbUserReferralDto[]>} - A Promise that resolves to the awaiting referrals
+   */
+  async getEmployeeAwaitingReferrals(
+    empPrimaryEmail: string,
+    companyId: string,
+    referralStatus: string
+  ): Promise<DbUserReferralDto[]> {
+    try {
+      // Get employee's responses given to different referrals by empPrimaryEmail
+      const userReferralResponse = await UserReferralResponseService.get(
+        empPrimaryEmail
+      );
+      const empPassedRefIds = Array.from(new Set(userReferralResponse[0]?.passedRefIds || []));
+      const empRejectedRefIds = Array.from(new Set(userReferralResponse[0]?.rejectedRefIds || []));
+      const referralIdsToBeExcluded = [...empPassedRefIds, ...empRejectedRefIds];
+  
+      // Get company referrals where status is awaiting
+      const companyReferrals = await this.getByGSI1PKAndStatus(
+        companyId,
+        referralStatus
+      );
+
+      // NOTE : This block filters the referrals on which the emp has not taken any action 
+      // @todo : Investigated and see if this can be handle by dynamouse itself 
+      const awaitingCompanyReferrals = [];
+      for (const referral of companyReferrals) {
+        if (!referralIdsToBeExcluded.includes(referral.id)) {
+          awaitingCompanyReferrals.push(referral);
+        }
+      }
+      global.logger.info(
+        "Filtered Company Referrals:",
+        awaitingCompanyReferrals
+      );
+
+      return awaitingCompanyReferrals;
+    } catch (error) {
+      global.logger.error("Error fetching employee awaiting referrals:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * getEmployeeReferralsByStatus
+   * 
+   * Retrieves employee referrals based on their primary email and referral status.
+   * 
+   * @param {string} empPrimaryEmail - Employee's primary email
+   * @param {string} referralStatus - Referral status
+   * @returns { Promise<QueryResponse<DbUserReferralDto>[]> } - A Promise that resolves to the employee referrals
+   */
+  async getEmployeeReferralsByStatus(
+    empPrimaryEmail: string,
+    referralStatus: string
+  ): Promise<QueryResponse<DbUserReferralDto>[]> {
+    // Get company referrals where status is referralStatus
+    let attributes: string[] = [];
+
+    // Determine the attribute based on referralStatus
+    if (referralStatus === ReferralStatus.CANCELLED) {
+      attributes = ["passedRefIds"];
+    } else if (referralStatus === ReferralStatus.ACCEPTED) {
+      attributes = ["acceptedRefIds"];
+    } else if (referralStatus === ReferralStatus.REJECTED) {
+      attributes = ["rejectedRefIds"];
+    } else if (referralStatus === ReferralStatus.DONE) {
+      attributes = ["doneRefIds"];
+    }
+
+    // Get the refIds on which emp has performed the given action
+    const userReferralResponse = await UserReferralResponseService.getByEmailWithSpecifiedAttributes(
+      empPrimaryEmail,
+      attributes
+    );
+
+    if (!userReferralResponse.length) {
+      global.logger.info("No referrals found for the given email");
+      return [];
+    }
+
+    // Extract referral IDs based on referralStatus attribute
+    const refIds: string[] = userReferralResponse[0][attributes[0]];
+
+    // Fetch referral details
+    if (!refIds.length) {
+      return [];
+    }
+    return this.getReferralsByIdsUsingGsis(refIds);
+  }
 }
 
 // Export an instance of the UserService class

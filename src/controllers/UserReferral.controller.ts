@@ -5,6 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import { UserReferralRequestDTO } from "../dtos/User.dto";
 import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
 import { UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
+import { Status } from "../dtos/Company.dto";
 
 // Load the local schema
 import {
@@ -20,6 +21,7 @@ import UserReferralService from "../services/UserReferral.service";
 import UserReferralResponseService from "../services/UserReferralResponse.service";
 import InvokeLambdaService from "../services/InvokeLambda.service";
 import CompanyService from "../services/Company.service";
+import UserService from "../services/User.service";
 
 //Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -28,7 +30,6 @@ import { RequestValidationError } from "../utils/errors.util";
 // Load the Enums
 import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
-import UserService from "../services/User.service";
 
 import { EmailSourceDestinationAddress } from "../libraries/email.library";
 import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED } from "../dtos/EmailTemplatePlaceholder.dto";
@@ -42,7 +43,7 @@ import UserDetailService from "../services/UserDetail.service";
  */
 class UserReferralController {
   /**
-   * getByEmail
+   * getReferralsForCand
    *
    * Retrieves the user based on the provided query parameters
    *
@@ -50,13 +51,13 @@ class UserReferralController {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  get = async (req: Request, res: Response, next: NextFunction) => {
+  getReferralsForCand = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Log the action for debugging purposes
       logger.info("Get user Referral by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
+      const email = req.params.userEmail;
 
       // Validate the email field
       const { error, value } = validateEmailField(email);
@@ -65,15 +66,10 @@ class UserReferralController {
       }
 
       // Check if a specific status is requested
-      const status = req.query.status;
-      let result;
+      const status = req.query.status as string;
 
-      // Fetch referrals based on the status query
-      if (status && typeof status === "string") {
-        result = await UserReferralService.getByStatus(value, status);
-      } else {
-        result = await UserReferralService.get(value);
-      }
+      //  Prepare result
+      let result = await UserReferralService.getReferralsForCand(value, status);
 
       // Get company IDs from the fetched referrals
       const companyIDs: string[] = result.map((obj) => obj.companyId);
@@ -117,7 +113,7 @@ class UserReferralController {
   };
 
   /**
-   * getByGSI1PKAndStatus
+   * getReferralsForEmp
    *
    * Retrieves the referrals based on the provided query parameters
    *
@@ -125,37 +121,42 @@ class UserReferralController {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  getByGSI1PKAndStatus = async (
+  getReferralsForEmp = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      // Log the action for debugging purposes
-      logger.info("Get Referral by GSI1PK and status [controller]");
+      logger.info("Fetching referrals for employee by company ID and status");
 
-      // Extract email from request parameters
-      const companyId = req.params.companyId;
-      const status = req.query.status;
-      let result;
-      if (status && typeof status === "string") {
-        result = await UserReferralService.getByGSI1PKAndStatus(
-          companyId,
-          status
-        );
-      } else {
-        result = await UserReferralService.getByGSI1PK(companyId);
+      // Extract company ID and status from request query parameters
+      const companyId: string = req.query.companyId as string;
+      const referralStatus: string = req.query.status as string;
+
+      // get the employee email
+      const empPrimaryEmail = req.params.emailId;
+
+       // Validate the newStatus parameter
+       const { error } = UserReferralStatusValidation.validate(referralStatus, {
+        abortEarly: false,
+      });
+
+      // If the newStatus validation fails, throw a RequestValidationError
+      if (error) {
+        throw new RequestValidationError(error);
       }
+      
+      // Get referrals for emp based on provided status
+      let empReferrals = await UserReferralService.getEmployeeReferrals(
+        empPrimaryEmail,
+        companyId,
+        referralStatus
+      );
 
-      /* status && typeof status === "string"
-        ? result = await UserReferralService.getByStatus(email, status)
-        : result = await UserReferralService.get(email); */
-
-      // Send a successful response with user data
-      res.status(HttpStatusCode.OK_200).json(result);
+      // Send a successful response with user data and referral details
+      res.status(HttpStatusCode.OK_200).json(empReferrals);
     } catch (error: any) {
       // Handle errors
-
       // If it's another type of error, pass it to the next error handler
       next(error);
     }
@@ -171,14 +172,14 @@ class UserReferralController {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  getMatchingScore = async (
+  getReferralScoreForCand = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
       const { id, referralId } = req.params;
-      const matchingScore = await UserReferralService.matchingScore(
+      const matchingScore = await UserReferralService.getReferralScoreForCand(
         id,
         referralId
       );
@@ -199,10 +200,10 @@ class UserReferralController {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  createReferral = async (req: Request, res: Response, next: NextFunction) => {
+  createReferralByCand = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Create referral [controller]");
-      const email = req.params.id;
+      const email = req.params.userEmail;
 
       const { error: emailError, value: emailId } = validateEmailField(email);
 
@@ -229,7 +230,7 @@ class UserReferralController {
         });
       } */
 
-      const referralRequestId = await UserReferralService.referralRequest(
+      const referralRequestId = await UserReferralService.create(
         referralRequest,
         emailId
       );
@@ -271,7 +272,7 @@ class UserReferralController {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  updateStatus = async (req: Request, res: Response, next: NextFunction) => {
+  updateReferralStatusByCand = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Log the action for debugging purposes
       global.logger.info("update referral status [controller]");
@@ -337,7 +338,6 @@ class UserReferralController {
     }
   };
 
-
   /**
    * Updates the status of a user referral request by an employee.
    *
@@ -345,7 +345,7 @@ class UserReferralController {
    * @param {Response} res - The response object to send back to the client.
    * @param {NextFunction} next - The next function to pass control to the next middleware.
    */
-  updateStatusByEmployee = async (
+  updateReferralStatusByEmp = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -375,7 +375,7 @@ class UserReferralController {
 
       // From the referral, get the candidate's name and email for sending email
       const candPK: string = referral[0].PK;
-      const candEmail: string = candPK.split('#').pop() ?? ""; // for valid PK, there will be valid email id
+      const candEmail: string = candPK.split("#").pop() ?? ""; // for valid PK, there will be valid email id
       const candDetails = await UserDetailService.get(candEmail);
       const candName = candDetails[0].name;
 
@@ -385,7 +385,9 @@ class UserReferralController {
       // Check if action is PASS or REJECT to determine if referral response needs to be updated
       if (
         referralstatusUpdate.action === ReferralActions.PASS ||
-        referralstatusUpdate.action === ReferralActions.REJECT
+        referralstatusUpdate.action === ReferralActions.REJECT ||
+        referralstatusUpdate.action === ReferralActions.ACCEPT ||
+        referralstatusUpdate.action === ReferralActions.DONE
       ) {
         // Retrieve the existing referral response for the specified email ID.
         referralResponse = await UserReferralResponseService.get(
@@ -400,6 +402,8 @@ class UserReferralController {
       let userReferralResponseDTO: UserReferralResponseDTO = {
         passedRefIds: [],
         rejectedRefIds: [],
+        acceptedRefIds: [],
+        doneRefIds: [],
       };
 
       // Get current date
@@ -493,7 +497,6 @@ class UserReferralController {
 
           break;
 
-        // Handle when action is ACCEPT
         case ReferralActions.ACCEPT:
           if (!referral || referral.count === 0) {
             throw new Error("Wrong referralId");
@@ -505,19 +508,45 @@ class UserReferralController {
           referral[0].status = ReferralStatus.ACCEPTED;
           referral[0].acceptedAtByUser = currentDate;
 
-          break;
+          // Update acceptedRefIds array in DTO
+          if (updateReferralResponse) {
+            referralResponse[0].acceptedRefIds.push(referralId);
+          } else {
+            userReferralResponseDTO.acceptedRefIds.push(referralId);
+          }
 
+          break;
         // Handle when action is DONE
         case ReferralActions.DONE:
-          if (!referral || referral.count === 0) {
+          if (!referral || referral.length === 0) {
             throw new Error("Wrong referralId");
           } else if (referral[0].doneByEmployee) {
             throw new Error("Referral already done by you");
           }
 
+          // If the referral was previously accepted, remove it from acceptedRefIds
+          if (referral[0].status === ReferralStatus.ACCEPTED) {
+            const index =
+              referralResponse[0].acceptedRefIds.indexOf(referralId);
+            if (index !== -1) {
+              referralResponse[0].acceptedRefIds.splice(index, 1);
+            }
+          }
+
           referral[0].doneByEmployee = currentDate;
           referral[0].doneByUserId = userId;
           referral[0].status = ReferralStatus.DONE;
+
+          // Update doneRefIds array in DTO or referral response based on whether response exists
+          if (updateReferralResponse) {
+            if (referralResponse[0].doneRefIds) {
+              referralResponse[0].doneRefIds.push(referralId);
+            } else {
+              referralResponse[0].doneRefIds = [referralId];
+            }
+          } else {
+            userReferralResponseDTO.doneRefIds.push(referralId);
+          }
 
           break;
 
@@ -547,12 +576,13 @@ class UserReferralController {
         const sendEmailResponse = await UserReferralService.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders, toAddress);
       }
 
-
       if (updateReferralResponse) {
-        const { passedRefIds, rejectedRefIds } = referralResponse[0];
+        const { passedRefIds, rejectedRefIds , acceptedRefIds ,doneRefIds} = referralResponse[0];
         UserReferralResponseService.update(referralstatusUpdate.emailId, {
           passedRefIds,
           rejectedRefIds,
+          acceptedRefIds,
+          doneRefIds,
         });
       } else {
         UserReferralResponseService.create(
@@ -568,12 +598,6 @@ class UserReferralController {
       next(error);
     }
   };
-
-
-
-
-
-
 }
 
 export default UserReferralController;

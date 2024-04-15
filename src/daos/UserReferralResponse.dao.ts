@@ -2,10 +2,11 @@
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { UserReferralResponseModel } from "../db/models/UserReferralResponse.model";
+import { DbUserReferralResponseDto, UserReferralResponseModel } from "../db/models/UserReferralResponse.model";
 
 //Load the local dtos
 import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // UserReferralResponseDao class implementing the BaseDao interface
 class UserReferralResponseDao implements BaseDao {
@@ -18,7 +19,7 @@ class UserReferralResponseDao implements BaseDao {
    * @param email - Email address of the user
    * @returns User details corresponding to the email
    */
-  async get(email: string) {
+  async get(email: string): Promise<QueryResponse<DbUserReferralResponseDto>> {
     logger.info("Get user ReferralResponse by id [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
@@ -28,6 +29,22 @@ class UserReferralResponseDao implements BaseDao {
       .eq(PK)
       .where("SK")
       .eq(SK)
+      .exec();
+  }
+  async getByEmailWithSpecifiedAttributes(
+    email: string,
+    attributes: string[]
+  ): Promise<QueryResponse<DbUserReferralResponseDto>> {
+    logger.info("Get user ReferralResponse by id [DAO]");
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    const SK = this.sortKeys.SK_ID;
+    return UserReferralResponseModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .eq(SK)
+      .attributes(attributes)
       .exec();
   }
 

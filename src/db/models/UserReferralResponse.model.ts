@@ -9,6 +9,8 @@ import { BaseDbDto } from "./Base.model";
 class DbUserReferralResponseDto extends BaseDbDto {
   passedRefIds!: string[];
   rejectedRefIds!: string[];
+  acceptedRefIds!: string[];
+  doneRefIds!: string[];
 }
 
 const UserReferralResponseSchema = new dynamoose.Schema(
@@ -19,6 +21,14 @@ const UserReferralResponseSchema = new dynamoose.Schema(
       required: true,
     },
     rejectedRefIds: {
+      type: Array,
+      required: true,
+    },
+    acceptedRefIds: {
+      type: Array,
+      required: true,
+    },
+    doneRefIds: {
       type: Array,
       required: true,
     },
@@ -36,4 +46,4 @@ const UserReferralResponseModel = dynamoose.model<DbUserReferralResponseDto>(
 );
 
 // Export the UserReferralResponseModel
-export { UserReferralResponseModel };
+export { UserReferralResponseModel ,DbUserReferralResponseDto};
