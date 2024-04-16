@@ -560,22 +560,6 @@ class UserReferralController {
       // Update referral in the database
       const result = await UserReferralService.update(PK, SK, userReferralDTO, referralstatusUpdate.action);
 
-      // Update or create user referral response based on whether response exists
-      // If the details are updated and action is "DONE", then email should be sent to the candidate saying that his referral request has been completed
-      if (result && referralstatusUpdate.action === ReferralActions.DONE) {
-        // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestCompleted function
-        const toAddress: EmailSourceDestinationAddress = {
-          email: candEmail,
-          fullName: candName
-        };
-        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED = {
-          candName: candName
-        }
-
-        // Function responsible for sending the email to the candidate saying that his referral request has been completed
-        const sendEmailResponse = await UserReferralService.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders, toAddress);
-      }
-
       if (updateReferralResponse) {
         const { passedRefIds, rejectedRefIds , acceptedRefIds ,doneRefIds} = referralResponse[0];
         UserReferralResponseService.update(referralstatusUpdate.emailId, {

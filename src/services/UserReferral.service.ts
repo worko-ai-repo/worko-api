@@ -33,6 +33,9 @@ import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ReferralActions } from "../enums/User.enum";
 
+// Import services
+import CompanyService from "./Company.service";
+
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
  */
@@ -89,6 +92,10 @@ class UserReferralService {
     const candDetails = await UserDetailService.get(candEmail);
     const candName = candDetails[0].name;
 
+    // Get the name of the company for which the referral request got accepted
+    const companyId = userReferralDTO.companyId;
+    const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId])
+    const companyName = companyDetails[0].name;
     let result = await userReferralDao.update(PK, SK, userReferralDTO);
 
     if(result && status === ReferralActions.DONE)
@@ -99,7 +106,8 @@ class UserReferralService {
         fullName: candName
       };
       const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED = {
-        candName: candName
+        candName: candName,
+        companyName: companyName
       }
 
       // Function responsible for sending the email to the candidate saying that his referral request has been completed
@@ -233,9 +241,20 @@ class UserReferralService {
       newStatus
     );
 
+    // Get the name of the referee who accepted the referral request
+    const empId = updatedReferralStatus.acceptedByUserId as string;
+    const employeeId = empId.split("ID#")[1]; 
+    const empDetails = await UserDetailService.getUserById(employeeId)
+    const refereeName = empDetails[0].name;
+
+    // Get the name of the company for which the referral request got accepted
+    const companyId = updatedReferralStatus.companyId;
+    const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId]);
+    const companyName = companyDetails[0].name;
+     
     // If the details are updated and newStatus is "ACCEPTED", then email should be sent to the candidate saying that his referral request has been accepted
     if (updatedReferralStatus && newStatus === ReferralStatus.ACCEPTED) {
-      await this.sendEmailOnReferralAccepted(candEmail);
+      await this.sendEmailOnReferralAccepted(candEmail,refereeName,companyName);
     }
     return updatedReferralStatus;
   }
@@ -262,7 +281,7 @@ class UserReferralService {
     return updatedReferralStatus;
   }
 
-  async sendEmailOnReferralAccepted(candEmail: string) {
+  async sendEmailOnReferralAccepted(candEmail: string, refereeName: string, companyName: string) {
     // Get the Candidate Details from his candEmail
     const userDetails = await UserService.getUserByEmail(candEmail);
     const candName: string = userDetails[0].name;
@@ -272,8 +291,11 @@ class UserReferralService {
       email: candEmail,
       fullName: candName,
     };
-    const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED =
-      { candName: candName };
+    const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED = { 
+      candName: candName, 
+      companyName: companyName, 
+      refereeName: refereeName 
+    };
 
     // Function responsible for sending the email to the candidate saying that his referral request has been accepted
     const sendEmailResponse =

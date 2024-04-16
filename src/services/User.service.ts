@@ -180,7 +180,7 @@ class UserService {
     const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
 
     // If the user profile completion percentage is less than 80%, then an email should be sent to the user
-    if(totalCurPerc <= APP_CONSTANTS.expProfileperc)
+    if (totalCurPerc <= APP_CONSTANTS.PROFILE_COMPLETION_PERCENTAGE.CAND)
     {
       if( (daysDifference >= 1 && daysDifference < 2) 
       || (daysDifference >= 3 && daysDifference < 4) 

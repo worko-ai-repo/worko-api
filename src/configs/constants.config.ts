@@ -36,15 +36,13 @@ const APP_CONSTANTS = {
 
   /**
    * AWS S3 directory paths for different types of files.
-   * @awsS3Bucket "verif-y-{env}-transcript-storage"
+   * @awsS3Bucket "worko-{env}"
    */
   AWS_S3_DIR_PATHS: {
     USER_RESUME: "users/{userId}/resumes", // To upload the individual user's resume
     USER_PROFILE_PIC: "users/{userId}/profilePics", // To upload the individual user's profile pics
     CAREER_RESUME: "career-resumes" // To upload the resumes uplaoded via career page
   },
-
-
 
   /**
    * AWS S3 file names for different types of files.
@@ -75,12 +73,26 @@ const APP_CONSTANTS = {
    */
   SOURCE_EMAIL_ADDRESS: {
     WORKO_DEFAULT: {
-      email: "suraj@worko.ai",
-      fullName: "Suraj Yadav"
+      email: "hello@worko.ai",
+      fullName: "Worko.ai"
+    },
+    WORKO_NO_REPLY: {
+      email: "no-reply@worko.ai",
+      fullName: "Worko.ai"
     },
   },
 
-  expProfileperc : 80,
+  /**
+   * PROFILE_COMPLETION_PERCENTAGE
+   * 
+   * These are the minimum profile percentages required to complete the profile for respective dashboards.
+   * 
+   * If the profile is not completed with minimum percentage then the user should not be able to access the certain features of the application.
+   */
+  PROFILE_COMPLETION_PERCENTAGE: {
+    CAND: 80,
+    EMP: 80,
+  },
 };
 
 export default APP_CONSTANTS;
