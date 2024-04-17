@@ -98,20 +98,48 @@ class UserReferralService {
     const companyName = companyDetails[0].name;
     let result = await userReferralDao.update(PK, SK, userReferralDTO);
 
-    if(result && status === ReferralActions.DONE)
+    if(result)
     {
-      // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestCompleted function
-      const toAddress: EmailSourceDestinationAddress = {
-        email: candEmail,
-        fullName: candName
-      };
-      const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED = {
-        candName: candName,
-        companyName: companyName
-      }
+      // The actions are done by the employee
 
-      // Function responsible for sending the email to the candidate saying that his referral request has been completed
-      const sendEmailResponse = await this.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders,toAddress);
+      // When employee accepts the referral request, email will be sent to candidate
+      if(status === ReferralActions.ACCEPT) 
+      {
+        // Get the name of the referee who accepted the referral request
+        const empId = userReferralDTO.acceptedByUserId as string;
+        const employeeId = empId.split("ID#")[1]; 
+        const empDetails = await UserDetailService.getUserById(employeeId)
+        const refereeName = empDetails[0].name;
+
+        // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestAccepted function
+        const toAddress: EmailSourceDestinationAddress = {
+          email: candEmail,
+          fullName: candName
+        };
+        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED = {
+          candName: candName,
+          companyName: companyName,
+          refereeName: refereeName
+        }
+  
+        // Function responsible for sending the email to the candidate saying that his referral request has been accepted
+        const sendEmailResponse = await this.sendEmailToCandWhenReferralRequestAccepted(emailPlaceholders,toAddress);
+      }
+      // When employee marks the referral request as done, email will be sent to candidate
+      else if(status === ReferralActions.DONE) {
+        // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestCompleted function
+        const toAddress: EmailSourceDestinationAddress = {
+          email: candEmail,
+          fullName: candName
+        };
+        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED = {
+          candName: candName,
+          companyName: companyName
+        }
+  
+        // Function responsible for sending the email to the candidate saying that his referral request has been completed
+        const sendEmailResponse = await this.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders,toAddress);
+      }
     }
 
     return result;
