@@ -83,9 +83,9 @@ class UserReviewController {
      * @param {Request} req
      * @param {Response} res
      * @param {NextFunction} next
-     * @returns {}
+     * @returns {Promise<any>}
      */
-    getUserReceivedReviews = async (req: Request, res: Response, next: NextFunction) => {
+    getUserReceivedReviews = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
         try {
             // Get user email id from url path for whom review has to be retrived
             const userId = req.params.userId;
@@ -100,17 +100,14 @@ class UserReviewController {
                 serviceReqId: req.query.serviceReqId as string
             };
 
-
             // Retrieve user details by userId
             const userDetail = await userDetailService.getUserById(userId);
-            if (!userDetail) {
+            if (!userDetail.count) {
                 return res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found" });
             }
 
             // Extract email from userDetail
             const userEmail = userDetail[0].emailList.primary;
-
-            // Create review as requested
 
             // Retrieve reviews based on the provided filter 
             let result = await userReviewService.getUserReceivedReviews(userEmail, reviewFilters);
@@ -119,7 +116,7 @@ class UserReviewController {
             global.logger.info("Get review received by user [controller]");
 
             // Send response with the review data
-            res.status(HttpStatusCode.OK_200).json(result);
+            return res.status(HttpStatusCode.OK_200).json(result);
         } catch (error: any) {
             next(error);
         }

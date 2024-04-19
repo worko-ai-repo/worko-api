@@ -60,12 +60,12 @@ class UserSupportDao implements BaseDao {
 
         // Prepare the required details to create entry in the database
         const supportDbDetails = {
+            ...userSupportCreateDto,
             PK: this.partitianKey.replace("{emailId}", emailAddress),
             SK: this.sortKeys.SK_INIT.replace("{id}", id),
             GSI1PK: this.GSI1PK,
             GSI1SK: this.GSI1SK.replace("{id}", id),
             id: id,
-            ...userSupportCreateDto,
         };
 
         // Logger message

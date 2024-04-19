@@ -7,7 +7,6 @@ import { UserType, UserSupportContextTypeEnum, UserSupportStatusEnum } from "../
  * Structure for User Support Database Data Transfer Object (DTO).
  */
 export interface UserSupportCreateApiDto {
-    userId: string;
     userEmail: string;
     userFirstName: string;
     userLastName?: string;
@@ -16,7 +15,6 @@ export interface UserSupportCreateApiDto {
     userMessage: string;
     contextType: UserSupportContextTypeEnum;
     contextId: string;
-    createdByUserId: string; // @todo this value should be read from token and make required changes to fix it
 }
 
 /**

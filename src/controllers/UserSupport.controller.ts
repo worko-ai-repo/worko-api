@@ -50,6 +50,8 @@ class UserSupportController {
             const userSupportCreateDto: UserSupportCreateDto = {
                 ...userSupportDto,
                 status: UserSupportStatusEnum.OPEN,
+                userId: "id", // @todo this value should be read from token and make required changes to fix it
+                createdByUserId: "id", // @todo this value should be read from token and make required changes to fix it
             }
             // Create Support as requested
             const result = await userSupportService.createSupport(userSupportCreateDto.userEmail, userSupportCreateDto);

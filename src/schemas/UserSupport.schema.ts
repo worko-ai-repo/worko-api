@@ -6,13 +6,6 @@ import { UserType, UserSupportContextTypeEnum, UserSupportStatusEnum } from "../
 
 // Define validation schema for user support creation API DTO
 export const userSupportCreateApiDtoValidation = Joi.object({
-
-    // Validate userId field
-    userId: Joi.string().required().messages({
-        "any.required": "User ID is required.",
-        "string.empty": "User ID should not be empty.",
-    }),
-
     // Validate userEmail field
     userEmail: Joi.string().email().required().messages({
         "any.required": "User email is required.",
@@ -60,12 +53,6 @@ export const userSupportCreateApiDtoValidation = Joi.object({
     contextId: Joi.string().required().messages({
         "any.required": "Context ID is required.",
         "string.empty": "Context ID should not be empty.",
-    }),
-
-    // Validate createdByUserId field
-    createdByUserId: Joi.string().required().messages({
-        "any.required": "Created by user ID is required.",
-        "string.empty": "Created by user ID should not be empty.",
     }),
 });
 

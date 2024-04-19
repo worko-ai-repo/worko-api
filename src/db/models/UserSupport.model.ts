@@ -68,11 +68,11 @@ const UserSupportSchema = new dynamoose.Schema(
         },
         userFirstName: {
             type: String,
-            required: false
+            required: true
         },
         userLastName: {
             type: String,
-            required: true
+            required: false
         },
         userRole: {
             type: String,
