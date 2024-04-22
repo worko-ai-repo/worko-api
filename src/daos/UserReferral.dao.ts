@@ -57,7 +57,7 @@ class UserReferralDao implements BaseDao {
    * @param status - referral status
    * @returns {Promise<QueryResponse<DbUserReferralDto>>} - A Promise that resolves to the Referral of the user
    */
-  async getReferralsForCand(email: string, status: string):Promise<QueryResponse<DbUserReferralDto>> {
+  async getReferralsForCand(email: string, status?: string):Promise<QueryResponse<DbUserReferralDto>> {
     global.logger.info("Get user Referral by status [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,

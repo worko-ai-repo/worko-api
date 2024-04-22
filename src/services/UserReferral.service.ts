@@ -96,18 +96,16 @@ class UserReferralService {
     const companyId = userReferralDTO.companyId;
     const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId])
     const companyName = companyDetails[0].name;
-    let result = await userReferralDao.update(PK, SK, userReferralDTO);
 
+    // Update the referral details
+    let result = await userReferralDao.update(PK, SK, userReferralDTO);
     if(result)
     {
-      // The actions are done by the employee
-
       // When employee accepts the referral request, email will be sent to candidate
       if(status === ReferralActions.ACCEPT) 
       {
         // Get the name of the referee who accepted the referral request
-        const empId = userReferralDTO.acceptedByUserId as string;
-        const employeeId = empId.split("ID#")[1]; 
+        const employeeId = userReferralDTO.acceptedByUserId as string;
         const empDetails = await UserDetailService.getUserById(employeeId)
         const refereeName = empDetails[0].name;
 
@@ -123,7 +121,7 @@ class UserReferralService {
         }
   
         // Function responsible for sending the email to the candidate saying that his referral request has been accepted
-        const sendEmailResponse = await this.sendEmailToCandWhenReferralRequestAccepted(emailPlaceholders,toAddress);
+        await this.sendEmailToCandWhenReferralRequestAccepted(emailPlaceholders,toAddress);
       }
       // When employee marks the referral request as done, email will be sent to candidate
       else if(status === ReferralActions.DONE) {
@@ -138,7 +136,7 @@ class UserReferralService {
         }
   
         // Function responsible for sending the email to the candidate saying that his referral request has been completed
-        const sendEmailResponse = await this.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders,toAddress);
+        await this.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders,toAddress);
       }
     }
 
@@ -240,7 +238,7 @@ class UserReferralService {
    * @param status - referral status
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getReferralsForCand(email: string, status: string):Promise<QueryResponse<DbUserReferralDto>> {
+  async getReferralsForCand(email: string, status?: string):Promise<QueryResponse<DbUserReferralDto>> {
     // Logging the action of getting user Referral by status in the service layer
     logger.info("Fetching user Referral by status [UserReferralService]");
     return userReferralDao.getReferralsForCand(email, status);
@@ -263,28 +261,28 @@ class UserReferralService {
     global.logger.info("Updating user Referral status [UserReferralService]");
 
     // Update status without withdrawal details
-    const updatedReferralStatus = await userReferralDao.updateStatus(
+    return userReferralDao.updateStatus(
       referralId,
       candEmail,
       newStatus
     );
 
-    // Get the name of the referee who accepted the referral request
-    const empId = updatedReferralStatus.acceptedByUserId as string;
-    const employeeId = empId.split("ID#")[1]; 
-    const empDetails = await UserDetailService.getUserById(employeeId)
-    const refereeName = empDetails[0].name;
-
-    // Get the name of the company for which the referral request got accepted
-    const companyId = updatedReferralStatus.companyId;
-    const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId]);
-    const companyName = companyDetails[0].name;
-     
+    // @todo Ashrith, this function is used for candidate specifically, and candidate will never accept the referral, therefor code to send email is not required here.
+    // Kindly remove if this is true.
     // If the details are updated and newStatus is "ACCEPTED", then email should be sent to the candidate saying that his referral request has been accepted
-    if (updatedReferralStatus && newStatus === ReferralStatus.ACCEPTED) {
+    /* if (updatedReferralStatus && newStatus === ReferralStatus.ACCEPTED) {
+      // Get the name of the referee who accepted the referral request
+      const employeeId = updatedReferralStatus.acceptedByUserId as string;
+      const empDetails = await UserDetailService.getUserById(employeeId)
+      const refereeName = empDetails[0].name;
+  
+      // Get the name of the company for which the referral request got accepted
+      const companyId = updatedReferralStatus.companyId;
+      const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId]);
+      const companyName = companyDetails[0].name;
+
       await this.sendEmailOnReferralAccepted(candEmail,refereeName,companyName);
-    }
-    return updatedReferralStatus;
+    } */
   }
 
   async updateStatusForWithdrawnReferral(

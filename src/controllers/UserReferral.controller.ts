@@ -56,25 +56,23 @@ class UserReferralController {
       // Log the action for debugging purposes
       logger.info("Get user Referral by email [controller]");
 
-      // Extract email from request parameters
-      const email = req.params.userEmail;
+      // Get the status from the request query parameter
+      const referralStatus = req.query.status as string;
 
-      // Validate the email field
-      const { error, value } = validateEmailField(email);
+      // Validate the email from the request
+      const { error, value: candEmail } = validateEmailField(req.params.userEmail);
       if (error) {
         throw new RequestValidationError(error);
       }
 
-      // Check if a specific status is requested
-      const status = req.query.status as string;
+      // Get the candidate referrals for the given "candEmail" and "referralStatus", if no referral found then just return empty response
+      let candReferrals = await UserReferralService.getReferralsForCand(candEmail, referralStatus);
+      if (!candReferrals.count){
+        return res.status(HttpStatusCode.OK_200).json([]);
+      }
 
-      //  Prepare result
-      let result = await UserReferralService.getReferralsForCand(value, status);
-
-      // Get company IDs from the fetched referrals
-      const companyIDs: string[] = result.map((obj) => obj.companyId);
-
-      // Get unique company IDs using a Set
+      // Get unique company IDs from the retrieved referrals
+      const companyIDs: string[] = candReferrals.map((referral) => referral.companyId);
       const uniqueCompanyIDs: string[] = Array.from(new Set(companyIDs));
 
       // Fetch company details for each unique company ID
@@ -82,17 +80,16 @@ class UserReferralController {
         uniqueCompanyIDs
       );
 
-      // Map over the referrals and include company name
-      const finalUserReferral = result.map((item) => {
-        // Find the company details corresponding to the current referral item
-        const companyDetails = companyDetailsResults.find(
-          (companyDetail) => companyDetail.id === item.companyId
-        );
+      // Loop over the retrieved referrals and include the company name in the response
+      const finalUserReferral = candReferrals.map((referral) => {
+        // Find the company details corresponding to the current referral
+        const companyDetails = companyDetailsResults.find((companyDetail) => companyDetail.id === referral.companyId);
 
-        // Extract the company name if company details are found, otherwise set it to null
-        const companyName = companyDetails ? companyDetails.name : null;
-
-        return { ...item, companyName: companyName };
+        // Return the company name along with referral details
+        return {
+          ...referral,
+          companyName: companyDetails?.name ?? null
+        };
       });
 
       // Send a successful response with user data
@@ -129,6 +126,8 @@ class UserReferralController {
     try {
       logger.info("Fetching referrals for employee by company ID and status");
 
+      // @todo: The "companyId" should be optional when status is other than awaiting. 
+      // And status must be mandatory and the emplyee should not be able to get/call the API to get the WITHDRAWN referrals.
       // Extract company ID and status from request query parameters
       const companyId: string = req.query.companyId as string;
       const referralStatus: string = req.query.status as string;
