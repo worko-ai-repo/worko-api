@@ -19,7 +19,16 @@ import { RecordListingFilterOptions } from "../dtos/Common.dto";
  * CompanyService class responsible for managing company-related operations.
  */
 class CompanyService {
+
   constructor() { }
+
+ /**
+  * 
+  * @param name 
+  */
+  async getCompanyByName(name: string) {
+    return companyDao.getCompanyByName(name);
+  }
 
   /**
    *
@@ -71,6 +80,16 @@ class CompanyService {
    */
   async addNewCompany(companyDto: CompanyDTO) {
     return companyDetailDao.add(companyDto);
+  }
+
+  /**
+   * update company details
+   * @param companyDto 
+   * @param id 
+   * @returns 
+   */
+  async updateCompany(companyDto: CompanyDTO, id: string) {
+    return companyDetailDao.update(companyDto, id);
   }
 
   /**

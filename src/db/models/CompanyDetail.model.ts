@@ -16,6 +16,7 @@ class DbCompanyDetailDto extends BaseDbDto {
   carrierPage!: string;
   linkedIn!: string;
   logoUrl!: string;
+  logo!:string;
 }
 
 // Creating a DynamoDB schema for the 'Company' model with specified attributes and their types
@@ -65,6 +66,10 @@ const CompanySchema = new dynamoose.Schema(
     logoUrl: {
       type: String,
       required: true,
+    },
+    logo: {
+      type: String,
+      required: false,
     },
   },
   {

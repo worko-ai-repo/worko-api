@@ -13,7 +13,8 @@ const CompanyRouter = Router();
 // Create company based on the provided query parameter by admin
 // @todo change this to "/", this should help.
 CompanyRouter.post("/", companyController.createCompany);
-
+// Update company based on the provided query parameter by admin
+CompanyRouter.put("/:id", companyController.updateCompany);
 // Create a company request based on the provided query parameter by user
 // @todo change this to "/request", this should help.
 CompanyRouter.post("/add", companyController.requestCompany);

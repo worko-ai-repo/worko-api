@@ -37,6 +37,37 @@ import { RequestValidationError } from "../utils/errors.util";
  * Class to perform related/relevent action/activities related to the "company" table
  */
 class CompanyController {
+
+
+  updateCompany = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Extract company data from the request body
+      const companyDto: CompanyDTO = req.body;
+      // Extract company id from the request query parameter
+      const companyId:string =  req.params.id as string;
+      // Validate the incoming company data using the defined validation schema in CompanyDTOValidation
+      const { error } = CompanyDTOValidation.validate(companyDto, {
+        abortEarly: false,
+      });
+
+      // Check if validation resulted in errors
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      
+      // Call the CompanyService to update a  company
+      const updateCompany = await CompanyService.updateCompany(companyDto, companyId);
+
+      // Send successful response with the created company data
+      res.status(HttpStatusCode.OK_200).json(updateCompany);
+    } catch (error) {
+      // Handle errors
+
+      // Pass the error to the next error handler
+      next(error);
+    }
+  };
   /**
    *createCompany
    *
@@ -51,6 +82,22 @@ class CompanyController {
     try {
       // Extract company data from the request body
       const companyDto: CompanyDTO = req.body;
+      // Check if company name already exist
+      // Call the CompanyService to get company by name
+      const company = await CompanyService.getCompanyByName(companyDto.name);
+      if (company) {
+        throw new Error("Company name already exist");
+      }
+      
+      // const companyList = await CompanyService.getCompanyList({
+      //    companyName: companyDto.name,
+      //    industryName: "",
+      //    pageSize: 25
+      //  });
+      // // check array companyList size is more than 0
+      // if (companyList.length > 0) {
+      //   throw new Error("Company name already exist");
+      // }
 
       // Validate the incoming company data using the defined validation schema in CompanyDTOValidation
       const { error } = CompanyDTOValidation.validate(companyDto, {

@@ -53,12 +53,15 @@ const serverlessConfiguration: AWS = {
           "ses:UpdateTemplate",
           "ses:GetTemplate",
           "ses:DeleteTemplate",
-          "ses:SendTemplatedEmail"
+          "ses:SendTemplatedEmail",
         ],
         Resource: [
           "arn:aws:ses:ap-south-1:787066054733:configuration-set/*",
-          "arn:aws:ses:ap-south-1:787066054733:identity/worko.ai",
-          "arn:aws:ses:ap-south-1:787066054733:template/*"
+          "arn:aws:ses:ap-south-1:787066054733:contact-list/*",
+          "arn:aws:ses:ap-south-1:787066054733:identity/*",
+          "arn:aws:ses:ap-south-1:787066054733:template/*",
+          "arn:aws:ses:ap-south-1:787066054733:custom-verification-email-template/*",
+          "arn:aws:ses:ap-south-1:787066054733:*"
         ]
       },
       {

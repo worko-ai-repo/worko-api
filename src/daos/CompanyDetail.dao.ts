@@ -16,6 +16,7 @@ import { Query } from "dynamoose/dist/ItemRetriever";
 
 // DAO class for handling Company details
 class CompanyDetailDao implements BaseDao {
+
   modelName = "Company"; // Model name for Company
   partitianKey = "COMP#"; // Partition key for Company
   sortKeys = { SK_INIT: "ID#{companyId}" }; // Sort keys for Company
@@ -49,12 +50,13 @@ class CompanyDetailDao implements BaseDao {
     // Construct the query based on filter options
     if (filterOptions.companyName) {
       // If company name filter is provided, construct a query to search for companies by name
-      let companyName = filterOptions.companyName;
+      let companyName = filterOptions.companyName.toLocaleUpperCase();
+      // let companyName = filterOptions.companyName
       // Convert the first letter to uppercase
-      if (companyName[0] === companyName[0].toLowerCase()) {
-        companyName =
-          companyName.charAt(0).toUpperCase() + companyName.slice(1);
-      }
+      // if (companyName[0] === companyName[0].toLowerCase()) {
+      //   companyName =
+      //     companyName.charAt(0).toUpperCase() + companyName.slice(1);
+      // }
       // Create a query to search for companies starting with the specified name
       query = CompanyDetailModel.query("PK")
         .eq(this.partitianKey)
@@ -152,6 +154,7 @@ class CompanyDetailDao implements BaseDao {
       "{companyId}": id,
     });
 
+    companyDto.name = companyDto.name.toUpperCase();
     // Prepare the data required to create a new company
     const newCompanyDto = {
       PK: this.partitianKey,
@@ -166,6 +169,20 @@ class CompanyDetailDao implements BaseDao {
 
     // Create the company with the above data
     return CompanyDetailModel.create(newCompanyDto);
+  }
+
+  async update(companyDto: CompanyDTO, companyId: string) {
+    const updateCompanyDto = {
+      ...companyDto,
+      id: companyId,    // adding id if its not present
+    }
+    // Update the company with the above data
+    return CompanyDetailModel.update({
+      PK: this.partitianKey,
+      SK: this.sortKeys.SK_INIT.strtr({
+        "{companyId}": companyId
+      })
+    }, updateCompanyDto);
   }
 }
 
