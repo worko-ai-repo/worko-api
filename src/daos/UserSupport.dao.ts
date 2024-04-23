@@ -66,6 +66,7 @@ class UserSupportDao implements BaseDao {
             GSI1PK: this.GSI1PK,
             GSI1SK: this.GSI1SK.replace("{id}", id),
             id: id,
+            userLastName: userSupportCreateDto.userLastName ?? "",
         };
 
         // Logger message

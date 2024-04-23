@@ -20,7 +20,7 @@ export const userSupportCreateApiDtoValidation = Joi.object({
     }),
 
     // Validate userLastName field
-    userLastName: Joi.string().optional(),
+    userLastName: Joi.string().allow("").optional(),
 
     // Validate userRole field
     userRole: Joi.string().valid(...Object.values(UserType)).required().messages({
