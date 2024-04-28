@@ -16,7 +16,7 @@ class UserReferralResponseService {
    * @param email - Email of the user
    * @returns {Promise<any>} - A Promise that resolves to the ReferralResponse of the user
    */
-  async get(email: string): Promise<any> {
+  async get(email: string): Promise<QueryResponse<DbUserReferralResponseDto>> {
     // Logging the action of getting user ReferralResponse by email in the service layer
     global.logger.info(
       "Fetching user ReferralResponse by email [UserReferralResponseService]"

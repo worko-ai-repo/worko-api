@@ -35,11 +35,13 @@ import { ReferralActions } from "../enums/User.enum";
 
 // Import services
 import CompanyService from "./Company.service";
+import { UserReferralResponseDTO } from '../dtos/UserReferralResponse.dto';
 
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
  */
 class UserReferralService {
+  
   /**
    * Processes a referral request made by a user(candidate).
    *
@@ -90,13 +92,15 @@ class UserReferralService {
     logger.info("Updating user Referral [UserReferralService]");
     const candEmail: string = PK.split("#").pop() ?? ""; // for valid PK, there will be valid email id
     const candDetails = await UserDetailService.get(candEmail);
-    const candName = candDetails[0].name;
-
+    const candName = candDetails.length > 0 ? candDetails[0].name ?? "" : "";
+    logger.debug(`Candidate Name: ${candName}`);
+    
     // Get the name of the company for which the referral request got accepted
     const companyId = userReferralDTO.companyId;
-    const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId])
-    const companyName = companyDetails[0].name;
-
+    const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId]);
+    const companyName = companyDetails.length > 0 ? companyDetails[0].name ?? "" : "";
+    logger.debug(`Company Name: ${companyName}`);
+    
     // Update the referral details
     let result = await userReferralDao.update(PK, SK, userReferralDTO);
     if(result)
@@ -245,6 +249,15 @@ class UserReferralService {
   }
 
   /**
+   * Retrieves user referral by ID.
+   *
+   * @param {string} referralId - The ID of the referral
+   * @return {Promise<QueryResponse<DbUserReferralDto>>} - A Promise that resolves to the user referral
+   */
+  async getReferralById(referralId :string):Promise<QueryResponse<DbUserReferralDto>>{
+    return userReferralDao.getByGSI1(referralId);
+  }
+  /**
    * updates the status of user Referral
    *
    * @param referralId - Referral ID
@@ -259,14 +272,53 @@ class UserReferralService {
   ): Promise<DbUserReferralDto> {
     // Logging the action of updating user Referral status in the service layer
     global.logger.info("Updating user Referral status [UserReferralService]");
+    
+    // if the new status is DONE, update the user response
+    if (newStatus === ReferralStatus.DONE) {
+      // Get the referral details
+      let referral = await this.getReferralById(referralId);
 
+      // Retrive the employee details
+      let empUserId = referral[0].acceptedByUserId as string;
+      const empDetail = await UserDetailService.getUserById(empUserId);
+
+      // Check if Emp Details are found
+      if (empDetail.count) {
+        //Retrive the emp Email and Referral Responses
+        let empEmail = empDetail[0].emailList.primary;
+        const userReferralResponse = await UserReferralResponseService.get(empEmail);
+
+        // If the userReferralResponse is found, update the user response
+        if (userReferralResponse.count) {
+          // Remove the referralId from 'acceptedRefIds' from the userReferralResponse and add the referralId in 'doneRefIds' if found 
+          userReferralResponse[0].acceptedRefIds = userReferralResponse[0].acceptedRefIds.filter((id: string) => id !== referralId);
+          userReferralResponse[0].doneRefIds = userReferralResponse[0].doneRefIds.concat(referralId);
+
+          // Update the UserReferralResponse 
+          await UserReferralResponseService.update(empEmail, {
+            passedRefIds: userReferralResponse[0].passedRefIds,
+            rejectedRefIds: userReferralResponse[0].rejectedRefIds,
+            acceptedRefIds: userReferralResponse[0].acceptedRefIds,
+            doneRefIds: userReferralResponse[0].doneRefIds,
+          });
+        } else {
+          // If the userReferralResponse is not found, create a new userReferralResponse and update the user response
+          let userReferralNewResponse = {
+            passedRefIds: [],
+            rejectedRefIds: [],
+            acceptedRefIds: [], 
+            doneRefIds: [referralId]
+          };  
+          await UserReferralResponseService.update(empEmail, userReferralNewResponse);
+        }
+      }
+    }
     // Update status without withdrawal details
     return userReferralDao.updateStatus(
       referralId,
       candEmail,
       newStatus
     );
-
     // @todo Ashrith, this function is used for candidate specifically, and candidate will never accept the referral, therefor code to send email is not required here.
     // Kindly remove if this is true.
     // If the details are updated and newStatus is "ACCEPTED", then email should be sent to the candidate saying that his referral request has been accepted
@@ -401,7 +453,7 @@ class UserReferralService {
    * @param {string[]} referralIds - Array of referral IDs
    * @return { Promise<QueryResponse<DbUserReferralDto>[]> } - A Promise that resolves to the Referrals
    */
-  async getReferralsByIdsUsingGsis(referralIds: string[]): Promise<QueryResponse<DbUserReferralDto>[]> {
+  async getReferralsByIdsUsingGsis(referralIds: string[]): Promise<(DbUserReferralDto | null)[]> {
     return userReferralDao.getReferralsByIdsUsingGsis(referralIds);
   }
 
@@ -418,7 +470,7 @@ class UserReferralService {
     empPrimaryEmail: string,
     companyId: string,
     referralStatus: string
-  ) {
+  ): Promise<DbUserReferralDto[]>{
     // If referralStatus is AWAITING then fetch the details 
     if (referralStatus === ReferralStatus.AWAITING) {
       // If status is awaiting, call the function to get awaiting referrals
@@ -495,7 +547,7 @@ class UserReferralService {
   async getEmployeeReferralsByStatus(
     empPrimaryEmail: string,
     referralStatus: string
-  ): Promise<QueryResponse<DbUserReferralDto>[]> {
+  ):Promise<DbUserReferralDto[]>{
     // Get company referrals where status is referralStatus
     let attributes: string[] = [];
 
@@ -528,7 +580,8 @@ class UserReferralService {
     if (!refIds.length) {
       return [];
     }
-    return this.getReferralsByIdsUsingGsis(refIds);
+   let result = await this.getReferralsByIdsUsingGsis(refIds);
+   return result.filter(referral => referral !== null) as DbUserReferralDto[];
   }
 }
 

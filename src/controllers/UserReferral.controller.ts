@@ -151,15 +151,42 @@ class UserReferralController {
         companyId,
         referralStatus
       );
-
-      // Send a successful response with user data and referral details
-      res.status(HttpStatusCode.OK_200).json(empReferrals);
+  
+      // Check if any company referrals exist
+      if (!empReferrals.length) {
+        // Send employee referrals as response if no company referrals found
+        return res.status(HttpStatusCode.OK_200).json([]);
+        
+      }
+  
+      // Get unique company IDs from the retrieved referrals
+      const uniqueCompanyIDs: string[] = Array.from(new Set(empReferrals.map(referral => referral.companyId)));
+  
+      // Fetch company details for each unique company ID
+      const companyDetailsResults = await CompanyService.getCompanyDetailsByIds(uniqueCompanyIDs);
+  
+      // Loop over the retrieved referrals and include the company name in the response
+      const finalUserReferrals = empReferrals.map(referral => {
+  
+        // Find the company details corresponding to the current referral
+        const companyDetails = companyDetailsResults.find(companyDetail => companyDetail.id === referral.companyId);
+        
+        // Return the referral along with the company name
+        return {
+          ...referral,
+          companyName: companyDetails?.name ?? null,
+        };
+      });
+      
+      // Send a successful response with combined user data and referral details
+      res.status(HttpStatusCode.OK_200).json(finalUserReferrals);
     } catch (error: any) {
       // Handle errors
       // If it's another type of error, pass it to the next error handler
       next(error);
     }
   };
+  
 
   /**
    *
@@ -377,8 +404,12 @@ class UserReferralController {
       const candEmail: string = candPK.split("#").pop() ?? ""; // for valid PK, there will be valid email id
       const candDetails = await UserDetailService.get(candEmail);
       const candName = candDetails[0].name;
+  
+      // Retrieve the existing referral response for the specified email ID.
+      let referralResponse = await UserReferralResponseService.get(
+        referralstatusUpdate.emailId
+      );
 
-      let referralResponse;
       let updateReferralResponse = false;
 
       // Check if action is PASS or REJECT to determine if referral response needs to be updated
@@ -388,10 +419,7 @@ class UserReferralController {
         referralstatusUpdate.action === ReferralActions.ACCEPT ||
         referralstatusUpdate.action === ReferralActions.DONE
       ) {
-        // Retrieve the existing referral response for the specified email ID.
-        referralResponse = await UserReferralResponseService.get(
-          referralstatusUpdate.emailId
-        );
+       
         // Determine whether an existing referral response is found based on the count.
         // If count is non-zero, set updateReferralResponse to true; otherwise, set it to false.
         updateReferralResponse = referralResponse.count !== 0;

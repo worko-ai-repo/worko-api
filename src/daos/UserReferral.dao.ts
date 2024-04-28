@@ -171,8 +171,14 @@ class UserReferralDao implements BaseDao {
     const PK = this.partitianKey.strtr({ "{primaryEmail}": email });
     const SK = this.sortKeys.SK_REFERRAL.strtr({ "{reqId}": referralId });
 
-    // Update the referral status in the database
-    return UserReferralModel.update({ PK: PK, SK: SK }, { status: status });
+    // Create the update object with PK, SK, and status
+    let updateObject: Partial<DbUserReferralDto> = {  status: status };
+
+    // If the status is set to DONE, add the doneByCandidate field with the current date
+    if (status === ReferralStatus.DONE) {
+      updateObject.doneByCandidate = new Date();
+    }
+    return UserReferralModel.update( {PK : PK, SK : SK} , updateObject);
   }
 
   /**
@@ -256,7 +262,7 @@ class UserReferralDao implements BaseDao {
    * @param ReferralSK
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getByGSI1(GSI1SK: string) {
+  async getByGSI1(GSI1SK: string): Promise<QueryResponse<DbUserReferralDto>> {
     global.logger.info("Get Referral by GSI1PK and GSI1SK [DAO]");
     const GSI1PK = "REF#";
     const finalGSI1SK = "ID#" + GSI1SK;
@@ -321,7 +327,7 @@ class UserReferralDao implements BaseDao {
    * @param referralIds - Array of referral IDs
    * @returns { Promise<QueryResponse<DbUserReferralDto>[]>} - A Promise that resolves to the Referrals
    */
-  async getReferralsByIdsUsingGsis(referralIds: string[]): Promise<QueryResponse<DbUserReferralDto>[]>{
+  async getReferralsByIdsUsingGsis(referralIds: string[]): Promise<(DbUserReferralDto | null)[]> {
     global.logger.info("Get Referrals by GSI1PK and Referral IDs [DAO]");
     // Construct an array of keys based on referralIds
     const promises = referralIds.map((referralId) => {
@@ -330,7 +336,8 @@ class UserReferralDao implements BaseDao {
         .eq(this.GSI1PK)
         .where("GSI1SK")
         .eq(GSI1SK)
-        .exec();
+        .exec()
+        .then((referral) => referral.count ? referral[0] : null);
     });
     return Promise.all(promises);
   }
