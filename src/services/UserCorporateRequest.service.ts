@@ -49,6 +49,17 @@ class UserCorporateRequestService {
     }
 
     /**
+     * getgetCountByEmailCount
+     * 
+     * Checking whether the form is filled only once or not 
+     * 
+     * @param email - User email used to fill the form
+     */
+    async getCountByEmail(email: string) {
+        return userCorporateRequestDao.getCountByEmail(email);
+    }
+
+    /**
      * updateCorporateRequestById
      *
      * Updates an existing corporate request by its ID.

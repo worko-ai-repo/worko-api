@@ -83,24 +83,10 @@ class UserBankDetailController {
       logger.info("Create/update user BankDetail by email [controller]");
 
       // Extract email from request parameters
-      const email = req.params.id;
-
-      const { error: emailError, value: emailId } = validateEmailField(email);
+      const emailId = req.params.id;
 
       const userBankDetailDTO: UserBankDetailDTO = req.body;
-      const { error, value } = userBankDetailDTOValidation.validate(
-        userBankDetailDTO,
-        {
-          abortEarly: false,
-        }
-      );
-
-      // Validate the user input and throw a validation error if necessary
-      if (emailError) {
-        throw new RequestValidationError(emailError);
-      } else if (error) {
-        throw new RequestValidationError(error);
-      }
+      const value = userBankDetailDTO;
 
       // Check and add timestamps for BankDetails
       if (value.bankDetails) {
@@ -124,7 +110,14 @@ class UserBankDetailController {
 
       // If it has an SK, then it is an update, and if it does not have an SK, it is a create
       if (req.body.SK) {
-        result = await UserBankDetailService.update(emailId, value);
+        if (req.body.hasOwnProperty('SK')) {
+          delete req.body.SK;
+        }
+        
+        if (req.body.hasOwnProperty('PK')) {
+          delete req.body.PK;
+        }
+        result = await UserBankDetailService.update(emailId, req.body);
       } else {
         value.bankDetails[0].status = BankUpiStatus.ACTIVE;
         value.upiIds[0].status = BankUpiStatus.ACTIVE;

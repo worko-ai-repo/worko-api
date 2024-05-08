@@ -410,6 +410,12 @@ class UserController {
       if (error) {
         throw new RequestValidationError(error);
       }
+
+      const userCount = await UserService.getCount(email);
+      if (!userCount.count) {
+        return res.status(HttpStatusCode.CONFLICT_409).json({ error: "User Does Not Exist." });
+      }
+
       const update = await UserService.updateUserCV(value, resume);
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
@@ -428,6 +434,7 @@ class UserController {
       InvokeLambdaService.triggerResumeExtraction(email)
 
       res.status(HttpStatusCode.OK_200).json(update);
+      
     } catch (error) {
       // Handle errors
       // Pass the error to the next error handler

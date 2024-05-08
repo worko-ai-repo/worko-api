@@ -61,6 +61,12 @@ class UserCorporateRequestController {
                 throw new RequestValidationError(error);
             }
 
+            // Checking whether user is submitting another response or not
+            const userCheck = await userCorporateRequestService.getCountByEmail(requestBody.userEmail);
+            if (userCheck.count) {
+                return res.status(HttpStatusCode.CONFLICT_409).json({ error: "User has already Submitted the Form" });
+            }
+
             // create final responseDTO 
             const userCorporateRequestCreateDto: UserCorporateRequestCreateDto = {
                 ...userCorporateRequestDto,
@@ -75,7 +81,8 @@ class UserCorporateRequestController {
                 );
 
             // Send response indicating success
-            res.status(HttpStatusCode.CREATED_201).json(corporateRequest);
+            res.status(HttpStatusCode.CREATED_201).json(corporateRequest);  
+
         } catch (error: any) {
             // Pass the error to the error handling middleware
             next(error);
