@@ -7,6 +7,10 @@ import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.
 // Import Utils
 import HttpStatusCode from "../utils/http-codes.util";
 import UserService from "../services/User.service";
+import UserSubscriptionService from "../services/UserSubscription.service";
+import { UserSubscriptionType } from "../enums/UserSubscriptionStatus.enum";
+import UserDetailService from "../services/UserDetail.service";
+import { EmailTemplatePlaceholderCAND_PREMIUM_UPGRADE_NOTIFICATION } from "../dtos/EmailTemplatePlaceholder.dto";
 
 /**
  * TestController
@@ -85,6 +89,98 @@ class TestController {
       res.status(HttpStatusCode.OK_200).json(emailResponse);
       
     } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * sendEmpProfileReminderEmail - Controller function to send a profile reminder email to an employer
+   * 
+   * @param {Request} req - Express Request object
+   * @param {Response} res - Express Response object
+   * @param {NextFunction} next - Express Next function
+   */
+  sendEmpProfileReminderEmail = async (req: Request, res: Response, next: NextFunction) => {
+    
+    try {
+
+      // Get the email of the employee
+      const email = req.params.id;
+      // Call the service to send profile reminder email
+      const emailResponse = await UserService.sendProfileReminderEmailtoEmp(email);
+
+      res.status(HttpStatusCode.OK_200).json(emailResponse);
+      
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  /**
+   * sendMailToUpgradeSubscription - Controller function to send an email to upgrade subscription
+   * 
+   * @param {Request} req - Express Request object
+   * @param {Response} res - Express Response object
+   * @param {NextFunction} next - Express Next function
+   */
+  sendCandMailToUpgradeSubscription = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Extract email from request parameters
+      const email = req.params.id;
+
+      // Call UserService to send email for upgrading subscription
+      const statusAndEmailResponse = await UserService.sendUserMailToUpgradeSubscription(email);
+      
+      // Send response with status and email response
+      res.status(HttpStatusCode.OK_200).json(statusAndEmailResponse)
+    } catch (error) {
+      // Pass error to Express error handling middleware
+      next(error)
+    }
+  }
+
+  /**
+   * sendRemindertoCreateMutlipleProfiles - Controller function to send a reminder to create multiple profiles
+   * 
+   * @param {Request} req - Express Request object
+   * @param {Response} res - Express Response object
+   * @param {NextFunction} next - Express Next function
+   */
+  sendReminderToCandToCreateMutlipleProfiles = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Extract email from request parameters
+      const email = req.params.id;
+
+      // Call UserService to send reminder to create multiple profiles
+      const reminderStatus = await UserService.sendCandRemindertoCreateMutlipleProfiles(email);
+
+      // Send response with reminder status
+      res.status(HttpStatusCode.OK_200).json(reminderStatus)
+    } catch (error) {
+      // Pass error to Express error handling middleware
+      next(error)
+    }
+  }
+
+  /**
+   * sendRemindertoEmptoCreateMutlipleProfiles - Controller function to send a reminder to employer to create multiple profiles
+   * 
+   * @param {Request} req - Express Request object
+   * @param {Response} res - Express Response object
+   * @param {NextFunction} next - Express Next function
+   */
+  sendReminderToEmpToCreateMutlipleProfiles = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Extract email from request parameters
+      const email = req.params.id;
+
+      // Call UserService to send reminder to employer to create multiple profiles
+      const reminderStatus = await UserService.sendEmpRemindertoCreateMutlipleProfiles(email);
+
+      // Send response with reminder status
+      res.status(HttpStatusCode.OK_200).json(reminderStatus)
+    } catch (error) {
+      // Pass error to Express error handling middleware
       next(error)
     }
   }

@@ -14,6 +14,10 @@ import UserRatingAvgService from "./UserRatingAvg.service";
 // Import models 
 import { DbUserReviewDto } from "../db/models/UserReview.model";
 import { DbUserRatingAvgDto } from "../db/models/UserRatingAvg.model";
+import UserDetailService from "./UserDetail.service";
+import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
+import { EmailTemplatePlaceholderEMP_REVIEW_RATING_BY_CAND } from "../dtos/EmailTemplatePlaceholder.dto";
+import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 
 /**
  * UserReviewService
@@ -33,6 +37,28 @@ class UserReviewService {
     async createReview(userEmail: string, userReviewCreateDto: UserReviewCreateDto): Promise<DbUserReviewDto> {
         // Create review
         const createdReview = await userReviewDao.createReview(userEmail, userReviewCreateDto);
+
+        // Get details of the employee being reviewed
+        const empId = userReviewCreateDto.ratingForUserId; 
+        const empDetails = await UserDetailService.getUserById(empId)
+        const refereeName = empDetails[0].name;
+        const refereeEmail = empDetails[0].emailList.primary;
+
+        // Prepare email destination
+        const toAddress: EmailSourceDestinationAddress = {
+          email: refereeEmail,
+          fullName: refereeName
+        };
+        
+        // Prepare email destination
+        const emailPlaceholders: EmailTemplatePlaceholderEMP_REVIEW_RATING_BY_CAND = {
+          empName: refereeName,
+          feedback: userReviewCreateDto.reviewText as string,
+          rating: userReviewCreateDto.rating
+        }
+  
+        // Send email to notify the employee about received rating and review
+        const sendEmailResponse = await this.sendEmailToEmpAboutRatingAndReview(emailPlaceholders,toAddress);
 
         // Logger message for creating review
         global.logger.info("Creating review entry", {
@@ -90,6 +116,25 @@ class UserReviewService {
         // Call the DAO method to retrieve average rating for reviews received by a user
         return userRatingAvgDao.getRatingAverages(emailId);
     }
+
+    /**
+     * sendEmailToEmpAboutRatingAndReview - Function to send an email notification to an employee about received rating and review
+     * 
+     * @param {EmailTemplatePlaceholderEMP_REVIEW_RATING_BY_CAND} emailPlaceholders - Placeholders for email content
+     * @param {EmailSourceDestinationAddress} toAddress - Email address and full name of the recipient
+     * @returns {Promise<{ awsMessageId: string | null }>} - Promise resolving to AWS message ID or null
+     */
+    async sendEmailToEmpAboutRatingAndReview(
+        emailPlaceholders: EmailTemplatePlaceholderEMP_REVIEW_RATING_BY_CAND,
+        toAddress: EmailSourceDestinationAddress
+      ): Promise<{ awsMessageId: string | null }> {
+        // Send email using the email library with the specified template, recipient, and placeholders
+        return emailLibrary.sendEmail(
+          EmailTemplateEnum.EMP_REVIEW_RATING_BY_CAND,
+          toAddress,
+          emailPlaceholders,
+        );
+      }
 }
 
 // Export an instance of the UserReviewService class

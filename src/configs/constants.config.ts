@@ -93,6 +93,12 @@ const APP_CONSTANTS = {
     CAND: 80,
     EMP: 80,
   },
+
+  FRONTEND_URLS: {
+    SUBS_PREMIUM_RENEW: "https://app.worko.ai/",
+    SUBS_PREMIUM_UPGRADE: "https://app.worko.ai/",
+  }
+
 };
 
 export default APP_CONSTANTS;

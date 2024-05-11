@@ -15,7 +15,9 @@ import {
 
 import {
   EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED,
-  EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED
+  EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED,
+  EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION,
+  EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND
 } from "../dtos/EmailTemplatePlaceholder.dto";
 
 // import models
@@ -86,6 +88,7 @@ class UserReferralService {
     PK: string,
     SK: string,
     userReferralDTO: UserReferralDTO,
+    doneByUserId: string,
     status: string
   ): Promise<any> {
     // Logging the action of updating user Referral in the service layer
@@ -97,50 +100,97 @@ class UserReferralService {
     
     // Get the name of the company for which the referral request got accepted
     const companyId = userReferralDTO.companyId;
-    const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId]);
-    const companyName = companyDetails.length > 0 ? companyDetails[0].name ?? "" : "";
-    logger.debug(`Company Name: ${companyName}`);
-    
-    // Update the referral details
+    const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId])
+    const companyName = companyDetails[0].name;
+
     let result = await userReferralDao.update(PK, SK, userReferralDTO);
-    if(result)
-    {
+
+    if (result) {
+      // The actions are done by the employee
       // When employee accepts the referral request, email will be sent to candidate
-      if(status === ReferralActions.ACCEPT) 
-      {
-        // Get the name of the referee who accepted the referral request
-        const employeeId = userReferralDTO.acceptedByUserId as string;
-        const empDetails = await UserDetailService.getUserById(employeeId)
+      if (status === ReferralActions.ACCEPT) {
+        // Get the name and email of the referee who accepted the referral request
+        const empId = userReferralDTO.acceptedByUserId as string;
+        const empDetails = await UserDetailService.getUserById(empId);
         const refereeName = empDetails[0].name;
+        const refereeEmail = empDetails[0].emailList.primary;
 
         // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestAccepted function
         const toAddress: EmailSourceDestinationAddress = {
           email: candEmail,
-          fullName: candName
+          fullName: candName,
         };
-        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED = {
-          candName: candName,
-          companyName: companyName,
-          refereeName: refereeName
-        }
-  
-        // Function responsible for sending the email to the candidate saying that his referral request has been accepted
-        await this.sendEmailToCandWhenReferralRequestAccepted(emailPlaceholders,toAddress);
+        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED =
+          {
+            candName: candName,
+            companyName: companyName,
+            refereeName: refereeName,
+          };
+
+        // Prepare the necessary parameters required for the sendEmailToEmpWhenReferralRequestAccepted function
+        const emptoAddress: EmailSourceDestinationAddress = {
+          email: refereeEmail,
+          fullName: refereeName,
+        };
+
+        const empemailPlaceholders: EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION =
+          {
+            empName: refereeName,
+            candName: candName,
+          };
+
+        await Promise.all([
+          this.sendEmailToCandWhenReferralRequestAccepted(
+            emailPlaceholders,
+            toAddress
+          ),
+          this.sendEmailToEmpWhenReferralRequestAccepted(
+            empemailPlaceholders,
+            emptoAddress
+          ),
+        ]);
       }
       // When employee marks the referral request as done, email will be sent to candidate
-      else if(status === ReferralActions.DONE) {
+      else if (status === ReferralActions.DONE) {
+        // Get the name and email of the referee who completed the referral request
+        const empId = doneByUserId;
+        // const employeeId = empId.split("ID#")[1];
+        const empDetails = await UserDetailService.getUserById(empId);
+        const refereeName = empDetails[0].name;
+        const refereeEmail = empDetails[0].emailList.primary;
+
         // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestCompleted function
         const toAddress: EmailSourceDestinationAddress = {
           email: candEmail,
-          fullName: candName
+          fullName: candName,
         };
-        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED = {
-          candName: candName,
-          companyName: companyName
-        }
-  
-        // Function responsible for sending the email to the candidate saying that his referral request has been completed
-        await this.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders,toAddress);
+        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED =
+          {
+            candName: candName,
+            companyName: companyName,
+          };
+
+        // Prepare the necessary parameters required for the sendEmailToEmpWhenReferralRequestCompleted function
+        const emptoAddress: EmailSourceDestinationAddress = {
+          email: refereeEmail,
+          fullName: refereeName,
+        };
+
+        const empemailPlaceholders: EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND =
+          {
+            empName: refereeName,
+          };
+
+        await Promise.all([
+          this.sendEmailToCandWhenReferralRequestCompleted(
+            emailPlaceholders,
+            toAddress
+          ),
+          this.sendEmailToEmpWhenReferralRequestCompleted(
+            empemailPlaceholders,
+            emptoAddress
+          ),
+        ]);
       }
     }
 
@@ -440,6 +490,44 @@ class UserReferralService {
     // Send email using the email library with the specified template, recipient, and placeholders
     return emailLibrary.sendEmail(
         EmailTemplateEnum.CAND_REFERRAL_REQ_COMPLETED,
+        toAddress,
+        emailPlaceholders,
+    );
+  }
+
+  /**
+   * sendEmailToEmpWhenReferralRequestAccepted - Function to send an email notification to employer when a referral request is accepted by him
+   * 
+   * @param {EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION} emailPlaceholders - Placeholders for email content
+   * @param {EmailSourceDestinationAddress} toAddress - Email address and full name of the recipient
+   * @returns {Promise<{ awsMessageId: string | null }>} - Promise resolving to AWS message ID or null
+   */
+  async sendEmailToEmpWhenReferralRequestAccepted(
+    emailPlaceholders: EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION,
+    toAddress: EmailSourceDestinationAddress
+  ): Promise<{ awsMessageId: string | null }> {
+    // Send email using the email library with the specified template, recipient, and placeholders
+    return emailLibrary.sendEmail(
+        EmailTemplateEnum.EMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION,
+        toAddress,
+        emailPlaceholders,
+    );
+  }
+
+  /**
+   * sendEmailToEmpWhenReferralRequestCompleted - Function to send an email notification to employer when a referral request is completed by him
+   * 
+   * @param {EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND} emailPlaceholders - Placeholders for email content
+   * @param {EmailSourceDestinationAddress} toAddress - Email address and full name of the recipient
+   * @returns {Promise<{ awsMessageId: string | null }>} - Promise resolving to AWS message ID or null
+   */
+  async sendEmailToEmpWhenReferralRequestCompleted(
+    emailPlaceholders: EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND,
+    toAddress: EmailSourceDestinationAddress
+  ): Promise<{ awsMessageId: string | null }> {
+    // Send email using the email library with the specified template, recipient, and placeholders
+    return emailLibrary.sendEmail(
+        EmailTemplateEnum.EMP_REFFERAL_DONE_FOR_CAND,
         toAddress,
         emailPlaceholders,
     );

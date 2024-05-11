@@ -56,6 +56,11 @@ class UserSupportController {
             // Create Support as requested
             const result = await userSupportService.createSupport(userSupportCreateDto.userEmail, userSupportCreateDto);
 
+            // Calling the function that sends email to employee about the candidate query by passing necessary parameters
+            const referralId = requestBody.contextId;
+            const query = requestBody.userMessage;
+            const sendEmailResponse = await userSupportService.sendEmailToEmpAboutCandReferralQuery(referralId,query);
+
             // Send response indicating success
             res.status(HttpStatusCode.CREATED_201).json(result);
         } catch (error: any) {

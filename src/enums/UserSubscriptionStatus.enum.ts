@@ -11,3 +11,7 @@ export enum UserSubscriptionStatus {
   EXPIRED = "EXPIRED",
   USED = "USED",
 }
+
+export enum UserSubscriptionType {
+  FREE = "Free"
+}

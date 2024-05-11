@@ -10,6 +10,11 @@ import { UserSupportCreateDto, UserSupportFilterDto, UserSupportUpdateApiDto, Us
 // Import Models 
 import { DbUserSupportDto } from "../db/models/UserSupport.model";
 import { UserSupportStatusEnum } from "../enums/User.enum";
+import UserReferralService from "./UserReferral.service";
+import UserDetailService from "./UserDetail.service";
+import { EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND } from "../dtos/EmailTemplatePlaceholder.dto";
+import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
+import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 
 /**
  * UserSupportService
@@ -81,6 +86,65 @@ class UserSupportService {
         // Call the DAO method to retrieve support list
         return userSupportDao.getUserSupportList(filterOptions);
     }
+
+    /**
+     * sendEmailToEmpAboutCandReferralQuery - Function to send an email notification to an employee about a candidate query
+     * 
+     * @param {string} referralId - Referral ID
+     * @param {string} query - Query from the candidate
+     * @returns {Promise<boolean>} - Promise resolving to true if email sent successfully, otherwise false
+     */
+    async sendEmailToEmpAboutCandReferralQuery(referralId: string, query: string): Promise<boolean> {
+
+        // Get referral data using referralId
+        const referralData = await UserReferralService.getByGSI1(referralId);
+        if(!referralData) {
+            throw new Error("No valid referral exists for employee to process this query.");
+        }
+        const empId = referralData[0].doneByUserId;
+
+        // Extract the Employee Details from the employee ID 
+        // const employeeId = empId.split("ID#")[1]; 
+        const empDetails = await UserDetailService.getUserById(empId)
+        const refereeName = empDetails[0].name;
+        const refereeEmail = empDetails[0].emailList.primary;
+
+        // Prepare email destination
+        const toAddress: EmailSourceDestinationAddress = {
+            email: refereeEmail,
+            fullName: refereeName
+        };
+
+        // Prepare email placeholders for the referral query notification
+        const emailPlaceholders: EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND = {
+            empName: refereeName,
+            query: query
+        }
+
+        // Send email to notify the employee about the candidate query
+        const sendEmailResponse = await this.sendEmailForCandReferralQueryToEmp(emailPlaceholders,toAddress);
+
+        return true;
+    }
+
+    /**
+     * sendEmailForCandReferralQueryToEmp - Function to send an email notification to an employee about a candidate query
+     * 
+     * @param {EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND} emailPlaceholders - Placeholders for email content
+     * @param {EmailSourceDestinationAddress} toAddress - Email address and full name of the recipient
+     * @returns {Promise<{ awsMessageId: string | null }>} - Promise resolving to AWS message ID or null
+     */
+    async sendEmailForCandReferralQueryToEmp(
+        emailPlaceholders: EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND,
+        toAddress: EmailSourceDestinationAddress
+      ): Promise<{ awsMessageId: string | null }> {
+        // Send email using the email library with the specified template, recipient, and placeholders
+        return emailLibrary.sendEmail(
+          EmailTemplateEnum.EMP_QUERY_FOR_REFERRAL_BY_CAND,
+          toAddress,
+          emailPlaceholders,
+        );
+      }
 
     /**
     * getSupportById
