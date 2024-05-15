@@ -101,6 +101,17 @@ class UserCareerRequestService {
         // Call the DAO method to retrieve career request by ID
         return userCareerRequestDao.getCareerRequestById(requestId);
     }
+
+    /**
+     * getCountByEmail
+     * 
+     * Checking whether the form is filled only once or not 
+     * 
+     * @param email - User email used to fill the form
+     */
+    async getCountByEmail(email: string) {
+        return userCareerRequestDao.getCountByEmail(email);
+    }
 }
 
 // Export an instance of the UserCareerRequestService class

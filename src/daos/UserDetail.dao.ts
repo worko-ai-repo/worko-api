@@ -5,7 +5,7 @@ import BaseDao from "./Base.dao";
 import { UserDetailModel } from "../db/models/UserDetail.model";
 
 //Load the local dtos
-import { UserSignUpDTO } from "../dtos/User.dto";
+import { UserProfileResponse, UserSignUpDTO } from "../dtos/User.dto";
 import { UserDetailDTO } from "../dtos/UserDetail.dto";
 
 //Load UlidService for generating ULID IDs
@@ -72,6 +72,22 @@ class UserDetailDao implements BaseDao {
       "{primaryEmail}": email,
     });
     return UserDetailModel.query("PK").eq(PK).where("SK").eq(SK).exec();
+  }
+
+  /**
+   * partialProfileChange
+   * 
+   * Updates the last accessed dashboard for a user
+   * 
+   * @param email - Email address of the user
+   * @param SK - Sort Key of the user
+   * @param userProfileResponse - Updated user profile data
+   */
+  async partialProfileChange(email: string, SK: string, userProfileResponse: UserProfileResponse) {
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    return UserDetailModel.update({ PK: PK, SK: SK }, userProfileResponse );
   }
 
   /**

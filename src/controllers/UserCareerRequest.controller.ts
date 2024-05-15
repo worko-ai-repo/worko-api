@@ -63,6 +63,12 @@ class UserCareerRequestController {
         throw new RequestValidationError(error);
       }
 
+      // Checking whether user is submitting another response or not
+      const userCheck = await userCareerRequestService.getCountByEmail(requestBody.userEmail);
+      if (userCheck.count) {
+          return res.status(HttpStatusCode.CONFLICT_409).json({ error: "User has already Submitted the Form" });
+      }
+
       // create final responseDTO
       const userCareerRequestCreateDto: UserCareerRequestCreateDto = {
         ...userCareerRequestDto,

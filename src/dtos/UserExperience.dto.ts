@@ -8,7 +8,7 @@ export interface UserExperienceDTO {
   endedYear?: number;
   experienceInMonths?: number;
   companyName: string;
-  companySK: string;
+  companyId: string;
   emailId?: string;
   isCurrent?: boolean;
 }

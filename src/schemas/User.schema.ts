@@ -138,3 +138,19 @@ export const validateEmailField = (email: string) => {
 
   return Email.validate(email);
 };
+
+export const userProfilePartialRequestDTOValidation = Joi.object({
+  name: Joi.string()
+    .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
+    .required()
+    .messages({
+      "any.required": "Name is required",
+      "string.pattern.base":
+        "Name must contain only alphabetic characters, spaces, dots, apostrophes, or hyphens",
+    }),
+  lastAccessedDash: Joi.string().required().messages({
+      "any.required": "Last accessed dashboard date is required.",
+      "string.empty": "Last accessed dashboard date cannot be empty.",
+  }),
+  profileImage: Joi.string().optional(),
+});

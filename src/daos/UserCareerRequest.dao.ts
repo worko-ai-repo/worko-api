@@ -166,6 +166,20 @@ class UserCareerRequestDao implements BaseDao {
       .eq(GSI1SK)
       .exec();
   }
+
+  /**
+   * getCountByEmail
+   *
+   * Checking whether the form is filled only once or not
+   *
+   * @param email - User email used to fill the form
+   */
+  async getCountByEmail(email: string) {
+    const PK = this.partitianKey.strtr({
+      "{emailId}": email,
+    });
+    return UserCareerRequestModel.query("PK").eq(PK).attributes(["PK"]).exec();
+  }
 }
 
 // Create and export the UserCareerRequestDao instance

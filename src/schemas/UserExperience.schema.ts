@@ -51,10 +51,10 @@ export const userExperienceDTOValidation = Joi.object({
     "string.empty": "Company Name should not be empty.",
   }),
 
-  // Validation for company SK
-  companySK: Joi.string().required().messages({
-    "any.required": "Company SK is required.",
-    "string.empty": "Company SK should not be empty.",
+  // Validation for company Id
+  companyId: Joi.string().required().messages({
+    "any.required": "Company Id is required.",
+    "string.empty": "Company Id should not be empty.",
   }),
 
   // Validation for email ID
@@ -127,10 +127,10 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
       "string.empty": "Company Name should not be empty.",
     }),
 
-    // Validation for company SK
-    companySK: Joi.string().required().messages({
-      "any.required": "Company SK is required.",
-      "string.empty": "Company SK should not be empty.",
+    // Validation for company Id
+    companyId: Joi.string().required().messages({
+      "any.required": "Company Id is required.",
+      "string.empty": "Company Id should not be empty.",
     }),
 
     // Validation for email ID

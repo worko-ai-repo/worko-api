@@ -97,8 +97,9 @@ const APP_CONSTANTS = {
   FRONTEND_URLS: {
     SUBS_PREMIUM_RENEW: "https://app.worko.ai/",
     SUBS_PREMIUM_UPGRADE: "https://app.worko.ai/",
-  }
+  },
 
+  WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png"
 };
 
 export default APP_CONSTANTS;

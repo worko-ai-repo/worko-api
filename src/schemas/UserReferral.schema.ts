@@ -32,7 +32,7 @@ export const withdrawnReferralPayloadValidation = Joi.object({
   reason: Joi.string().required().messages({
     "any.required": "Reason is required"
   }),
-  userComment: Joi.string().optional()
+  userComment: Joi.string().allow('').optional()
 });
 
 export const UserReferralEmployeeStatusValidation = Joi.object({
@@ -65,11 +65,5 @@ export const UserReferralEmployeeStatusValidation = Joi.object({
     otherwise: Joi.optional(),
   }),
 
-  userComment: Joi.when("action", {
-    is: ReferralActions.REJECT,
-    then: Joi.string().required().messages({
-      "any.required": "User comment is required for rejection",
-    }),
-    otherwise: Joi.optional(),
-  })
+  userComment: Joi.string().allow('').optional()
 });

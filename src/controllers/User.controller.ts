@@ -16,6 +16,7 @@ import { UserProfilePercentageDTO } from "../dtos/UserProfilePercentage.dto";
 import {
   UserSignUpDTOValidation,
   userEmployeeSignUpDTOValidation,
+  userProfilePartialRequestDTOValidation,
   validateEmailField,
 } from "../schemas/User.schema";
 
@@ -163,6 +164,66 @@ class UserController {
   };
 
   /**
+   * partialProfileChange
+   *
+   * Update user's lastAccessedDash based on the provided query parameters
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  partialProfileChange = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+
+    try {
+      
+      // Extract email from request parameters
+      const email = req.params.id;
+
+      // Extract user profile response from request body
+      const userProfileUpdateRequest: UserProfileResponse = req.body;
+
+      // Validate email
+      const { error: emailError, value: emailId } = validateEmailField(email);
+
+      const { error, value: userProfileUpdateData } = userProfilePartialRequestDTOValidation.validate(userProfileUpdateRequest, {
+        abortEarly: false,
+      });
+
+      // If email validation fails, throw a RequestValidationError
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      } else if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Fetch SK (Sort Key) for the user
+      // @todo If you wish to get the User Details, consider using UserDetailService.get(email)
+      const SK = await UserService.getSK(emailId); 
+
+      // Check if SK is null or indicates an error
+      if (!SK) {
+        // If user not found, return 404 status with error message
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Update last accessed dashboard for the user
+      const updatedDetails = await UserService.partialProfileChange(emailId,userProfileUpdateData);
+
+      // Return success response with updated details
+      res.status(HttpStatusCode.OK_200).json({
+        status: "Updated Successfully",
+        data: updatedDetails,
+      });
+    } catch (error: any) {
+      next(error)
+    }
+  }
+
+  /**
    * createUser
    *
    * Create a new user based on the provided input data. Validates the input data
@@ -283,9 +344,9 @@ class UserController {
       } = userSignUpDto;
 
       const userExperienceDto: UserExperienceDTO = {
-        department,
-        companyName,
-        companySK,
+        department: department,
+        companyName: companyName,
+        companyId: companySK.split("#").pop() as string,
         emailId: companyEmailId,
       };
       const userSocialProfileDTO: UserSocialProfileDTO = {

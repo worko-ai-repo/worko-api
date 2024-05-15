@@ -82,7 +82,6 @@ class UserExperienceDao implements BaseDao {
       id: id,
       isEmailVerified: false,
       ...userExperienceDto,
-      companyId: userExperienceDto.companySK.split("#").pop(),
     };
     return UserExperienceModel.create(userExperienceDTO);
   }

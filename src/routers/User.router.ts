@@ -22,6 +22,9 @@ UserRouter.post("/register/employee", userController.createEmployee);
 // Get the user profile detail based on the provided query parameter
 UserRouter.get("/:id/profile", userController.getUserProfileDetailById);
 
+// API to update the User's Last Accessed Dashboard
+UserRouter.put("/:id/partialProfileChange", userController.partialProfileChange);
+
 //Update the verification status of user email based on the provided query parameter
 UserRouter.patch("/:id/verify/email", userController.updateEmailVerifyStatus);
 

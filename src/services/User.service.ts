@@ -14,7 +14,7 @@ import {
 } from "../dtos/EmailTemplatePlaceholder.dto";
 
 // Load the local dtos
-import { UserSignUpDTO } from "../dtos/User.dto";
+import { UserProfileResponse, UserSignUpDTO } from "../dtos/User.dto";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { UserType } from "../enums/User.enum";
 import { UserSubscriptionType } from "../enums/UserSubscriptionStatus.enum";
@@ -52,6 +52,20 @@ class UserService {
   async getUserDetailByEmail(email: string, SK: string) {
     global.logger.info("Get user detail by id [service]");
     return userDetailDao.getUserDetails(email, SK);
+  }
+
+  /**
+   * partialProfileChange
+   * 
+   * Updates the last accessed dashboard for a user
+   *
+   * @param email - Email of the user
+   * @param userProfileResponse - Updated user profile data
+   */
+  async partialProfileChange(email: string, userProfileResponse: UserProfileResponse) {
+
+    const SK = await this.getSK(email);
+    return userDetailDao.partialProfileChange(email, SK, userProfileResponse);
   }
 
   /**

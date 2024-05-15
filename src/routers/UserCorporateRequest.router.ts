@@ -16,6 +16,12 @@ UserCorporateRequestRouter.post("/", userCorporateRequestController.createCorpor
 // Get all corporate request details raised by user
 UserCorporateRequestRouter.get("/", userCorporateRequestController.getUserCorporateRequestList);
 
+// API to send otp to the User's email that is being used to fill the form
+UserCorporateRequestRouter.post("/:email/request-otp", userCorporateRequestController.sendOtptoVerifyUserForCorporatePage);
+
+// API to verify the User's email via otp that is being used to fill the form
+UserCorporateRequestRouter.post("/:email/verify-otp", userCorporateRequestController.verifyUserEmailForCorporatePage)
+
 // Get corporate request details for mention requestId
 UserCorporateRequestRouter.get("/:requestId", userCorporateRequestController.getCorporateRequestById);
 

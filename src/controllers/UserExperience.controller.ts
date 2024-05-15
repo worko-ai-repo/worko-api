@@ -73,6 +73,7 @@ class UserExperienceController {
         return {
           ...item,
           companyLogoUrl: companyDetails?.logoUrl || null,
+          companyLogo: companyDetails?.logo || null
         };
       });
 

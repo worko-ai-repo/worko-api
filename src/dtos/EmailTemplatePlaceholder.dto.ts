@@ -67,3 +67,9 @@ export interface EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND {
     empName: string;
     query: string;
 }
+
+export interface EmailTemplatePlaceholderUSER_CORPORATE_REQUEST_EMAIL_OTP {
+    userFullName: string;
+    logoUrl: string;
+    otp: string;
+}

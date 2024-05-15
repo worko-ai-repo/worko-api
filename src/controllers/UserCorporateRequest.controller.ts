@@ -25,6 +25,7 @@ import {
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
+import { validateEmailField } from "../schemas/User.schema";
 
 /**
  * UserCorporateRequestController
@@ -121,6 +122,81 @@ class UserCorporateRequestController {
             next(error);
         }
     };
+
+    /**
+     * sendOtptoVerifyUserForCorporatePage
+     *
+     * @param {Request} req - Express request object
+     * @param {Response} res - Express response object
+     * @param {NextFunction} next - Express next function
+     */
+    sendOtptoVerifyUserForCorporatePage = async (
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+
+            // Extract primary email address from request parameters
+            const email = req.params.email;
+            const fullName = req.body.fullName;
+
+            // Get user's IP address from request
+            const userIpAddress: string = req.ip as string;
+            
+            // Validate email address, If email validation fails throw a validation error
+            const { error } = validateEmailField(email);
+            if (error) {
+                throw new RequestValidationError(error);
+            }
+            
+            // Send an email to the user to verify their email address.
+            const userOtpDetails = await userCorporateRequestService.sendOtptoVerifyUserForCorporatePage(
+                email,
+                fullName,
+                userIpAddress,
+            );
+
+            // Send success response with user OTP object
+            res.status(HttpStatusCode.OK_200).json({
+                id: userOtpDetails.id
+            });
+            
+        } catch (error: any) {
+            next(error)
+        }
+    }
+
+    verifyUserEmailForCorporatePage = async(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ) =>  {
+        try {
+            // Extract user primary email address from request parameters
+            const email = req.params.email;
+
+            // Extract OTP from request body
+            const otp = req.body.otp;
+
+            // Validate email address, If email validation fails throw a validation error
+            const { error } = validateEmailField(email);
+            if (error) {
+                throw new RequestValidationError(error);
+            }
+
+            // Verify the OTP received from user to make sure the email belogs to the user only.
+            const isOtpVerified = await userCorporateRequestService.verifyUserEmailForCorporatePage(
+                email,
+                otp,
+            );
+
+            // Send OTP verification details in the response
+            res.status(HttpStatusCode.OK_200).json({verificationStatus: isOtpVerified});
+        } catch (error: any) {
+            next(error)
+        }
+    }
 
     /**
      * getCorporateRequestById
