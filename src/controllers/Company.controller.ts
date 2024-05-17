@@ -7,6 +7,7 @@ import {
   AddCompanyDTO,
   CompanyListingFilterOptions,
   CompanyListingFilterRequestDTO,
+  CompanyRequestDTO,
 } from "../dtos/Company.dto";
 import {
   RecordListingFilterOptions,
@@ -42,7 +43,7 @@ class CompanyController {
   updateCompany = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Extract company data from the request body
-      const companyDto: CompanyDTO = req.body;
+      const companyDto: CompanyRequestDTO = req.body;
       // Extract company id from the request query parameter
       const companyId:string =  req.params.id as string;
       // Validate the incoming company data using the defined validation schema in CompanyDTOValidation
@@ -55,9 +56,13 @@ class CompanyController {
         throw new RequestValidationError(error);
       }
 
+      const updateCompanyDTO: CompanyDTO = {
+        ...companyDto,
+        isVerified: true
+      }
       
       // Call the CompanyService to update a  company
-      const updateCompany = await CompanyService.updateCompany(companyDto, companyId);
+      const updateCompany = await CompanyService.updateCompany(updateCompanyDTO, companyId);
 
       // Send successful response with the created company data
       res.status(HttpStatusCode.OK_200).json(updateCompany);
@@ -81,7 +86,7 @@ class CompanyController {
   createCompany = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Extract company data from the request body
-      const companyDto: CompanyDTO = req.body;
+      const companyDto: CompanyRequestDTO = req.body;
       // Check if company name already exist
       // Call the CompanyService to get company by name
       const company = await CompanyService.getCompanyByName(companyDto.name);
@@ -109,8 +114,12 @@ class CompanyController {
         throw new RequestValidationError(error);
       }
 
+      const addCompanyDTO: CompanyDTO = {
+        ...companyDto,
+        isVerified: true
+      }
       // Call the CompanyService to add a new company
-      const createdCompany = await CompanyService.addNewCompany(companyDto);
+      const createdCompany = await CompanyService.addNewCompany(addCompanyDTO);
 
       // Send successful response with the created company data
       res.status(HttpStatusCode.CREATED_201).json(createdCompany);
@@ -223,6 +232,19 @@ class CompanyController {
       }
 
       const addCompany = await CompanyService.requestNewCompany(addCompanyDto);
+      
+      let requestedCompany : CompanyDTO = {
+        name: addCompanyDto.companyDetail.name as string,
+        industry: addCompanyDto.companyDetail.industry as string,
+        teamSize: addCompanyDto.companyDetail.teamSize as number,
+        carrierPage: addCompanyDto.companyDetail.carrierPage as string,
+        linkedIn: addCompanyDto.companyDetail.linkedIn as string,
+        logoUrl: addCompanyDto.companyDetail.logoUrl as string,
+        logo: addCompanyDto.companyDetail.logo as string,
+        isVerified: false
+      } 
+
+      const createdCompany = await CompanyService.addNewCompany(requestedCompany);
 
       res.status(HttpStatusCode.CREATED_201).json(addCompany);
     } catch (error) {

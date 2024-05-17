@@ -8,6 +8,16 @@ import {
 } from "./Common.dto";
 
 // We can come up with our own JS DOC properties like resource, action, etc. ANd update the same for all DTOs.
+export interface CompanyRequestDTO {
+  name: string; 
+  industry: string; 
+  teamSize: number; 
+  carrierPage: string; 
+  linkedIn: string; 
+  logoUrl: string; 
+  logo:  string;  
+}
+
 export interface CompanyDTO {
   // Represents the data structure for creating or updating a company.
   // Should be used in requests where a new company needs to be created or an existing one updated.
@@ -18,6 +28,7 @@ export interface CompanyDTO {
   linkedIn: string; // LinkedIn page URL
   logoUrl: string; // URL of the company's logo
   logo:  string;  // logo name
+  isVerified: boolean;
 }
 
 interface CompanyObject {
@@ -27,6 +38,7 @@ interface CompanyObject {
   carrierPage: String;
   linkedIn: String;
   logoUrl: String;
+  logo: string;
 }
 
 export enum UserType {
