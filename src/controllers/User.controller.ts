@@ -16,7 +16,6 @@ import { UserProfilePercentageDTO } from "../dtos/UserProfilePercentage.dto";
 import {
   UserSignUpDTOValidation,
   userEmployeeSignUpDTOValidation,
-  userProfilePartialRequestDTOValidation,
   validateEmailField,
 } from "../schemas/User.schema";
 
@@ -164,7 +163,7 @@ class UserController {
   };
 
   /**
-   * partialProfileChange
+   * updateLastAccessedDash
    *
    * Update user's lastAccessedDash based on the provided query parameters
    *
@@ -172,7 +171,7 @@ class UserController {
    * @param {Response} res
    * @param {NextFunction} next
    */
-  partialProfileChange = async (
+  updateLastAccessedDash = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -184,21 +183,15 @@ class UserController {
       const email = req.params.id;
 
       // Extract user profile response from request body
-      const userProfileUpdateRequest: UserProfileResponse = req.body;
+      const lastAccessedDash = req.body.lastAccessedDash;
 
       // Validate email
       const { error: emailError, value: emailId } = validateEmailField(email);
 
-      const { error, value: userProfileUpdateData } = userProfilePartialRequestDTOValidation.validate(userProfileUpdateRequest, {
-        abortEarly: false,
-      });
-
       // If email validation fails, throw a RequestValidationError
       if (emailError) {
         throw new RequestValidationError(emailError);
-      } else if (error) {
-        throw new RequestValidationError(error);
-      }
+      } 
 
       // Fetch SK (Sort Key) for the user
       // @todo If you wish to get the User Details, consider using UserDetailService.get(email)
@@ -211,7 +204,7 @@ class UserController {
       }
 
       // Update last accessed dashboard for the user
-      const updatedDetails = await UserService.partialProfileChange(emailId,userProfileUpdateData);
+      const updatedDetails = await UserService.updateLastAccessedDash(emailId,lastAccessedDash);
 
       // Return success response with updated details
       res.status(HttpStatusCode.OK_200).json({

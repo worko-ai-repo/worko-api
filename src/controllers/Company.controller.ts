@@ -85,7 +85,7 @@ class CompanyController {
       // Check if company name already exist
       // Call the CompanyService to get company by name
       const company = await CompanyService.getCompanyByName(companyDto.name);
-      if (company) {
+      if (company.count) {
         throw new Error("Company name already exist");
       }
       
@@ -214,6 +214,12 @@ class CompanyController {
       // Check if validation resulted in errors
       if (error) {
         throw new RequestValidationError(error);
+      }
+
+      const companyName = addCompanyDto.companyDetail.name as string
+      const company = await CompanyService.getRequestedCompanyByName(companyName);
+      if (company.count) {
+        return res.status(HttpStatusCode.CONFLICT_409).json({ error: "Company has already been added to Request List" });
       }
 
       const addCompany = await CompanyService.requestNewCompany(addCompanyDto);

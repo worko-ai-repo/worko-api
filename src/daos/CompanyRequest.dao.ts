@@ -28,6 +28,13 @@ class CompanyRequestDao implements BaseDao {
     }
   }
 
+  async getRequestedCompanyByName(name: string) {
+    return CompanyRequestModel.query("PK")
+            .eq(this.partitianKey)
+            .filter("companyDetail.name")
+            .eq(name)
+            .exec();
+  }
   /**
    * Creates a request for adding a new company based on provided DTO
    *

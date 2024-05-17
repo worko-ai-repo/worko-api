@@ -44,7 +44,7 @@ export interface AddCompanyDTO {
   // Represents the data structure for adding a new company.
   // Should be used when creating a new company request.
   userType: UserType; // Type of user adding the company
-  companyDetail: Partial<CompanyObject>; // Details of the company to be added
+  companyDetail: CompanyObject; // Details of the company to be added
   status: Status; // Status of the company request
 }
 

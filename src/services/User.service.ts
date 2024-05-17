@@ -55,17 +55,17 @@ class UserService {
   }
 
   /**
-   * partialProfileChange
+   * updateLastAccessedDash
    * 
    * Updates the last accessed dashboard for a user
    *
    * @param email - Email of the user
-   * @param userProfileResponse - Updated user profile data
+   * @param userlastAccessedDash - User's Last Accessed Dashboard
    */
-  async partialProfileChange(email: string, userProfileResponse: UserProfileResponse) {
+  async updateLastAccessedDash(email: string, userlastAccessedDash: string) {
 
     const SK = await this.getSK(email);
-    return userDetailDao.partialProfileChange(email, SK, userProfileResponse);
+    return userDetailDao.updateLastAccessedDash(email, SK, userlastAccessedDash);
   }
 
   /**

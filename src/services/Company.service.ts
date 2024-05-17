@@ -92,6 +92,9 @@ class CompanyService {
     return companyDetailDao.update(companyDto, id);
   }
 
+  async getRequestedCompanyByName(name: string) {
+    return companyRequestDao.getRequestedCompanyByName(name);
+  }
   /**
    *
    * Request for a new company with provided details.

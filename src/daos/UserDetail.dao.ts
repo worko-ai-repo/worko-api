@@ -75,19 +75,19 @@ class UserDetailDao implements BaseDao {
   }
 
   /**
-   * partialProfileChange
+   * updateLastAccessedDash
    * 
    * Updates the last accessed dashboard for a user
    * 
    * @param email - Email address of the user
    * @param SK - Sort Key of the user
-   * @param userProfileResponse - Updated user profile data
+   * @param userlastAccessedDash - User's Last Accessed Dashboard
    */
-  async partialProfileChange(email: string, SK: string, userProfileResponse: UserProfileResponse) {
+  async updateLastAccessedDash(email: string, SK: string, userlastAccessedDash: string) {
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    return UserDetailModel.update({ PK: PK, SK: SK }, userProfileResponse );
+    return UserDetailModel.update({ PK: PK, SK: SK }, {lastAccessedDash: userlastAccessedDash} );
   }
 
   /**

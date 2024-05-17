@@ -58,7 +58,7 @@ export const userDetailDTOValidation = Joi.object({
     "number.base": "Years of experience must be a valid number.",
   }),
   CV: Joi.string().optional(),
-  coverLetter: Joi.string().optional(),
+  coverLetter: Joi.string().allow('').optional(),
   lastAccessedDash: Joi.string().required().messages({
     "any.required": "Last accessed dashboard date is required.",
     "string.empty": "Last accessed dashboard date cannot be empty.",
