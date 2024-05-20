@@ -54,15 +54,9 @@ const serverlessConfiguration: AWS = {
           "ses:GetTemplate",
           "ses:DeleteTemplate",
           "ses:SendTemplatedEmail",
+          "ses:CreateTemplate"
         ],
-        Resource: [
-          "arn:aws:ses:ap-south-1:787066054733:configuration-set/*",
-          "arn:aws:ses:ap-south-1:787066054733:contact-list/*",
-          "arn:aws:ses:ap-south-1:787066054733:identity/*",
-          "arn:aws:ses:ap-south-1:787066054733:template/*",
-          "arn:aws:ses:ap-south-1:787066054733:custom-verification-email-template/*",
-          "arn:aws:ses:ap-south-1:787066054733:*"
-        ]
+        Resource: "*"
       },
       {
         Effect: "Allow",
@@ -86,6 +80,28 @@ const serverlessConfiguration: AWS = {
           "arn:aws:lambda:ap-south-1:787066054733:function:worko-jd-resume-matching",
           "arn:aws:lambda:ap-south-1:787066054733:function:resume-parser"
         ]
+      },{
+        Effect: "Allow",
+        Action: [
+          "iam:PassRole",
+          "scheduler:GetSchedule",
+          "scheduler:UpdateSchedule",
+          "scheduler:CreateSchedule",
+          "scheduler:DeleteSchedule"
+        ],
+        Resource: [
+          "arn:aws:iam::787066054733:role/worko-schedule-invoke-lambda-role",
+          "arn:aws:scheduler:ap-south-1:787066054733:schedule/*/*"
+        ]
+      },
+      {
+        Effect: "Allow",
+        "Action": [
+          "scheduler:GetScheduleGroup",
+          "scheduler:DeleteScheduleGroup",
+          "scheduler:CreateScheduleGroup"
+        ],
+        "Resource": "arn:aws:scheduler:ap-south-1:787066054733:schedule-group/*"
       }
     ],
     environment: {},
@@ -93,6 +109,10 @@ const serverlessConfiguration: AWS = {
   functions: {
     app: {
       handler: "dist/src/app.handler",
+      vpc: {
+        subnetIds: ["subnet-0fc74e8d5babbfc99", "subnet-086a24597acb03552"],
+        securityGroupIds: ["sg-0fb9fcd798e6302ad"]
+      },
       events: [
         {
           http: {

@@ -99,6 +99,13 @@ const APP_CONSTANTS = {
     SUBS_PREMIUM_UPGRADE: "https://app.worko.ai/",
   },
 
+  SCHEDULE_JOB:{
+    GROUP: "worko",
+    TIME_ZONE: "Asia/Calcutta",
+    LAMBDA_TRIGGER_ARN: "arn:aws:lambda:ap-south-1:787066054733:function:pankaj-test-function",
+    ROLE_ARN: "arn:aws:iam::787066054733:role/worko-schedule-invoke-lambda-role"
+  },
+
   WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png"
 };
 
