@@ -23,6 +23,7 @@ CompanyRouter.post("/add", companyController.requestCompany);
 // @todo change this to "/request", this should help.
 CompanyRouter.get("/new", companyController.getRequestedCompanyList);
 
+CompanyRouter.get("/all", companyController.getAllCompanyNames);
 // Get the company details list
 // @todo here we should not use "list", we can just have "/" and it should be helpful and consistent without naming convenstions/syntax.
 CompanyRouter.get("/", companyController.getCompanyList);

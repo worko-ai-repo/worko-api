@@ -124,6 +124,13 @@ class CompanyDetailDao implements BaseDao {
       .exec();
   }
 
+  async getAllCompanyNames() {
+    return CompanyDetailModel.query("PK")
+      .eq(this.partitianKey)
+      .attributes(["name"])
+      .exec();
+  }
+
   /**
    * 
    * Add a company based on provided DTO

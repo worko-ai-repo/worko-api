@@ -235,12 +235,12 @@ class CompanyController {
       
       let requestedCompany : CompanyDTO = {
         name: addCompanyDto.companyDetail.name as string,
-        industry: addCompanyDto.companyDetail.industry as string,
-        teamSize: addCompanyDto.companyDetail.teamSize as number,
+        industry: addCompanyDto.companyDetail.industry as string || "",
+        teamSize: addCompanyDto.companyDetail.teamSize as number || 0,
         carrierPage: addCompanyDto.companyDetail.carrierPage as string,
         linkedIn: addCompanyDto.companyDetail.linkedIn as string,
-        logoUrl: addCompanyDto.companyDetail.logoUrl as string,
-        logo: addCompanyDto.companyDetail.logo as string,
+        logoUrl: addCompanyDto.companyDetail.logoUrl as string || "",
+        logo: addCompanyDto.companyDetail.logo as string || "",
         isVerified: false
       } 
 
@@ -282,6 +282,21 @@ class CompanyController {
       next(error);
     }
   };
+
+  getAllCompanyNames = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+
+    try {
+
+      const companyNames = await CompanyService.getAllCompanyNames();
+      res.status(HttpStatusCode.OK_200).json(companyNames)
+    } catch (error: any) {
+      next(error)
+    }
+  }
 }
 
 export default CompanyController;
