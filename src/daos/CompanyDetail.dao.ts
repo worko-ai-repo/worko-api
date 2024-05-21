@@ -43,12 +43,10 @@ class CompanyDetailDao implements BaseDao {
       "logoUrl",
       "carrierPage",
       "logo",
-      "isVerified"
     ];
 
     let query: Query<AnyItem>;
     query = CompanyDetailModel.query("PK").eq(this.partitianKey)
-    query = query.where("isVerified").eq(true);
     // Construct the query based on filter options
     if (filterOptions.companyName) {
       // If company name filter is provided, construct a query to search for companies by name

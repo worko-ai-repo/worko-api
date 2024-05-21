@@ -152,10 +152,11 @@ class CompanyController {
       const companyList = await CompanyService.getCompanyList(
         recordListingFilterRequest
       );
-
+      let allCompanies = companyList.filter(company => company.isVerified === true || company.isVerified === undefined);
+       
       // Response
       const response: RecordListingResponseDTO = {
-        data: companyList,
+        data: allCompanies,
         pagination: {
           count: companyList.count,
           queriedCount: companyList.queriedCount,
@@ -235,12 +236,12 @@ class CompanyController {
       
       let requestedCompany : CompanyDTO = {
         name: addCompanyDto.companyDetail.name as string,
-        industry: addCompanyDto.companyDetail.industry as string || "",
-        teamSize: addCompanyDto.companyDetail.teamSize as number || 0,
+        industry: addCompanyDto.companyDetail.industry as string ?? "",
+        teamSize: addCompanyDto.companyDetail.teamSize as number ?? 0,
         carrierPage: addCompanyDto.companyDetail.carrierPage as string,
         linkedIn: addCompanyDto.companyDetail.linkedIn as string,
-        logoUrl: addCompanyDto.companyDetail.logoUrl as string || "",
-        logo: addCompanyDto.companyDetail.logo as string || "",
+        logoUrl: addCompanyDto.companyDetail.logoUrl as string ?? "",
+        logo: addCompanyDto.companyDetail.logo as string ?? "",
         isVerified: false
       } 
 
