@@ -582,10 +582,10 @@ class UserReferralController {
       }
 
       // Extract unnecessary properties before updating referral
-      const { PK, SK, updatedAt, doneByUserId, ...userReferralDTO } = referral[0];
+      const { PK, SK, updatedAt, ...userReferralDTO } = referral[0];
       
       // Update referral in the database
-      const result = await UserReferralService.update(PK, SK, userReferralDTO, doneByUserId, referralstatusUpdate.action);
+      const result = await UserReferralService.update(PK, SK, userReferralDTO, referralstatusUpdate.action);
 
       if (updateReferralResponse) {
         const { passedRefIds, rejectedRefIds , acceptedRefIds ,doneRefIds} = referralResponse[0];

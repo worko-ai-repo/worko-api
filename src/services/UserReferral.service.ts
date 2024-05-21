@@ -88,7 +88,6 @@ class UserReferralService {
     PK: string,
     SK: string,
     userReferralDTO: UserReferralDTO,
-    doneByUserId: string,
     status: string
   ): Promise<any> {
     // Logging the action of updating user Referral in the service layer
@@ -153,7 +152,7 @@ class UserReferralService {
       // When employee marks the referral request as done, email will be sent to candidate
       else if (status === ReferralActions.DONE) {
         // Get the name and email of the referee who completed the referral request
-        const empId = doneByUserId;
+        const empId = userReferralDTO.doneByUserId as string;
         // const employeeId = empId.split("ID#")[1];
         const empDetails = await UserDetailService.getUserById(empId);
         const refereeName = empDetails[0].name;

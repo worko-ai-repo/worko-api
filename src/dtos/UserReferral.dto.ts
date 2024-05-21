@@ -9,6 +9,7 @@ export interface UserReferralDTO {
   passedByUserIds?: Array<{ userId: string; actionDate: Date }>;
   rejectedByUserIds?: Array<{ userId: string; actionDate: Date; reason: string; userComment: string }>;
   acceptedByUserId?: string;
+  doneByUserId?: string;
   acceptedAtByUser?: Date;
   doneByEmployee?: Date;
   doneByCandidate?: Date;
