@@ -43,54 +43,39 @@ class CompanyDetailDao implements BaseDao {
       "logoUrl",
       "carrierPage",
       "logo",
+      "isVerified"
     ];
 
     let query: Query<AnyItem>;
-
+    query = CompanyDetailModel.query("PK").eq(this.partitianKey)
+    query = query.where("isVerified").eq(true);
     // Construct the query based on filter options
     if (filterOptions.companyName) {
       // If company name filter is provided, construct a query to search for companies by name
       let companyName = filterOptions.companyName.toLocaleUpperCase();
-      // let companyName = filterOptions.companyName
-      // Convert the first letter to uppercase
-      // if (companyName[0] === companyName[0].toLowerCase()) {
-      //   companyName =
-      //     companyName.charAt(0).toUpperCase() + companyName.slice(1);
-      // }
-      // Create a query to search for companies starting with the specified name
-      query = CompanyDetailModel.query("PK")
-        .eq(this.partitianKey)
-        .where("name")
-        .beginsWith(companyName);
-    } else {
-      // If no company name filter is provided, check other filters
-      if (filterOptions.industryName) {
+      query = query.where("name").beginsWith(companyName);
+    } 
+    // If no company name filter is provided, check other filters
+    if (filterOptions.industryName) {
+        let industryName = filterOptions.industryName;
         // If industry name filter is provided, search for companies by industry
-        query = CompanyDetailModel.query("GSI1PK").eq(
-          this.GSI1PK.strtr({
-            "{industryName}": filterOptions.industryName,
-          })
-        );
-      } else {
-        // If no specific filter is provided, retrieve all companies for the partition key
-        query = CompanyDetailModel.query("PK").eq(this.partitianKey);
-      }
-      
-      // Get TeamSize filter from filterOptions
-      if (filterOptions.teamSize) {
-        // If teamSize filter is provided, filter the companies by teamSize range
-        let teamSizeRange = filterOptions.teamSize.split("-");
-        if (teamSizeRange.length === 2) {
-          // If range has two values, SO filter the companies within the range
-          let minRange = parseInt(teamSizeRange[0]);
-          let maxRange = parseInt(teamSizeRange[1]);
-          query.where("teamSize").between(minRange, maxRange);
-        } 
-        else if (teamSizeRange.length === 1) {
-          // If range has only one value(single value), so filter companies with teamSize equal to that value 
-          let singleTeamSize = parseInt(teamSizeRange[0]);
-          query.where("teamSize").eq(singleTeamSize);
-        }
+        query = query.where("industry").eq(industryName);
+    } 
+    
+    // Get TeamSize filter from filterOptions
+    if (filterOptions.teamSize) {
+      // If teamSize filter is provided, filter the companies by teamSize range
+      let teamSizeRange = filterOptions.teamSize.split("-");
+      if (teamSizeRange.length === 2) {
+        // If range has two values, SO filter the companies within the range
+        let minRange = parseInt(teamSizeRange[0]);
+        let maxRange = parseInt(teamSizeRange[1]);
+        query.where("teamSize").between(minRange, maxRange);
+      } 
+      else if (teamSizeRange.length === 1) {
+        // If range has only one value(single value), so filter companies with teamSize equal to that value 
+        let singleTeamSize = parseInt(teamSizeRange[0]);
+        query.where("teamSize").eq(singleTeamSize);
       }
     }
 

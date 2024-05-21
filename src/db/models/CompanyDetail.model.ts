@@ -17,6 +17,7 @@ class DbCompanyDetailDto extends BaseDbDto {
   linkedIn!: string;
   logoUrl!: string;
   logo!:string;
+  isVerified!: boolean;
 }
 
 // Creating a DynamoDB schema for the 'Company' model with specified attributes and their types
@@ -71,6 +72,10 @@ const CompanySchema = new dynamoose.Schema(
       type: String,
       required: false,
     },
+    isVerified: {
+      type: Boolean,
+      required: true
+    }
   },
   {
     ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,

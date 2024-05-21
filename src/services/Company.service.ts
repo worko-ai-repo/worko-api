@@ -103,8 +103,7 @@ class CompanyService {
    */
   async requestNewCompany(addCompanyDTO: AddCompanyDTO) {
     try {
-      const result = await companyRequestDao.request(addCompanyDTO);
-      console.log(result);
+      return companyRequestDao.request(addCompanyDTO);
     } catch (error) {
       throw error;
     }
