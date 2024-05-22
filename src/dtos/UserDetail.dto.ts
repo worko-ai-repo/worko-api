@@ -19,4 +19,10 @@ export interface UserDetailDTO {
   profileImage?: string;
   country: string;
   isCandidateFresher: boolean;
+  candidateExperience?: {
+    companyId?: string;
+    companyName: string;
+    designation: string;
+    department: string;
+  }
 }

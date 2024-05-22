@@ -1,5 +1,20 @@
 import Joi from "joi";
 
+const candidateExperienceSchema = Joi.object({
+  companyName: Joi.string().required().messages({
+    "any.required": "Company Name is required.",
+    "string.empty": "Company Name should not be empty.",
+  }),
+  designation: Joi.string().required().messages({
+    "any.required": "Designation is required.",
+    "string.empty": "Designation should not be empty.",
+  }),
+  department: Joi.string().required().messages({
+    "any.required": "Department is required.",
+    "string.empty": "Department should not be empty.",
+  }),
+});
+
 export const userDetailDTOValidation = Joi.object({
   name: Joi.string()
     .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
@@ -74,4 +89,13 @@ export const userDetailDTOValidation = Joi.object({
       "boolean.base": "Invalid isCandidateFresher status.",
     }),
 
+    candidateExperience: Joi.when('userType', {
+      is: Joi.array().items(Joi.string().valid('CAND')),
+      then: candidateExperienceSchema.required(),
+      otherwise: Joi.when('userType', {
+        is: Joi.array().items(Joi.string().valid('CAND', 'EMP')),
+        then: candidateExperienceSchema.required(),
+        otherwise: Joi.forbidden()
+      })
+    }),
 }).options({ stripUnknown: true });
