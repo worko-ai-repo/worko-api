@@ -1,16 +1,13 @@
 import Joi from "joi";
 
 const candidateExperienceSchema = Joi.object({
-  companyName: Joi.string().required().messages({
-    "any.required": "Company Name is required.",
+  companyName: Joi.string().allow('').optional().messages({
     "string.empty": "Company Name should not be empty.",
   }),
-  designation: Joi.string().required().messages({
-    "any.required": "Designation is required.",
+  designation: Joi.string().allow('').optional().messages({
     "string.empty": "Designation should not be empty.",
   }),
-  department: Joi.string().required().messages({
-    "any.required": "Department is required.",
+  department: Joi.string().allow('').optional().messages({
     "string.empty": "Department should not be empty.",
   }),
 });
@@ -88,14 +85,15 @@ export const userDetailDTOValidation = Joi.object({
       "any.required": "isCandidateFresher is required.",
       "boolean.base": "Invalid isCandidateFresher status.",
     }),
-
+    
+    // If user type is Cand ask the candidateExperince fields along with optional details but if it other then throw forbidden message
     candidateExperience: Joi.when('userType', {
       is: Joi.array().items(Joi.string().valid('CAND')),
-      then: candidateExperienceSchema.required(),
+      then: candidateExperienceSchema.optional(),
       otherwise: Joi.when('userType', {
-        is: Joi.array().items(Joi.string().valid('CAND', 'EMP')),
-        then: candidateExperienceSchema.required(),
+        is: Joi.array().items(Joi.string().valid('EMP')),
+        then: Joi.forbidden(),
         otherwise: Joi.forbidden()
       })
     }),
-}).options({ stripUnknown: true });
+  }).options({ stripUnknown: true });

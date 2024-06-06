@@ -178,7 +178,11 @@ class UserCareerRequestDao implements BaseDao {
     const PK = this.partitianKey.strtr({
       "{emailId}": email,
     });
-    return UserCareerRequestModel.query("PK").eq(PK).attributes(["PK"]).exec();
+    return UserCareerRequestModel.query("PK")
+    .eq(PK)
+    .where("SK")
+    .beginsWith("CAREER#REQ#ID#")
+    .exec();
   }
 }
 
