@@ -177,6 +177,7 @@ class UserCorporateRequestDao implements BaseDao {
           "{emailId}": email,
         });
         return UserCorporateRequestModel.query("PK")
+        .eq(PK)
         .where("SK")
         .beginsWith("CORP#REQ#ID#")
         .exec();

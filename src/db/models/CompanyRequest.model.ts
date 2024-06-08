@@ -10,6 +10,8 @@ class DbCompanyRequestDto extends BaseDbDto {
   userType!: string;
   companyDetail!: Record<string, any>; // Utilizing Record<string, any> for a map-like structure
   status!: string;
+  userEmail?: string;
+  userContactNumber?: string;
 }
 
 // Define the Company Schema including additional attributes
@@ -27,6 +29,14 @@ const CompanySchema = new dynamoose.Schema(
     status: {
       type: String,
       required: true,
+    },
+    userEmail: {
+      type: String,
+      required: false,
+    },
+    userContactNumber: {
+      type: String,
+      required: false,
     },
   },
   {

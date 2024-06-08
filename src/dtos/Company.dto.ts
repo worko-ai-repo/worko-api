@@ -58,6 +58,8 @@ export interface AddCompanyDTO {
   userType: UserType; // Type of user adding the company
   companyDetail: CompanyObject; // Details of the company to be added
   status: Status; // Status of the company request
+  userEmail: string;
+  userContactNumber : string;
 }
 
 interface Company {
