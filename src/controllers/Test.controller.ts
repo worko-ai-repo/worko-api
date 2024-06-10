@@ -8,7 +8,6 @@ import { emailLibrary } from "../libraries/email.library";
 import HttpStatusCode from "../utils/http-codes.util";
 import UserService from "../services/User.service";
 import UserSubscriptionService from "../services/UserSubscription.service";
-import { UserSubscriptionType } from "../enums/UserSubscriptionStatus.enum";
 import UserDetailService from "../services/UserDetail.service";
 import { EmailTemplatePlaceholderCAND_PREMIUM_UPGRADE_NOTIFICATION } from "../dtos/EmailTemplatePlaceholder.dto";
 import ScheduleJobService from "../services/ScheduleJob.service";
