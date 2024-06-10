@@ -15,6 +15,8 @@ import UserDetailService from "./UserDetail.service";
 import { EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND } from "../dtos/EmailTemplatePlaceholder.dto";
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
+import { BaseError } from "../utils/errors.util";
+import HttpStatusCode from "../utils/http-codes.util";
 
 /**
  * UserSupportService
@@ -95,36 +97,51 @@ class UserSupportService {
      * @returns {Promise<boolean>} - Promise resolving to true if email sent successfully, otherwise false
      */
     async sendEmailToEmpAboutCandReferralQuery(referralId: string, query: string): Promise<boolean> {
+      // Get referral data using referralId
+      const referralData = await UserReferralService.getByGSI1(referralId);
+      if (!referralData) {
+        throw new Error(
+          "No valid referral exists for employee to process this query."
+        );
+      }
+      const empId = referralData[0].acceptedByUserId || referralData[0].doneByUserId;
 
-        // Get referral data using referralId
-        const referralData = await UserReferralService.getByGSI1(referralId);
-        if(!referralData) {
-            throw new Error("No valid referral exists for employee to process this query.");
-        }
-        const empId = referralData[0].doneByUserId;
+      // Extract the Employee Details from the employee ID
+      // const employeeId = empId.split("ID#")[1];
+      const empDetails = await UserDetailService.getUserById(empId);
+      
+      // If Employee Details are not found then throw an error
+      if (!empDetails.count) {
+        throw new BaseError(
+          "Employee with given ID doesn't exist",
+          HttpStatusCode.NOT_FOUND_404
+        );
+      }
 
-        // Extract the Employee Details from the employee ID 
-        // const employeeId = empId.split("ID#")[1]; 
-        const empDetails = await UserDetailService.getUserById(empId)
-        const refereeName = empDetails[0].name;
-        const refereeEmail = empDetails[0].emailList.primary;
+      // Prepare name and email from employee details
+      const refereeName = empDetails[0].name;
+      const refereeEmail = empDetails[0].emailList.primary;
 
-        // Prepare email destination
-        const toAddress: EmailSourceDestinationAddress = {
-            email: refereeEmail,
-            fullName: refereeName
+      // Prepare email destination
+      const toAddress: EmailSourceDestinationAddress = {
+        email: refereeEmail,
+        fullName: refereeName,
+      };
+
+      // Prepare email placeholders for the referral query notification
+      const emailPlaceholders: EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND =
+        {
+          empName: refereeName,
+          query: query,
         };
 
-        // Prepare email placeholders for the referral query notification
-        const emailPlaceholders: EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND = {
-            empName: refereeName,
-            query: query
-        }
+      // Send email to notify the employee about the candidate query
+      const sendEmailResponse = await this.sendEmailForCandReferralQueryToEmp(
+        emailPlaceholders,
+        toAddress
+      );
 
-        // Send email to notify the employee about the candidate query
-        const sendEmailResponse = await this.sendEmailForCandReferralQueryToEmp(emailPlaceholders,toAddress);
-
-        return true;
+      return true;
     }
 
     /**
