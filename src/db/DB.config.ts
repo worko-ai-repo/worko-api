@@ -37,6 +37,9 @@ import { UserSupportModel } from "./models/UserSupport.model";
 import { UserOtpModel } from "./models/UserOTP.model";
 import { UserCorporateRequestModel } from "./models/UserCorporateRequest.model";
 import { UserCareerRequestModel } from "./models/UserCareerRequest.model";
+import { UserOrderModel } from "./models/UserOrder.model";
+import { UserOrderProductModel } from "./models/UserOrderProduct.model";
+import { UserOrderTransactionModel } from "./models/UserOrderTransaction.model";
 
 /**
  * DBConfig
@@ -137,6 +140,9 @@ class DBConfig {
       UserOtpModel,
       UserCorporateRequestModel,
       UserCareerRequestModel,
+      UserOrderModel,
+      UserOrderProductModel,
+      UserOrderTransactionModel,
     ]);
   }
 }

@@ -2,13 +2,14 @@
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { MasterSubscriptionModel } from "../db/models/MasterSubscription.model";
+import { DbMasterSubscriptionDto, MasterSubscriptionModel } from "../db/models/MasterSubscription.model";
 
 //Load the local dtos
 import { MasterSubscriptionDTO } from "../dtos/MasterSubscription.dto";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Class definition for MasterSubscriptionDao implementing BaseDao
 class MasterSubscriptionDao implements BaseDao {
@@ -60,7 +61,7 @@ class MasterSubscriptionDao implements BaseDao {
    * Get subscription plan details
    *
    */
-  async getByPlan(plan: string) {
+  async getByPlan(plan: string):Promise<QueryResponse<DbMasterSubscriptionDto>> {
     console.log("get subscription plan detail [DAO]");
 
     const PK = this.partitianKey;
@@ -77,7 +78,7 @@ class MasterSubscriptionDao implements BaseDao {
    * Get subscription plan details
    *
    */
-  async getById(masterSubscriptionId: string) {
+  async getById(masterSubscriptionId: string):Promise<QueryResponse<DbMasterSubscriptionDto>> {
     global.logger.info("get subscription plan detail by Id [DAO]");
 
     const PK = this.partitianKey;

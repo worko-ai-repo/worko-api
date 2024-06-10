@@ -1,5 +1,4 @@
 import type { AWS } from "@serverless/typescript";
-import { request } from "express";
 
 const serverlessConfiguration: AWS = {
   service: "worko-api",
@@ -13,11 +12,26 @@ const serverlessConfiguration: AWS = {
     "serverless-dotenv-plugin",
     "serverless-webpack",
   ],
-  custom: {},
+  custom: {
+    app: {
+      STAGE: "${env:APP_SLS_STAGE}",
+    },
+    aws:{
+      APP_AWS_ACCOUNT_ID:  "${env:APP_AWS_ACCOUNT_ID}",
+      APP_AWS_DYNAMODB_TABLE_NAME: "${env:APP_AWS_DYNAMODB_TABLE_NAME}",
+      APP_AWS_VPC:  "${env:APP_AWS_VPC}",
+      APP_AWS_SECURITY_GROUP: "${env:APP_AWS_SECURITY_GROUP}",
+      APP_AWS_SUBNET1: "${env:APP_AWS_SUBNET1}",
+      APP_AWS_SUBNET2: "${env:APP_AWS_SUBNET2}"
+    },
+  },
   provider: {
     name: "aws",
     runtime: "nodejs18.x",
-    stage: process.env.APP_SLS_STAGE,
+    stage: process.env.APP_SLS_STAGE, // @todo it is not being resolved, it needs to be fixed.
+    environment:{
+      
+    },
     region: "ap-south-1", // Should be dynamically set
     iamRoleStatements: [
       {
@@ -29,7 +43,8 @@ const serverlessConfiguration: AWS = {
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
           "dynamodb:DeleteItem",
-          "dynamodb:BatchGetItem"
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem"
         ],
         Resource: [
           "arn:aws:dynamodb:ap-south-1:*:table/worko",
@@ -54,15 +69,9 @@ const serverlessConfiguration: AWS = {
           "ses:GetTemplate",
           "ses:DeleteTemplate",
           "ses:SendTemplatedEmail",
+          "ses:CreateTemplate"
         ],
-        Resource: [
-          "arn:aws:ses:ap-south-1:787066054733:configuration-set/*",
-          "arn:aws:ses:ap-south-1:787066054733:contact-list/*",
-          "arn:aws:ses:ap-south-1:787066054733:identity/*",
-          "arn:aws:ses:ap-south-1:787066054733:template/*",
-          "arn:aws:ses:ap-south-1:787066054733:custom-verification-email-template/*",
-          "arn:aws:ses:ap-south-1:787066054733:*"
-        ]
+        Resource: "*"
       },
       {
         Effect: "Allow",
@@ -83,16 +92,41 @@ const serverlessConfiguration: AWS = {
           "lambda:InvokeAsync"
         ],
         Resource: [
-          "arn:aws:lambda:ap-south-1:787066054733:function:worko-jd-resume-matching",
-          "arn:aws:lambda:ap-south-1:787066054733:function:resume-parser"
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-jd-resume-matching",
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:resume-parser"
         ]
+      },{
+        Effect: "Allow",
+        Action: [
+          "iam:PassRole",
+          "scheduler:GetSchedule",
+          "scheduler:UpdateSchedule",
+          "scheduler:CreateSchedule",
+          "scheduler:DeleteSchedule"
+        ],
+        Resource: [
+          "arn:aws:iam::${self:custom.aws.APP_AWS_ACCOUNT_ID}:role/worko-schedule-invoke-lambda-role",
+          "arn:aws:scheduler:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:schedule/*/*"
+        ]
+      },
+      {
+        Effect: "Allow",
+        "Action": [
+          "scheduler:GetScheduleGroup",
+          "scheduler:DeleteScheduleGroup",
+          "scheduler:CreateScheduleGroup"
+        ],
+        "Resource": "arn:aws:scheduler:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:schedule-group/*"
       }
-    ],
-    environment: {},
+    ]
   },
   functions: {
     app: {
       handler: "dist/src/app.handler",
+      vpc: {
+        subnetIds: ["${self:custom.aws.APP_AWS_SUBNET1}", "${self:custom.aws.APP_AWS_SUBNET2}"],
+        securityGroupIds: ["${self:custom.aws.APP_AWS_SECURITY_GROUP}"]
+      },
       events: [
         {
           http: {
@@ -113,7 +147,7 @@ const serverlessConfiguration: AWS = {
             },
             authorizer: {
               type: "request",
-              arn: "arn:aws:lambda:ap-south-1:787066054733:function:worko-auth"
+              arn: "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-auth"
             }
           }
         },
@@ -136,7 +170,7 @@ const serverlessConfiguration: AWS = {
             },
             authorizer: {
               type: "request",
-              arn: "arn:aws:lambda:ap-south-1:787066054733:function:worko-auth"
+              arn: "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-auth"
             }
           }
         },

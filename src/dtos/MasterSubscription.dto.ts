@@ -1,7 +1,6 @@
 // Define a common interface for shared properties
 export interface SubscriptionBaseDTO {
   name: string;
-  amount: number;
   duration: number;
   referralCount: number;
   isActive: boolean;

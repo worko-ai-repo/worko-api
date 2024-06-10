@@ -99,7 +99,21 @@ const APP_CONSTANTS = {
     SUBS_PREMIUM_UPGRADE: "https://app.worko.ai/",
   },
 
-  WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png"
+  SCHEDULE_JOB:{
+    GROUP: "worko",
+    TIME_ZONE: "Asia/Calcutta",
+    LAMBDA_TRIGGER_ARN: "arn:aws:lambda:ap-south-1:787066054733:function:pankaj-test-function",
+    ROLE_ARN: "arn:aws:iam::787066054733:role/worko-schedule-invoke-lambda-role"
+  },
+
+  WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
+
+  /**
+   * REFERRAL_MINIMUM_MATCHING_SCORE
+   * 
+   * Required constants for Referral score as matching score
+   */
+  REFERRAL_MINIMUM_MATCHING_SCORE: 7,
 };
 
 export default APP_CONSTANTS;

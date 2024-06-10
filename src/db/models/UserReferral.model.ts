@@ -13,6 +13,9 @@ class DbUserReferralDto extends BaseDbDto {
   GSI1SK!: string;
   companyId!: string;
 
+  // user's subscriptionId
+  userSubscriptionId!: string;
+
   // The main referaal body related to referal
   status!: string;
   jobUrl!: string;
@@ -31,7 +34,7 @@ class DbUserReferralDto extends BaseDbDto {
   // @todo Fix the attributes structures as per this in Dyamoose Schema below
   passedByUserIds?: Array<{
     userId: string;
-    actionDate: Date
+    actionDate: Date;
   }>; // Updated property to store both userId and actionDate
 
   // The userIds (and other contextual details) of the employees who have rejected the referral request
@@ -63,6 +66,10 @@ const UserReferralSchema = new dynamoose.Schema(
       required: true,
     },
     status: {
+      type: String,
+      required: true,
+    },
+    userSubscriptionId: {
       type: String,
       required: true,
     },

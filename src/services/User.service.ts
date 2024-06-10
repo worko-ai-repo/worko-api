@@ -1,3 +1,6 @@
+// Load the defaults
+import { DateTime } from 'luxon';
+
 // Load the local daos
 import APP_CONSTANTS from "../configs/constants.config";
 import userDao from "../daos/User.dao";
@@ -14,17 +17,25 @@ import {
 } from "../dtos/EmailTemplatePlaceholder.dto";
 
 // Load the local dtos
-import { UserProfileResponse, UserSignUpDTO } from "../dtos/User.dto";
-import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
-import { UserType } from "../enums/User.enum";
-import { UserSubscriptionType } from "../enums/UserSubscriptionStatus.enum";
+import { SubscriptionCreateRequestDTO } from '../dtos/Subscription.dto';
+import { NewUserCandSignUpDTO, NewUserEmpSignUpDTO, UserSubscriptionDetailsUpdateDto } from "../dtos/User.dto";
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
-import MasterSubscriptionService from "./MasterSubscription.service";
-import UserDetailService from "./UserDetail.service";
-import UserProfilePercentageService from "./UserProfilePercentage.service";
-import UserSubscriptionService from "./UserSubscription.service";
 
-import { DateTime } from 'luxon';
+// Load the local enum
+import { UserType } from "../enums/User.enum";
+import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
+import { UserSubscriptionStatus, UserSubscriptionType } from "../enums/UserSubscription.enum";
+
+// Load the local model
+import { DbUserDetailDto } from "../db/models/UserDetail.model";
+
+// Load the local services
+import UserDetailService from "./UserDetail.service";
+import MasterSubscriptionService from "./MasterSubscription.service";
+import UserSubscriptionService from "./UserSubscription.service";
+import UserProfilePercentageService from "./UserProfilePercentage.service";
+
+
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
 
@@ -85,13 +96,38 @@ class UserService {
    * @param userSignUpDTO - Details of the user to be added
    * @param email - Email of the user
    */
-  async addUser(userSignUpDTO: UserSignUpDTO, userType: string) {
+  async addUser(userSignUpDTO: NewUserCandSignUpDTO | NewUserEmpSignUpDTO, userType: string):Promise<DbUserDetailDto> {
     global.logger.info("Create candidate/employee [service]");
-    
-    // Creating new user
-    const newUser = await userDetailDao.add(userSignUpDTO, userType);
 
+    const addedNewUser = await userDetailDao.add(userSignUpDTO)
+    
     if (userType === UserType.CAND) {
+
+      // Adding the FREE subscription plan for Candidate
+      let planName = UserSubscriptionType.FREE;
+      const subPlan = await MasterSubscriptionService.getByPlan(planName);
+      if (subPlan) {
+        // Create partial data for subscription
+        const subscriptionCreateRequest : SubscriptionCreateRequestDTO = {
+          status: UserSubscriptionStatus.ACTIVE,
+          orderId: "0",
+          requestedReferrals: 0,
+          acceptedReferrals: 0,
+          completedReferrals: 0,
+        };
+        await UserSubscriptionService.create(subPlan.SK, userSignUpDTO.email , subscriptionCreateRequest);
+      } else {
+        // Logger message
+        global.logger.info(
+          "The default/free subscription was not found therefore could not add free subscription to candidate while creating account.",
+          {
+            filePath: __filename,
+            methodName: userSignUpDTO.name,
+            userEmail: userSignUpDTO.email,
+            plan: planName,
+          }
+        );
+      }
       // Prepare details required for sending the Email
       const candName : string = userSignUpDTO.name;
       const candEmail : string = userSignUpDTO.email;
@@ -107,25 +143,7 @@ class UserService {
 
       // Function responsible for sending a welcome email to the candidate 
       const sendEmailResponse = await this.sendEmailToCandWelcomeMessage(emailPlaceholders,toAddress);
-      
-      // Adding the FREE subscription plan for Candidate
-      let planName = "Free";
-      const subPlan = await MasterSubscriptionService.getByPlan(planName);
-      console.log("This is the subplan : ", subPlan);
-      if (subPlan) {
-        UserSubscriptionService.create(subPlan.SK, userSignUpDTO.email);
-      } else {
-        // Logger message
-        global.logger.info(
-          "The default/free subscription was not found therefore could not add free subscription to candidate while creating account.",
-          {
-            filePath: __filename,
-            methodName: this.addUser.name,
-            userEmail: userSignUpDTO.email,
-            plan: planName,
-          }
-        );
-      }
+     
     } else if(userType === UserType.EMP) {
         // Prepare details required for sending the Email
         const empName : string = userSignUpDTO.name;
@@ -143,8 +161,9 @@ class UserService {
         // Function responsible for sending a welcome email to the candidate 
         const sendEmailResponse = await this.sendEmailToEmpWelcomeMessage(emailPlaceholders,toAddress);
     }
-    
-    return newUser;
+
+    // Creating new user
+    return addedNewUser;
   }
 
   /**
@@ -564,61 +583,78 @@ class UserService {
    *
    * @param email
    */
-  async decreaseReferralCount(email: string) {
-    global.logger.info("Decrease referral count [service]");
-    //To Get SK
-    const SK = await this.getSK(email);
-    //To Get referral count
-    const refCount = await userDetailDao.getUserSubscriptionStatus(email, SK);
-    console.log("refCount: ", refCount[0].referralCount);
-    const currRefCount = refCount[0].referralCount - 1;
-    //if referral count is below 1 then subscription status is set to be false
-    if (currRefCount < 1) {
-      userDetailDao.updateIsSubscribedStatus(SK, email, false);
-    }
-    /* Ensure that the referral count is never below zero.
-    If somehow the referral count goes below zero (negative number),
-    reset it to zero to maintain a non-negative count. */
-    if (currRefCount < 0) {
-      return userDetailDao.updateReferralCount(SK, email, 0);
-    }
-    // updating referral count
-    return userDetailDao.updateReferralCount(SK, email, currRefCount);
-  }
+  // async decreaseReferralCount(email: string) {
+  //   global.logger.info("Decrease referral count [service]");
+  //   //To Get SK
+  //   const SK = await this.getSK(email);
+  //   //To Get referral count
+  //   const refCount = await userDetailDao.getUserSubscriptionStatus(email, SK);
+  //   console.log("refCount: ", refCount[0].referralCount);
+  //   const currRefCount = refCount[0].referralCount - 1;
+  //   //if referral count is below 1 then subscription status is set to be false
+  //   if (currRefCount < 1) {
+  //     userDetailDao.updateIsSubscribedStatus(SK, email, false);
+  //   }
+  //   /* Ensure that the referral count is never below zero.
+  //   If somehow the referral count goes below zero (negative number),
+  //   reset it to zero to maintain a non-negative count. */
+  //   if (currRefCount < 0) {
+  //     return userDetailDao.updateReferralCount(SK, email, 0);
+  //   }
+  //   // updating referral count
+  //   return this.updateReferralCount(SK, email, currRefCount);
+  // }
 
   /**
    *
    * Increase referral when Candidate referal requests is Withdrawn
    */
 
-  async increaseReferralCount(candEmail: string) {
-    global.logger.info("Increase referral count [service]");
+  // async increaseReferralCount(candEmail: string) {
+  //   global.logger.info("Increase referral count [service]");
 
-    // Get SK
-    const SK = await this.getSK(candEmail);
+  //   // Get SK
+  //   const SK = await this.getSK(candEmail);
 
-    // Get referral count
-    const userSubscriptions = await userDetailDao.getUserSubscriptionStatus(candEmail, SK);
+  //   // Get referral count
+  //   const userSubscriptions = await userDetailDao.getUserSubscriptionStatus(candEmail, SK);
 
-    let currRefCount = 0;
+  //   let currRefCount = 0;
 
-    // Check if referral count exists
-    if (userSubscriptions.length > 0) {
-      currRefCount = userSubscriptions[0].referralCount;
-      global.logger.info(`Current referral count: ${currRefCount}`);
-    }
+  //   // Check if referral count exists
+  //   if (userSubscriptions.length > 0) {
+  //     currRefCount = userSubscriptions[0].referralCount;
+  //     global.logger.info(`Current referral count: ${currRefCount}`);
+  //   }
 
-    // Increment referral count
-    currRefCount++;
-    global.logger.info(`New referral count: ${currRefCount}`);
+  //   // Increment referral count
+  //   currRefCount++;
+  //   global.logger.info(`New referral count: ${currRefCount}`);
 
-    // Update referral count
-    const updateResult = await userDetailDao.updateReferralCount(SK, candEmail, currRefCount);
-    global.logger.info(`Update result: ${updateResult}`);
+  //   // Update referral count
+  //   const updateResult = await this.updateReferralCount(SK, candEmail, currRefCount);
+  //   global.logger.info(`Update result: ${updateResult}`);
+    
+  //   if (updateResult.referralCount > 1) {
+  //     userDetailDao.updateIsSubscribedStatus(SK, candEmail, true);
+  //   }
+    
+  //   return updateResult;
+  // }
 
-    return updateResult;
+  
+  /**
+   * Updates the referral count for a user.
+   *
+   * @param {string} id - The ID of the user.
+   * @param {string} candEmail - The candidate's email address.
+   * @param {UserSubscriptionDetailsUpdateDto} updateBodyObject - The object containing updated subscription details.
+   * @returns {Promise<DbUserDetailDto>} - A promise that resolves to the updated user details.
+   */
+  async updateReferralCount( id : string, candEmail:string, updateBodyObject:UserSubscriptionDetailsUpdateDto):Promise<DbUserDetailDto>{
+    return userDetailDao.updateReferralCount(id, candEmail, updateBodyObject);
+    ;
   }
-
 
   /** 
    * sendEmailToCandWelcomeMessage

@@ -29,20 +29,16 @@ const SubscriptionSchema = Joi.object({
   }),
 });
 
-const SubscriptionDTOValidation = Joi.object({
-  amount: Joi.number().required().messages({
-    "any.required": "Amount is required.",
-    "number.base": "Amount must be a number.",
+const SubscriptionCreateApiDTOValidation = Joi.object({
+  masterSubscriptionId: Joi.string().required().messages({
+    "any.required": "Master Subscription ID is required.",
+    "string.base": "Master Subscription ID must be a string.",
   }),
-  status: Joi.string()
-    .valid("active", "inactive", "cancelled") // @todo KIndly update this to read the values from enum.
-    .required()
-    .messages({
-      "any.required": "Status is required.",
-      "string.base": "Status must be a string.",
-      "any.only": 'Status must be one of "active", "inactive", or "cancelled".',
-    }),
+  orderId: Joi.string().required().messages({
+    "any.required": "Order ID is required.",
+    "string.base": "Order ID must be a string.",
+  }),
 });
 
 // Export the SubscriptionSchema for use in other parts of the application.
-export { SubscriptionSchema, SubscriptionDTOValidation };
+export { SubscriptionSchema, SubscriptionCreateApiDTOValidation };
