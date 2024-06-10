@@ -6,6 +6,7 @@ export interface UserReferralDTO {
   jobUrl: string;
   jdExtracted?: string;
   matchingScore: number;
+  userSubscriptionId: string;
   passedByUserIds?: Array<{ userId: string; actionDate: Date }>;
   rejectedByUserIds?: Array<{ userId: string; actionDate: Date; reason: string; userComment: string }>;
   acceptedByUserId?: string;

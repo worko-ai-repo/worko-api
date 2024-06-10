@@ -2,10 +2,10 @@
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { UserDetailModel } from "../db/models/UserDetail.model";
+import { DbUserDetailDto, UserDetailModel } from "../db/models/UserDetail.model";
 
 //Load the local dtos
-import { UserProfileResponse, UserSignUpDTO } from "../dtos/User.dto";
+import { NewUserCandSignUpDTO, NewUserEmpSignUpDTO, UserProfileResponse, UserSignUpDTO, UserSubscriptionDetailsUpdateDto } from "../dtos/User.dto";
 import { UserDetailDTO } from "../dtos/UserDetail.dto";
 
 //Load UlidService for generating ULID IDs
@@ -13,13 +13,14 @@ import UlidService from "../services/Ulid.service";
 
 //Load enums
 import { UserType } from "../dtos/Company.dto";
+import UserSubscriptionService from "../services/UserSubscription.service";
 
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
   modelName = "UserDetail";
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
   sortKeys = {
-    SK_ID: "ID#{userId}" // where userId is cognito provided userId for registered user
+    SK_ID: "ID#{userId}", // where userId is cognito provided userId for registered user
   };
   GSI1PK: string = "USR#";
   GSI1SK = "ID#{userId}"; // where userId is cognito provided userId for registered user
@@ -76,18 +77,25 @@ class UserDetailDao implements BaseDao {
 
   /**
    * updateLastAccessedDash
-   * 
+   *
    * Updates the last accessed dashboard for a user
-   * 
+   *
    * @param email - Email address of the user
    * @param SK - Sort Key of the user
    * @param userlastAccessedDash - User's Last Accessed Dashboard
    */
-  async updateLastAccessedDash(email: string, SK: string, userlastAccessedDash: string) {
+  async updateLastAccessedDash(
+    email: string,
+    SK: string,
+    userlastAccessedDash: string
+  ) {
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    return UserDetailModel.update({ PK: PK, SK: SK }, {lastAccessedDash: userlastAccessedDash} );
+    return UserDetailModel.update(
+      { PK: PK, SK: SK },
+      { lastAccessedDash: userlastAccessedDash }
+    );
   }
 
   /**
@@ -126,46 +134,32 @@ class UserDetailDao implements BaseDao {
   }
 
   /**
+   * add
+   *
    * Adds a new user by creating a user sign-up DTO and saving it.
    *
    * @param userSignUpDTO - User sign-up data transfer object
-   * @param email - Email address of the user
    */
-  async add(userSignUpDTO: UserSignUpDTO, userType: string) {
+  async add(
+    userSignUpDTO: NewUserCandSignUpDTO | NewUserEmpSignUpDTO
+  ): Promise<DbUserDetailDto> {
     global.logger.info("Create candidate/employee [DAO]");
     /* if (!userSignUpDTO.CV) {
         userSignUpDTO.CV = "";
       } */
-    let refCount = 0;
-    let isSub = false;
-    if (userType === UserType.CAND) {
-      refCount = 1;
-      isSub = true;
-    }
-    const { email, userId, ...copyUserSignUpDTO } = userSignUpDTO;
-    const emailList = { primary: email };
-    const today = new Date();
+
     const newUserSignUpDTO = {
+      ...userSignUpDTO,
       PK: this.partitianKey.strtr({
-        "{primaryEmail}": email,
+        "{primaryEmail}": userSignUpDTO.email,
       }),
       SK: this.sortKeys.SK_ID.strtr({
-        "{userId}": userId,
+        "{userId}": userSignUpDTO.id,
       }),
-      id: userId,
       GSI1PK: this.GSI1PK,
       GSI1SK: this.GSI1SK.strtr({
-        "{userId}": userId
+        "{userId}": userSignUpDTO.id,
       }),
-      ...copyUserSignUpDTO,
-      emailList: emailList,
-      isSubscribed: isSub,
-      userType: [userType],
-      lastAccessedDash: userType,
-      referralCount: refCount,
-      expiryDate: today,
-      isEmailVerified: false,
-      isNumberVerified: false,
     };
     return UserDetailModel.create(newUserSignUpDTO);
   }
@@ -216,21 +210,34 @@ class UserDetailDao implements BaseDao {
   }
 
   /**
+   * updateReferralCount
    *
-   * @param SK
-   * @param email
-   * @param currRefCount
-   * @returns
+   * Updates the referral count for a user.
+   *
+   * @param id - The user's unique identifier.
+   * @param email - The user's email address.
+   * @param updateBodyObject - Object containing the updated user subscription details.
+   * @returns A promise that resolves to the updated user details.
    */
-  async updateReferralCount(SK: string, email: string, currRefCount: number) {
-    global.logger.info("Decrease referral count [DAO]");
+  async updateReferralCount(
+    id: string,
+    email: string,
+    updateBodyObject: UserSubscriptionDetailsUpdateDto
+  ): Promise<DbUserDetailDto> {
+    global.logger.info("Calculate referral count [DAO]");
+
+    // Generate the partition key using the user's email
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    return UserDetailModel.update(
-      { PK: PK, SK: SK },
-      { referralCount: currRefCount }
-    );
+
+    // Generate the sort key using the user's ID
+    const SK = this.sortKeys.SK_ID.strtr({
+      "{userId}": id,
+    });
+
+    // Update the user's details in the database
+    return UserDetailModel.update({ PK: PK, SK: SK }, updateBodyObject);
   }
 
   /**

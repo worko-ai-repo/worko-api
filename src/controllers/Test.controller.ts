@@ -2,15 +2,12 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local libraries
-import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
+import { emailLibrary } from "../libraries/email.library";
 
 // Import Utils
 import HttpStatusCode from "../utils/http-codes.util";
 import UserService from "../services/User.service";
-import UserSubscriptionService from "../services/UserSubscription.service";
-import { UserSubscriptionType } from "../enums/UserSubscriptionStatus.enum";
-import UserDetailService from "../services/UserDetail.service";
-import { EmailTemplatePlaceholderCAND_PREMIUM_UPGRADE_NOTIFICATION } from "../dtos/EmailTemplatePlaceholder.dto";
+import ScheduleJobService from "../services/ScheduleJob.service";
 
 /**
  * TestController
@@ -20,6 +17,28 @@ import { EmailTemplatePlaceholderCAND_PREMIUM_UPGRADE_NOTIFICATION } from "../dt
  * Note: It is only for testing purposes. The methods from this controller should not be exposed to production.
  */
 class TestController {
+
+  /**
+   * scheduleJobToTriggerBack
+   *
+   * Schedule a job to trigger back
+   *
+   * @param {string} arg0
+   * @param {any} scheduleJobToTriggerBack
+   */
+  scheduleJob= async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const name = req.body.scheduleName
+      const schedule = req.body.scheduleExpression //"at(2024-05-12T12:00:00)"
+      const input = req.body.input
+      console.log(name, schedule)
+      const response = await ScheduleJobService.createSchedule(name, schedule, input)
+
+      res.status(HttpStatusCode.OK_200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
   /**
    * sendEmail
    *

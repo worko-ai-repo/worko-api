@@ -1,8 +1,11 @@
 // Load npm packages
+import { DateTime } from "luxon";
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 import {
+  NewUserCandSignUpDTO,
+  NewUserEmpSignUpDTO,
   UserEmployeeSignUpDTO,
   UserProfileResponse,
   UserSignUpDTO,
@@ -217,178 +220,254 @@ class UserController {
   }
 
   /**
-   * createUser
-   *
-   * Create a new user based on the provided input data. Validates the input data
-   * and, if successful, proceeds with the user creation logic.
-   *
-   * @param {Request} req
-   * @param {Response} res
-   * @param {NextFunction} next
-   */
+ * createCandidate
+ *
+ * Creates a new candidate user based on the provided input data. This function performs the following steps:
+ * 1. Validates the input data using the UserSignUpDTOValidation schema.
+ * 2. Checks if a user with the given email already exists.
+ * 3. Prepares additional user data (social profile, user type, email list, etc.).
+ * 4. Creates a new user in the database.
+ * 5. Creates a social profile for the user.
+ * 6. Initializes and updates the user's profile completion percentage.
+ * 7. Triggers resume extraction if a CV is provided.
+ *
+ * @param {Request} req - Express request object containing user sign-up data in the body.
+ * @param {Response} res - Express response object used to send back the API response.
+ * @param {NextFunction} next - Express next function for error handling.
+ * @throws {RequestValidationError} If the input data fails validation.
+ * @throws {Error} Any other errors that occur during the process.
+ */
   createCandidate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       global.logger.info("Create candidate [controller]");
+
+      // Extract user sign-up data from request body
       const userSignUpDto: UserSignUpDTO = req.body;
+
+      // Validate the input data using Joi schema
       const { error, value } = UserSignUpDTOValidation.validate(userSignUpDto, {
         abortEarly: false,
       });
 
+      // If validation fails, throw a custom error
       if (error) {
         throw new RequestValidationError(error);
       }
 
-      //
+      // Check if a user with this email already exists
       const count = await UserService.getCount(userSignUpDto.email);
       if (count.count > 0) {
         res
           .status(HttpStatusCode.CONFLICT_409)
-          .json({ error: "User Already Exits!." });
+          .json({ error: "User Already Exists!." });
+        return; // Important to return here to prevent further execution
       }
 
+      // Extract LinkedIn URL for social profile
       const linkedinUrl = req.body.linkedinUrl;
       const userSocialProfileDTO: UserSocialProfileDTO = {
         linkedin: [linkedinUrl],
       };
+
+      // Set up additional user data
       const userType = UserType.CAND;
-      const newUser = await UserService.addUser(value, userType);
+      const emailList = { primary: userSignUpDto.email };
+      let userCandSignUpDto: NewUserCandSignUpDTO = {
+        ...userSignUpDto,
+        id: userSignUpDto.userId,
+        emailList: emailList,
+        userType: [userType],
+        isEmailVerified: false,
+        isNumberVerified: false,
+        lastAccessedDash: userType,
+        referralCount: 0,
+        expiryDate: DateTime.now().toJSDate(), // Note: It is dummy value, it is being updated later in the process
+        isSubscribed: false,
+      };
+
+      // Create the new user in the database
+      const newUser = await UserService.addUser(userCandSignUpDto, userType);
+
+      // Create a social profile for the user
       UserSocialProfileService.create(
         userSignUpDto.email,
         userSocialProfileDTO
       );
 
-      // Create the variable using the helper class
+      // Initialize the user's profile completion percentage
       let userProfilePercentageDTO: UserProfilePercentageDTO =
         UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
 
-      // Update curPerc based on the update object
+      // Update current percentage based on the validated data
       userProfilePercentageDTO =
         UserProfilePercentageOperationHelper.updateCurPerc(
           userProfilePercentageDTO,
           value
         );
 
+      // Update field-specific percentages (in this case, for social profile)
       userProfilePercentageDTO =
         UserProfilePercentageOperationHelper.updateFieldCurPercByKeys(
           userProfilePercentageDTO,
           [profilePercentageField.socialProfile]
         );
 
-      //creating profile percentage SK for user
+      // Create a profile percentage record for the user
       UserProfilePercentageService.create(
         userSignUpDto.email,
         userProfilePercentageDTO
       );
 
-      //extract resume if cv is present
-      if(userSignUpDto.CV)
-        InvokeLambdaService.triggerResumeExtraction(userSignUpDto.email)
+      // If a CV is provided, trigger asynchronous resume extraction
+      if (userSignUpDto.CV) {
+        InvokeLambdaService.triggerResumeExtraction(userSignUpDto.email);
+      }
 
+      // Respond with the newly created user data
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
-      // Handle errors
-
-      // Pass the error to the next error handler
+      // Any errors that occur (validation, database, etc.) are passed to the global error handler
       next(error);
     }
   };
 
-  /**
-   * createUser
-   *
-   * Create a new user based on the provided input data. Validates the input data
-   * and, if successful, proceeds with the user creation logic.
-   *
-   * @param {Request} req
-   * @param {Response} res
-   * @param {NextFunction} next
-   */
-  createEmployee = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      global.logger.info("Create employee [controller]");
-      const userSignUpDto: UserEmployeeSignUpDTO = req.body;
+/**
+ * createEmployee
+ *
+ * Creates a new employee user based on the provided input data. This function performs the following steps:
+ * 1. Validates the input data using the userEmployeeSignUpDTOValidation schema.
+ * 2. Checks if a user with the given email already exists.
+ * 3. Prepares additional user data (user type, email list, etc.).
+ * 4. Creates a new user in the database.
+ * 5. Extracts and sets up work-related information (department, company details).
+ * 6. Creates a social profile for the user.
+ * 7. Stores the user's work experience details.
+ * 8. Initializes and updates the user's profile completion percentage.
+ *
+ * @param {Request} req - Express request object containing employee sign-up data in the body.
+ * @param {Response} res - Express response object used to send back the API response.
+ * @param {NextFunction} next - Express next function for error handling.
+ * @throws {RequestValidationError} If the input data fails validation.
+ * @throws {Error} Any other errors that occur during the process.
+ */
+createEmployee = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    global.logger.info("Create employee [controller]");
 
-      const { error } = userEmployeeSignUpDTOValidation.validate(
-        userSignUpDto,
-        {
-          abortEarly: false,
-        }
-      );
+    // Extract employee sign-up data from request body
+    const userSignUpDto: UserEmployeeSignUpDTO = req.body;
 
-      if (error) {
-        throw new RequestValidationError(error);
+    // Validate the input data using Joi schema
+    const { error } = userEmployeeSignUpDTOValidation.validate(
+      userSignUpDto,
+      {
+        abortEarly: false,
       }
-      //
-      const count = await UserService.getCount(userSignUpDto.email);
-      if (count.count > 0) {
-        res
-          .status(HttpStatusCode.CONFLICT_409)
-          .json({ error: "User Already Exists!." });
-      }
-      //
-      const email = userSignUpDto.email;
-      const {
-        companyName,
-        companySK,
-        companyEmailId,
-        department,
-        linkedinUrl,
-        ...copyUserSignUpDTO
-      } = userSignUpDto;
+    );
 
-      const userExperienceDto: UserExperienceDTO = {
-        department: department,
-        companyName: companyName,
-        companyId: companySK.split("#").pop() as string,
-        emailId: companyEmailId,
-      };
-      const userSocialProfileDTO: UserSocialProfileDTO = {
-        linkedin: [linkedinUrl],
-      };
-      const userType = UserType.EMP;
-      const newUser = await UserService.addUser(copyUserSignUpDTO, userType);
-      UserSocialProfileService.create(email, userSocialProfileDTO);
-      //The User Email table is removed and added the work related email to User Experience table
-      /* UserEmailService.createEmailt(email, companyName, companyEmailId); */
-      UserExperienceService.create(email, userExperienceDto);
-
-      // Create the variable using the helper class
-      let userProfilePercentageDTO: UserProfilePercentageDTO =
-        UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
-
-      // Update curPerc based on the update object
-      userProfilePercentageDTO =
-        UserProfilePercentageOperationHelper.updateCurPerc(
-          userProfilePercentageDTO,
-          copyUserSignUpDTO
-        );
-
-      userProfilePercentageDTO =
-        UserProfilePercentageOperationHelper.updateCurPerc(
-          userProfilePercentageDTO,
-          userExperienceDto
-        );
-
-      userProfilePercentageDTO =
-        UserProfilePercentageOperationHelper.updateFieldCurPercByKeys(
-          userProfilePercentageDTO,
-          [profilePercentageField.socialProfile]
-        );
-
-      //creating profile percentage SK for user
-      UserProfilePercentageService.create(
-        userSignUpDto.email,
-        userProfilePercentageDTO
-      );
-
-      res.status(HttpStatusCode.CREATED_201).json(newUser);
-    } catch (error) {
-      // Handle errors
-
-      // Pass the error to the next error handler
-      next(error);
+    // If validation fails, throw a custom error
+    if (error) {
+      throw new RequestValidationError(error);
     }
-  };
+
+    // Check if a user with this email already exists
+    const count = await UserService.getCount(userSignUpDto.email);
+    if (count.count > 0) {
+      res
+        .status(HttpStatusCode.CONFLICT_409)
+        .json({ error: "User Already Exists!." });
+      return; // Important to return here to prevent further execution
+    }
+
+    // Extract core user information
+    const email = userSignUpDto.email;
+    const userType = UserType.EMP;
+    const emailList = { primary: userSignUpDto.email };
+
+    // Set up additional user data for employee
+    let userEmpSignUpDto: NewUserEmpSignUpDTO = {
+      ...userSignUpDto,
+      id: userSignUpDto.userId,
+      emailList: emailList,
+      userType: [userType],
+      isEmailVerified: false,
+      isNumberVerified: false,
+      lastAccessedDash: userType,
+      referralCount: 0,
+      isSubscribed: false,
+      expiryDate: DateTime.now().toJSDate(),  // Note: No trial period for employees?
+    };
+
+    // Prepare work experience data
+    const userExperienceDto: UserExperienceDTO = {
+      department: userSignUpDto.department,
+      companyName: userSignUpDto.companyName,
+      companyId: userSignUpDto.companySK.split("#").pop() as string,  // Extracting ID from SK
+      emailId: userSignUpDto.companyEmailId,
+    };
+    
+    // Create the new user in the database
+    const newUser = await UserService.addUser(userEmpSignUpDto, userType);
+    
+    // Destructure to separate common user data from work-related data
+    const {
+      companyName,
+      companySK,
+      companyEmailId,
+      department,
+      linkedinUrl,
+      ...copyUserSignUpDTO
+    } = userSignUpDto;
+
+    // Set up social profile data
+    const userSocialProfileDTO: UserSocialProfileDTO = {
+      linkedin: [linkedinUrl], 
+    };
+    UserSocialProfileService.create(email, userSocialProfileDTO);
+
+    // Store user's work experience
+    /* UserEmailService.createEmailt(email, companyName, companyEmailId); */
+    // Note: Previous comment suggests UserEmail table is no longer used
+    UserExperienceService.create(email, userExperienceDto);
+
+    // Initialize the user's profile completion percentage
+    let userProfilePercentageDTO: UserProfilePercentageDTO =
+      UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
+
+    // Update current percentage based on common user data
+    userProfilePercentageDTO =
+      UserProfilePercentageOperationHelper.updateCurPerc(
+        userProfilePercentageDTO,
+        copyUserSignUpDTO
+      );
+
+    // Further update percentage based on work experience data
+    userProfilePercentageDTO =
+      UserProfilePercentageOperationHelper.updateCurPerc(
+        userProfilePercentageDTO,
+        userExperienceDto
+      );
+
+    // Update field-specific percentages (in this case, for social profile)
+    userProfilePercentageDTO =
+      UserProfilePercentageOperationHelper.updateFieldCurPercByKeys(
+        userProfilePercentageDTO,
+        [profilePercentageField.socialProfile]
+      );
+
+    // Create a profile percentage record for the user
+    UserProfilePercentageService.create(
+      userSignUpDto.email,
+      userProfilePercentageDTO
+    );
+
+    // Respond with the newly created user data
+    res.status(HttpStatusCode.CREATED_201).json(newUser);
+  } catch (error) {
+    // Any errors that occur (validation, database, etc.) are passed to the global error handler
+    next(error);
+  }
+};
 
   /**
    *

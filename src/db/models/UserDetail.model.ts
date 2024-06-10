@@ -22,6 +22,7 @@ class DbUserDetailDto extends BaseDbDto {
   isNumberVerified!: boolean;
   isSubscribed!: boolean;
   referralCount!: number;
+  expiryDate!: Date; // @rename this to "subscriptionExpiryDate"
   location?: string;
   about?: string;
   CTC?: number;

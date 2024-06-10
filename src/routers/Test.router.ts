@@ -28,5 +28,8 @@ TestRouter.get("/:id/sendRemindertoCreateMutlipleProfiles", testController.sendR
 // Send Email to the employee to suggest him that he can create profile as candidate as well
 TestRouter.get("/:id/sendRemindertoEmptoCreateMultipleProfiles", testController.sendReminderToEmpToCreateMutlipleProfiles)
 
+//Schedule Job to send reminder to employee to create multiple profiles
+TestRouter.post("/scheduleJob", testController.scheduleJob)
+
 // Export the "TestRouter"
 export default TestRouter;
