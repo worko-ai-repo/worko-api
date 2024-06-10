@@ -26,6 +26,7 @@ import UserReviewRouter from "./routers/UserReview.router";
 import UserSupportRouter from "./routers/UserSupport.router";
 import UserCorporateRequestRouter from "./routers/UserCorporateRequest.router";
 import UserCareerRequestRouter from "./routers/UserCareerRequest.router";
+import EventRouter from "./routers/Event.router";
 
 // File routers
 import FileRouter from "./routers/File.router";
@@ -40,12 +41,17 @@ import EmailTemplateRouter from "./routers/EmailTemplate.router";
 
 // Other
 import TestRouter from "./routers/Test.router";
+// import OrderRouter from "./routers/Order.router";
+import UserOrderRouter from "./routers/UserOrder.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
 
 // Regitser the "Company" routers
 router.use("/company", CompanyRouter);
+
+// Regitser the "EventRouter CRUD" routers
+router.use("/event", EventRouter);
 
 // Regitser the "User CRUD" routers
 router.use("/user", UserRouter);
@@ -94,6 +100,12 @@ router.use("/user", UserAvailabilityRouter);
 
 // Regitser the "User Review" routers
 router.use("/user", UserReviewRouter);
+
+// Register the "UserOrder" routers
+router.use("/user", UserOrderRouter);
+
+// Register the "Order" routers
+// router.use("/sample-order", OrderRouter);
 
 // Regitser the "File" router
 router.use("/file", FileRouter);

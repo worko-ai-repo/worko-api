@@ -176,7 +176,11 @@ class UserCorporateRequestDao implements BaseDao {
         const PK = this.partitianKey.strtr({
           "{emailId}": email,
         });
-        return UserCorporateRequestModel.query("PK").eq(PK).attributes(["PK"]).exec();
+        return UserCorporateRequestModel.query("PK")
+        .eq(PK)
+        .where("SK")
+        .beginsWith("CORP#REQ#ID#")
+        .exec();
     }
 }
 

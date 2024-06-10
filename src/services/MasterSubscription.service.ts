@@ -3,6 +3,7 @@ import masterSubscriptionDao from "../daos/MasterSubscription.dao";
 
 // Load the local dtos
 import { MasterSubscriptionDTO } from "../dtos/MasterSubscription.dto";
+import { DbMasterSubscriptionDto } from "../db/models/MasterSubscription.model";
 
 /**
  * MasterSubscriptionService
@@ -42,7 +43,7 @@ class MasterSubscriptionService {
    *
    * @returns
    */
-  async getByPlan(plan: string) {
+  async getByPlan(plan: string):Promise<DbMasterSubscriptionDto>{
     console.log("Get subscription plan details [service]");
     const subPlanDetail = await masterSubscriptionDao.getByPlan(plan);
     return subPlanDetail[0];
@@ -54,7 +55,7 @@ class MasterSubscriptionService {
    *
    * @returns
    */
-  async getById(masterSubscriptionId: string) {
+  async getById(masterSubscriptionId: string):Promise<DbMasterSubscriptionDto>{
     console.log("Get subscription plan details by Id [service]");
     const result = await masterSubscriptionDao.getById(masterSubscriptionId);
     return result[0];

@@ -1,3 +1,5 @@
+// @todo rename this file to "UserSubscription.enum.ts"
+
 /**
  * UserSubscriptionStatus
  *

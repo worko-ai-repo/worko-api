@@ -1,5 +1,17 @@
 import Joi from "joi";
 
+const candidateExperienceSchema = Joi.object({
+  companyName: Joi.string().allow('').optional().messages({
+    "string.empty": "Company Name should not be empty.",
+  }),
+  designation: Joi.string().allow('').optional().messages({
+    "string.empty": "Designation should not be empty.",
+  }),
+  department: Joi.string().allow('').optional().messages({
+    "string.empty": "Department should not be empty.",
+  }),
+});
+
 export const userDetailDTOValidation = Joi.object({
   name: Joi.string()
     .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
@@ -73,5 +85,15 @@ export const userDetailDTOValidation = Joi.object({
       "any.required": "isCandidateFresher is required.",
       "boolean.base": "Invalid isCandidateFresher status.",
     }),
-
-}).options({ stripUnknown: true });
+    
+    // If user type is Cand ask the candidateExperince fields along with optional details but if it other then throw forbidden message
+    candidateExperience: Joi.when('userType', {
+      is: Joi.array().items(Joi.string().valid('CAND')),
+      then: candidateExperienceSchema.optional(),
+      otherwise: Joi.when('userType', {
+        is: Joi.array().items(Joi.string().valid('EMP')),
+        then: Joi.forbidden(),
+        otherwise: Joi.forbidden()
+      })
+    }),
+  }).options({ stripUnknown: true });

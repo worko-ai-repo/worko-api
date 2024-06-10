@@ -56,4 +56,4 @@ const MasterSubscriptionModel = dynamoose.model<DbMasterSubscriptionDto>(
 );
 
 // Export the MasterSubscription
-export { MasterSubscriptionModel };
+export { MasterSubscriptionModel, DbMasterSubscriptionDto };

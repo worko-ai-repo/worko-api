@@ -105,8 +105,15 @@ const APP_CONSTANTS = {
     LAMBDA_TRIGGER_ARN: "arn:aws:lambda:ap-south-1:787066054733:function:pankaj-test-function",
     ROLE_ARN: "arn:aws:iam::787066054733:role/worko-schedule-invoke-lambda-role"
   },
+  
+  WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
 
-  WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png"
+  /**
+   * REFERRAL_MINIMUM_MATCHING_SCORE
+   * 
+   * Required constants for Referral score as matching score
+   */
+  REFERRAL_MINIMUM_MATCHING_SCORE: 7,
 };
 
 export default APP_CONSTANTS;

@@ -72,6 +72,10 @@ class CompanyService {
     }
   }
 
+  async getAllCompanyNames() {
+    return companyDetailDao.getAllCompanyNames();
+  }
+
   /**
    *
    * Adds a new company with provided details.

@@ -22,6 +22,7 @@ class DbUserDetailDto extends BaseDbDto {
   isNumberVerified!: boolean;
   isSubscribed!: boolean;
   referralCount!: number;
+  expiryDate!: Date; // @rename this to "subscriptionExpiryDate"
   location?: string;
   about?: string;
   CTC?: number;
@@ -34,6 +35,12 @@ class DbUserDetailDto extends BaseDbDto {
   profileImage?: string;
   country?: string;
   isCandidateFresher?: boolean;
+  candidateExperience?: {
+    companyId?: string;
+    companyName: string;
+    designation: string;
+    department: string;
+  }
 }
 
 // Define the schema for the User Details model using DynamoDB
@@ -146,6 +153,28 @@ const UserDetailSchema = new dynamoose.Schema(
     },
     isCandidateFresher: {
       type: Boolean,
+      required: false,
+    },
+    candidateExperience: {
+      type: Object,
+      schema: {
+        companyId: {
+          type: String,
+          required: false,
+        },
+        companyName: {
+          type: String,
+          required: true,
+        },
+        designation: {
+          type: String,
+          required: true,
+        },
+        department: {
+          type: String,
+          required: true,
+        },
+      },
       required: false,
     },
   },

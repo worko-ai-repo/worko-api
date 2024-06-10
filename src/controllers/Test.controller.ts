@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 
 // Load the local libraries
-import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
+import { emailLibrary } from "../libraries/email.library";
 
 // Import Utils
 import HttpStatusCode from "../utils/http-codes.util";

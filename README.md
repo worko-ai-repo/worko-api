@@ -103,6 +103,9 @@ $ sls deploy list --stage={stage} --aws-profile={stageAwsProfile}
 
 # Rollback to the build associated with the provided timestamp
 $ serverless rollback --stage={stage} --aws-profile={stageAwsProfile} --timestamp={buildTimestamp}
+
+# Print active environment variable and serverless.ts config with parsed values.
+$ sls print
 ```
 
 # Branching

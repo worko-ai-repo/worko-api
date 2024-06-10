@@ -16,7 +16,6 @@ import { Query } from "dynamoose/dist/ItemRetriever";
 
 // DAO class for handling Company details
 class CompanyDetailDao implements BaseDao {
-
   modelName = "Company"; // Model name for Company
   partitianKey = "COMP#"; // Partition key for Company
   sortKeys = { SK_INIT: "ID#{companyId}" }; // Sort keys for Company
@@ -43,37 +42,41 @@ class CompanyDetailDao implements BaseDao {
       "logoUrl",
       "carrierPage",
       "logo",
-      "isVerified"
+      "isVerified",
     ];
 
     let query: Query<AnyItem>;
-    query = CompanyDetailModel.query("PK").eq(this.partitianKey)
-    query = query.where("isVerified").eq(true);
+    query = CompanyDetailModel.query("PK").eq(this.partitianKey);
+
     // Construct the query based on filter options
     if (filterOptions.companyName) {
       // If company name filter is provided, construct a query to search for companies by name
       let companyName = filterOptions.companyName.toLocaleUpperCase();
       query = query.where("name").beginsWith(companyName);
-    } 
+      query = query.attributes(attributesToInclude);
+
+      // Execute the query without pagination and return all the results for companyName
+      return query.exec();
+    }
+
     // If no company name filter is provided, check other filters
     if (filterOptions.industryName) {
-        let industryName = filterOptions.industryName;
-        // If industry name filter is provided, search for companies by industry
-        query = query.where("industry").eq(industryName);
-    } 
-    
+      let industryName = filterOptions.industryName;
+      // If industry name filter is provided, search for companies by industry
+      query = query.where("industry").eq(industryName);
+    }
+
     // Get TeamSize filter from filterOptions
     if (filterOptions.teamSize) {
       // If teamSize filter is provided, filter the companies by teamSize range
       let teamSizeRange = filterOptions.teamSize.split("-");
       if (teamSizeRange.length === 2) {
-        // If range has two values, SO filter the companies within the range
+        // If range has two values, filter the companies within the range
         let minRange = parseInt(teamSizeRange[0]);
         let maxRange = parseInt(teamSizeRange[1]);
         query.where("teamSize").between(minRange, maxRange);
-      } 
-      else if (teamSizeRange.length === 1) {
-        // If range has only one value(single value), so filter companies with teamSize equal to that value 
+      } else if (teamSizeRange.length === 1) {
+        // If range has only one value (single value), filter companies with teamSize equal to that value
         let singleTeamSize = parseInt(teamSizeRange[0]);
         query.where("teamSize").eq(singleTeamSize);
       }
@@ -93,8 +96,8 @@ class CompanyDetailDao implements BaseDao {
   }
 
   /**
-   * 
-   * @param ids 
+   *
+   * @param ids
    * Returns the list of companies having the InputKeys
    */
   getCompanyDetailsByIds(ids: string[]) {
@@ -104,9 +107,9 @@ class CompanyDetailDao implements BaseDao {
         SK: this.sortKeys.SK_INIT.strtr({
           "{companyId}": id,
         }),
-      }
+      };
     });
-    return CompanyDetailModel.batchGet(inputKeys)
+    return CompanyDetailModel.batchGet(inputKeys);
   }
 
   /**
@@ -124,8 +127,15 @@ class CompanyDetailDao implements BaseDao {
       .exec();
   }
 
+  async getAllCompanyNames() {
+    return CompanyDetailModel.query("PK")
+      .eq(this.partitianKey)
+      .attributes(["name"])
+      .exec();
+  }
+
   /**
-   * 
+   *
    * Add a company based on provided DTO
    *
    * @param companyDto

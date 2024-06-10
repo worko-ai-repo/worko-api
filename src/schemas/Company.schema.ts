@@ -31,9 +31,7 @@ export const CompanyDTOValidation = Joi.object({
     "string.uri": "Logo URL must be a valid URI",
     "any.required": "Logo URL is required",
   }),
-  logo: Joi.string().required().messages({
-    "any.required": "Logo is required",
-  }),
+  logo: Joi.string().allow("").optional(),
 });
 
 export const CompanyRequestDTOValidation = Joi.object({
@@ -72,9 +70,8 @@ export const CompanyRequestDTOValidation = Joi.object({
       "string.uri": "Logo URL must be a valid URI",
       "any.required": "Logo URL is required",
     }),
-
-    logo: Joi.string().required().messages({
-      "any.required": "Logo is required",
-    }),
+    logo: Joi.string().allow("").optional(),
   }),
+  userEmail: Joi.string().allow("").optional(),
+  userContactNumber : Joi.string().allow("").optional(),
 });

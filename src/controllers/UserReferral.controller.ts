@@ -1,8 +1,11 @@
 //npm import
 import { Request, Response, NextFunction } from "express";
 
+// import luxon
+import { DateTime } from 'luxon';
+
 // Load the local dtos
-import { UserReferralRequestDTO } from "../dtos/User.dto";
+import { UserReferralRequestCreateApiDTO ,UserReferralRequestCreateDTO } from "../dtos/User.dto";
 import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
 import { UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
 import { Status } from "../dtos/Company.dto";
@@ -22,10 +25,12 @@ import UserReferralResponseService from "../services/UserReferralResponse.servic
 import InvokeLambdaService from "../services/InvokeLambda.service";
 import CompanyService from "../services/Company.service";
 import UserService from "../services/User.service";
+import UserDetailService from "../services/UserDetail.service";
+import UserSubscriptionService from "../services/UserSubscription.service";
 
 //Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
-import { RequestValidationError } from "../utils/errors.util";
+import { BaseError, RequestValidationError } from "../utils/errors.util";
 
 // Load the Enums
 import { ReferralActions } from "../enums/User.enum";
@@ -33,7 +38,7 @@ import { ReferralStatus } from "../enums/UserReferral.enum";
 
 import { EmailSourceDestinationAddress } from "../libraries/email.library";
 import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED } from "../dtos/EmailTemplatePlaceholder.dto";
-import UserDetailService from "../services/UserDetail.service";
+
 
 
 /**
@@ -217,67 +222,107 @@ class UserReferralController {
   };
 
   /**
-   * createReferral
+   * createReferralByCand
    *
-   * Create a new referral based on the provided input data. Validates the input data
-   * and, if successful, proceeds with the new referral creation logic.
+   * Creates a new referral request initiated by a candidate user. This function performs the following steps:
+   * 1. Validates the user's email from the request parameters.
+   * 2. Validates the referral request data from the request body.
+   * 3. Checks if the user has an active subscription.
+   * 4. (Commented out) Checks if the user is eligible to create a new referral based on their subscription status.
+   * 5. Creates the referral request in the database, associating it with the user's active subscription.
+   * 6. Triggers an asynchronous lambda function to calculate matching scores for this referral.
    *
-   * @param {Request} req
-   * @param {Response} res
-   * @param {NextFunction} next
+   * The function also includes special error handling for cases where the user doesn't exist.
+   *
+   * @param {Request} req - Express request object:
+   * @param {Response} res - Express response object used to send back the API response.
+   * @param {NextFunction} next - Express next function for error handling.
+   * @throws {RequestValidationError} If the email or referral data fails validation.
+   * @throws {BaseError} (Commented out) If the user has reached their referral limit.
+   * @throws {Error} Any other errors that occur during the process.
    */
   createReferralByCand = async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("Create referral [controller]");
-      const email = req.params.userEmail;
 
+      // Extract and validate the user's email from request parameters
+      const email = req.params.userEmail;
       const { error: emailError, value: emailId } = validateEmailField(email);
 
-      const referralRequest: UserReferralRequestDTO = req.body;
+      // Extract and validate the referral request data from request body
+      const referralRequestBody: UserReferralRequestCreateApiDTO = req.body;
       const { error } = UserReferralRequestDTOValidation.validate(
-        referralRequest,
+        referralRequestBody,
         { abortEarly: false }
       );
 
+      // Handle validation errors
       if (emailError) {
         throw new RequestValidationError(emailError);
       } else if (error) {
         throw new RequestValidationError(error);
       }
 
-      /* const SK = await UserService.getSK(email);
-      const subStatus = await UserService.getSubscriptionStatus(email, SK);
-      if (!subStatus[0].isSubscribed) {
-        res.status(HttpStatusCode.PAYMENT_REQUIRED_402).json({
-          status: "failure",
-          message: "Payment Required",
-          description:
-            "User does not have an active subscription. Please subscribe to access this service.",
-        });
-      } */
+      // Fetch the user's active subscription ID
+      const activeSubscriptionId =
+        await UserSubscriptionService.getActiveSubscriptionForUser(emailId);
 
-      const referralRequestId = await UserReferralService.create(
-        referralRequest,
-        emailId
-      );
-      // invoke score matching lambda function
-      // @todo : add logic code to check if  it has been tested on local or not
-      await InvokeLambdaService.triggerMatchingScoreCalculation(
-        email,
-        referralRequestId.referralRequestId
-      );
+      if (!activeSubscriptionId[0]) {
+        // If no active subscription found, return a conflict status
+        res
+          .status(HttpStatusCode.CONFLICT_409)
+          .json("User doesn't have any active Subscription!");
+      } else {
+        // The following block is commented out, possibly for future use or in review
+        // It checks if the user is eligible to create a new referral based on their subscription status
+        /*
+        // Check if the user is eligible to create a new referral
+        const SK = await UserService.getSK(email);
+        const userDetails = await UserService.getSubscriptionStatus(email, SK);
+        if (
+          activeSubscriptionId[0].availableReferrals === 0 &&
+          !userDetails[0].isSubscribed &&
+          userDetails[0].referralCount === 0
+        ) {
+          throw new BaseError(
+            "You cannot request for a referral because you have reached the maximum limit of referrals. Please upgrade your subscription.",
+            HttpStatusCode.PAYMENT_REQUIRED_402
+          );
+        }
+        */
 
-      res.status(HttpStatusCode.OK_200).json(referralRequestId);
+        // Enhance the referral request with the active subscription ID
+        const userReferralRequest: UserReferralRequestCreateDTO = {
+          ...referralRequestBody,
+          userSubscriptionId: activeSubscriptionId[0].id,
+        };
+
+        // Create the referral request in the database
+        const referralRequestId = await UserReferralService.create(
+          userReferralRequest,
+          emailId
+        );
+
+        // Invoke a lambda function to calculate matching scores for this referral
+        // TODO: Add logic to check if it has been tested on local or not
+        await InvokeLambdaService.triggerMatchingScoreCalculation(
+          email,
+          referralRequestId.referralRequestId
+        );
+
+        // Respond with the created referral request ID
+        res.status(HttpStatusCode.OK_200).json(referralRequestId);
+      }
     } catch (error) {
       // Handle errors
-      // Pass the error to the next error handler
       console.log("error: ", error);
-      // Check if the error is a specific type (TypeError in this case)
+
+      // Special handling for a specific error type: User not found
       if (
         error instanceof TypeError &&
         error.message.includes("undefined (reading 'SK')")
       ) {
-        // Respond with "User not found" message and set a different status code (e.g., 400)
+        // This error suggests that UserService.getSK(email) failed because the user doesn't exist
         res.status(HttpStatusCode.UNAUTHORIZED_401).json({
           status: "failure",
           message: "There is no user with the provided details",
@@ -336,8 +381,6 @@ class UserReferralController {
         if (error) {
           throw new RequestValidationError(error);
         }
-        // To inscrease the referral count every time the candidate request for referral is withdrawn
-        UserService.increaseReferralCount(candEmail);
 
         // Call the service method to withdraw the referral
         updatedReferralStatus =
@@ -434,7 +477,7 @@ class UserReferralController {
       };
 
       // Get current date
-      const currentDate = new Date();
+      const currentDate = DateTime.now();
 
       // Update referral based on action provided
       switch (referralstatusUpdate.action) {
@@ -458,12 +501,12 @@ class UserReferralController {
             referral[0].passedByUserIds.length === 0
           ) {
             referral[0].passedByUserIds = [
-              { userId, actionDate: currentDate.toISOString() },
+              { userId, actionDate:  currentDate.toISO() },
             ];
           } else {
             referral[0].passedByUserIds.push({
               userId,
-              actionDate: currentDate.toISOString(),
+              actionDate:  currentDate.toISO(),
             });
           }
 
@@ -501,7 +544,7 @@ class UserReferralController {
             referral[0].rejectedByUserIds = [
               {
                 userId: userId,
-                actionDate: currentDate.toISOString(),
+                actionDate:  currentDate.toISODate(),
                 reason: referralstatusUpdate.reason,
                 userComment: referralstatusUpdate.userComment,
               },
@@ -509,7 +552,7 @@ class UserReferralController {
           } else {
             referral[0].rejectedByUserIds.push({
               userId: userId,
-              actionDate: currentDate.toISOString(),
+              actionDate:  currentDate.toISODate(),
               reason: referralstatusUpdate.reason,
               userComment: referralstatusUpdate.userComment,
             });
@@ -533,7 +576,7 @@ class UserReferralController {
 
           referral[0].acceptedByUserId = userId;
           referral[0].status = ReferralStatus.ACCEPTED;
-          referral[0].acceptedAtByUser = currentDate;
+          referral[0].acceptedAtByUser = currentDate.toJSDate();
 
           // Update acceptedRefIds array in DTO
           if (updateReferralResponse) {
@@ -560,7 +603,7 @@ class UserReferralController {
             }
           }
 
-          referral[0].doneByEmployee = currentDate;
+          referral[0].doneByEmployee = currentDate.toJSDate();
           referral[0].doneByUserId = userId;
           referral[0].status = ReferralStatus.DONE;
 
@@ -582,10 +625,10 @@ class UserReferralController {
       }
 
       // Extract unnecessary properties before updating referral
-      const { PK, SK, updatedAt, doneByUserId, ...userReferralDTO } = referral[0];
+      const { PK, SK, updatedAt, ...userReferralDTO } = referral[0];
       
       // Update referral in the database
-      const result = await UserReferralService.update(PK, SK, userReferralDTO, doneByUserId, referralstatusUpdate.action);
+      const result = await UserReferralService.update(PK, SK, userReferralDTO, referralstatusUpdate.action);
 
       if (updateReferralResponse) {
         const { passedRefIds, rejectedRefIds , acceptedRefIds ,doneRefIds} = referralResponse[0];

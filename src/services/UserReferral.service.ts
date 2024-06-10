@@ -1,5 +1,9 @@
+// import luxon
+import { DateTime } from 'luxon';
+
 // Load the local daos
 import userReferralDao from "../daos/UserReferral.dao";
+import userDetailDao from '../daos/UserDetail.dao';
 
 // import Services
 import UserService from "./User.service";
@@ -7,12 +11,11 @@ import UserReferralResponseService from "./UserReferralResponse.service";
 import UserDetailService from "./UserDetail.service";
 
 // Load the local dtos
-import { UserReferralRequestDTO } from "../dtos/User.dto";
+import { UserReferralRequestCreateDTO } from "../dtos/User.dto";
 import {
   UserReferralDTO,
   UserReferralStatusChangeByCandDTO,
 } from "../dtos/UserReferral.dto";
-
 import {
   EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED,
   EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED,
@@ -22,42 +25,51 @@ import {
 
 // import models
 import { DbUserReferralDto } from "../db/models/UserReferral.model";
+import { DbUserSubsDto } from "../db/models/UserSubscription.model";
 
 // Import Libraries
 import {
   EmailSourceDestinationAddress,
   emailLibrary,
 } from "../libraries/email.library";
-import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import Enums
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ReferralActions } from "../enums/User.enum";
+import { UserSubscriptionStatus } from "../enums/UserSubscription.enum";
 
 // Import services
 import CompanyService from "./Company.service";
-import { UserReferralResponseDTO } from '../dtos/UserReferralResponse.dto';
+import UserSubscriptionService from "./UserSubscription.service";
 
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
  */
 class UserReferralService {
-  
   /**
    * Processes a referral request made by a user(candidate).
    *
    * @param referralRequest - Referral request Referrals
    * @param email - Email of the user making the referral request
    */
-  async create(
-    referralRequest: UserReferralRequestDTO,
-    email: string
-  ) {
-    console.log("Create referral [service]");
+  async create(referralRequest: UserReferralRequestCreateDTO, email: string) {
+    global.logger.info("Create referral [service]");
 
-    // To decrease the referral count by 1 every time the candidate request for referral
-    // UserService.decreaseReferralCount(email);
+    // Create the referral request
+    const createdReferral = await userReferralDao.create(
+      referralRequest,
+      email
+    );
+
+    // Update the referral counts
+    const updatedSubscription = await this.calculateAndUpdateReferralCounts(
+      email,
+      referralRequest.userSubscriptionId,
+      ReferralStatus.AWAITING
+    );
+    return createdReferral;
 
     //below block checks gets the ExtractedJd from db if it is there
     /* const jdExtract = await CompanyJobService.getJdUrl(
@@ -73,8 +85,118 @@ class UserReferralService {
     }
 
     console.log("cTesting: ", jdExtract); */
-    return userReferralDao.create(referralRequest, email);
   }
+
+  /**
+   *
+   * calculateAndUpdateReferralCounts
+   *
+   * Calculates and updates the referral counts based on the new referral status.
+   *
+   * @param {string} userEmail - The email of the user.
+   * @param {string} userSubscriptionId - The ID of the user's subscription.
+   * @param {string} newReferralStatus - The new referral status.
+   * @return {Promise<DbUserSubsDto>} A promise that resolves to the updated subscription.
+   * @throws {Error} If the user subscription is not found.
+   * @throws {Error} If the referral status is invalid.
+   */
+  async calculateAndUpdateReferralCounts(
+    userEmail: string,
+    userSubscriptionId: string,
+    newReferralStatus: string
+  ): Promise<DbUserSubsDto> {
+    // Get user's subscription details
+    const userSubscription = await UserSubscriptionService.getById(
+      userEmail,
+      userSubscriptionId
+    );
+    if (!userSubscription || userSubscription.count === 0) {
+      throw new Error("User subscription not found");
+    }
+
+    // Retrieve UserDetails from userEmail
+    let userDetails = await UserDetailService.get(userEmail);
+    if (!userDetails || userDetails.count === 0) {
+      throw new Error("User Details not found");
+    }
+
+    // Get SK (Sort Key) for the user
+    const userSortKey = await UserService.getSK(userEmail);
+
+    // Get user's subscription status details
+    const userSubscriptionStatusList =
+      await userDetailDao.getUserSubscriptionStatus(userEmail, userSortKey);
+
+    // Get user's current subscription details
+    let currentSubscription = userSubscription[0];
+    let userSubscriptionStatus = userSubscriptionStatusList[0];
+
+    // Update the referral counts based on the new referral status
+    // @todo : When Subscription is Used or expired and user buys a new active subscription 
+    //  the user/expired referral count if credited then it must go to the new  Subscription as discussed 
+    switch (newReferralStatus) {
+      case ReferralStatus.AWAITING :
+        currentSubscription.requestedReferrals += 1;
+        currentSubscription.availableReferrals -= 1;
+        userSubscriptionStatus.referralCount -= 1;
+        break;
+      case ReferralStatus.ACCEPTED:
+      case ReferralActions.ACCEPT:  
+        currentSubscription.requestedReferrals -= 1;
+        currentSubscription.acceptedReferrals += 1;
+        break;
+      case ReferralStatus.DONE:
+      case ReferralActions.DONE:  
+        currentSubscription.acceptedReferrals -= 1;
+        currentSubscription.completedReferrals += 1;
+        break;
+      case ReferralStatus.CANCELLED:
+      case ReferralStatus.WITHDRAWN:
+        if (currentSubscription.requestedReferrals > 0) {
+          currentSubscription.requestedReferrals -= 1;
+          currentSubscription.availableReferrals += 1;
+          userSubscriptionStatus.referralCount += 1;
+        }
+        break;
+      default:
+        throw new Error("Invalid referral status while updating Counts");
+    }
+
+    // Update subscription status based on availableReferrals
+    if (currentSubscription.availableReferrals === 0) {
+      await UserSubscriptionService.update(userEmail, userSubscriptionId, {
+        status: UserSubscriptionStatus.USED,
+      });
+    } else if (
+      currentSubscription.availableReferrals > 0 &&
+      currentSubscription.status !== UserSubscriptionStatus.EXPIRED
+    ) {
+      await UserSubscriptionService.update(userEmail, userSubscriptionId, {
+        status: UserSubscriptionStatus.ACTIVE,
+      });
+    }
+
+    // Update the user's subscription details
+    const updatedSubscription = await UserSubscriptionService.update(
+      userEmail,
+      userSubscriptionId,
+      {
+        requestedReferrals: currentSubscription.requestedReferrals,
+        availableReferrals: currentSubscription.availableReferrals,
+        acceptedReferrals: currentSubscription.acceptedReferrals,
+        completedReferrals: currentSubscription.completedReferrals,
+      }
+    );
+
+    // Update user service referral count and subscription status
+    await UserService.updateReferralCount(userDetails[0].id, userEmail, {
+      referralCount: userSubscriptionStatus.referralCount,
+      isSubscribed: userSubscriptionStatus.referralCount > 0,
+    });
+
+    return updatedSubscription;
+  }
+  
 
   /**
    * Updates an existing user Referral.
@@ -88,7 +210,6 @@ class UserReferralService {
     PK: string,
     SK: string,
     userReferralDTO: UserReferralDTO,
-    doneByUserId: string,
     status: string
   ): Promise<any> {
     // Logging the action of updating user Referral in the service layer
@@ -100,12 +221,32 @@ class UserReferralService {
     
     // Get the name of the company for which the referral request got accepted
     const companyId = userReferralDTO.companyId;
-    const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId])
+    const companyDetails = await CompanyService.getCompanyDetailsByIds([
+      companyId,
+    ]);
+
+    if(!companyDetails || companyDetails.length === 0) {
+      throw new Error("Company not found");
+    }
     const companyName = companyDetails[0].name;
 
     let result = await userReferralDao.update(PK, SK, userReferralDTO);
 
     if (result) {
+      
+      if (
+        status === ReferralActions.ACCEPT ||
+        status === ReferralActions.DONE
+      ) {
+        // Update the referral counts
+        const userSubscriptionId = userReferralDTO.userSubscriptionId;
+        await this.calculateAndUpdateReferralCounts(
+          candEmail,
+          userSubscriptionId,
+          status
+        );
+      }
+
       // The actions are done by the employee
       // When employee accepts the referral request, email will be sent to candidate
       if (status === ReferralActions.ACCEPT) {
@@ -153,7 +294,7 @@ class UserReferralService {
       // When employee marks the referral request as done, email will be sent to candidate
       else if (status === ReferralActions.DONE) {
         // Get the name and email of the referee who completed the referral request
-        const empId = doneByUserId;
+        const empId = userReferralDTO.doneByUserId as string;
         // const employeeId = empId.split("ID#")[1];
         const empDetails = await UserDetailService.getUserById(empId);
         const refereeName = empDetails[0].name;
@@ -340,9 +481,13 @@ class UserReferralService {
 
         // If the userReferralResponse is found, update the user response
         if (userReferralResponse.count) {
-          // Remove the referralId from 'acceptedRefIds' from the userReferralResponse and add the referralId in 'doneRefIds' if found 
-          userReferralResponse[0].acceptedRefIds = userReferralResponse[0].acceptedRefIds.filter((id: string) => id !== referralId);
-          userReferralResponse[0].doneRefIds = userReferralResponse[0].doneRefIds.concat(referralId);
+          // Remove the referralId from 'acceptedRefIds' from the userReferralResponse and add the referralId in 'doneRefIds' if found
+          userReferralResponse[0].acceptedRefIds =
+            userReferralResponse[0].acceptedRefIds.filter(
+              (id: string) => id !== referralId
+            );
+          userReferralResponse[0].doneRefIds =
+            userReferralResponse[0].doneRefIds.concat(referralId);
 
           // Update the UserReferralResponse 
           await UserReferralResponseService.update(empEmail, {
@@ -363,12 +508,25 @@ class UserReferralService {
         }
       }
     }
+
     // Update status without withdrawal details
-    return userReferralDao.updateStatus(
+    const updatedReferralStatus = await userReferralDao.updateStatus(
       referralId,
       candEmail,
       newStatus
     );
+
+    // Calculate and update referral counts when referral status has been updated
+    if (updatedReferralStatus) {
+      const userSubscriptionId = updatedReferralStatus.userSubscriptionId;
+      await this.calculateAndUpdateReferralCounts(
+        candEmail,
+        userSubscriptionId,
+        newStatus
+      );
+    }
+
+    return updatedReferralStatus;
     // @todo Ashrith, this function is used for candidate specifically, and candidate will never accept the referral, therefor code to send email is not required here.
     // Kindly remove if this is true.
     // If the details are updated and newStatus is "ACCEPTED", then email should be sent to the candidate saying that his referral request has been accepted
@@ -395,17 +553,26 @@ class UserReferralService {
     // Logging the action of withdrawing a referral in the service layer
     global.logger.info("Withdrawing user Referral [UserReferralService]");
 
-    // Set the actionDate for the withdrawal payload
-    withdrawnReferralPayload.actionDate = new Date();
+    // Set the actionDate for the withdrawal payload using Luxon
+    withdrawnReferralPayload.actionDate = DateTime.now().toJSDate();
 
     // Update status with withdrawal details
     const updatedReferralStatus =
-      userReferralDao.updateStatusForWithdrawnReferral(
+      await userReferralDao.updateStatusForWithdrawnReferral(
         referralId,
         candEmail,
         withdrawnReferralPayload
       );
 
+    // Update the referral counts
+    if (updatedReferralStatus) {
+      const userSubscriptionId = updatedReferralStatus.userSubscriptionId;
+      await this.calculateAndUpdateReferralCounts(
+        candEmail,
+        userSubscriptionId,
+        ReferralStatus.WITHDRAWN
+      );
+    }
     return updatedReferralStatus;
   }
 

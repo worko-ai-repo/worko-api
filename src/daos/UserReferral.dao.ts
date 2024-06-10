@@ -8,7 +8,7 @@ import {
 } from "../db/models/UserReferral.model";
 
 //Load the local dtos
-import { UserReferralRequestDTO } from "../dtos/User.dto";
+import { UserReferralRequestCreateDTO } from "../dtos/User.dto";
 import {
   UserReferralDTO,
   UserReferralStatusChangeByCandDTO,
@@ -32,6 +32,8 @@ class UserReferralDao implements BaseDao {
   GSI1SK = "ID#{refId}";
 
   /**
+   * @rename this to "getUserReferrals"
+   * 
    * Fetches user Referral based on the provided email.
    * @param email - Email address of the user
    * @returns User details corresponding to the email
@@ -88,10 +90,10 @@ class UserReferralDao implements BaseDao {
    * 
    * Request a user referral by creating a new entry in the database.
    *
-   * @param referralRequest - The UserReferralRequestDTO containing referral request details.
+   * @param referralRequest - The UserReferralRequestCreateDTO containing referral request details.
    * @param email - The email associated with the referral request.
    */
-  async create(referralRequest: UserReferralRequestDTO, email: string) {
+  async create(referralRequest: UserReferralRequestCreateDTO, email: string) {
     global.logger.info("Create referral [DAO]");
 
     // Prepare id
@@ -123,7 +125,7 @@ class UserReferralDao implements BaseDao {
       ...referralRequest,
     };
     // Create a new entry in the UserReferralModel (database model) with the referral request data
-    UserReferralModel.create(newReferralRequest);
+     UserReferralModel.create(newReferralRequest);
     const SKId = SK.split("#")[2];
     return { referralRequestId: SKId };
   }
@@ -154,6 +156,8 @@ class UserReferralDao implements BaseDao {
 
   /**
    * updateStatus
+   * 
+   * @todo rename this function to be specific for candidate activity
    * 
    * @param referralId - The ID of the referral
    * @param email - The email address of the user
