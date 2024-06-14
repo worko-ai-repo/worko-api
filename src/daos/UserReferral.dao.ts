@@ -150,7 +150,7 @@ class UserReferralDao implements BaseDao {
       .eq(PK)
       .where("SK")
       .eq(SK)
-      .attributes(["matchingScore"])
+      .attributes(["matchingScore", "jdMatchErrorCode", "jdMatchErrorDesc"])
       .exec();
   }
 

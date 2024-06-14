@@ -1,13 +1,17 @@
+// import joi
 import Joi from "joi";
 
+// import enums
+import { UserType } from "../enums/User.enum";
+
 const candidateExperienceSchema = Joi.object({
-  companyName: Joi.string().allow('').optional().messages({
+  companyName: Joi.string().allow("").optional().messages({
     "string.empty": "Company Name should not be empty.",
   }),
-  designation: Joi.string().allow('').optional().messages({
+  designation: Joi.string().allow("").optional().messages({
     "string.empty": "Designation should not be empty.",
   }),
-  department: Joi.string().allow('').optional().messages({
+  department: Joi.string().allow("").optional().messages({
     "string.empty": "Department should not be empty.",
   }),
 });
@@ -76,24 +80,33 @@ export const userDetailDTOValidation = Joi.object({
     "string.empty": "Last accessed dashboard date cannot be empty.",
   }),
   profileImage: Joi.string().optional(),
-    //country
-    country: Joi.string().required().messages({
-      "any.required": "Country is Required.",
-      "string.empty": "Country Cannot be Empty !",
+  //country
+  country: Joi.string().required().messages({
+    "any.required": "Country is Required.",
+    "string.empty": "Country Cannot be Empty !",
+  }),
+  // validate isCandidateFresher when lastAccessedDash is set to be cand or other dont accept it and throw forbiden error 
+  isCandidateFresher: Joi.when("lastAccessedDash", {
+    is: UserType.CAND,
+    then: Joi.boolean().required().messages({
+      "any.required":
+        "The 'isCandidateFresher' field is required for Candidate.",
+      "boolean.base": "The value for 'isCandidateFresher' must be a boolean.",
     }),
-    isCandidateFresher: Joi.boolean().required().default(false).messages({
-      "any.required": "isCandidateFresher is required.",
-      "boolean.base": "Invalid isCandidateFresher status.",
+    otherwise: Joi.forbidden(),
+  }),
+  // Validate candidateExperience when lastAccessedDash is set to be cand
+  candidateExperience: Joi.when("lastAccessedDash", {
+    // check before validating whether the isCandidateFresher is set to false then only validate 
+    is: UserType.CAND,
+    then: Joi.when("isCandidateFresher", {
+      is: false,
+      then: candidateExperienceSchema.required().messages({
+        "any.required":
+          "The 'candidateExperienceSchema' field is required for Candidate.",
+      }),
+      otherwise: candidateExperienceSchema.forbidden(),
     }),
-    
-    // If user type is Cand ask the candidateExperince fields along with optional details but if it other then throw forbidden message
-    candidateExperience: Joi.when('userType', {
-      is: Joi.array().items(Joi.string().valid('CAND')),
-      then: candidateExperienceSchema.optional(),
-      otherwise: Joi.when('userType', {
-        is: Joi.array().items(Joi.string().valid('EMP')),
-        then: Joi.forbidden(),
-        otherwise: Joi.forbidden()
-      })
-    }),
-  }).options({ stripUnknown: true });
+    otherwise: Joi.forbidden(),
+  }),
+}).options({ stripUnknown: true });
