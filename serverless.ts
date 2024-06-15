@@ -121,6 +121,18 @@ const serverlessConfiguration: AWS = {
     ]
   },
   functions: {
+    appeventtrigger:{
+      handler: "dis/src/app-event-trigger",
+      events: [
+        {
+          sqs: {
+            arn: "arn:aws:sqs:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:worko-app-event-queue",
+            batchSize: 1,
+            maximumBatchingWindow: 0
+          }
+        }
+      ]
+    },
     app: {
       handler: "dist/src/app.handler",
       events: [
