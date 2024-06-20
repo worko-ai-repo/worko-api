@@ -11,6 +11,9 @@ const testController = new TestController();
 const TestRouter = Router();
 
 // Send Test Email to User
+TestRouter.post("/test", testController.test);
+
+// Send Test Email to User
 TestRouter.post("/send-test-email", testController.sendEmail);
 
 // Send Email to the candidate to remind him to complete his profile

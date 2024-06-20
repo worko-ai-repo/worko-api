@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "000431a3-0803-42f5-84ff-2af4c3dd473a",
+      "receiptHandle": "AQEBgNZgH+WspyQ1feuUe6LcpF4ZzYbnHGQZWScoHBEqTPXTlZXOuCAyKSX68Pap5HgNrplEl+xJbEakkQovHQi8B2nSDgxQeGiPWAjcZQDcuVi6MHJKcmRmn94UaeHUOMDVUel2VgzFe0LHCgNVGtcihVsb8RrPqkqYvaOWtJwJUQwVryGomVAbIcob7L8e5RZ74RRXELlRs9QS7Tt6qPK1u5qnw/KRBwORfinuPBvcMriUJt4MSL4GrIIFvcko06J8BuSZIYo43KnnTpg1HgX9iLVhp/tVM/wY14JL7fT17/y0uoqnuhKBnsq+oxhD4nlLRA5d3eI8tOlj0+9xmZe/kH6LGlWGC8C32tzEmI1pV6fSQzQfR02xF1IBYV9JEhPL9wJtnpPAlcgQ39ZEz1tN/w==",
+      "body": " {\n        \"event\": \"REFERRAL_VALIDATE_MATCHING_SCORE\",\n        \"userId\": \"e1134dca-6071-70ff-2941-54fcce656f38\",\n        \"userEmail\": \"divy.raushan26@gmail.com\",\n        \"context\": {\n            \"referralId\": \"01J0QBMW3Z7AAPMT7PK71MPB8D\"\n        }\n    }",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1718800142786",
+        "SenderId": "AIDATCKANHWVUYBHWPBVP",
+        "ApproximateFirstReceiveTimestamp": "1718800142787"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "88d56df1b2991f9ea760ac874a93b9d2",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:ap-south-1:211125353899:worko-app-event-queue",
+      "awsRegion": "ap-south-1"
+    }
+  ]
+}

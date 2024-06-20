@@ -113,7 +113,7 @@ const APP_CONSTANTS = {
    * 
    * Required constants for Referral score as matching score
    */
-  REFERRAL_MINIMUM_MATCHING_SCORE: 7,
+  REFERRAL_MINIMUM_MATCHING_SCORE: 70,
 };
 
 export default APP_CONSTANTS;

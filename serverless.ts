@@ -122,7 +122,7 @@ const serverlessConfiguration: AWS = {
   },
   functions: {
     appeventtrigger:{
-      handler: "dis/src/app-event-trigger",
+      handler: "dist/src/app-event-trigger.handler",
       events: [
         {
           sqs: {

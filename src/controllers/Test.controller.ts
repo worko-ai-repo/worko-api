@@ -20,6 +20,36 @@ import ScheduleJobService from "../services/ScheduleJob.service";
  * Note: It is only for testing purposes. The methods from this controller should not be exposed to production.
  */
 class TestController {
+  /**
+   * Just testing
+   */
+  test = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Logger message
+      global.logger.info("Testing the context.", {
+        filePath: __filename,
+        methodName: this.constructor.name,
+        // req: req,
+        reqEvent: (req as any)?.lambdaEvent ?? "No event found",
+        reqEventAuthorizer: (req as any)?.lambdaEvent?.requestContext?.authorizer ?? "No authorizer found",
+        reqContext: (req as any)?.lambdaContext ?? "No context found",
+      });
+
+      // get-authorizer-context.middleware.ts -- getAuthorizerContext
+      // const lambdaContextAuthorizer = (req as any)?.lambdaEvent?.requestContext?.authorizer
+      // res.locals.userId = lambdaContextAuthorizer?.userId ?? null;
+
+      res.status(HttpStatusCode.OK_200).json({
+        // req: req,
+        reqEvent: (req as any)?.lambdaEvent ?? "No event found",
+        reqEventAuthorizer: (req as any)?.lambdaEvent?.requestContext?.authorizer ?? "No authorizer found",
+        reqContext: (req as any)?.lambdaContext ?? "No context found",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
 
   /**
    * scheduleJobToTriggerBack

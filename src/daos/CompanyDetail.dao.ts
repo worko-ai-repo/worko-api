@@ -85,7 +85,12 @@ class CompanyDetailDao implements BaseDao {
     // Include specified attributes in the query result
     query = query.attributes(attributesToInclude);
 
-    // If lastKey (offset) provided, start the query from the provided lastKey
+    // If any filter is applied, execute the query without pagination
+    if (filterOptions.companyName || filterOptions.industryName || filterOptions.teamSize) {
+      return query.exec();
+    }
+
+    // If no filter is applied, apply pagination
     if (filterOptions.lastKey) {
       // Start the query from the lastKey to retrieve subsequent pages
       query = query.startAt(filterOptions.lastKey);

@@ -1,4 +1,5 @@
 // Load the npm packages
+import { APIGatewayProxyEvent, Context } from "aws-lambda";
 import express, { Express, Request, Response, NextFunction } from "express";
 import serverless from "serverless-http";
 import cors from "cors";
@@ -138,7 +139,15 @@ class App {
   }
 }
 
-export const handler = serverless(new App().app);
+export const handler = serverless(new App().app, {
+  request: function (req: any, event: APIGatewayProxyEvent, context: Context) {
+    // Modify the request object with received "event" and "context" from the API Gateway, 
+    // to make it accessible in the routes/controllers.
+    req.lambdaEvent = event;
+    req.lambdaContext = context;
+  },
+});
+
 // Only works on 3000 regardless of what I set environment port to or how I set [value] in app.set('port', [value]).
 // new App().app.listen(3000);
 // app.listen(3000);
