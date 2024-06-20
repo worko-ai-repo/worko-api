@@ -36,6 +36,9 @@ class UserSupportController {
      */
     createSupport = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            // Read the "userId" of the user from the token
+            const tokenUserId = res.locals.userId;
+
             // Support request details
             const requestBody: UserSupportCreateApiDto = req.body;
 
@@ -50,8 +53,8 @@ class UserSupportController {
             const userSupportCreateDto: UserSupportCreateDto = {
                 ...userSupportDto,
                 status: UserSupportStatusEnum.OPEN,
-                userId: "id", // @todo this value should be read from token and make required changes to fix it
-                createdByUserId: "id", // @todo this value should be read from token and make required changes to fix it
+                userId: tokenUserId,
+                createdByUserId: tokenUserId,
             }
             // Create Support as requested
             const result = await userSupportService.createSupport(userSupportCreateDto.userEmail, userSupportCreateDto);

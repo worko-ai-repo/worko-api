@@ -28,6 +28,9 @@ class EmailTemplateController {
    */
   createEmailTemplate = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Read the "userId" of the user from the token
+      const tokenUserId = res.locals.userId;
+
       // Extract email template data from the request body
       const requestBody: EmailTemplateCreateDtoApi = req.body;
 
@@ -56,7 +59,7 @@ class EmailTemplateController {
       // Create email template
       const emailTemplateCreateDto: EmailTemplateCreateDto = {
         ...requestBody,
-        createdByUserId: "1", // @todo fix this with real id of the user from the token.
+        createdByUserId: tokenUserId,
       }
       const createdEmailTemplateRes = await emailTemplateService.createEmailTemplate(emailTemplateCreateDto);
 
@@ -85,6 +88,9 @@ class EmailTemplateController {
    */
   updateEmailTemplate = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Read the "userId" of the user from the token
+      const tokenUserId = res.locals.userId;
+
       // Get mail template name
       const templateName: string = req.params["templateName"];
 
@@ -117,7 +123,7 @@ class EmailTemplateController {
       // Update email template
       const emailTemplateUpdateDto: EmailTemplateUpdateDto = {
         ...requestBody,
-        updatedByUserId: "1", // @todo fix this with real id of the user from the token.
+        updatedByUserId: tokenUserId,
       }
       const updateEmailTemplateRes = await emailTemplateService.updateEmailTemplate(emailTemplateUpdateDto);
 

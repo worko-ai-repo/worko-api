@@ -263,7 +263,10 @@ class UserCorporateRequestController {
             // Prepare final updated corporate request data
             let updatedCorporateRequestData: UserCorporateRequestUpdateDto = {
                 ...validatedCorporateRequestApiPayload,
-                updatedByUserId: "1", // @todo Replace this with the user id received in the token
+                
+                // @todo : Fix it with token id, it appears that the this API is open, so we wont have the token to get the user id, 
+                // consider making appropriate changes to remove this.
+                updatedByUserId: "1", 
             };
 
             // Call the 'getCorporateRequestById' from UserCorporateRequestService to retrieve the request details

@@ -12,7 +12,7 @@ export interface UserReviewCreateApiDto {
   ratingForUserType: UserType; // Updated to use the enum type UserType
   rating: number; // Rating value
   reviewText?: string;
-  createdByUserId: string; // @todo fix by reading the id from the token
+  createdByUserId: string;
   updatedByUserId?: string;
   reviewContext: UserReviewEmpContext | UserReviewCandContext; // ref , cand user , emp_provi  
   referalId?: string;
@@ -31,7 +31,7 @@ export interface UserReviewCreateDto {
   ratingForUserType: UserType; // Updated to use the enum type UserType
   rating: number; // Rating value
   reviewText?: string;
-  createdByUserId: string; // @todo fix by reading the id from the token
+  createdByUserId: string;
   updatedByUserId?: string;
   reviewContext: UserReviewEmpContext | UserReviewCandContext; // ref , cand user , emp_provi  
   referalId?: string;

@@ -13,6 +13,9 @@ import "./extensions/string.extension";
 // Import libraries
 import "./libraries/logger.library";
 
+// Import middlewares
+import { getAuthorizerContext } from "./middlewares/authorizer-context.middleware";
+
 // Import the routes
 import routes from "./router";
 
@@ -85,7 +88,7 @@ class App {
    * This method registers the application routes exposed outside by the application, to allow the users/clients to access the routes/resources.
    */
   registerAppRoutes() {
-    this.app.use("/", routes);
+    this.app.use("/", getAuthorizerContext(), routes);
   }
 
   /**

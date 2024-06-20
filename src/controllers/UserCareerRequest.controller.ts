@@ -186,7 +186,10 @@ class UserCareerRequestController {
       // Prepare final updated career request data
       let updatedCareerRequestData: UserCareerRequestUpdateDto = {
         ...validatedCareerRequestApiPayload,
-        updatedByUserId: "1", // @todo : Fix it with token id
+        
+        // @todo : Fix it with token id, it appears that the this API is open, so we wont have the token to get the user id, 
+        // consider making appropriate changes to remove this.
+        updatedByUserId: "1", 
       };
 
       // Call the 'getCareerRequestById' from UserCareerRequestService to retrieve the request details

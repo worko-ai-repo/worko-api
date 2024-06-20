@@ -143,7 +143,7 @@ class EmailLibrary {
     let emailLogCreateRequest: EmailLogCreateDto = {
       templateName: templateName,
       awsMessageId: sendTemplatedEmailAwsSesResponse.MessageId,
-      createdByUserId: "1", // @todo fix this with correct user id extracting from the token
+      createdByUserId: "1", // @todo fix this with correct user id extracting from the token. It will require a bit of change, consider taking this later after the prod release.
       status: EmailLogStatusEnum.SENT, // @todo Review this and make sure the email has been sent before updating the status with "SENT"
       fromEmail: fromAddress.email,
       fromName: fromAddress?.fullName,
@@ -153,9 +153,13 @@ class EmailLibrary {
       ccEmails: ccAddresses,
       bccEmails: bccAddresses,
       emailPlaceholders: placeholders,
-      emailSubject: "emailSubject", // @todo fix by saving the correct parsed value.
-      emailTitle: "emailTitle", // @todo fix by saving the correct parsed value.
-      emailBody: "emailBody", // @todo fix by saving the correct parsed value.
+      
+      // @todo fix theses by saving the correct parsed value. 
+      // It is not possible because the parsing is taken care by AWS SES itself. 
+      // We should consider removing this entirely. Or look for some other way of sending emails and storing these infos.
+      emailSubject: "emailSubject", 
+      emailTitle: "emailTitle", 
+      emailBody: "emailBody", 
     }
     let emailLogCreateResponse = await emailLogService.createEmailLog(emailLogCreateRequest);
 

@@ -33,6 +33,7 @@ class TestController {
         reqEvent: (req as any)?.lambdaEvent ?? "No event found",
         reqEventAuthorizer: (req as any)?.lambdaEvent?.requestContext?.authorizer ?? "No authorizer found",
         reqContext: (req as any)?.lambdaContext ?? "No context found",
+        resLocals: res.locals
       });
 
       // get-authorizer-context.middleware.ts -- getAuthorizerContext
@@ -44,7 +45,9 @@ class TestController {
         reqEvent: (req as any)?.lambdaEvent ?? "No event found",
         reqEventAuthorizer: (req as any)?.lambdaEvent?.requestContext?.authorizer ?? "No authorizer found",
         reqContext: (req as any)?.lambdaContext ?? "No context found",
+        resLocals: res.locals
       });
+
     } catch (error) {
       next(error);
     }
