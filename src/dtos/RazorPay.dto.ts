@@ -55,6 +55,7 @@ export interface RazorpayTransactionResponseEncryptedDTO {
   razorpay_order_id: string; // The unique identifier of the order.
   razorpay_payment_id: string; // The unique identifier of the payment.
   razorpay_signature: string; // The signature to be used for verification.
+  status_code: number; // The status retruned by razorpay on transction response
 }
 
 /**

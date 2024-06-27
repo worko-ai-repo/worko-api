@@ -15,4 +15,5 @@ export const RazorpayOrderCreateTransactionRequestPlainDTOValidation = Joi.objec
     "any.required": "Razorpay signature is required.",
     "string.base": "Razorpay signature must be a string.",
   }),
+  status_code: Joi.number().optional(),
 });
