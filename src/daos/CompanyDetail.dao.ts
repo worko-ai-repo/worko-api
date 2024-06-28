@@ -19,6 +19,9 @@ class CompanyDetailDao implements BaseDao {
   modelName = "Company"; // Model name for Company
   partitianKey = "COMP#"; // Partition key for Company
   sortKeys = { SK_INIT: "ID#{companyId}" }; // Sort keys for Company
+
+  // @todo : As we have supporting multiple industries for companies considering the same 
+  // attaching indutsry to GSI1PK will not work we need to update teh GSI1PK value appropiately
   GSI1PK = "COMP#INDS#{industryName}";
   GSI1SK = "ID#{companyId}";
 
@@ -59,11 +62,32 @@ class CompanyDetailDao implements BaseDao {
       return query.exec();
     }
 
-    // If no company name filter is provided, check other filters
+    // search for industry name if provided.
     if (filterOptions.industryName) {
-      let industryName = filterOptions.industryName;
-      // If industry name filter is provided, search for companies by industry
-      query = query.where("industry").eq(industryName);
+      // Log the original industry name input for debugging
+      global.logger.info("searching for industry name is :" + filterOptions.industryName);
+    
+      // Split the industry name by '/', convert to lowercase, and trim each term
+      let industryTerms = filterOptions.industryName.toLowerCase().split('/').map(term => term.trim());
+    
+      // Add a parenthesized condition to the query for industry filtering
+      query = query.and().parenthesis((condition) => {
+        let subCondition = condition;
+    
+        // Iterate through each industry term
+        industryTerms.forEach((term, index) => {
+          if (index === 0) {
+            // For the first term, start the condition chain
+            subCondition = subCondition.where('industry').contains(term);
+          } else {
+            // For subsequent terms, add OR conditions
+            subCondition = subCondition.or().where('industry').contains(term);
+          }
+        });
+        
+        // Return the built subcondition
+        return subCondition;
+      });
     }
 
     // Get TeamSize filter from filterOptions
@@ -154,7 +178,10 @@ class CompanyDetailDao implements BaseDao {
       "{companyId}": id,
     });
 
+    // store the detalis with alphabetic cases 
     companyDto.name = companyDto.name.toUpperCase();
+    companyDto.industry = companyDto.industry.toLowerCase();
+    
     // Prepare the data required to create a new company
     const newCompanyDto = {
       PK: this.partitianKey,
