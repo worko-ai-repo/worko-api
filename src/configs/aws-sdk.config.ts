@@ -7,6 +7,7 @@ import APP_CONSTANTS from "./constants.config";
 // Import libraries
 import { AwsS3ClientLibrary } from "../libraries/aws-s3-client.library";
 import { AwsSesClientLibrary } from "../libraries/aws-ses-client.library";
+import { AwsSqsClientLibrary } from "../libraries/aws-sqs-client.library";
 
 /**
  * awsConfigOptions
@@ -24,7 +25,6 @@ if (process.env.APP_STAGE == APP_CONSTANTS.STAGES.LOCAL) {
         region: process.env.APP_AWS_REGION,
     }
 }
-
 
 /**
  * ****************************************************************************************************
@@ -74,14 +74,39 @@ const awsSesConfigOptions: AWS.SES.ClientConfiguration = {
 const awsSesClientLibrary: AwsSesClientLibrary = new AwsSesClientLibrary(awsSesConfigOptions);
 console.log("The 'awsSesClientLibrary' is initialised.", { filePath: __filename, });
 
+/**
+ * ****************************************************************************************************
+ * AWS SQS Client Library
+ * ****************************************************************************************************
+ */
+
+/**
+ * awsSqsConfigOptions
+ * 
+ * AWS SQS specific configurations extending the "awsConfigOptions".
+ */
+const awsSqsConfigOptions: AWS.SQS.ClientConfiguration = {
+    ...awsConfigOptions,
+}
+
+/**
+ * awsSqsClientLibrary
+ * 
+ * Application/local SQS wrapper client to interact with AWS SQS service to perform regular activities
+ */
+const awsSqsClientLibrary: AwsSqsClientLibrary = new AwsSqsClientLibrary(awsSqsConfigOptions);
+console.log("The 'awsSqsClientLibrary' is initialised.", { filePath: __filename, });
+
 // Export the required resourses
 export {
     // Configurations
     awsConfigOptions,
     awsS3ConfigOptions,
     awsSesConfigOptions,
+    awsSqsConfigOptions,
 
     // Service Clients
     awsS3ClientLibrary,
     awsSesClientLibrary,
+    awsSqsClientLibrary,
 }

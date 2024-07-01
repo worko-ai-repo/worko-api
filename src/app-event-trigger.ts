@@ -2,37 +2,27 @@
 import { Context, SQSEvent } from "aws-lambda";
 
 // Import configurations
-import APP_CONSTANTS from "./configs/constants.config";
 import DBConfig from "./db/DB.config";
 
 // Import local DTOs
 import {
   SqsMsgBaseReqDto,
   SqsMsgReferralValidationMatchingScoreReqDto,
+  SqsMsgReviewReferralAcceptanceStatusReqDto,
 } from "./dtos/SqsEvent.dto";
-import {
-  EmailTemplatePlaceholderCAND_WELCOME_MSG,
-  EmailTemplatePlaceholderEMP_WELCOME_MSG,
-} from "./dtos/EmailTemplatePlaceholder.dto";
 
 // Import local Enums
-import { ReferralStatus } from "./enums/UserReferral.enum";
-import { UserType } from "./enums/User.enum";
 import { SqsMsgEventEnum } from "./enums/SqsEvent.enum";
-
-// Import libraries
-import { EmailSourceDestinationAddress } from "./libraries/email.library";
 
 // Import local Services
 import UserReferralService from "./services/UserReferral.service";
 import UserDetailService from "./services/UserDetail.service";
-import UserService from "./services/User.service";
 
 // Import utils
 import { BaseError } from "./utils/errors.util";
 import HttpStatusCode from "./utils/http-codes.util";
 
-// Import extensions, the extensions must be imported after all natural imports 
+// Import extensions, the extensions must be imported after all natural imports
 // and before any direct imports like this which defines something and adds to the current scope.
 import "./extensions/string.extension";
 
@@ -41,24 +31,26 @@ import "./libraries/logger.library";
 
 /**
  * initDatabaseConfig
- * 
+ *
  * Initialise the database configurations
  */
 const initDatabaseConfig = () => {
+  // Create a new database configuration instance
   const dbConf = new DBConfig();
+  // Initialize the database configuration
   dbConf.init();
-}
+};
 
-// initialize DB
-initDatabaseConfig()
+// Initialize the database configuration
+initDatabaseConfig();
 
 /**
  * Sends an error response.
  *
  * @param {any} error - The custom error object.
  * @param {string} message - The error message.
- * @param {boolean} consoleResponse - Wheather to console tthe response or not.
- * @returns {Promise<object>} The success response object.
+ * @param {boolean} consoleResponse - Whether to console the response or not.
+ * @returns {Promise<object>} The error response object.
  */
 const sendErrResponse = async (
   error: any,
@@ -74,12 +66,12 @@ const sendErrResponse = async (
     }),
   };
 
-  // If asked then console the response in log
+  // If consoleResponse is true, log the response
   if (consoleResponse) {
     global.logger.info("sendErrResponse: ", {
       filePath: __filename,
       methodName: "sendErrResponse",
-      response: response
+      response: response,
     });
   }
 
@@ -91,7 +83,7 @@ const sendErrResponse = async (
  *
  * @param {number} statusCode - The HTTP status code.
  * @param {string} message - The success message.
- * @param {boolean} consoleResponse - Wheather to console tthe response or not.
+ * @param {boolean} consoleResponse - Whether to console the response or not.
  * @returns {Promise<object>} The success response object.
  */
 const sendSuccessResponse = async (
@@ -107,12 +99,12 @@ const sendSuccessResponse = async (
     }),
   };
 
-  // If asked then console the response in log
+  // If consoleResponse is true, log the response
   if (consoleResponse) {
     global.logger.info("sendSuccessResponse: ", {
       filePath: __filename,
       methodName: "sendSuccessResponse",
-      response: response
+      response: response,
     });
   }
 
@@ -135,84 +127,37 @@ const sendWelcomeEmailToUser = async (
   context: Context
 ): Promise<object> => {
   try {
-    // Retrive the userSignupDetails by useremail provided in message .
-    let userSignupDetails = await UserDetailService.get(message.userEmail);
+    // Use the sendWelcomeEmail function from UserDetailService
+    const emailSent = await UserDetailService.sendWelcomeEmail(message.userEmail);
 
-    // thorw error if not found
-    if (!userSignupDetails.count) {
-      throw new BaseError(
-        `The user details not found for the "${message.userEmail}" email address.`,
-        HttpStatusCode.NOT_FOUND_404
+    // Check if the email was sent
+    if (emailSent) {
+      // Return success response if email was sent successfully
+      return sendSuccessResponse(
+        HttpStatusCode.OK_200,
+        `The welcome email for the "${message.userEmail}" email has been sent successfully.`
       );
+    } else {
+      // Throw custom error if email sending failed
+      throw new BaseError(`Unable to send welcome email for the "${message.userEmail}" email.`);
     }
-
-    // retrive userDetails and userTypes from userSignUpdetaisl.
-    let userDetails = userSignupDetails[0];
-    let userType = userDetails.userType[0];
-
-    // If userType is Cand then send the Welcome Email to the provided user.
-    if (userType === UserType.CAND) {
-      // Prepare details required for sending the Email
-      const candName: string = userDetails.name;
-      const candEmail: string = userDetails.emailList.primary;
-
-      // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
-      const toAddress: EmailSourceDestinationAddress = {
-        email: candEmail,
-        fullName: candName,
-      };
-      const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
-        candName: candName,
-      };
-
-      // Send a welcome email to the candidate
-      await UserService.sendEmailToCandWelcomeMessage(
-        emailPlaceholders,
-        toAddress
-      );
-    }
-    // If userType is EMP then send the Welcome Email to the provided user.
-    else if (userType === UserType.EMP) {
-      // Prepare details required for sending the Email
-      const empName: string = userDetails.name;
-      const empEmail: string = userDetails.emailList.primary;
-
-      // Prepare the necessary parameters required for the sendEmailToEmpWelcomeMessage function
-      const toAddress: EmailSourceDestinationAddress = {
-        email: empEmail,
-        fullName: empName,
-      };
-      const emailPlaceholders: EmailTemplatePlaceholderEMP_WELCOME_MSG = {
-        empName: empName,
-      };
-
-      // Send a welcome email to the employer
-      await UserService.sendEmailToEmpWelcomeMessage(
-        emailPlaceholders,
-        toAddress
-      );
-    }
-
-    // Retrun the response
-    return sendSuccessResponse(
-      HttpStatusCode.OK_200,
-      "The Welcome email has been sent successfully."
-    );
   } catch (error: any) {
-    // Handle error
-    return sendErrResponse(error, "Failed to send the welcome email.");
+    // Return error response if email sending failed
+    return sendErrResponse(
+      error,
+      error?.errorMsg ?? error?.message
+    );
   }
 };
 
 /**
- * validateReferralMatchingScore
+ * Validates the referral matching score and updates the referral status if necessary.
+ * If the score is above the minimum threshold, it creates a delayed message to check the status after 5 days.
  *
- * This function validates the referral matching score and updates the referral status if the score is below the minimum threshold.
- *
- * @param {SqsMsgReferralValidationMatchingScoreReqDto} message - The SQS message payload containing the referral ID and user email.
- * @param {SQSEvent} event - The SQS event object.
- * @param {Context} context - The AWS Lambda context object.
- * @returns {Promise<object>} The response object.
+ * @param {SqsMsgReferralValidationMatchingScoreReqDto} message - The SQS message payload containing the referral ID and user details
+ * @param {SQSEvent} event - The SQS event object
+ * @param {Context} context - The AWS Lambda context object
+ * @returns {Promise<object>} The response object
  */
 const validateReferralMatchingScore = async (
   message: SqsMsgReferralValidationMatchingScoreReqDto,
@@ -220,88 +165,147 @@ const validateReferralMatchingScore = async (
   context: Context
 ): Promise<object> => {
   try {
-    // retrive the referralid and userEmail from message.
+    // Retrieve the necessary information from the message
     const { referralId } = message.context;
-    const { userEmail } = message;
+    const { userEmail, userId } = message;
 
-    // Retrive the user referraldetails from its referralId
-    const userReferralDetails = await UserReferralService.getReferralById(
-      referralId
+    // Validate the referral matching score
+    const isReferralMatchingScoreValid = await UserReferralService.validateReferralMatchingScore(
+      referralId,
+      userEmail,
+      userId
     );
 
-    // throw error if not found
-    if (!userReferralDetails.count) {
-      throw new BaseError(
-        `The referral details not found for the "${referralId}" referral id.`,
-        HttpStatusCode.NOT_FOUND_404
+    // Return success response if validation was successful
+    if (isReferralMatchingScoreValid) {
+      return sendSuccessResponse(
+        HttpStatusCode.OK_200,
+        "Referral matching score validated successfully."
       );
+    } else {
+      // Throw custom error if validation failed
+      throw new BaseError(`Unable to validate referral matching score for referral ID "${referralId}".`);
     }
-
-    // extract the matchingScore from userReferralDetails
-    const userReferralMatchingScore = userReferralDetails[0].matchingScore;
-
-    // Validate matchingScore by constant
-    if (
-      userReferralMatchingScore < APP_CONSTANTS.REFERRAL_MINIMUM_MATCHING_SCORE
-    ) {
-      await UserReferralService.updateStatus(
-        referralId,
-        userEmail,
-        ReferralStatus.CANCELLED
-      );
-    }
-
-    // return the sucessfull response
-    return sendSuccessResponse(
-      HttpStatusCode.OK_200,
-      "Referral matching score validated successfully."
-    );
   } catch (error: any) {
-    // Handle error
+    // Return error response if validation failed
     return sendErrResponse(
       error,
-      "An error occurred while validating the referral matching score."
+      error?.errorMsg ?? error?.message
     );
   }
 };
 
 /**
- * Handles incoming SQS events by parsing the message body and dispatching the appropriate function based on the event type.
+ * Reviews the referral acceptance status after 5 days and rejects it if still in "awaiting" status.
  *
- * @param {SQSEvent} event - The SQS event object containing the message(s) to be processed.
- * @param {Context} context - The AWS Lambda context object.
- * @returns {Promise<object>} The response object.
- * @throws {Error} - Throws an error if no event matches the message event type.
+ * @param {SqsMsgReviewReferralAcceptanceStatusReqDto} message - The SQS message payload containing the referral ID and user email
+ * @param {SQSEvent} event - The SQS event object
+ * @param {Context} context - The AWS Lambda context object
+ * @returns {Promise<object>} The response object
  */
-export const handler = async (event: SQSEvent, context: Context): Promise<object> => {
+const reviewReferralAcceptanceStatus = async (
+  message: SqsMsgReviewReferralAcceptanceStatusReqDto,
+  event: SQSEvent,
+  context: Context
+): Promise<object> => {
   try {
-    console.log("App event trigger: Received event from SQS: ", event);
+    // Retrieve the necessary information from the message
+    const { referralId } = message.context;
+    const { userEmail } = message;
 
-    // Retrieve the message body from the SQS event
+    // Review the referral acceptance status
+    const isReferralAcceptanceStatusValid = await UserReferralService.reviewReferralAcceptanceStatus(
+      referralId,
+      userEmail
+    );
+
+    // Return success response if review was successful
+    if (isReferralAcceptanceStatusValid) {
+      return sendSuccessResponse(
+        HttpStatusCode.OK_200,
+        "Referral acceptance status reviewed successfully."
+      );
+    } else {
+      // Throw custom error if review failed
+      throw new BaseError(`Unable to review referral acceptance status for referral ID "${referralId}".`);
+    }
+  } catch (error: any) {
+    // Return error response if review failed
+    return sendErrResponse(
+      error,
+      error?.errorMsg ?? error?.message
+    );
+  }
+};
+
+/**
+ * Main handler function for processing SQS events.
+ * It determines the type of event and calls the appropriate function to handle it.
+ *
+ * @param {SQSEvent} event - The SQS event object
+ * @param {Context} context - The AWS Lambda context object
+ * @returns {Promise<object>} The response object
+ */
+export const handler = async (
+  event: SQSEvent,
+  context: Context
+): Promise<object> => {
+  try {
+    // Log received SQS event
+    global.logger.info("App event trigger: Received event from SQS: ", {
+      filePath: __filename,
+      methodName: "handler",
+      event: event,
+    });
+
+    // Extract message body from event
     let messageBody = event.Records[0].body;
-    console.log("App event trigger: messageBody: " + messageBody);
+    global.logger.info("App event trigger: messageBody: " + messageBody, {
+      filePath: __filename,
+      methodName: "handler",
+    });
 
-    // Convert the message body to a string if it's not already a string
-    if (typeof messageBody !== 'string') {
+    // Convert message body to string if not already a string
+    if (typeof messageBody !== "string") {
       messageBody = JSON.stringify(messageBody);
-      console.log("App event trigger: messageBody (converted to string): " + messageBody);
+      global.logger.info(
+        "App event trigger: messageBody (converted to string): " + messageBody,
+        {
+          filePath: __filename,
+          methodName: "handler",
+        }
+      );
     }
 
-    // Parse the message body as JSON
+    // Parse message body
     const parsedMessageBody = JSON.parse(messageBody);
-    console.log("App event trigger: parsedMessageBody: ", parsedMessageBody);
-    console.log("App event trigger: typeof parsedMessageBody: ", typeof parsedMessageBody);
+    global.logger.info("App event trigger: parsedMessageBody: ", {
+      filePath: __filename,
+      methodName: "handler",
+      parsedMessageBody: parsedMessageBody,
+    });
 
-    // Parse the entire message as JSON
+    // Extract message and event type
     const parsedMessage: SqsMsgBaseReqDto = parsedMessageBody;
     const messageEvent = parsedMessage.event;
-    console.log("App event trigger: parsedMessage: ", parsedMessage);
-    console.log("App event trigger: messageEvent: ", messageEvent);
+    global.logger.info("App event trigger: parsedMessage and messageEvent: ", {
+      filePath: __filename,
+      methodName: "handler",
+      parsedMessage: parsedMessage,
+      messageEvent: messageEvent,
+    });
 
-    // Check the message event type and dispatch the appropriate function based on the event type.
+    // Handle different event types
     if (messageEvent === SqsMsgEventEnum.REFERRAL_VALIDATE_MATCHING_SCORE) {
       return validateReferralMatchingScore(
         parsedMessage as SqsMsgReferralValidationMatchingScoreReqDto,
+        event,
+        context
+      );
+    } else if (
+      messageEvent === SqsMsgEventEnum.REFERRAL_REVIEW_ACCEPTANCE_STATUS) {
+      return reviewReferralAcceptanceStatus(
+        parsedMessage as SqsMsgReviewReferralAcceptanceStatusReqDto,
         event,
         context
       );
@@ -309,9 +313,12 @@ export const handler = async (event: SQSEvent, context: Context): Promise<object
       return sendWelcomeEmailToUser(parsedMessage, event, context);
     }
 
-    // Throw an error if no event matches the message event type.
-    throw new Error(`The provided event ${messageEvent} is invalid, therefore it cannot be processed.`);
+    // Throw error if event type is invalid
+    throw new Error(
+      `The provided event ${messageEvent} is invalid, therefore it cannot be processed.`
+    );
   } catch (error: any) {
+    // Return error response if an unexpected error occurred
     return sendErrResponse(error, "An unexpected error occurred.");
   }
-}
+};

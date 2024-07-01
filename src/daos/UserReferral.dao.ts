@@ -32,25 +32,6 @@ class UserReferralDao implements BaseDao {
   GSI1SK = "ID#{refId}";
 
   /**
-   * @rename this to "getUserReferrals"
-   * 
-   * Fetches user Referral based on the provided email.
-   * @param email - Email address of the user
-   * @returns User details corresponding to the email
-   */
-  async get(email: string) {
-    global.logger.info("Get user Referral by email [DAO]");
-    const PK = this.partitianKey.strtr({
-      "{primaryEmail}": email,
-    });
-    return UserReferralModel.query("PK")
-      .eq(PK)
-      .where("SK")
-      .beginsWith("REF#ID#")
-      .exec();
-  }
-
-  /**
    * getReferralsForCand
    * 
    * Fetches user Referral based on the provided email and status.
@@ -228,17 +209,19 @@ class UserReferralDao implements BaseDao {
   }
 
   /**
-   * Fetches Referral based on GSI1PK, companySK.
-   * @param companyId - Company sort key
+   * Fetches Referral based on userEmail, referralId.
+   * @param userEmail -
+   * @param referralId -
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getEmpReferralsByCompanyId(companyId: string) {
-    global.logger.info("Get Referral EmpReferralsByCompanyId [DAO]");
-    return UserReferralModel.query("GSI1PK")
-      .eq(this.GSI1PK)
-      .where("companyId")
-      .eq(companyId)
-      .exec();
+  async getUserReferralByReferralId(
+    userEmail: string,
+    referralId: string
+  ): Promise<DbUserReferralDto> {
+    global.logger.info("Get Referral [DAO]");
+    const PK = this.partitianKey.strtr({ "{primaryEmail}": userEmail });
+    const SK = this.sortKeys.SK_REFERRAL.strtr({ "{reqId}": referralId });
+    return UserReferralModel.get({ PK: PK, SK: SK });
   }
 
   /**

@@ -39,10 +39,21 @@ import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ReferralActions } from "../enums/User.enum";
 import { UserSubscriptionStatus } from "../enums/UserSubscription.enum";
+import { SqsMsgEventEnum } from '../enums/SqsEvent.enum';
+
+// Import constants
+import APP_CONSTANTS from '../configs/constants.config';
+import { awsSqsClientLibrary } from '../configs/aws-sdk.config';
+
+// Import dtos
+import { SqsMsgReviewReferralAcceptanceStatusReqDto } from '../dtos/SqsEvent.dto';
 
 // Import services
 import CompanyService from "./Company.service";
 import UserSubscriptionService from "./UserSubscription.service";
+
+// Import utlis
+import { BaseError } from '../utils/errors.util';
 
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
@@ -132,25 +143,26 @@ class UserReferralService {
     let userSubscriptionStatus = userSubscriptionStatusList[0];
 
     // Update the referral counts based on the new referral status
-    // @todo : When Subscription is Used or expired and user buys a new active subscription 
-    //  the user/expired referral count if credited then it must go to the new  Subscription as discussed 
+    // @todo : When Subscription is Used or expired and user buys a new active subscription
+    //  the user/expired referral count if credited then it must go to the new  Subscription as discussed
     switch (newReferralStatus) {
-      case ReferralStatus.AWAITING :
+      case ReferralStatus.AWAITING:
         currentSubscription.requestedReferrals += 1;
         currentSubscription.availableReferrals -= 1;
         userSubscriptionStatus.referralCount -= 1;
         break;
       case ReferralStatus.ACCEPTED:
-      case ReferralActions.ACCEPT:  
+      case ReferralActions.ACCEPT:
         currentSubscription.requestedReferrals -= 1;
         currentSubscription.acceptedReferrals += 1;
         break;
       case ReferralStatus.DONE:
-      case ReferralActions.DONE:  
+      case ReferralActions.DONE:
         currentSubscription.acceptedReferrals -= 1;
         currentSubscription.completedReferrals += 1;
         break;
       case ReferralStatus.CANCELLED:
+      case ReferralStatus.REJECTED:
       case ReferralStatus.WITHDRAWN:
         if (currentSubscription.requestedReferrals > 0) {
           currentSubscription.requestedReferrals -= 1;
@@ -196,7 +208,6 @@ class UserReferralService {
 
     return updatedSubscription;
   }
-  
 
   /**
    * Updates an existing user Referral.
@@ -218,14 +229,14 @@ class UserReferralService {
     const candDetails = await UserDetailService.get(candEmail);
     const candName = candDetails.length > 0 ? candDetails[0].name ?? "" : "";
     logger.debug(`Candidate Name: ${candName}`);
-    
+
     // Get the name of the company for which the referral request got accepted
     const companyId = userReferralDTO.companyId;
     const companyDetails = await CompanyService.getCompanyDetailsByIds([
       companyId,
     ]);
 
-    if(!companyDetails || companyDetails.length === 0) {
+    if (!companyDetails || companyDetails.length === 0) {
       throw new Error("Company not found");
     }
     const companyName = companyDetails[0].name;
@@ -233,7 +244,6 @@ class UserReferralService {
     let result = await userReferralDao.update(PK, SK, userReferralDTO);
 
     if (result) {
-      
       if (
         status === ReferralActions.ACCEPT ||
         status === ReferralActions.DONE
@@ -352,31 +362,21 @@ class UserReferralService {
   }
 
   /**
-   * Retrieves user Referral by email.
-   *
-   * @param email - Email of the user
-   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
-   */
-  async get(email: string) {
-    // Logging the action of getting user Referral by email in the service layer
-    logger.info("Fetching user Referral by email [UserReferralService]");
-    return userReferralDao.get(email);
-  }
-
-  /**
    *
    * Fetches Referral based on  companySK
    *
-   * @param companyId - Company sort key
-   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   * @param userEmail - Company sort key
+   * @param referralId - Company sort key
+   * @returns {Promise<DbUserReferralDto>} - A Promise that resolves to the Referral of the user
    *
    */
-  async getEmpReferralsByCompanyId(
-    companyId: string
-  ): Promise<QueryResponse<DbUserReferralDto>> {
+  async getUserReferralByReferralId(
+    userEmail: string,
+    referralId: string
+  ): Promise<DbUserReferralDto> {
     // Logging the action of getting user Referral by companyId in the service layer
     logger.info("Fetching Referrals by companyId  [UserReferralService]");
-    return userReferralDao.getEmpReferralsByCompanyId(companyId);
+    return userReferralDao.getUserReferralByReferralId(userEmail, referralId);
   }
 
   /**
@@ -433,7 +433,10 @@ class UserReferralService {
    * @param status - referral status
    * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
    */
-  async getReferralsForCand(email: string, status?: string):Promise<QueryResponse<DbUserReferralDto>> {
+  async getReferralsForCand(
+    email: string,
+    status?: string
+  ): Promise<QueryResponse<DbUserReferralDto>> {
     // Logging the action of getting user Referral by status in the service layer
     logger.info("Fetching user Referral by status [UserReferralService]");
     return userReferralDao.getReferralsForCand(email, status);
@@ -445,7 +448,9 @@ class UserReferralService {
    * @param {string} referralId - The ID of the referral
    * @return {Promise<QueryResponse<DbUserReferralDto>>} - A Promise that resolves to the user referral
    */
-  async getReferralById(referralId :string):Promise<QueryResponse<DbUserReferralDto>>{
+  async getReferralById(
+    referralId: string
+  ): Promise<QueryResponse<DbUserReferralDto>> {
     return userReferralDao.getByGSI1(referralId);
   }
   /**
@@ -463,7 +468,7 @@ class UserReferralService {
   ): Promise<DbUserReferralDto> {
     // Logging the action of updating user Referral status in the service layer
     global.logger.info("Updating user Referral status [UserReferralService]");
-    
+
     // if the new status is DONE, update the user response
     if (newStatus === ReferralStatus.DONE) {
       // Get the referral details
@@ -477,7 +482,9 @@ class UserReferralService {
       if (empDetail.count) {
         //Retrive the emp Email and Referral Responses
         let empEmail = empDetail[0].emailList.primary;
-        const userReferralResponse = await UserReferralResponseService.get(empEmail);
+        const userReferralResponse = await UserReferralResponseService.get(
+          empEmail
+        );
 
         // If the userReferralResponse is found, update the user response
         if (userReferralResponse.count) {
@@ -489,7 +496,7 @@ class UserReferralService {
           userReferralResponse[0].doneRefIds =
             userReferralResponse[0].doneRefIds.concat(referralId);
 
-          // Update the UserReferralResponse 
+          // Update the UserReferralResponse
           await UserReferralResponseService.update(empEmail, {
             passedRefIds: userReferralResponse[0].passedRefIds,
             rejectedRefIds: userReferralResponse[0].rejectedRefIds,
@@ -501,10 +508,13 @@ class UserReferralService {
           let userReferralNewResponse = {
             passedRefIds: [],
             rejectedRefIds: [],
-            acceptedRefIds: [], 
-            doneRefIds: [referralId]
-          };  
-          await UserReferralResponseService.update(empEmail, userReferralNewResponse);
+            acceptedRefIds: [],
+            doneRefIds: [referralId],
+          };
+          await UserReferralResponseService.update(
+            empEmail,
+            userReferralNewResponse
+          );
         }
       }
     }
@@ -576,7 +586,11 @@ class UserReferralService {
     return updatedReferralStatus;
   }
 
-  async sendEmailOnReferralAccepted(candEmail: string, refereeName: string, companyName: string) {
+  async sendEmailOnReferralAccepted(
+    candEmail: string,
+    refereeName: string,
+    companyName: string
+  ) {
     // Get the Candidate Details from his candEmail
     const userDetails = await UserService.getUserByEmail(candEmail);
     const candName: string = userDetails[0].name;
@@ -586,11 +600,12 @@ class UserReferralService {
       email: candEmail,
       fullName: candName,
     };
-    const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED = { 
-      candName: candName, 
-      companyName: companyName, 
-      refereeName: refereeName 
-    };
+    const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED =
+      {
+        candName: candName,
+        companyName: companyName,
+        refereeName: refereeName,
+      };
 
     // Function responsible for sending the email to the candidate saying that his referral request has been accepted
     const sendEmailResponse =
@@ -637,15 +652,15 @@ class UserReferralService {
     return emailLibrary.sendEmail(
       EmailTemplateEnum.CAND_REFERRAL_REQ_ACCEPTED,
       toAddress,
-      emailPlaceholders,
+      emailPlaceholders
     );
   }
 
-  /** 
+  /**
    * sendEmailToCandWhenReferralRequestCompleted
-   * 
+   *
    * Sends a candidate referral request completed email.
-   * 
+   *
    * @param {EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED} emailPlaceholders - Placeholders for the email template.
    * @param {EmailSourceDestinationAddress} toAddress - Object containing the name and email address of the recipient.
    * @returns { Promise<{ awsMessageId: string | null }> }
@@ -656,15 +671,15 @@ class UserReferralService {
   ): Promise<{ awsMessageId: string | null }> {
     // Send email using the email library with the specified template, recipient, and placeholders
     return emailLibrary.sendEmail(
-        EmailTemplateEnum.CAND_REFERRAL_REQ_COMPLETED,
-        toAddress,
-        emailPlaceholders,
+      EmailTemplateEnum.CAND_REFERRAL_REQ_COMPLETED,
+      toAddress,
+      emailPlaceholders
     );
   }
 
   /**
    * sendEmailToEmpWhenReferralRequestAccepted - Function to send an email notification to employer when a referral request is accepted by him
-   * 
+   *
    * @param {EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION} emailPlaceholders - Placeholders for email content
    * @param {EmailSourceDestinationAddress} toAddress - Email address and full name of the recipient
    * @returns {Promise<{ awsMessageId: string | null }>} - Promise resolving to AWS message ID or null
@@ -675,15 +690,15 @@ class UserReferralService {
   ): Promise<{ awsMessageId: string | null }> {
     // Send email using the email library with the specified template, recipient, and placeholders
     return emailLibrary.sendEmail(
-        EmailTemplateEnum.EMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION,
-        toAddress,
-        emailPlaceholders,
+      EmailTemplateEnum.EMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION,
+      toAddress,
+      emailPlaceholders
     );
   }
 
   /**
    * sendEmailToEmpWhenReferralRequestCompleted - Function to send an email notification to employer when a referral request is completed by him
-   * 
+   *
    * @param {EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND} emailPlaceholders - Placeholders for email content
    * @param {EmailSourceDestinationAddress} toAddress - Email address and full name of the recipient
    * @returns {Promise<{ awsMessageId: string | null }>} - Promise resolving to AWS message ID or null
@@ -694,29 +709,31 @@ class UserReferralService {
   ): Promise<{ awsMessageId: string | null }> {
     // Send email using the email library with the specified template, recipient, and placeholders
     return emailLibrary.sendEmail(
-        EmailTemplateEnum.EMP_REFFERAL_DONE_FOR_CAND,
-        toAddress,
-        emailPlaceholders,
+      EmailTemplateEnum.EMP_REFFERAL_DONE_FOR_CAND,
+      toAddress,
+      emailPlaceholders
     );
   }
 
   /**
    * getReferralsByIdsUsingGsis
-   * 
+   *
    * Fetches referrals based on array of referral IDs.
    *
    * @param {string[]} referralIds - Array of referral IDs
    * @return { Promise<QueryResponse<DbUserReferralDto>[]> } - A Promise that resolves to the Referrals
    */
-  async getReferralsByIdsUsingGsis(referralIds: string[]): Promise<(DbUserReferralDto | null)[]> {
+  async getReferralsByIdsUsingGsis(
+    referralIds: string[]
+  ): Promise<(DbUserReferralDto | null)[]> {
     return userReferralDao.getReferralsByIdsUsingGsis(referralIds);
   }
 
   /**
    * getEmployeeReferrals
-   * 
+   *
    * Retrieves employee referrals based on their primary email, company ID, and referral status.
-   * 
+   *
    * @param {string} empPrimaryEmail - Employee's primary email
    * @param {string} companyId - Company ID
    * @param {string} referralStatus - Referral status
@@ -725,8 +742,8 @@ class UserReferralService {
     empPrimaryEmail: string,
     companyId: string,
     referralStatus: string
-  ): Promise<DbUserReferralDto[]>{
-    // If referralStatus is AWAITING then fetch the details 
+  ): Promise<DbUserReferralDto[]> {
+    // If referralStatus is AWAITING then fetch the details
     if (referralStatus === ReferralStatus.AWAITING) {
       // If status is awaiting, call the function to get awaiting referrals
       return this.getEmployeeAwaitingReferrals(
@@ -742,9 +759,9 @@ class UserReferralService {
 
   /**
    * getEmployeeAwaitingReferrals
-   * 
+   *
    * Retrieves employee awaiting referrals based on their primary email and company ID.
-   * 
+   *
    * @param {string} empPrimaryEmail - Employee's primary email
    * @param {string} companyId - Company ID
    * @param {string} referralStatus - Referral status
@@ -760,18 +777,25 @@ class UserReferralService {
       const userReferralResponse = await UserReferralResponseService.get(
         empPrimaryEmail
       );
-      const empPassedRefIds = Array.from(new Set(userReferralResponse[0]?.passedRefIds || []));
-      const empRejectedRefIds = Array.from(new Set(userReferralResponse[0]?.rejectedRefIds || []));
-      const referralIdsToBeExcluded = [...empPassedRefIds, ...empRejectedRefIds];
-  
+      const empPassedRefIds = Array.from(
+        new Set(userReferralResponse[0]?.passedRefIds || [])
+      );
+      const empRejectedRefIds = Array.from(
+        new Set(userReferralResponse[0]?.rejectedRefIds || [])
+      );
+      const referralIdsToBeExcluded = [
+        ...empPassedRefIds,
+        ...empRejectedRefIds,
+      ];
+
       // Get company referrals where status is awaiting
       const companyReferrals = await this.getByGSI1PKAndStatus(
         companyId,
         referralStatus
       );
 
-      // NOTE : This block filters the referrals on which the emp has not taken any action 
-      // @todo : Investigated and see if this can be handle by dynamouse itself 
+      // NOTE : This block filters the referrals on which the emp has not taken any action
+      // @todo : Investigated and see if this can be handle by dynamouse itself
       const awaitingCompanyReferrals = [];
       for (const referral of companyReferrals) {
         if (!referralIdsToBeExcluded.includes(referral.id)) {
@@ -792,9 +816,9 @@ class UserReferralService {
 
   /**
    * getEmployeeReferralsByStatus
-   * 
+   *
    * Retrieves employee referrals based on their primary email and referral status.
-   * 
+   *
    * @param {string} empPrimaryEmail - Employee's primary email
    * @param {string} referralStatus - Referral status
    * @returns { Promise<QueryResponse<DbUserReferralDto>[]> } - A Promise that resolves to the employee referrals
@@ -802,7 +826,7 @@ class UserReferralService {
   async getEmployeeReferralsByStatus(
     empPrimaryEmail: string,
     referralStatus: string
-  ):Promise<DbUserReferralDto[]>{
+  ): Promise<DbUserReferralDto[]> {
     // Get company referrals where status is referralStatus
     let attributes: string[] = [];
 
@@ -818,10 +842,11 @@ class UserReferralService {
     }
 
     // Get the refIds on which emp has performed the given action
-    const userReferralResponse = await UserReferralResponseService.getByEmailWithSpecifiedAttributes(
-      empPrimaryEmail,
-      attributes
-    );
+    const userReferralResponse =
+      await UserReferralResponseService.getByEmailWithSpecifiedAttributes(
+        empPrimaryEmail,
+        attributes
+      );
 
     if (!userReferralResponse.length) {
       global.logger.info("No referrals found for the given email");
@@ -835,10 +860,176 @@ class UserReferralService {
     if (!refIds.length) {
       return [];
     }
-   let result = await this.getReferralsByIdsUsingGsis(refIds);
-   return result.filter(referral => referral !== null) as DbUserReferralDto[];
+    let result = await this.getReferralsByIdsUsingGsis(refIds);
+    return result.filter(
+      (referral) => referral !== null
+    ) as DbUserReferralDto[];
+  }
+
+  /**
+   * Validates the referral matching score and updates the referral status if necessary.
+   * If the score is above the minimum threshold, it creates a delayed message to check the status after 5 days.
+   *
+   * @param {string} referralId - The ID of the referral
+   * @param {string} userEmail - The email of the user
+   * @param {string} userId - The ID of the user
+   * @returns {Promise<boolean>} True if validation was successful, false otherwise
+   */
+  async validateReferralMatchingScore(
+    referralId: string,
+    userEmail: string,
+    userId: string
+  ): Promise<boolean> {
+    // Log the attempt to validate referral matching score
+    logger.info(
+      `Attempting to validate referral matching score for referral ID: ${referralId}, user email: ${userEmail} [UserReferralService]`
+    );
+
+    // Fetch user referral details using referral ID and user email
+    let userReferralDetails = await this.getUserReferralByReferralId(
+      userEmail,
+      referralId
+    );
+
+    // If referral details are not found, throw an error
+    if (!userReferralDetails) {
+      throw new BaseError(
+        `The referral details not found for the provided referral ID "${referralId}" and email "${userEmail}".`
+      );
+    }
+
+    // Retrieve the matching score from user referral details
+    const { matchingScore } = userReferralDetails;
+
+    // Update referral status to CANCELLED if matching score is below minimum threshold
+    if (matchingScore < APP_CONSTANTS.REFERRAL_MINIMUM_MATCHING_SCORE) {
+      await this.updateStatus(referralId, userEmail, ReferralStatus.CANCELLED);
+      logger.info(`Referral ${referralId} cancelled due to low matching score`);
+    } else {
+      // Create a delayed message to check referral status after 5 days
+      const delayedCheckCreated = await this.createDelayedReferralStatusCheck(
+        referralId,
+        userEmail,
+        userId
+      );
+
+      // If delayed check creation failed, throw an error
+      if (!delayedCheckCreated) {
+        throw new BaseError(
+          `Failed to create delayed status check for referral ID "${referralId}".`
+        );
+      }
+      logger.info(`Created delayed status check for referral ${referralId}`);
+    }
+
+    return true;
+  }
+
+  /**
+   * Creates a delayed message to check the referral acceptance status after a specified number of days.
+   *
+   * @param {string} referralId - The ID of the referral
+   * @param {string} userEmail - The email of the user
+   * @param {string} userId - The ID of the user
+   * @returns {Promise<boolean>} A promise that resolves to true if the message was sent successfully, false otherwise
+   */
+  async createDelayedReferralStatusCheck(
+    referralId: string,
+    userEmail: string,
+    userId: string
+  ): Promise<boolean> {
+    // Log the attempt to create a delayed referral status check
+    logger.info(
+      `Attempting to create delayed referral status check for referral ID: ${referralId}, user email: ${userEmail} [UserReferralService]`
+    );
+
+    // Calculate delay of 5 days in seconds
+    const delaySeconds =
+      APP_CONSTANTS.REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_DAYS *
+      24 *
+      60 *
+      60;
+
+    // Create message payload for SQS
+    const message: SqsMsgReviewReferralAcceptanceStatusReqDto = {
+      event: SqsMsgEventEnum.REFERRAL_REVIEW_ACCEPTANCE_STATUS,
+      userEmail: userEmail,
+      userId: userId,
+      context: {
+        referralId: referralId,
+      },
+    };
+
+    // Get the URL of the SQS queue
+    const queueUrl = await awsSqsClientLibrary.getQueueUrl(
+      process.env.APP_AWS_SQS_QUEUE_NAME!
+    );
+    if (!queueUrl) {
+      throw new BaseError(
+        `Unable to get SQS queue URL for queue name "${process.env.APP_AWS_SQS_QUEUE_NAME}".`
+      );
+    }
+
+    // Send message to SQS with delay
+    await awsSqsClientLibrary.sendMessage(
+      queueUrl,
+      JSON.stringify(message),
+      delaySeconds
+    );
+
+    // Log the successful sending of the delayed message
+    logger.info(`Delayed message sent for referral ${referralId}`, {
+      filePath: __filename,
+      methodName: "createDelayedReferralStatusCheck",
+    });
+
+    return true;
+  }
+
+  /**
+   * Reviews the referral acceptance status after 5 days and rejects it if still in "awaiting" status.
+   *
+   * @param {string} referralId - The ID of the referral
+   * @param {string} userEmail - The email of the user
+   * @returns {Promise<boolean>} True if review was successful, false otherwise
+   */
+  async reviewReferralAcceptanceStatus(
+    referralId: string,
+    userEmail: string
+  ): Promise<boolean> {
+    // Log the attempt to review referral acceptance status
+    logger.info(
+      `Attempting to review referral acceptance status for referral ID: ${referralId}, user email: ${userEmail} [UserReferralService]`
+    );
+
+    // Fetch user referral details using referral ID and user email
+    let userReferralDetails = await this.getUserReferralByReferralId(
+      userEmail,
+      referralId
+    );
+
+    // If referral details are not found, throw an error
+    if (!userReferralDetails) {
+      throw new BaseError(
+        `The referral details not found for the provided referral ID "${referralId}" and email "${userEmail}".`
+      );
+    }
+
+    // Update referral status to REJECTED if status is still AWAITING
+    if (userReferralDetails.status === ReferralStatus.AWAITING) {
+      await this.updateStatus(referralId, userEmail, ReferralStatus.REJECTED);
+      logger.info(
+        `Referral ${referralId} rejected after 5 days in awaiting status.`
+      );
+    } else {
+      // Log that rejection is not required because status is not AWAITING
+      logger.info(
+        `The status for referral ${referralId} is "${userReferralDetails.status}", therefore rejection is not required`
+      );
+    }
+
+    return true;
   }
 }
-
 // Export an instance of the UserService class
 export default new UserReferralService();
