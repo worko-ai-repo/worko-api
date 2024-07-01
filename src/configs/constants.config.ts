@@ -114,6 +114,14 @@ const APP_CONSTANTS = {
    * Required constants for Referral score as matching score
    */
   REFERRAL_MINIMUM_MATCHING_SCORE: 70,
+
+ /**
+ * REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_DAYS
+ * 
+ * This is for the number of days after which the referral will be considered as rejected
+ * as per AWAITING status.
+ */
+  REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_DAYS : 5,
 };
 
 export default APP_CONSTANTS;

@@ -28,3 +28,19 @@ export interface SqsMsgBaseReqDto {
         referralId: string;
     };
  }
+
+ /**
+ * Interface for SQS message request DTO related to reviewing referral acceptance status.
+ * 
+ * Extends the `SqsMsgBaseReqDto` interface.
+ * 
+ * @interface SqsMsgReviewReferralAcceptanceStatusReqDto
+ * @extends SqsMsgBaseReqDto
+ * @property {Object} context - Additional context information.
+ * @property {string} context.referralId - The unique identifier of the referral.
+ */
+export interface SqsMsgReviewReferralAcceptanceStatusReqDto extends SqsMsgBaseReqDto {
+    context: {
+        referralId: string;
+    };
+}
