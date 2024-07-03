@@ -115,13 +115,17 @@ const APP_CONSTANTS = {
    */
   REFERRAL_MINIMUM_MATCHING_SCORE: 70,
 
- /**
- * REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_DAYS
- * 
- * This is for the number of days after which the referral will be considered as rejected
- * as per AWAITING status.
- */
-  REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_DAYS : 5,
+  /**
+   * REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_DAYS
+   * 
+   * This is for the number of days after which the referral will be considered as rejected
+   * as per AWAITING status.
+   */
+  get REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_DAYS(): number {
+    return process.env.APP_SLS_STAGE === this.STAGES.PROD
+    ? 5 // 5 days for production
+    : 2 / 24; // 2 hours converted to days for dev
+  },
 };
 
 export default APP_CONSTANTS;

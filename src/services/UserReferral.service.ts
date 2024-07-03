@@ -943,7 +943,7 @@ class UserReferralService {
       `Attempting to create delayed referral status check for referral ID: ${referralId}, user email: ${userEmail} [UserReferralService]`
     );
 
-    // Calculate delay of 5 days in seconds
+    // Calculate delay in seconds
     const delaySeconds =
       APP_CONSTANTS.REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_DAYS *
       24 *

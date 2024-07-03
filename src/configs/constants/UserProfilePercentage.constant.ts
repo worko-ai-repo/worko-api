@@ -158,7 +158,7 @@ export const UserProfilePercentage = {
         {
           field: "isEmailVerified",
           fieldText: "Official Mail - Verify",
-          expPerc: 8,
+          expPerc: 12,
         },
         {
           field: "designation",
@@ -166,17 +166,12 @@ export const UserProfilePercentage = {
           expPerc: 6,
         },
         {
-          field: "designationTag",
-          fieldText: "Designation Tag",
-          expPerc: 4,
-        },
-        {
           field: "department",
           fieldText: "Department",
           expPerc: 8,
         },
         {
-          field: "startedYear",
+          field: "experienceInMonths",
           fieldText: "Working since",
           expPerc: 6,
         },
