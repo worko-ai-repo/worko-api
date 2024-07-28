@@ -98,12 +98,11 @@ class UserService {
    */
   async addUser(userSignUpDTO: NewUserCandSignUpDTO | NewUserEmpSignUpDTO, userType: string):Promise<DbUserDetailDto> {
     global.logger.info("Create candidate/employee [service]");
-
+   
+    // Create a new user in db
     const addedNewUser = await userDetailDao.add(userSignUpDTO)
     
-    if (userType === UserType.CAND) {
-
-      // Adding the FREE subscription plan for Candidate
+      // Adding the FREE subscription plan for the User(Cand/Emp)
       let planName = UserSubscriptionType.FREE;
       const subPlan = await MasterSubscriptionService.getByPlan(planName);
       if (subPlan) {
@@ -128,6 +127,10 @@ class UserService {
           }
         );
       }
+
+    // send welcome email based on the userType .  
+    // @todo Need to review this as this is moved to SQS and should be removed from here as there is no use of the below welcome email code 
+    if (userType === UserType.CAND) {
       // Prepare details required for sending the Email
       const candName : string = userSignUpDTO.name;
       const candEmail : string = userSignUpDTO.email;

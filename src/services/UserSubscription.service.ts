@@ -6,7 +6,7 @@ import userSubscriptionDao from "../daos/UserSubscription.dao";
 import MasterSubscriptionService from "./MasterSubscription.service";
 
 // Load the local dtos
-import {SubscriptionCreateRequestDTO, SubscriptionCreateDTO, SubscriptionUpdateDTO} from "../dtos/Subscription.dto";
+import { SubscriptionCreateRequestDTO, SubscriptionCreateDTO, SubscriptionUpdateDTO } from "../dtos/Subscription.dto";
 
 // Load the local dynamoose libraries 
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
@@ -22,13 +22,16 @@ import { BaseError } from "../utils/errors.util";
 import UserService from './User.service';
 import UserDetailService from './UserDetail.service';
 
+// import enums
+import { UserSubscriptionType, UserSubscriptionStatus } from '../enums/UserSubscription.enum';
+
 /**
  * UserSubscriptionService
  *
  *  Responsible for handling user subscription-related operations.
  */
 class UserSubscriptionService {
-  constructor() {}
+  constructor() { }
 
   /**
    * Creates a new subscription based on provided details.
@@ -186,6 +189,57 @@ class UserSubscriptionService {
       isSubscribed: true,
       expiryDate: newSubscription[0].expiryDate, // @todo we dont need this. If yes then change the name to "subscriptionExpiryDate"
     });
+  }
+
+  /**
+  * Adds a free subscription for a user.
+  *
+  * @param {string} email - The email of the user.
+  * @return {Promise< DbUserSubsDto>} - A promise that resolves when the free subscription is added successfully.
+  * @throws {BaseError} - If the user already has a subscription.
+  */
+  /**
+ * This module defines a route for creating a free subscription for a user.
+ * Note: This route is intended to be used only for one-time purposes, such as to add subscription for a missing user account.
+ * It should not be used for any internal purposes or major subscription management tasks.
+ * 
+*/
+  async addUserFreeSubscription(email: string): Promise<DbUserSubsDto> {
+    // Log the action of fetching user bought subscription list
+    global.logger.info("Adding Free Subscription for user [service]");
+
+    // Retrieve the user's existing subscriptions, if any
+    let userExistingSubscriptions = await userSubscriptionDao.get(email);
+
+    // Throw an error if any subscriptions are found
+    if (userExistingSubscriptions.count > 0) {
+      throw new BaseError(
+        "Cannot add a free subscription. The user already has an existing subscription.",
+        HttpStatusCode.CONFLICT_409
+      );
+    }
+
+    // Retrieve the FREE subscription plan for the candidate
+    const planName = UserSubscriptionType.FREE;
+    const subscriptionPlan = await MasterSubscriptionService.getByPlan(planName);
+
+    // Throw an error if the subscription plan is not found
+    if (!subscriptionPlan) {
+      throw new BaseError(
+        `Unable to add free subscription: The subscription plan '${planName}' does not exist in the system.`,
+        HttpStatusCode.NOT_FOUND_404
+      );
+    }
+
+    // Create partial data for subscription
+    const subscriptionCreateRequest: SubscriptionCreateRequestDTO = {
+      status: UserSubscriptionStatus.ACTIVE,
+      orderId: "0",
+      requestedReferrals: 0,
+      acceptedReferrals: 0,
+      completedReferrals: 0,
+    };
+    return await this.create(subscriptionPlan.SK, email, subscriptionCreateRequest);
   }
 }
 

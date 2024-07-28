@@ -43,6 +43,7 @@ import EmailTemplateRouter from "./routers/EmailTemplate.router";
 import TestRouter from "./routers/Test.router";
 // import OrderRouter from "./routers/Order.router";
 import UserOrderRouter from "./routers/UserOrder.router";
+import AdminRouter from "./routers/Admin.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -134,6 +135,9 @@ router.use("/corporate", UserCorporateRequestRouter);
 
 // Register the "User Career Request " routers
 router.use("/career", UserCareerRequestRouter);
+
+// Register the "User Career Request " routers
+router.use("/admin", AdminRouter);
 
 // Export the router
 export default router;
