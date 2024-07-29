@@ -1,79 +1,127 @@
-import { SchedulerClient, CreateScheduleCommand, FlexibleTimeWindowMode } from "@aws-sdk/client-scheduler"; 
-import APP_CONSTANTS from "../configs/constants.config";
-import { ulid } from "ulidx";
-import UlidService from "./Ulid.service";
-import { ScheduleJobModel } from "../db/models/ScheduleJob.model";
+// Import DAOs
+import { awsSchedulerClientLibrary } from "../configs/aws-sdk.config";
+import { scheduleJobDaoObj } from "../daos/ScheduleJob.dao";
 
-class ScheduleJob{
-    constructor() {}
-    client = new SchedulerClient({});
-// create async function to create Schedule command using aws sdk schedule command
-    /**
-     * @param scheduleDesc - Description of the schedule
-     * @param scheduleExpression - Schedule expression in `at(2024-05-13T17:10:00)` or `rate(5 minutes)` format
-     * @param input - Input to the Lambda function
-     * 
-     *  */
-    async createSchedule(scheduleDesc: string, scheduleExpression: string, input: any) {
-        
-        const commandInput = {
-            Name: UlidService.getUlidId(), // Schedule name should always be unique
-            Description: scheduleDesc,
-            GroupName: APP_CONSTANTS.SCHEDULE_JOB.GROUP,    // This should be predefined in AWS 
-            ScheduleExpression: scheduleExpression, // required
-            ScheduleExpressionTimezone: APP_CONSTANTS.SCHEDULE_JOB.TIME_ZONE, // important to trigger in same time zone
-            FlexibleTimeWindow: { // FlexibleTimeWindow
-                Mode: FlexibleTimeWindowMode.FLEXIBLE,
-                MaximumWindowInMinutes: Number("30"),
-              }, 
-            Target: {
-                Arn: APP_CONSTANTS.SCHEDULE_JOB.LAMBDA_TRIGGER_ARN,
-                RoleArn: APP_CONSTANTS.SCHEDULE_JOB.ROLE_ARN,
-                // DeadLetterConfig: {
-                //   Arn: "STRING_VALUE",
-                // },
-            },
-            Input: JSON.stringify(input),
-        };
-        const command = new CreateScheduleCommand(commandInput);
-        const response = await this.client.send(command);
-        console.log(response);
+// Import models
+import { DbScheduleJobDto } from "../db/models/ScheduleJob.model";
 
-        return response
+// Import DTOs
+import { ScheduleJobCreateDto } from "../dtos/ScheduleJob.dto";
+
+// Import enums
+import { ScheduleJobStatus, ScheduleJobType } from "../enums/ScheduleJob.enum";
+
+// Import error handling utilities
+import { BaseError } from "../utils/errors.util";
+import HttpStatusCode from "../utils/http-codes.util";
+
+class ScheduleJobService {
+  private schedulerLambdaArn: string;
+  private schedulerRoleArn: string;
+
+  constructor() {
+    this.schedulerLambdaArn = process.env.APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN || '';
+    this.schedulerRoleArn = process.env.APP_AWS_SCHEDULER_HANDLER_ROLE_ARN || '';
+
+    if (!this.schedulerLambdaArn || !this.schedulerRoleArn) {
+      throw new BaseError('Scheduler ARNs are not properly configured');
     }
+  }
 
-    updateDb(id: string, status: string){
-        const newUserSignUpDTO = {
-            // PK: this.partitianKey.strtr({
-            //   "{primaryEmail}": email,
-            // }),
-            // SK: this.sortKeys.SK_ID.strtr({
-            //   "{userId}": userId,
-            // }),
-            // id: userId,
-            // GSI1PK: this.GSI1PK,
-            // GSI1SK: this.GSI1SK.strtr({
-            //   "{userId}": userId
-            // }),
-            // ...copyUserSignUpDTO,
-            // emailList: emailList,
-            // isSubscribed: isSub,
-            // userType: [userType],
-            // lastAccessedDash: userType,
-            // referralCount: refCount,
-            // expiryDate: today,
-            // isEmailVerified: false,
-            // isNumberVerified: false,
-          };
-          return ScheduleJobModel.create(newUserSignUpDTO);
+  /**
+  * Creates a new schedule job and schedules it with AWS Scheduler.
+  *
+  * @param {ScheduleJobCreateDto} scheduleBody - The schedule job creation DTO.
+  * @return {Promise<DbScheduleJobDto>} The created schedule job DTO.
+  * @throws {BaseError} If the job creation fails or if an unsupported job type is provided.
+  */
+  async createScheduleJob(scheduleBody: ScheduleJobCreateDto): Promise<DbScheduleJobDto> {
+    // Log the attempt to create a new schedule job
+    global.logger.info("Creating new scheduler job (data).", { scheduleBody });
+
+    // Initialize the created job variable
+    let createdJob: DbScheduleJobDto | null = null;
+
+    try {
+      // Determine the appropriate Lambda function and role ARNs based on job type,
+      let schedulerLambdaFunctionArn: string;
+      let schedulerLambdaRoleArn: string;
+
+      // Currently, we only support REFERRAL_REVIEW_ACCEPTANCE_STATUS job type
+      if (scheduleBody.type !== ScheduleJobType.REFERRAL_REVIEW_ACCEPTANCE_STATUS) {
+        throw new BaseError(`The requested schedule job type ${scheduleBody.type} is not supported.`,
+          HttpStatusCode.BAD_REQUEST_400);
+      } else {
+        schedulerLambdaFunctionArn = this.schedulerLambdaArn;
+        schedulerLambdaRoleArn = this.schedulerRoleArn;
+      }
+
+      // Create the schedule job in the database
+      createdJob = await scheduleJobDaoObj.create(scheduleBody);
+      if (!createdJob) {
+        throw new BaseError("Failed to create scheduler job in database", HttpStatusCode.BAD_REQUEST_400);
+      }
+      global.logger.info("Created job in database:", createdJob);
+
+      // Create the schedule in AWS Scheduler
+      await awsSchedulerClientLibrary.createSchedule({
+        Name: createdJob.id,
+        ScheduleExpression: `at(${scheduleBody.scheduleTime})`,
+        FlexibleTimeWindow: {
+          Mode: "OFF",
+        },
+        Target: {
+          Arn: schedulerLambdaFunctionArn,
+          RoleArn: schedulerLambdaRoleArn,
+          Input: JSON.stringify({ scheduleJobId: createdJob.id }),
+        },
+      });
+
+      global.logger.info("Scheduled job in AWS:", createdJob.id);
+      return createdJob;
+
+    } catch (error: any) {
+      // Update the job status to FAILED if an error occurs during creation
+      if (createdJob) {
+        await scheduleJobDaoObj.update(createdJob.id, { status: ScheduleJobStatus.FAILED });
+      }
+
+      // Throw a BaseError with details about the failure
+      throw new BaseError(
+        `Failed to create AWS scheduler for job ${createdJob?.id}: ${error.message}`,
+        error.statusCode || HttpStatusCode.INTERNAL_SERVER_ERROR_500
+      );
     }
+  }
 
-   // lambda handler to accept trigger from Schedule Job 
-   async handler(event: any) {
-    console.log(event);
-    return "success"
+  /**
+   * Completes the schedule job and deletes it from AWS Scheduler.
+   *
+   * @param {string} id - The ID of the schedule job to complete.
+   * @return {Promise<boolean>}
+   */
+  async completeScheduleJob(id: string): Promise<boolean> {
+    // Update the schedule job status to COMPLETED in the database
+    await scheduleJobDaoObj.update(id, { status: ScheduleJobStatus.COMPLETED });
+    global.logger.info("Marked scheduler job as completed in database:", id);
+
+    // Delete the schedule from AWS Scheduler
+    await awsSchedulerClientLibrary.deleteSchedule({ Name: id });
+    global.logger.info("Deleted scheduler job from AWS:", id);
+
+    return true;
+  }
+
+  /**
+   * Retrieves a schedule job by its ID.
+   *
+   * @param {string} id - The ID of the schedule job to retrieve.
+   * @return {Promise<DbScheduleJobDto>} The retrieved schedule job DTO.
+   */
+  async getScheduleJobById(id: string): Promise<DbScheduleJobDto> {
+    // Retrieve the schedule job from the database by its ID
+    return scheduleJobDaoObj.getById(id);
   }
 }
 
-// Export an instance of the ScheduleJob class
-export default new ScheduleJob();
+export default new ScheduleJobService();

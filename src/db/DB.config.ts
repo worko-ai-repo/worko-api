@@ -40,6 +40,7 @@ import { UserCareerRequestModel } from "./models/UserCareerRequest.model";
 import { UserOrderModel } from "./models/UserOrder.model";
 import { UserOrderProductModel } from "./models/UserOrderProduct.model";
 import { UserOrderTransactionModel } from "./models/UserOrderTransaction.model";
+import { ScheduleJobModel } from "./models/ScheduleJob.model";
 
 /**
  * DBConfig
@@ -143,6 +144,7 @@ class DBConfig {
       UserOrderModel,
       UserOrderProductModel,
       UserOrderTransactionModel,
+      ScheduleJobModel,
     ]);
   }
 }

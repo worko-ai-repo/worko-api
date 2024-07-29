@@ -1,9 +1,14 @@
-import { string } from "joi";
-import { ScheduleJobStatus, ScheduleJobType } from "../../enums/ScheduleJob.enum";
-import { DB_CONSTANTS } from "../DB.constants";
-import { BaseDbDto } from "./Base.model";
 // Load the npm packages
 import * as dynamoose from "dynamoose";
+
+// Load the models
+import { BaseDbDto } from "./Base.model";
+
+// Load the constants
+import { DB_CONSTANTS } from "../DB.constants";
+
+// Load the enums
+import { ScheduleJobStatus, ScheduleJobType } from "../../enums/ScheduleJob.enum";
 
 class DbScheduleJobDto extends BaseDbDto{
     id!: string;
@@ -11,7 +16,7 @@ class DbScheduleJobDto extends BaseDbDto{
     desc?: string;
     scheduleTime!: string;
     status!: ScheduleJobStatus;
-    input?: object
+    input!: object
 }
 
 // Define the schema for the support model using DynamoDB

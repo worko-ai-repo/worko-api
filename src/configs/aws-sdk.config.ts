@@ -8,6 +8,7 @@ import APP_CONSTANTS from "./constants.config";
 import { AwsS3ClientLibrary } from "../libraries/aws-s3-client.library";
 import { AwsSesClientLibrary } from "../libraries/aws-ses-client.library";
 import { AwsSqsClientLibrary } from "../libraries/aws-sqs-client.library";
+import { AwsSchedulerLibrary } from "../libraries/aws-scheduler-client.library";
 
 /**
  * awsConfigOptions
@@ -97,6 +98,29 @@ const awsSqsConfigOptions: AWS.SQS.ClientConfiguration = {
 const awsSqsClientLibrary: AwsSqsClientLibrary = new AwsSqsClientLibrary(awsSqsConfigOptions);
 console.log("The 'awsSqsClientLibrary' is initialised.", { filePath: __filename, });
 
+/**
+ * ****************************************************************************************************
+ * AWS Scheduler Client Library
+ * ****************************************************************************************************
+ */
+
+/**
+ * awsSchedulerConfigOptions
+ * 
+ * AWS Scheduler specific configurations extending the "awsConfigOptions".
+ */
+const awsSchedulerConfigOptions: AWS.Scheduler.ClientConfiguration = {
+    ...awsConfigOptions,
+}
+
+/**
+ * awsSchedulerClientLibrary
+ * 
+ * Application/local Scheduler wrapper client to interact with AWS Scheduler service to perform regular activities
+ */
+const awsSchedulerClientLibrary: AwsSchedulerLibrary = new AwsSchedulerLibrary(awsSchedulerConfigOptions);
+console.log("The 'awsSchedulerClientLibrary' is initialised.", { filePath: __filename, });
+
 // Export the required resourses
 export {
     // Configurations
@@ -104,9 +128,11 @@ export {
     awsS3ConfigOptions,
     awsSesConfigOptions,
     awsSqsConfigOptions,
+    awsSchedulerConfigOptions,
 
     // Service Clients
     awsS3ClientLibrary,
     awsSesClientLibrary,
     awsSqsClientLibrary,
+    awsSchedulerClientLibrary,
 }

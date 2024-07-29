@@ -53,7 +53,6 @@ class TestController {
     }
   }
 
-
   /**
    * scheduleJobToTriggerBack
    *
@@ -62,14 +61,10 @@ class TestController {
    * @param {string} arg0
    * @param {any} scheduleJobToTriggerBack
    */
-  scheduleJob= async (req: Request, res: Response, next: NextFunction) => {
+  createScheduleJob = async(req: Request, res: Response, next: NextFunction) => {
     try {
-      const name = req.body.scheduleName
-      const schedule = req.body.scheduleExpression //"at(2024-05-12T12:00:00)"
-      const input = req.body.input
-      console.log(name, schedule)
-      const response = await ScheduleJobService.createSchedule(name, schedule, input)
-
+      let scheduleBody = req.body;
+      const response = await ScheduleJobService.createScheduleJob(scheduleBody)
       res.status(HttpStatusCode.OK_200).json(response);
     } catch (error) {
       next(error);

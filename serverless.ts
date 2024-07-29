@@ -24,13 +24,18 @@ const serverlessConfiguration: AWS = {
       APP_AWS_SUBNET1: "${env:APP_AWS_SUBNET1}",
       APP_AWS_SUBNET2: "${env:APP_AWS_SUBNET2}"
     },
+    awsLambdaFunctions: {
+      APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN: "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:app-scheduler-handler",
+      APP_AWS_SCHEDULER_HANDLER_ROLE_ARN: "arn:aws:iam::${self:custom.aws.APP_AWS_ACCOUNT_ID}:role/worko-schedule-invoke-lambda-role",
+    },
   },
   provider: {
     name: "aws",
     runtime: "nodejs18.x",
     stage: process.env.APP_SLS_STAGE, // @todo it is not being resolved, it needs to be fixed.
-    environment:{
-      
+    environment: {
+      APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN: "${self:custom.awsLambdaFunctions.APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN}",
+      APP_AWS_SCHEDULER_HANDLER_ROLE_ARN: "${self:custom.awsLambdaFunctions.APP_AWS_SCHEDULER_HANDLER_ROLE_ARN}",
     },
     region: "ap-south-1", // Should be dynamically set
     iamRoleStatements: [
@@ -132,6 +137,9 @@ const serverlessConfiguration: AWS = {
           }
         }
       ]
+    },
+    "app-scheduler-handler": {
+      handler: "dist/src/app-scheduler.handler",
     },
     app: {
       handler: "dist/src/app.handler",

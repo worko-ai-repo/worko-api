@@ -39,18 +39,21 @@ import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ReferralActions } from "../enums/User.enum";
 import { UserSubscriptionStatus } from "../enums/UserSubscription.enum";
-import { SqsMsgEventEnum } from '../enums/SqsEvent.enum';
 
 // Import constants
 import APP_CONSTANTS from '../configs/constants.config';
-import { awsSqsClientLibrary } from '../configs/aws-sdk.config';
 
 // Import dtos
-import { SqsMsgReviewReferralAcceptanceStatusReqDto } from '../dtos/SqsEvent.dto';
+import { ScheduleJobCreateDto, ScheduleJobRefReviewAcceptanceStatusInputDto } from '../dtos/ScheduleJob.dto';
+
+// Import enums
+import { ScheduleJobStatus, ScheduleJobType } from '../enums/ScheduleJob.enum';
+
 
 // Import services
 import CompanyService from "./Company.service";
 import UserSubscriptionService from "./UserSubscription.service";
+import ScheduleJobService from './ScheduleJob.service';
 
 // Import utlis
 import { BaseError } from '../utils/errors.util';
@@ -907,25 +910,28 @@ class UserReferralService {
       logger.info(`Referral ${referralId} cancelled due to low matching score`);
     } else {
       // Create a delayed message to check referral status after 5 days
-      const delayedCheckCreated = await this.createDelayedReferralStatusCheck(
+      let delayedStatusCheck = await this.scheduleDelayedReferralAcceptanceReview(
         referralId,
         userEmail,
         userId
       );
 
       // If delayed check creation failed, throw an error
-      if (!delayedCheckCreated) {
+      if (!delayedStatusCheck) {
         throw new BaseError(
-          `Failed to create delayed status check for referral ID "${referralId}".`
+          `Failed to schedule scheduler to review the referral acceptance status for referral ID "${referralId}".`
         );
       }
+
       logger.info(`Created delayed status check for referral ${referralId}`);
     }
 
     return true;
   }
-
+  
   /**
+   * scheduleDelayedReferralAcceptanceReview
+   * 
    * Creates a delayed message to check the referral acceptance status after a specified number of days.
    *
    * @param {string} referralId - The ID of the referral
@@ -933,7 +939,7 @@ class UserReferralService {
    * @param {string} userId - The ID of the user
    * @returns {Promise<boolean>} A promise that resolves to true if the message was sent successfully, false otherwise
    */
-  async createDelayedReferralStatusCheck(
+  async scheduleDelayedReferralAcceptanceReview(
     referralId: string,
     userEmail: string,
     userId: string
@@ -943,55 +949,47 @@ class UserReferralService {
       `Attempting to create delayed referral status check for referral ID: ${referralId}, user email: ${userEmail} [UserReferralService]`
     );
 
-    // Calculate delay in seconds
-    const delaySeconds =
-      APP_CONSTANTS.REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_DAYS *
-      24 *
-      60 *
-      60;
-
-    // Create message payload for SQS
-    const message: SqsMsgReviewReferralAcceptanceStatusReqDto = {
-      event: SqsMsgEventEnum.REFERRAL_REVIEW_ACCEPTANCE_STATUS,
-      userEmail: userEmail,
-      userId: userId,
-      context: {
-        referralId: referralId,
-      },
+    // Calculate the schedule time based on the delay hours constant
+    const delayHours = APP_CONSTANTS.REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS;
+    const scheduleTime = DateTime.now().plus({ hours: delayHours }).toISO();
+    let schedulerInput : ScheduleJobRefReviewAcceptanceStatusInputDto = {
+      referralId,
+      userEmail,
+      userId
+    }
+    // Prepare the payload for the scheduled job
+    const scheduleJobPayload: ScheduleJobCreateDto = {
+      type: ScheduleJobType.REFERRAL_REVIEW_ACCEPTANCE_STATUS,
+      scheduleTime: scheduleTime,
+      input: schedulerInput,
+      desc: `Review referral acceptance status for referral ID "${referralId}"`,
+      status: ScheduleJobStatus.SCHEDULED,
     };
 
-    // Get the URL of the SQS queue
-    const queueUrl = await awsSqsClientLibrary.getQueueUrl(
-      process.env.APP_AWS_SQS_QUEUE_NAME!
-    );
-    if (!queueUrl) {
-      throw new BaseError(
-        `Unable to get SQS queue URL for queue name "${process.env.APP_AWS_SQS_QUEUE_NAME}".`
-      );
+    // Create the scheduled job
+    let scheduleJobCreated = await ScheduleJobService.createScheduleJob(scheduleJobPayload);
+
+    // Log the result of the scheduled job creation
+    if (scheduleJobCreated) {
+      logger.info(`Scheduled job created for referral ${referralId}`, {
+        filePath: __filename,
+        methodName: "scheduleDelayedReferralAcceptanceReview",
+      });
+      return true;
+    } else {
+      logger.error(`Failed to create scheduled job for referral ${referralId}`);
+      return false;
     }
-
-    // Send message to SQS with delay
-    await awsSqsClientLibrary.sendMessage(
-      queueUrl,
-      JSON.stringify(message),
-      delaySeconds
-    );
-
-    // Log the successful sending of the delayed message
-    logger.info(`Delayed message sent for referral ${referralId}`, {
-      filePath: __filename,
-      methodName: "createDelayedReferralStatusCheck",
-    });
-
-    return true;
   }
 
   /**
+   * reviewReferralAcceptanceStatus
+   * 
    * Reviews the referral acceptance status after 5 days and rejects it if still in "awaiting" status.
    *
    * @param {string} referralId - The ID of the referral
    * @param {string} userEmail - The email of the user
-   * @returns {Promise<boolean>} True if review was successful, false otherwise
+   * @returns {Promise<boolean>} A promise that resolves to true if the review was successful, false otherwise
    */
   async reviewReferralAcceptanceStatus(
     referralId: string,
@@ -1031,5 +1029,6 @@ class UserReferralService {
     return true;
   }
 }
+
 // Export an instance of the UserService class
 export default new UserReferralService();
