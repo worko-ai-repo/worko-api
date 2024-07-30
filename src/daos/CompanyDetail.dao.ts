@@ -202,6 +202,9 @@ class CompanyDetailDao implements BaseDao {
     const updateCompanyDto = {
       ...companyDto,
       id: companyId,    // adding id if its not present
+      GSI1PK: this.GSI1PK.strtr({
+        "{industryName}": companyDto.industry,
+      }),
     }
     // Update the company with the above data
     return CompanyDetailModel.update({

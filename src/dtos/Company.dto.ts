@@ -26,7 +26,7 @@ export interface CompanyDTO {
   teamSize: number; // Size of the company's team
   carrierPage: string; // Carrier page URL
   linkedIn: string; // LinkedIn page URL
-  logoUrl: string; // URL of the company's logo
+  logoUrl?: string; // URL of the company's logo
   logo:  string;  // logo name
   isVerified: boolean;
 }
