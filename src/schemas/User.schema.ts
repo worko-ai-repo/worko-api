@@ -29,16 +29,15 @@ export const UserSignUpDTOValidation = Joi.object({
       /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
       "LinkedIn URL is not valid"
     )
+    .optional()
     .messages({
       "string.pattern.base": "Please Provide Valid URL",
     }),
-  ECTC: Joi.number().min(0).options({ convert: false }).required().messages({
-    "any.required": "ECTC is required",
+  ECTC: Joi.number().min(0).options({ convert: false }).optional().messages({
     "number.base": "ECTC should be a valid number",
     "number.min": "Number must be greater than or equal to 0",
   }),
-  YOE: Joi.number().min(0).options({ convert: false }).required().messages({
-    "any.required": "YOE is required",
+  YOE: Joi.number().min(0).options({ convert: false }).optional().messages({
     "number.base": "YOE should be a valid number",
     "number.min": "Number must be greater than or equal to 0",
   }),

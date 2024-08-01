@@ -8,7 +8,7 @@ export interface UserSignUpDTO {
   number: string;
   linkedinUrl?: string;
   ECTC?: number;
-  YOE: number;
+  YOE?: number;
   CV?: string;
   userId: string;
   acceptedTermsAndConditions: boolean;
@@ -26,7 +26,7 @@ export interface NewUserCandSignUpDTO {
   number: string;
   linkedinUrl?: string;
   ECTC?: number;
-  YOE: number;
+  YOE?: number;
   CV?: string;
   emailList: { [key: string]: string };
   userType: string[];

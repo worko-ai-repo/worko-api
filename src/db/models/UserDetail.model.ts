@@ -28,7 +28,7 @@ class DbUserDetailDto extends BaseDbDto {
   CTC?: number;
   ECTC?: number;
   noticePeriod?: number;
-  YOE!: number;
+  YOE?: number;
   CV?: string;
   coverLetter?: string;
   lastAccessedDash!: string;
@@ -129,7 +129,7 @@ const UserDetailSchema = new dynamoose.Schema(
     },
     YOE: {
       type: Number,
-      required: true,
+      required: false,
     },
     CV: {
       type: String,
