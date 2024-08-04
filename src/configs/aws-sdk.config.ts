@@ -9,7 +9,7 @@ import { AwsS3ClientLibrary } from "../libraries/aws-s3-client.library";
 import { AwsSesClientLibrary } from "../libraries/aws-ses-client.library";
 import { AwsSqsClientLibrary } from "../libraries/aws-sqs-client.library";
 import { AwsSchedulerLibrary } from "../libraries/aws-scheduler-client.library";
-
+import { AwsDynamoDBLibrary } from "../libraries/aws-dynamoDb-client.library"; 
 /**
  * awsConfigOptions
  * 
@@ -121,6 +121,27 @@ const awsSchedulerConfigOptions: AWS.Scheduler.ClientConfiguration = {
 const awsSchedulerClientLibrary: AwsSchedulerLibrary = new AwsSchedulerLibrary(awsSchedulerConfigOptions);
 console.log("The 'awsSchedulerClientLibrary' is initialised.", { filePath: __filename, });
 
+// ****************************************************************************************************
+// AWS DynamoDB Client Library
+// ****************************************************************************************************
+
+/**
+ * awsDynamoDBConfigOptions
+ * 
+ * AWS DynamoDB specific configurations extending the "awsConfigOptions".
+ */
+const awsDynamoDBConfigOptions: AWS.DynamoDB.ClientConfiguration = {
+    ...awsConfigOptions,
+}
+
+/**
+ * awsDynamoDBClientLibrary
+ * 
+ * Application/local DynamoDB wrapper client to interact with AWS DynamoDB service to perform regular activities
+ */
+const awsDynamoDBClientLibrary: AwsDynamoDBLibrary = new AwsDynamoDBLibrary(awsDynamoDBConfigOptions);
+console.log("The 'awsDynamoDBClientLibrary' is initialised.", { filePath: __filename, });
+
 // Export the required resourses
 export {
     // Configurations
@@ -129,10 +150,12 @@ export {
     awsSesConfigOptions,
     awsSqsConfigOptions,
     awsSchedulerConfigOptions,
+    awsDynamoDBConfigOptions,
 
     // Service Clients
     awsS3ClientLibrary,
     awsSesClientLibrary,
     awsSqsClientLibrary,
     awsSchedulerClientLibrary,
+    awsDynamoDBClientLibrary,
 }

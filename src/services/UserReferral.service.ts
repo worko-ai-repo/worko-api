@@ -20,6 +20,7 @@ import {
   EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED,
   EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED,
   EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION,
+  EmailTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION,
   EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND
 } from "../dtos/EmailTemplatePlaceholder.dto";
 
@@ -53,11 +54,13 @@ import { ScheduleJobStatus, ScheduleJobType } from '../enums/ScheduleJob.enum';
 // Import services
 import CompanyService from "./Company.service";
 import UserSubscriptionService from "./UserSubscription.service";
+import UserExperienceService from './UserExperience.service';
 import ScheduleJobService from './ScheduleJob.service';
 
 // Import utlis
 import { BaseError } from '../utils/errors.util';
 import HttpStatusCode from '../utils/http-codes.util';
+import { DbUserExperienceDto } from '../db/models/UserExperience.model';
 
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
@@ -108,6 +111,7 @@ class UserReferralService {
       referralRequest.userSubscriptionId,
       ReferralStatus.AWAITING
     );
+   
     return createdReferral;
 
     //below block checks gets the ExtractedJd from db if it is there
@@ -743,6 +747,97 @@ class UserReferralService {
     );
   }
 
+ /**
+   * sendEmailToEmployeesOnReferralCreation
+   * 
+   * Sends an email to all current employees of a company when a referral is created.
+   * The email notifies employees of a new candidate referral.
+   * 
+   * @param {string} companyId - The ID of the company whose employees will receive the email.
+   * @param {string} referralId - The ID of the referral for which the email is being sent.
+   * @param {string} candidateName - The name of the referred candidate.
+   * @returns {Promise<boolean>} - Returns true if emails are sent successfully.
+   * @throws {BaseError} - Throws an error if no employees are found.
+   */
+  async sendEmailToEmployeesOnReferralCreation(
+    companyId: string,
+    referralId: string,
+    candidateName: string
+  ): Promise<boolean> {
+  let companyEmployees: DbUserExperienceDto[] = [];
+  let lastKey: any = undefined;
+  const pageSize = 25;
+
+  // Continue fetching and sending emails as long as there are more employees
+  do {
+    // Get a batch of employees for the company
+    const employeesResponse = await UserExperienceService.getCompanyCurrentEmployeesByCompanyId(companyId, {
+      pageSize,
+      lastKey: lastKey,
+    });      
+
+    // Add employees to the list
+    companyEmployees = companyEmployees.concat(employeesResponse);
+
+    // Update the lastKey for the next iteration and encode it 
+    lastKey = employeesResponse.lastKey ?? null;
+  } while (lastKey);
+
+  // throw error if no employees are found
+  if (!companyEmployees.length) {
+    throw new BaseError(
+      `No employees found for the company with companyId ${companyId}.`,
+      HttpStatusCode.NOT_FOUND_404
+    );
+  }
+
+  // Fetch employee details and send emails in parallel
+  const emailPromisesBatch = companyEmployees.map(async (employee) => {
+    // Prepare the employee email address
+    const empEmail = employee.PK.split("#")[2];
+
+    // Get employee details
+    const empDetails = await UserDetailService.get(empEmail);
+    if (!empDetails.count) {
+      // Merge the current batch of promises with the accumulated ones
+      global.logger.info(`The employee details for the given email "${empEmail}" not found. Therefore, the email notification cannot be sent for the referral "${referralId}".`, {
+        companyId: companyId,
+      });
+      return false;
+    }
+
+    const refereeName = empDetails[0].name;
+    const refereeEmail = empDetails[0].emailList.primary;
+
+    // Construct the email address object
+    const toAddress: EmailSourceDestinationAddress = {
+      email: refereeEmail,
+      fullName: refereeName,
+    };
+
+    // Prepare the email placeholders with appropriate values
+    const emailPlaceholders: EmailTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION = {
+      emp_first_name: refereeName,
+      candidate_name: candidateName,
+    };
+
+    // Send the email using the email library
+    return emailLibrary.sendEmail(
+      EmailTemplateEnum.EMP_RECEIVED_REFERRAL_REQ_NOTIFICATION,
+      toAddress,
+      emailPlaceholders
+    );
+  });
+
+  // Merge the current batch of promises with the accumulated ones
+  global.logger.info(`Processed ${emailPromisesBatch.length} email sending tasks so far for companyId: ${companyId}`);
+
+  // Wait for all email sending promises to complete
+  await Promise.all(emailPromisesBatch);
+  
+  return true;
+}
+
   /**
    * getReferralsByIdsUsingGsis
    *
@@ -947,10 +1042,33 @@ class UserReferralService {
           `Failed to schedule scheduler to review the referral acceptance status for referral ID "${referralId}".`
         );
       }
-
       logger.info(`Created delayed status check for referral ${referralId}`);
-    }
 
+      // ===========================================================================
+      // ===== SEND EMAIL TO EMPLOYEES ON SUCCESSFUL REFERRAL CREATION/REQUEST =====
+      // ===========================================================================
+
+      // Fetch candidate details using user ID
+      const candidateDetails = await UserDetailService.getUserById(userId);
+
+      // Check if candidate details are found
+      if (!candidateDetails.count) {
+        throw new BaseError(
+          `Candidate details not found with userId ${userId}. Please check the information and try again.`,
+          HttpStatusCode.NOT_FOUND_404
+        );
+      }
+
+      // Extract candidate name from the fetched details
+      const candidateName = candidateDetails[0].name;
+
+      // Send email notification to employees about the referral creation
+      await this.sendEmailToEmployeesOnReferralCreation(
+        userReferralDetails.companyId,
+        referralId,
+        candidateName
+      );
+    }
     return true;
   }
   

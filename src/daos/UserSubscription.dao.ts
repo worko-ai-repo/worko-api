@@ -1,5 +1,5 @@
 // Load dynamoose libraries
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { QueryResponse, ScanResponse } from "dynamoose/dist/ItemRetriever";
 
 //Load the base dao
 import BaseDao from "./Base.dao";
@@ -21,6 +21,8 @@ import { UserSubscriptionStatus } from '../enums/UserSubscription.enum';
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
+import { RecordListingFilterOptions, RecordListingResponseDTO } from "../dtos/Common.dto";
+import { lastKeyToBase64EncodeStr } from "../helpers/dynamoose.helper";
 
 
 // Class definition for UserSubscriptionDao implementing BaseDao
@@ -28,7 +30,9 @@ class UserSubscriptionDao implements BaseDao {
   modelName = "user";
   partitianKey = "USR#EML#{primaryEmail}";
   sortKeys = { SK_SUBS: "SUBS#CAND#ID#{subsId}" };
-
+  
+  GSI1PK: string = "SUBS#CAND#";
+  GSI1SK = "ID#{id}";
   /**
    * Fetches subscription details based on user email
    * 
@@ -108,12 +112,8 @@ class UserSubscriptionDao implements BaseDao {
       SK: this.sortKeys.SK_SUBS.strtr({
         "{subsId}": id,
       }),
-      GSI1PK: this.sortKeys.SK_SUBS.strtr({
-        "ID#{subsId}": "",
-      }),
-      GSI1SK: this.partitianKey.strtr({
-        "{primaryEmail}": email,
-      }),
+      GSI1PK: this.GSI1PK,
+      GSI1SK: this.GSI1SK.strtr({ "{id}": id }),
       id: id,
     };
     return UserSubModel.create(newSubscriptionDto);
@@ -170,6 +170,66 @@ class UserSubscriptionDao implements BaseDao {
       .where("status")
       .eq(UserSubscriptionStatus.ACTIVE) // Only get active ones
       .exec();
+  }
+
+  /**
+   * getUsersAllSubscriptions
+   * 
+    * This function is intended to retrive the details for all user subscriptions
+   *  It should be used exclusively for this purpose and should not be
+   * used for any other operations or purposes.
+   * Retrieves all user subscriptions.
+   * Retrieves all user subscriptions from the database.
+   *
+   */
+  async getAllUsersSubscriptions(options: RecordListingFilterOptions): Promise<QueryResponse<DbUserSubsDto>> {
+    console.log("Options for paginatins with data ", options)
+    global.logger.info("Get all user subscriptions [DAO]");
+    // construct query
+    let query = UserSubModel.query("GSI1PK").eq("SUBS#CAND#");
+
+    // apply lastkey if provided
+    if (options.lastKey) {
+      query = query.startAt(options.lastKey);
+    }
+
+    // apply pageSize if provided
+    if (options.pageSize) {
+      query = query.limit(options.pageSize);
+    }
+    return query.exec();
+  };
+
+  /**
+   * updateUserSubscriptionGSIsWithSubsId
+   *
+   * This function is intended to update the GSI1SK and GSI1PK for all user subscriptions
+   * in the database. It should be used exclusively for this purpose and should not be
+   * used for any other operations or purposes.
+   * 
+   * Updates the GSI1PK and GSI1SK for a specific user subscription in the database.
+   *
+   * @param {string} email - The email of the user
+   * @param {string} id - The ID of the subscription
+   * @param {string} newGSI1PK - The new GSI1PK value
+   * @param {string} newGSI1SK - The new GSI1SK value
+   * @returns {Promise<DbUserSubsDto>} The updated user subscription
+   */
+  async updateUserSubscriptionGSIsWithSubsId(
+    email: string,
+    id: string,
+  ): Promise<DbUserSubsDto> {
+    global.logger.info("Update User Subscriptions GSIs[DAO}");
+
+    // prepare The keys.
+    const PK = this.partitianKey.strtr({ "{primaryEmail}": email });
+    const SK = this.sortKeys.SK_SUBS.strtr({ "{subsId}": id });
+
+    // retrun with updated keys and valeus
+    return UserSubModel.update(
+      { PK, SK },
+      { GSI1PK: this.GSI1PK, GSI1SK: this.GSI1SK.replace("{id}", id) },
+    );
   }
 }
 

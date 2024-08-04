@@ -9,7 +9,7 @@ import MasterSubscriptionService from "./MasterSubscription.service";
 import { SubscriptionCreateRequestDTO, SubscriptionCreateDTO, SubscriptionUpdateDTO } from "../dtos/Subscription.dto";
 
 // Load the local dynamoose libraries 
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { QueryResponse, ScanResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load the local model
 import { DbUserSubsDto } from "../db/models/UserSubscription.model";
@@ -21,6 +21,7 @@ import { BaseError } from "../utils/errors.util";
 // Load the local services
 import UserService from './User.service';
 import UserDetailService from './UserDetail.service';
+import { RecordListingFilterOptions, RecordListingResponseDTO } from '../dtos/Common.dto';
 
 // import enums
 import { UserSubscriptionType, UserSubscriptionStatus } from '../enums/UserSubscription.enum';
@@ -31,7 +32,7 @@ import { UserSubscriptionType, UserSubscriptionStatus } from '../enums/UserSubsc
  *  Responsible for handling user subscription-related operations.
  */
 class UserSubscriptionService {
-  constructor() { }
+  constructor() {}
 
   /**
    * Creates a new subscription based on provided details.
@@ -50,14 +51,9 @@ class UserSubscriptionService {
     global.logger.info(`[ creating subscription for email: ${email} ]`);
 
     // Retrive mastersubscriptionDetails
-    const mastersubscriptionDetails = await MasterSubscriptionService.getById(
-      masterSubscriptionId
-    );
+    const mastersubscriptionDetails = await MasterSubscriptionService.getById(masterSubscriptionId);
     if (!mastersubscriptionDetails) {
-      throw new BaseError(
-        "The Master subscription for given Id is not found.",
-        HttpStatusCode.NOT_FOUND_404
-      );
+      throw new BaseError("The Master subscription for given Id is not found.", HttpStatusCode.NOT_FOUND_404);
     }
     global.logger.debug("Master subscription service detail.", {
       filePath: __filename,
@@ -84,16 +80,10 @@ class UserSubscriptionService {
     };
 
     // Create New Subscription For User
-    let newSubscription = await userSubscriptionDao.create(
-      subscriptionDto,
-      email
-    );
+    let newSubscription = await userSubscriptionDao.create(subscriptionDto, email);
 
     // Do necessary update of subscription
-    await this.updateUserDetailsCountsOnNewSubscription(
-      email,
-      newSubscription.id
-    );
+    await this.updateUserDetailsCountsOnNewSubscription(email, newSubscription.id);
 
     return newSubscription;
   }
@@ -114,10 +104,7 @@ class UserSubscriptionService {
    * @param email - Email of the user
    * @returns {Promise<any>} - Subscription details of the user
    */
-  async getById(
-    email: string,
-    id: string
-  ): Promise<QueryResponse<DbUserSubsDto>> {
+  async getById(email: string, id: string): Promise<QueryResponse<DbUserSubsDto>> {
     global.logger.info("[ getting subscription details by id ]");
     return userSubscriptionDao.getById(email, id);
   }
@@ -134,11 +121,7 @@ class UserSubscriptionService {
     updatedSubscriptionDto: SubscriptionUpdateDTO
   ): Promise<DbUserSubsDto> {
     global.logger.info("[ updating subscription details ]");
-    return userSubscriptionDao.update(
-      email,
-      userSubscriptionId,
-      updatedSubscriptionDto
-    );
+    return userSubscriptionDao.update(email, userSubscriptionId, updatedSubscriptionDto);
   }
 
   /**
@@ -148,16 +131,14 @@ class UserSubscriptionService {
    *
    * @param email - Email of the user
    */
-  async getActiveSubscriptionForUser(
-    email: string
-  ): Promise<QueryResponse<DbUserSubsDto>> {
+  async getActiveSubscriptionForUser(email: string): Promise<QueryResponse<DbUserSubsDto>> {
     global.logger.info("[ getting active subscription id for user ]");
     return userSubscriptionDao.getActiveSubscriptionForUser(email);
   }
 
   /**
    * updateUserDetailsCountsOnNewSubscription
-   * 
+   *
    * Updates the referral count and subscription status for a new user subscription.
    *
    * @param {string} userEmail - The email of the user.
@@ -165,10 +146,7 @@ class UserSubscriptionService {
    * @throws {Error} If the new subscription is not found or the user details are not found.
    * @return {Promise<void>} A promise that resolves when the referral count and subscription status are updated.
    */
-  async updateUserDetailsCountsOnNewSubscription(
-    userEmail: string,
-    newSubscriptionId: string
-  ): Promise<void> {
+  async updateUserDetailsCountsOnNewSubscription(userEmail: string, newSubscriptionId: string): Promise<void> {
     global.logger.info("[ updating user referral count on new subscription ]");
     // Get the new subscription details
     const newSubscription = await this.getById(userEmail, newSubscriptionId);
@@ -192,18 +170,50 @@ class UserSubscriptionService {
   }
 
   /**
-  * Adds a free subscription for a user.
-  *
-  * @param {string} email - The email of the user.
-  * @return {Promise< DbUserSubsDto>} - A promise that resolves when the free subscription is added successfully.
-  * @throws {BaseError} - If the user already has a subscription.
-  */
+   * getUsersAllSubscriptions
+   * 
+    * This function is intended to retrive the details for all user subscriptions
+   *  It should be used exclusively for this purpose and should not be
+   * used for any other operations or purposes.
+   * Retrieves all user subscriptions.
+   *
+   * @returns {Promise<QueryResponse<DbUserSubsDto>>} All user subscriptions
+   */
+  async getAllUsersSubscriptions(options: RecordListingFilterOptions): Promise<QueryResponse<DbUserSubsDto>> {
+    return userSubscriptionDao.getAllUsersSubscriptions(options);
+  }
+
   /**
- * This module defines a route for creating a free subscription for a user.
- * Note: This route is intended to be used only for one-time purposes, such as to add subscription for a missing user account.
- * It should not be used for any internal purposes or major subscription management tasks.
- * 
-*/
+   * updateUserSubscriptionGSIsWithSubsId
+   *
+   * This function is intended to update the GSI1SK and GSI1PK for all user subscriptions
+   * in the database. It should be used exclusively for this purpose and should not be
+   * used for any other operations or purposes.
+   *
+   * Updates the GSI1PK and GSI1SK for a specific user subscription.
+   *
+   * @param {string} email - The email of the user
+   * @param {string} id - The ID of the subscription
+   * @param {string} newGSI1PK - The new GSI1PK value
+   * @param {string} newGSI1SK - The new GSI1SK value
+   * @returns {Promise<DbUserSubsDto>} The updated user subscription
+   */
+  async updateUserSubscriptionGSIsWithSubsId(email: string, id: string): Promise<DbUserSubsDto> {
+    global.logger.info("Updateing User SUbscription GSIs [service]");
+    return userSubscriptionDao.updateUserSubscriptionGSIsWithSubsId(email, id);
+  }
+
+  /**
+   * Adds a free subscription for a user.
+   *
+   * @param {string} email - The email of the user.
+   * @return {Promise< DbUserSubsDto>} - A promise that resolves when the free subscription is added successfully.
+   * @throws {BaseError} - If the user already has a subscription.
+   * This module defines a route for creating a free subscription for a user.
+   * Note: This route is intended to be used only for one-time purposes, such as to add subscription for a missing user account.
+   * It should not be used for any internal purposes or major subscription management tasks.
+   *
+   */
   async addUserFreeSubscription(email: string): Promise<DbUserSubsDto> {
     // Log the action of fetching user bought subscription list
     global.logger.info("Adding Free Subscription for user [service]");
@@ -242,6 +252,7 @@ class UserSubscriptionService {
     return await this.create(subscriptionPlan.SK, email, subscriptionCreateRequest);
   }
 }
+
 
 // Export an instance of the UserSubscriptionService class
 export default new UserSubscriptionService();

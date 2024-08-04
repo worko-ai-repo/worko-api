@@ -27,12 +27,21 @@ const UserSubscriptionSchema = new dynamoose.Schema(
     ...DB_CONSTANTS.WORKO_PK_SK,
     GSI1PK: {
       type: String,
-      required: true,
-    },
-    GSI1SK: {
+      index: {
+          name: "GSI1",
+          type: "global",
+          rangeKey: "GSI1SK",
+      },
+      required: true
+  },
+  GSI1SK: {
       type: String,
-      required: true,
-    },
+      index: {
+          name: "GSI1",
+          type: "global",
+      },
+      required: true
+  },
     id: {
       type: String,
       required: true,

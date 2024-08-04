@@ -1,5 +1,5 @@
 // Load the local daos
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { QueryResponse, ScanResponse } from "dynamoose/dist/ItemRetriever";
 import userExperienceDao from "../daos/UserExperience.dao";
 import { DbUserExperienceDto } from "../db/models/UserExperience.model";
 import { EmailTemplatePlaceholderUSER_WORK_EMAIL_VERIFICATION_OTP } from "../dtos/EmailTemplatePlaceholder.dto";
@@ -9,6 +9,7 @@ import { EmailSourceDestinationAddress } from "../libraries/email.library";
 import UserDetailService from "./UserDetail.service";
 import userOtpService from "./UserOTP.service";
 import { DbUserOtpDto } from "../db/models/UserOTP.model";
+import { RecordListingFilterOptions, RecordListingResponseDTO } from "../dtos/Common.dto";
 
 // Load the local dtos
 
@@ -181,6 +182,35 @@ class UserExperienceService {
     
     // As the OTP is verified, indicating verification successful
     return true;
+  }
+
+  // /**
+  //  * updateUserExperienceGSIsWithExpId
+  //  *
+  //  * Updates the GSI1SK and GSI1PK for a user's experience.
+  //  *
+  //  * @param {string} userEmail - The email of the user
+  //  * @param {string} companyId - The companyId of the user's experience
+  //  * @param {string} id - The ID of the user's experience
+  //  * @returns {Promise<DbUserExperienceDto>} - A promise that resolves when the user's experience is updated
+  //  */
+  // async updateUserExperienceGSIsWithExpId(userEmail: string, id: string,companyId: string): Promise<DbUserExperienceDto> {
+  //   return userExperienceDao.updateUserExperienceGSIsWithExpId(userEmail,id,companyId);
+  // } 
+
+  /**
+   * getCompanyCurrentEmployeesByCompanyId
+   * 
+   * Retrieves company's current employees for the provided companyId.
+   *
+   * @param {string} companyId - The ID of the company to retrieve users for.
+   * @return {Promise<QueryResponse<DbUserExperienceDto>>} A promise that resolves to a QueryResponse of DbUserExperienceDto.
+   */
+  async getCompanyCurrentEmployeesByCompanyId(
+    companyId: string,
+    options: RecordListingFilterOptions
+  ): Promise<QueryResponse<DbUserExperienceDto>> {
+    return userExperienceDao.getCompanyCurrentEmployeesByCompanyId(companyId, options);
   }
 }
 

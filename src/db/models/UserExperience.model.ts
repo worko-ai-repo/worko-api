@@ -7,6 +7,8 @@ import { DB_CONSTANTS } from "../DB.constants";
 
 // Define the structure for User Experience Database Data Transfer Object (DTO)
 class DbUserExperienceDto extends BaseDbDto {
+  GSI1PK!: string;
+  GSI1SK!: string;
   id!: string;
   department!: string;
   designation?: string;
@@ -28,6 +30,23 @@ const UserExperienceSchema = new dynamoose.Schema(
   {
     // ...DBBaseSchema.attributes, // Use the attributes property from DBBaseSchema
     ...DB_CONSTANTS.WORKO_PK_SK,
+    GSI1PK: {
+      type: String,
+      index: {
+          name: "GSI1",
+          type: "global",
+          rangeKey: "GSI1SK",
+      },
+      required: true
+  },
+  GSI1SK: {
+      type: String,
+      index: {
+          name: "GSI1",
+          type: "global",
+      },
+      required: true
+  },
     id: {
       type: String,
       required: true,
