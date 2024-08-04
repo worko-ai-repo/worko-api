@@ -403,7 +403,7 @@ class UserReferralService {
     referralId: string
   ): Promise<DbUserReferralDto> {
     // Logging the action of getting user Referral by companyId in the service layer
-    logger.info("Fetching Referrals by companyId  [UserReferralService]");
+    logger.info(`Fetching Referrals by referralId :${referralId} and userEmail:${userEmail}  [UserReferralService]`);
     return userReferralDao.getUserReferralByReferralId(userEmail, referralId);
   }
 
@@ -976,7 +976,7 @@ class UserReferralService {
 
     // Calculate the schedule time based on the delay hours constant
     const delayHours = APP_CONSTANTS.REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS;
-    const scheduleTime = DateTime.now().plus({ hours: delayHours }).toISO();
+    const scheduleTime = DateTime.now().plus({ hours: delayHours }).toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss");
     let schedulerInput : ScheduleJobRefReviewAcceptanceStatusInputDto = {
       referralId,
       userEmail,

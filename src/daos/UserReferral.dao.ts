@@ -150,8 +150,8 @@ class UserReferralDao implements BaseDao {
     global.logger.info("Update user referral status [DAO]");
 
     // Construct PK and SK based on referralId and email
-    const PK = this.partitianKey.strtr({ "{primaryEmail}": email });
-    const SK = this.sortKeys.SK_REFERRAL.strtr({ "{reqId}": referralId });
+    const PK = this.partitianKey.replace("{primaryEmail}", email);
+    const SK = this.sortKeys.SK_REFERRAL.replace("{reqId}", referralId);
 
     // Create the update object with PK, SK, and status
     let updateObject: Partial<DbUserReferralDto> = {  status: status };
@@ -215,9 +215,9 @@ class UserReferralDao implements BaseDao {
     userEmail: string,
     referralId: string
   ): Promise<DbUserReferralDto> {
-    global.logger.info("Get Referral [DAO]");
-    const PK = this.partitianKey.strtr({ "{primaryEmail}": userEmail });
-    const SK = this.sortKeys.SK_REFERRAL.strtr({ "{reqId}": referralId });
+    global.logger.info(`Get Referral for UserEmail ${userEmail} and with Referral Id ${referralId}. [DAO]`);
+    const PK = this.partitianKey.replace("{primaryEmail}", userEmail);
+    const SK = this.sortKeys.SK_REFERRAL.replace("{reqId}", referralId);
     return UserReferralModel.get({ PK: PK, SK: SK });
   }
 

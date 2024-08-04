@@ -37,7 +37,7 @@ class ScheduleJobService {
   */
   async createScheduleJob(scheduleBody: ScheduleJobCreateDto): Promise<DbScheduleJobDto> {
     // Log the attempt to create a new schedule job
-    global.logger.info("Creating new scheduler job (data).", { scheduleBody });
+    global.logger.info("Creating new scheduler job [ScheduleJob Service].", { scheduleBody });
 
     // Initialize the created job variable
     let createdJob: DbScheduleJobDto | null = null;
@@ -64,7 +64,7 @@ class ScheduleJobService {
       global.logger.info("Created job in database:", createdJob);
 
       // Create the schedule in AWS Scheduler
-      await awsSchedulerClientLibrary.createSchedule({
+     let response = await awsSchedulerClientLibrary.createSchedule({
         Name: createdJob.id,
         ScheduleExpression: `at(${scheduleBody.scheduleTime})`,
         FlexibleTimeWindow: {
@@ -77,7 +77,7 @@ class ScheduleJobService {
         },
       });
 
-      global.logger.info("Scheduled job in AWS:", createdJob.id);
+      global.logger.info("Created schedule in AWS Scheduler:", { response: JSON.stringify(response) });
       return createdJob;
 
     } catch (error: any) {

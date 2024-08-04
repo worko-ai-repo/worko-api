@@ -123,13 +123,13 @@ const APP_CONSTANTS = {
   */
   get REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS(): number {
     const PROD_HOURS = 5 * 24; // 5 days converted to hours
-    const DEV_HOURS = 2; // 2 hours for dev
-
-    // return the hours based on the environment
+    const DEV_HOURS = 5 / 60; // 5 minutes converted to hours
+  
+    // return the time based on the environment
     return process.env.APP_SLS_STAGE === this.STAGES.PROD 
       ? PROD_HOURS 
       : DEV_HOURS;
-  },
+  }
 };
 
 export default APP_CONSTANTS;

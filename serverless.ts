@@ -25,7 +25,7 @@ const serverlessConfiguration: AWS = {
       APP_AWS_SUBNET2: "${env:APP_AWS_SUBNET2}"
     },
     awsLambdaFunctions: {
-      APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN: "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:app-scheduler-handler",
+      APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN: "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-api-${self:custom.app.STAGE}-app-scheduler-handler",
       APP_AWS_SCHEDULER_HANDLER_ROLE_ARN: "arn:aws:iam::${self:custom.aws.APP_AWS_ACCOUNT_ID}:role/worko-schedule-invoke-lambda-role",
     },
   },
