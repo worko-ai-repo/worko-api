@@ -84,31 +84,28 @@ class UserReferralDao implements BaseDao {
     const SK = this.sortKeys.SK_REFERRAL.strtr({
       "{reqId}": id,
     });
-    // Splitting referralRequest.SK into three parts using '#' delimiter
-    const [refPrefix, refId, refNum] = SK.split("#");
 
-    // Assigning values to GSI1PK and GSI1SK for Global Secondary Index 1
-    // @todo add these along with other propertise of class like "primaryKey" and "sortKeys"; And refer them from there.
-    const GSI1PK = `${refPrefix}#`;
-    const GSI1SK = `${refId}#${refNum}`;
-    // const mScore = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
-    const mScore = 0;
+    // create a referral request
     const newReferralRequest = {
+      ...referralRequest,
       id: id,
       PK: this.partitianKey.strtr({
         "{primaryEmail}": email,
       }),
       SK: SK,
-      GSI1PK: GSI1PK,
-      GSI1SK: GSI1SK,
+      GSI1PK: this.GSI1PK,
+      GSI1SK: this.GSI1SK.strtr({
+        "{refId}": id,
+      }),
       status: ReferralStatus.AWAITING,
-      matchingScore: mScore,
-      ...referralRequest,
+      matchingScore: 0, // todo : review this once .
     };
+
     // Create a new entry in the UserReferralModel (database model) with the referral request data
-     UserReferralModel.create(newReferralRequest);
-    const SKId = SK.split("#")[2];
-    return { referralRequestId: SKId };
+    await UserReferralModel.create(newReferralRequest);
+
+    // return only referralId 
+    return { referralRequestId: id };
   }
 
   /**
@@ -327,6 +324,26 @@ class UserReferralDao implements BaseDao {
         .then((referral) => referral.count ? referral[0] : null);
     });
     return Promise.all(promises);
+  }
+
+  /**
+  * getUserReferralsByJobUrl
+  * 
+  * Retrieves a user referral by job URL.
+  *
+  * @param {string} userEmail - The email of the user.
+  * @param {string} jobUrl - The job URL.
+  * @return {Promise<QueryResponse<DbUserReferralDto>>} A promise that resolves to the user referral data.
+  */
+  async getUserReferralsByJobUrl(userEmail: string, jobUrl: string): Promise<QueryResponse<DbUserReferralDto>> {
+    let PK = this.partitianKey.strtr({ "{primaryEmail}": userEmail });
+    return UserReferralModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith("REF#ID")
+      .where("jobUrl")
+      .eq(jobUrl)
+      .exec();
   }
 }
 

@@ -57,6 +57,7 @@ import ScheduleJobService from './ScheduleJob.service';
 
 // Import utlis
 import { BaseError } from '../utils/errors.util';
+import HttpStatusCode from '../utils/http-codes.util';
 
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
@@ -71,9 +72,33 @@ class UserReferralService {
   async create(referralRequest: UserReferralRequestCreateDTO, email: string) {
     global.logger.info("Create referral [service]");
 
+    // here if job url is found then decode it 
+    global.logger.info(`Decoding Job Url [${referralRequest.jobUrl}]`);
+
+    // Decode Job Url if it is encoded
+    let decodedJobUrl = decodeURIComponent(referralRequest.jobUrl).trim();
+
+    // retive the job url from referral if already exits
+    let existingJoburlCheck = await this.getUserReferralsByJobUrl(email, decodedJobUrl);
+
+    // If job url already exists, throw an error
+    if (existingJoburlCheck.count) {
+      throw new BaseError("You have already requested for referral for this job. Check your dashboard for reference",
+        HttpStatusCode.BAD_REQUEST_400
+      );
+    }
+
+    // Create a new referral request data
+    let referralRequestData: UserReferralRequestCreateDTO = {
+      userSubscriptionId: referralRequest.userSubscriptionId,
+      companyId: referralRequest.companyId,
+      jobUrl: decodedJobUrl,
+      jdExtracted: referralRequest.jdExtracted,
+    }
+    
     // Create the referral request
     const createdReferral = await userReferralDao.create(
-      referralRequest,
+      referralRequestData,
       email
     );
 
@@ -1027,6 +1052,19 @@ class UserReferralService {
     }
 
     return true;
+  }
+
+  /**
+   * getUserReferralsByJobUrl
+   * 
+   * Retrieves a user referral by job URL.
+   *
+   * @param {string} userEmail - The email of the user.
+   * @param {string} jobUrl - The job URL.
+   * @return {Promise<QueryResponse<DbUserReferralDto>>} A promise that resolves to the user referral data.
+   */
+  async getUserReferralsByJobUrl(userEmail: string, jobUrl: string): Promise<QueryResponse<DbUserReferralDto>> {
+    return userReferralDao.getUserReferralsByJobUrl(userEmail, jobUrl);
   }
 }
 
