@@ -122,7 +122,7 @@ const APP_CONSTANTS = {
   * if still in AWAITING status.
   */
   get REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS(): number {
-    const PROD_HOURS = 5 * 24; // 5 days converted to hours
+    const PROD_HOURS = 7 * 24; // 7 days converted to hours
     const DEV_HOURS = 2; // 2 hours for dev
 
     // return the hours based on the environment
