@@ -41,6 +41,7 @@ import EmailTemplateRouter from "./routers/EmailTemplate.router";
 
 // Other
 import TestRouter from "./routers/Test.router";
+import ScriptRouter from "./routers/Script.router";
 // import OrderRouter from "./routers/Order.router";
 import UserOrderRouter from "./routers/UserOrder.router";
 import AdminRouter from "./routers/Admin.router";
@@ -126,6 +127,11 @@ router.use("/email-template", EmailTemplateRouter);
 
 // Just a test controller to perform some testing operations required to confirm the changes made in the application.
 router.use("/test", TestRouter);
+
+// TODO: After executing the ScriptRouter in DEV and PROD environments,
+// these route should be commented out to prevent unintended execution.
+// Register the "Script" routers
+router.use("/script", ScriptRouter);
 
 // Register the "User Support " routers
 router.use("/support", UserSupportRouter);

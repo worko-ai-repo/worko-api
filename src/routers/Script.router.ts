@@ -1,0 +1,20 @@
+// Load the npm packages
+import { Router } from "express";
+import ScriptController from "../controllers/Script.controller";
+
+// Create Router
+const ScriptRouter = Router();
+
+// Initialize the ScriptController
+const scriptController = new ScriptController();
+
+// TODO: After executing the script/API in DEV and PROD environments,
+// these routes should be commented out to prevent unintended execution.
+
+// Endpoint to update all user subscriptions
+ScriptRouter.post("/update-user-subscriptions", scriptController.updateUserSubscriptionsGSIs);
+
+// Endpoint to update all user experiences
+// ScriptRouter.post("/update-user-experiences", scriptController.updateUserExperiencesGSIs);
+
+export default ScriptRouter;

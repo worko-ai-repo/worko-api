@@ -18,6 +18,10 @@ import DBConfig from './db/DB.config';
 // Import Dtos
 import { ScheduleJobRefReviewAcceptanceStatusInputDto } from './dtos/ScheduleJob.dto';
 
+// Import extensions, the extensions must be imported after all natural imports
+// and before any direct imports like this which defines something and adds to the current scope.
+import "./extensions/string.extension";
+
 // Import logger library
 import './libraries/logger.library';
 
@@ -64,7 +68,7 @@ const sendErrResponse = async (
         global.logger.info("sendErrResponse: ", {
             filePath: __filename,
             methodName: "sendErrResponse",
-            response: response,
+            response: JSON.stringify(response),
         });
     }
 
@@ -111,32 +115,24 @@ const sendSuccessResponse = async (
  * @param {Context} context - The context object.
  * @return {Promise<object>} A promise that resolves with the response object.
  */
-export const handler = async (event: ScheduledEvent, context: Context): Promise<object> => {
+export const handler = async (event: any, context: Context): Promise<object> => {
     try {
         // Log receipt of the event
         global.logger.info("App scheduler handler: Received event from scheduler: ", {
             filePath: __filename,
             methodName: "handler",
-            event: event,
-            context: context
+            event: JSON.stringify(event),
+            eventTypeOf:typeof event,
+            context: JSON.stringify(context) // @todo check with team, if this is required or we can remove.
         });
 
-        // Parse the scheduleJobId from the event detail
-       const {scheduleJobId} = JSON.parse(event.detail);
+        // Directly access scheduleJobId from the event object
+        const scheduleJobId = event.scheduleJobId;
 
-        global.logger.info("App scheduler handler: Parsed event details: ", {
-            filePath: __filename,
-            methodName: "handler",
-            scheduleJobId: scheduleJobId,
-            eventDetails : JSON.parse(event.detail)
-        });
-
-        // Fetch the schedule job using the scheduleJobId
+        // Fetch the schedule job using the scheduleJobId, check if the schedule job exists
         const scheduleJob = await scheduleJobService.getScheduleJobById(scheduleJobId);
-        
-        // Check if the schedule job exists
         if (!scheduleJob) {
-            throw new BaseError(`Schedule job ${scheduleJobId} not found`);
+            throw new BaseError(`The schedule job with the provided id "${scheduleJobId}" not found.`);
         }
         
         // extract the details from scheduled job from local database
@@ -145,7 +141,8 @@ export const handler = async (event: ScheduledEvent, context: Context): Promise<
         global.logger.info("App scheduler handler: scheduleJob input Details: ", {
             filePath: __filename,
             methodName: "handler",
-            inputDetails: inputDetails
+            inputDetails: inputDetails,
+            scheduledJob : scheduleJob,
         });
         
         // Process the schedule job based on its type

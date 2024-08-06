@@ -129,7 +129,7 @@ const APP_CONSTANTS = {
     return process.env.APP_SLS_STAGE === this.STAGES.PROD 
       ? PROD_HOURS 
       : DEV_HOURS;
-  },
+  }
 };
 
 export default APP_CONSTANTS;

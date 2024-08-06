@@ -9,14 +9,17 @@ import UlidService from "../services/Ulid.service";
 
 // Load dtos and other packages
 import { UserExperienceDTO } from "../dtos/UserExperience.dto";
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { QueryResponse, ScanResponse } from "dynamoose/dist/ItemRetriever";
+import { RecordListingFilterOptions, RecordListingResponseDTO } from "../dtos/Common.dto";
+import { lastKeyToBase64EncodeStr } from "../helpers/dynamoose.helper";
 
 // UserExperienceDao class implementing the BaseDao interface
 class UserExperienceDao implements BaseDao {
   modelName = "userExperience";
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
   sortKeys = { SK_ID: "EXP#ID#{uuid}" }; // Sort key structure using unique IDs
-
+  GSI1PK = "EXP#";
+  GSI1SK = "COMP#ID#{companyId}#ID#{id}";
   /**
    * Fetches user experience based on the provided email.
    * @param email - Email address of the user
@@ -56,12 +59,7 @@ class UserExperienceDao implements BaseDao {
       "{uuid}": id,
     });
 
-    return UserExperienceModel
-      .query("PK")
-      .eq(PK)
-      .where("SK")
-      .eq(SK)
-      .exec();
+    return UserExperienceModel.query("PK").eq(PK).where("SK").eq(SK).exec();
   }
 
   /**
@@ -78,6 +76,11 @@ class UserExperienceDao implements BaseDao {
       }),
       SK: this.sortKeys.SK_ID.strtr({
         "{uuid}": id,
+      }),
+      GSI1PK: this.GSI1PK,
+      GSI1SK: this.GSI1SK.strtr({
+        "{companyId}": userExperienceDto.companyId,
+        "{id}": id,
       }),
       id: id,
       isEmailVerified: false,
@@ -102,10 +105,10 @@ class UserExperienceDao implements BaseDao {
     });
     return UserExperienceModel.update({ PK: PK, SK: SK }, userExperienceDTO);
   }
-  
+
   /**
    * verifyWorkEmail
-   * 
+   *
    * A description of the entire function.
    *
    * @param {string} primaryEmail - description of parameter
@@ -125,6 +128,77 @@ class UserExperienceDao implements BaseDao {
       }),
     };
     return UserExperienceModel.update(inputKey, { isEmailVerified: true });
+  }
+
+  // /**
+  //  * updateUserExperienceGSIsWithExpId
+  //  *
+  //  *  This function is intended to update the GSI1SK and GSI1PK for a user's experience
+  //  * in the database. It should be used exclusively for this purpose and only invoked
+  //  * once for updating the specified user's experience. Do not use this function for
+  //  * any other operations or purposes.
+  //  *
+  //  * Updates the user's experiences.
+  //  *
+  //  * @param {string} userEmail - The email of the user.
+  //  * @param {string} id - The ID of the user.
+  //  * @return {Promise<DbUserExperienceDto>} A promise that resolves to the updated user's experiences.
+  //  */
+  // async updateUserExperienceGSIsWithExpId(userEmail: string, id: string, companyId: string): Promise<DbUserExperienceDto> {
+  //   // prepare the keys 
+  //   let PK = this.partitianKey.strtr({
+  //     "{primaryEmail}": userEmail,
+  //   });
+  //   let SK = this.sortKeys.SK_ID.strtr({
+  //     "{uuid}": id,
+  //   });
+
+  //   // prepare the GSI1SK value to update 
+  //   let GSI1SK = this.GSI1SK.strtr({
+  //     "{companyId}": companyId,
+  //     "{id}": id,
+  //   })
+  //   return UserExperienceModel.update(
+  //     { PK: PK, SK: SK },
+  //     { GSI1PK: this.GSI1PK, GSI1SK: GSI1SK }
+  //   );
+  // }
+
+  /**
+   * getCompanyCurrentEmployeesByCompanyId
+   *
+   * Retrieves company's current employees for the provided companyId.
+   *
+   * @param {string} companyId - The company ID to filter users by.
+   * @return {Promise<QueryResponse<DbUserExperienceDto>>} A Promise that resolves to a QueryResponse containing the filtered users.
+   */
+  async getCompanyCurrentEmployeesByCompanyId(
+    companyId: string,
+    options: RecordListingFilterOptions
+  ): Promise<QueryResponse<DbUserExperienceDto>> {
+    global.logger.info("Get company current employees by company ID [DAO]");
+
+    // construct query based on args
+    let query = UserExperienceModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .beginsWith(`COMP#ID#${companyId}`)
+      .where("isCurrent")
+      .eq(true);
+  
+    // apply lastKey if provided
+    if (options.lastKey) {
+      query = query.startAt(options.lastKey);
+    }
+
+    // apply pageSize if provided
+    if (options.pageSize) {
+      query = query.limit(options.pageSize);
+    }
+    
+    // perpare result 
+    return query.exec();
+   
   }
 }
 

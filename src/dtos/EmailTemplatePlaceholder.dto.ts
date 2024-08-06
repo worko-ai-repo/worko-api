@@ -73,3 +73,7 @@ export interface EmailTemplatePlaceholderUSER_CORPORATE_REQUEST_EMAIL_OTP {
     logoUrl: string;
     otp: string;
 }
+export interface EmailTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION{
+    emp_first_name: string;
+    candidate_name: string;
+}
