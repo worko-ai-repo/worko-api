@@ -41,7 +41,7 @@ const APP_CONSTANTS = {
   AWS_S3_DIR_PATHS: {
     USER_RESUME: "users/{userId}/resumes", // To upload the individual user's resume
     USER_PROFILE_PIC: "users/{userId}/profilePics", // To upload the individual user's profile pics
-    CAREER_RESUME: "career-resumes" // To upload the resumes uplaoded via career page
+    CAREER_RESUME: "career-resumes", // To upload the resumes uplaoded via career page
   },
 
   /**
@@ -66,27 +66,27 @@ const APP_CONSTANTS = {
 
   /**
    * SOURCE_EMAIL_ADDRESS
-   * 
+   *
    * Possible source email addresses & names would be used as sender while sending emails outside the application.
-   * 
+   *
    * Here you may consider adding additional sources for different use cases and use them in the application.
    */
   SOURCE_EMAIL_ADDRESS: {
     WORKO_DEFAULT: {
       email: "hello@worko.ai",
-      fullName: "Worko.ai"
+      fullName: "Worko.ai",
     },
     WORKO_NO_REPLY: {
       email: "no-reply@worko.ai",
-      fullName: "Worko.ai"
+      fullName: "Worko.ai",
     },
   },
 
   /**
    * PROFILE_COMPLETION_PERCENTAGE
-   * 
+   *
    * These are the minimum profile percentages required to complete the profile for respective dashboards.
-   * 
+   *
    * If the profile is not completed with minimum percentage then the user should not be able to access the certain features of the application.
    */
   PROFILE_COMPLETION_PERCENTAGE: {
@@ -99,37 +99,38 @@ const APP_CONSTANTS = {
     SUBS_PREMIUM_UPGRADE: "https://app.worko.ai/",
   },
 
-  SCHEDULE_JOB:{
+  SCHEDULE_JOB: {
     GROUP: "worko",
     TIME_ZONE: "Asia/Calcutta",
-    LAMBDA_TRIGGER_ARN: "arn:aws:lambda:ap-south-1:787066054733:function:pankaj-test-function",
-    ROLE_ARN: "arn:aws:iam::787066054733:role/worko-schedule-invoke-lambda-role"
+    LAMBDA_TRIGGER_ARN:
+      "arn:aws:lambda:ap-south-1:787066054733:function:pankaj-test-function",
+    ROLE_ARN:
+      "arn:aws:iam::787066054733:role/worko-schedule-invoke-lambda-role",
   },
-  
+
   WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
 
   /**
    * REFERRAL_MINIMUM_MATCHING_SCORE
-   * 
+   *
    * Required constants for Referral score as matching score
    */
   REFERRAL_MINIMUM_MATCHING_SCORE: 70,
 
   /**
-  * REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS
-  * 
-  * This is the number of hours after which the referral will be considered as rejected
-  * if still in AWAITING status.
-  */
+   * REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS
+   *
+   * This is the number of hours after which the referral will be considered as rejected
+   * if still in AWAITING status.
+   */
   get REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS(): number {
     const PROD_HOURS = 7 * 24; // 7 days converted to hours
-    const DEV_HOURS = 2; // 2 hours for dev
-
-    // return the hours based on the environment
-    return process.env.APP_SLS_STAGE === this.STAGES.PROD 
-      ? PROD_HOURS 
+    const DEV_HOURS = 10 / 60; // 10 minutes converted to hours
+    // return the time based on the environment
+    return process.env.APP_SLS_STAGE === this.STAGES.PROD
+      ? PROD_HOURS
       : DEV_HOURS;
-  }
+  },
 };
 
 export default APP_CONSTANTS;
