@@ -69,8 +69,7 @@ export const userDetailDTOValidation = Joi.object({
   CTC: Joi.number().optional(),
   ECTC: Joi.number().optional(),
   noticePeriod: Joi.number().optional(),
-  YOE: Joi.number().required().messages({
-    "any.required": "Years of experience is required.",
+  YOE: Joi.number().optional().messages({
     "number.base": "Years of experience must be a valid number.",
   }),
   CV: Joi.string().optional(),

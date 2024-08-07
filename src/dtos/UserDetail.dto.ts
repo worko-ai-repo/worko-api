@@ -12,7 +12,7 @@ export interface UserDetailDTO {
   CTC?: number;
   ECTC?: number;
   noticePeriod?: number;
-  YOE: number;
+  YOE?: number;
   CV?: string;
   coverLetter?: string;
   lastAccessedDash: string;
