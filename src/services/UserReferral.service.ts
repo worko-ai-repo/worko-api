@@ -1026,7 +1026,7 @@ class UserReferralService {
 
     // Update referral status to CANCELLED if matching score is below minimum threshold
     if (matchingScore < APP_CONSTANTS.REFERRAL_MINIMUM_MATCHING_SCORE) {
-      await this.updateStatus(referralId, userEmail, ReferralStatus.CANCELLED);
+      await this.updateStatus(referralId, userEmail, ReferralStatus.REJECTED);
       logger.info(`Referral ${referralId} cancelled due to low matching score`);
     } else {
       // Create a delayed message to check referral status after 5 days
