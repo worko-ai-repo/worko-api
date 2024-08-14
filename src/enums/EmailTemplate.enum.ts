@@ -25,5 +25,16 @@ export enum EmailTemplateEnum {
   EMP_SWITCH_PROFILE_NOTIFICATION = "EMP_SWITCH_PROFILE_NOTIFICATION",
   EMP_REVIEW_RATING_BY_CAND = "EMP_REVIEW_RATING_BY_CAND",
   EMP_QUERY_FOR_REFERRAL_BY_CAND = "EMP_QUERY_FOR_REFERRAL_BY_CAND",
-  USER_CORPORATE_REQUEST_EMAIL_OTP  = "USER_CORPORATE_REQUEST_EMAIL_OTP"
+  USER_CORPORATE_REQUEST_EMAIL_OTP  = "USER_CORPORATE_REQUEST_EMAIL_OTP",
+   /**
+   * The template name used when a candidate's referral is automatically cancelled
+   * after a specified number of days.
+   */
+   CAND_REF_AUTO_CANCEL_AFTER_X_DAYS = "CAND_REF_AUTO_CANCEL_AFTER_X_DAYS",
+
+   /**
+    * The template name used when a candidate's referral is automatically rejected
+    * after a specified number of days.
+    */
+   CAND_REF_AUTO_REJECT_AFTER_X_DAYS = "CAND_REF_AUTO_REJECT_AFTER_X_DAYS",
 }

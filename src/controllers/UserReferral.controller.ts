@@ -27,6 +27,7 @@ import CompanyService from "../services/Company.service";
 import UserService from "../services/User.service";
 import UserDetailService from "../services/UserDetail.service";
 import UserSubscriptionService from "../services/UserSubscription.service";
+import {userReferralEmpServiceObj} from "../services/UserReferralEmp.service";
 
 //Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -150,8 +151,8 @@ class UserReferralController {
         throw new RequestValidationError(error);
       }
       
-      // Get referrals for emp based on provided status
-      let empReferrals = await UserReferralService.getEmployeeReferrals(
+      // call the Employee Referral Service to Get referrals for emp based on provided status 
+      let empReferrals = await userReferralEmpServiceObj.getEmployeeReferrals(
         empPrimaryEmail,
         companyId,
         referralStatus
@@ -427,9 +428,9 @@ class UserReferralController {
       const { referralId } = req.params;
 
       // Extract and validate the request body
-      const referralstatusUpdate = req.body;
+      const referralStatusUpdate = req.body;
       const { error } = UserReferralEmployeeStatusValidation.validate(
-        referralstatusUpdate,
+        referralStatusUpdate,
         { abortEarly: false }
       );
 
@@ -438,215 +439,20 @@ class UserReferralController {
         throw new RequestValidationError(error);
       }
 
-      // Extract userId from request body
-      const userId = referralstatusUpdate.userId;
-      let referral = await UserReferralService.getByGSI1(referralId); //Fetching the referral details
-
-      // From the referral, get the candidate's name and email for sending email
-      const candPK: string = referral[0].PK;
-      const candEmail: string = candPK.split("#").pop() ?? ""; // for valid PK, there will be valid email id
-      const candDetails = await UserDetailService.get(candEmail);
-      const candName = candDetails[0].name;
-  
-      // Retrieve the existing referral response for the specified email ID.
-      let referralResponse = await UserReferralResponseService.get(
-        referralstatusUpdate.emailId
-      );
-
-      let updateReferralResponse = false;
-
-      // Check if action is PASS or REJECT to determine if referral response needs to be updated
-      if (
-        referralstatusUpdate.action === ReferralActions.PASS ||
-        referralstatusUpdate.action === ReferralActions.REJECT ||
-        referralstatusUpdate.action === ReferralActions.ACCEPT ||
-        referralstatusUpdate.action === ReferralActions.DONE
-      ) {
-       
-        // Determine whether an existing referral response is found based on the count.
-        // If count is non-zero, set updateReferralResponse to true; otherwise, set it to false.
-        updateReferralResponse = referralResponse.count !== 0;
-      }
-
-      // Initialize DTO for user referral response
-      let userReferralResponseDTO: UserReferralResponseDTO = {
-        passedRefIds: [],
-        rejectedRefIds: [],
-        acceptedRefIds: [],
-        doneRefIds: [],
-      };
-
-      // Get current date
-      const currentDate = DateTime.now();
-
-      // Update referral based on action provided
-      switch (referralstatusUpdate.action) {
-        // Handle when action is PASS
-        case ReferralActions.PASS:
-          if (!referral || referral.count === 0) {
-            throw new Error("Wrong referralId");
-          }
-          // Check if the referral has already been passed by the current user
-          const alreadyPassedByCurrentUser = referral[0].passedByUserIds && referral[0].passedByUserIds.some(
-            (passedUser: { userId: string }) => passedUser.userId === userId
-          );
-
-          // if user has already passed the referral then throw error message 
-          if (alreadyPassedByCurrentUser) {
-            throw new Error("The referral has already been passed by you.")
-          }
-          // Update passedByUserIds array with current userId and actionDate
-          if (
-            !referral[0].passedByUserIds ||
-            referral[0].passedByUserIds.length === 0
-          ) {
-            referral[0].passedByUserIds = [
-              { userId, actionDate:  currentDate.toISO() },
-            ];
-          } else {
-            referral[0].passedByUserIds.push({
-              userId,
-              actionDate:  currentDate.toISO(),
-            });
-          }
-
-          // Update referral response or DTO based on whether response exists
-          if (updateReferralResponse) {
-            referralResponse[0].passedRefIds.push(referralId);
-            // If updateReferralResponse is false, implying no existing referral response,
-            // add the referralId to the passedRefIds array of the userReferralResponseDTO.
-          } else {
-            userReferralResponseDTO.passedRefIds.push(referralId);
-          }
-
-          break;
-
-        // Handle when action is REJECT
-        case ReferralActions.REJECT:
-          if (!referral || referral.count === 0) {
-            throw new Error("Wrong referralId");
-          }
-          // Check if the referral has already been rejected by the current user
-          const alreadyRejectedByCurrentUser = referral[0].rejectedByUserIds &&
-            referral[0].rejectedByUserIds.some(
-              (rejectedUserId: { userId: string }) => rejectedUserId.userId === userId
-            );
-
-          // if user has already rejected the referral then throw error message 
-          if (alreadyRejectedByCurrentUser) {
-            throw new Error("The referral has already been rejected by you.")
-          }
-          // Update rejectedByUserIds array with userId, actionDate, reason, and userComment
-          if (
-            !referral[0].rejectedByUserIds ||
-            referral[0].rejectedByUserIds.length === 0
-          ) {
-            referral[0].rejectedByUserIds = [
-              {
-                userId: userId,
-                actionDate:  currentDate.toISODate(),
-                reason: referralstatusUpdate.reason,
-                userComment: referralstatusUpdate.userComment,
-              },
-            ];
-          } else {
-            referral[0].rejectedByUserIds.push({
-              userId: userId,
-              actionDate:  currentDate.toISODate(),
-              reason: referralstatusUpdate.reason,
-              userComment: referralstatusUpdate.userComment,
-            });
-          }
-
-          // Update referral response or DTO based on whether response exists
-          if (updateReferralResponse) {
-            referralResponse[0].rejectedRefIds.push(referralId);
-          } else {
-            userReferralResponseDTO.rejectedRefIds.push(referralId);
-          }
-
-          break;
-
-        case ReferralActions.ACCEPT:
-          if (!referral || referral.count === 0) {
-            throw new Error("Wrong referralId");
-          } else if (referral[0].acceptedByUserId) {
-            throw new Error("Referral already accepted by other employee");
-          }
-
-          referral[0].acceptedByUserId = userId;
-          referral[0].status = ReferralStatus.ACCEPTED;
-          referral[0].acceptedAtByUser = currentDate.toJSDate();
-
-          // Update acceptedRefIds array in DTO
-          if (updateReferralResponse) {
-            referralResponse[0].acceptedRefIds.push(referralId);
-          } else {
-            userReferralResponseDTO.acceptedRefIds.push(referralId);
-          }
-
-          break;
-        // Handle when action is DONE
-        case ReferralActions.DONE:
-          if (!referral || referral.length === 0) {
-            throw new Error("Wrong referralId");
-          } else if (referral[0].doneByEmployee) {
-            throw new Error("Referral already done by you");
-          }
-
-          // If the referral was previously accepted, remove it from acceptedRefIds
-          if (referral[0].status === ReferralStatus.ACCEPTED) {
-            const index =
-              referralResponse[0].acceptedRefIds.indexOf(referralId);
-            if (index !== -1) {
-              referralResponse[0].acceptedRefIds.splice(index, 1);
-            }
-          }
-
-          referral[0].doneByEmployee = currentDate.toJSDate();
-          referral[0].doneByUserId = userId;
-          referral[0].status = ReferralStatus.DONE;
-
-          // Update doneRefIds array in DTO or referral response based on whether response exists
-          if (updateReferralResponse) {
-            if (referralResponse[0].doneRefIds) {
-              referralResponse[0].doneRefIds.push(referralId);
-            } else {
-              referralResponse[0].doneRefIds = [referralId];
-            }
-          } else {
-            userReferralResponseDTO.doneRefIds.push(referralId);
-          }
-
-          break;
-
-        default:
-          throw new Error("Invalid action provided");
-      }
-
-      // Extract unnecessary properties before updating referral
-      const { PK, SK, updatedAt, ...userReferralDTO } = referral[0];
+      // Call the service method to update the referral status and preapre the params.
+      const userId = referralStatusUpdate.userId;
+      const empEmail = referralStatusUpdate.emailId;
       
-      // Update referral in the database
-      const result = await UserReferralService.update(PK, SK, userReferralDTO, referralstatusUpdate.action);
-
-      if (updateReferralResponse) {
-        const { passedRefIds, rejectedRefIds , acceptedRefIds ,doneRefIds} = referralResponse[0];
-        UserReferralResponseService.update(referralstatusUpdate.emailId, {
-          passedRefIds,
-          rejectedRefIds,
-          acceptedRefIds,
-          doneRefIds,
-        });
-      } else {
-        UserReferralResponseService.create(
-          referralstatusUpdate.emailId,
-          userReferralResponseDTO
-        );
-      }
-
+      // update the referral status 
+      const userReferral = await userReferralEmpServiceObj.updateReferralStatusByEmp(
+        referralId,
+        referralStatusUpdate,
+        userId,
+        empEmail
+      );
+  
       // Send a successful response with the updated referral data
-      res.status(HttpStatusCode.OK_200).json(result);
+      res.status(HttpStatusCode.OK_200).json(userReferral);
     } catch (error) {
       // Pass any errors to the next error handler
       next(error);

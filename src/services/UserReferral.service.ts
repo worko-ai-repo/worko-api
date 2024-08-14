@@ -17,6 +17,8 @@ import {
   UserReferralStatusChangeByCandDTO,
 } from "../dtos/UserReferral.dto";
 import {
+  EmailTemplatePlaceholderCAND_REF_AUTO_CANCEL_AFTER_X_DAYS,
+  EmailTemplatePlaceholderCAND_REF_AUTO_REJECT_AFTER_X_DAYS,
   EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED,
   EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED,
   EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION,
@@ -56,6 +58,7 @@ import CompanyService from "./Company.service";
 import UserSubscriptionService from "./UserSubscription.service";
 import UserExperienceService from './UserExperience.service';
 import ScheduleJobService from './ScheduleJob.service';
+import {userReferralEmpServiceObj} from './UserReferralEmp.service';
 
 // Import utlis
 import { BaseError } from '../utils/errors.util';
@@ -239,145 +242,6 @@ class UserReferralService {
     });
 
     return updatedSubscription;
-  }
-
-  /**
-   * Updates an existing user Referral.
-   *
-   * @param PK - PK of the user
-   * @param SK - SK of the user
-   * @param userReferralDTO - Data Transfer Object containing updated user Referral Referrals
-   * @returns {Promise<any>} - A Promise that resolves when the Referral is successfully updated
-   */
-  async update(
-    PK: string,
-    SK: string,
-    userReferralDTO: UserReferralDTO,
-    status: string
-  ): Promise<any> {
-    // Logging the action of updating user Referral in the service layer
-    logger.info("Updating user Referral [UserReferralService]");
-    const candEmail: string = PK.split("#").pop() ?? ""; // for valid PK, there will be valid email id
-    const candDetails = await UserDetailService.get(candEmail);
-    const candName = candDetails.length > 0 ? candDetails[0].name ?? "" : "";
-    logger.debug(`Candidate Name: ${candName}`);
-
-    // Get the name of the company for which the referral request got accepted
-    const companyId = userReferralDTO.companyId;
-    const companyDetails = await CompanyService.getCompanyDetailsByIds([
-      companyId,
-    ]);
-
-    if (!companyDetails || companyDetails.length === 0) {
-      throw new Error("Company not found");
-    }
-    const companyName = companyDetails[0].name;
-
-    let result = await userReferralDao.update(PK, SK, userReferralDTO);
-
-    if (result) {
-      if (
-        status === ReferralActions.ACCEPT ||
-        status === ReferralActions.DONE
-      ) {
-        // Update the referral counts
-        const userSubscriptionId = userReferralDTO.userSubscriptionId;
-        await this.calculateAndUpdateReferralCounts(
-          candEmail,
-          userSubscriptionId,
-          status
-        );
-      }
-
-      // The actions are done by the employee
-      // When employee accepts the referral request, email will be sent to candidate
-      if (status === ReferralActions.ACCEPT) {
-        // Get the name and email of the referee who accepted the referral request
-        const empId = userReferralDTO.acceptedByUserId as string;
-        const empDetails = await UserDetailService.getUserById(empId);
-        const refereeName = empDetails[0].name;
-        const refereeEmail = empDetails[0].emailList.primary;
-
-        // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestAccepted function
-        const toAddress: EmailSourceDestinationAddress = {
-          email: candEmail,
-          fullName: candName,
-        };
-        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED =
-          {
-            candName: candName,
-            companyName: companyName,
-            refereeName: refereeName,
-          };
-
-        // Prepare the necessary parameters required for the sendEmailToEmpWhenReferralRequestAccepted function
-        const emptoAddress: EmailSourceDestinationAddress = {
-          email: refereeEmail,
-          fullName: refereeName,
-        };
-
-        const empemailPlaceholders: EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION =
-          {
-            empName: refereeName,
-            candName: candName,
-          };
-
-        await Promise.all([
-          this.sendEmailToCandWhenReferralRequestAccepted(
-            emailPlaceholders,
-            toAddress
-          ),
-          this.sendEmailToEmpWhenReferralRequestAccepted(
-            empemailPlaceholders,
-            emptoAddress
-          ),
-        ]);
-      }
-      // When employee marks the referral request as done, email will be sent to candidate
-      else if (status === ReferralActions.DONE) {
-        // Get the name and email of the referee who completed the referral request
-        const empId = userReferralDTO.doneByUserId as string;
-        // const employeeId = empId.split("ID#")[1];
-        const empDetails = await UserDetailService.getUserById(empId);
-        const refereeName = empDetails[0].name;
-        const refereeEmail = empDetails[0].emailList.primary;
-
-        // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestCompleted function
-        const toAddress: EmailSourceDestinationAddress = {
-          email: candEmail,
-          fullName: candName,
-        };
-        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED =
-          {
-            candName: candName,
-            companyName: companyName,
-          };
-
-        // Prepare the necessary parameters required for the sendEmailToEmpWhenReferralRequestCompleted function
-        const emptoAddress: EmailSourceDestinationAddress = {
-          email: refereeEmail,
-          fullName: refereeName,
-        };
-
-        const empemailPlaceholders: EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND =
-          {
-            empName: refereeName,
-          };
-
-        await Promise.all([
-          this.sendEmailToCandWhenReferralRequestCompleted(
-            emailPlaceholders,
-            toAddress
-          ),
-          this.sendEmailToEmpWhenReferralRequestCompleted(
-            empemailPlaceholders,
-            emptoAddress
-          ),
-        ]);
-      }
-    }
-
-    return result;
   }
 
   /**
@@ -569,22 +433,6 @@ class UserReferralService {
     }
 
     return updatedReferralStatus;
-    // @todo Ashrith, this function is used for candidate specifically, and candidate will never accept the referral, therefor code to send email is not required here.
-    // Kindly remove if this is true.
-    // If the details are updated and newStatus is "ACCEPTED", then email should be sent to the candidate saying that his referral request has been accepted
-    /* if (updatedReferralStatus && newStatus === ReferralStatus.ACCEPTED) {
-      // Get the name of the referee who accepted the referral request
-      const employeeId = updatedReferralStatus.acceptedByUserId as string;
-      const empDetails = await UserDetailService.getUserById(employeeId)
-      const refereeName = empDetails[0].name;
-  
-      // Get the name of the company for which the referral request got accepted
-      const companyId = updatedReferralStatus.companyId;
-      const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId]);
-      const companyName = companyDetails[0].name;
-
-      await this.sendEmailOnReferralAccepted(candEmail,refereeName,companyName);
-    } */
   }
 
   async updateStatusForWithdrawnReferral(
@@ -710,132 +558,104 @@ class UserReferralService {
   }
 
   /**
-   * sendEmailToEmpWhenReferralRequestAccepted - Function to send an email notification to employer when a referral request is accepted by him
+   * sendEmailToCandidateOnAutoReferralCancellation
    *
-   * @param {EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION} emailPlaceholders - Placeholders for email content
-   * @param {EmailSourceDestinationAddress} toAddress - Email address and full name of the recipient
-   * @returns {Promise<{ awsMessageId: string | null }>} - Promise resolving to AWS message ID or null
-   */
-  async sendEmailToEmpWhenReferralRequestAccepted(
-    emailPlaceholders: EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION,
-    toAddress: EmailSourceDestinationAddress
-  ): Promise<{ awsMessageId: string | null }> {
-    // Send email using the email library with the specified template, recipient, and placeholders
-    return emailLibrary.sendEmail(
-      EmailTemplateEnum.EMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION,
-      toAddress,
-      emailPlaceholders
-    );
-  }
-
-  /**
-   * sendEmailToEmpWhenReferralRequestCompleted - Function to send an email notification to employer when a referral request is completed by him
+   * Sends an email to the candidate when their referral is auto-cancelled.
    *
-   * @param {EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND} emailPlaceholders - Placeholders for email content
-   * @param {EmailSourceDestinationAddress} toAddress - Email address and full name of the recipient
-   * @returns {Promise<{ awsMessageId: string | null }>} - Promise resolving to AWS message ID or null
+   * @param {string} candEmail - The email address of the candidate
+   * @param {string} candName - The name of the candidate
+   * @param {string} jobUrl - The title of the job for which the referral was made
+   * @param {string} companyName - The name of the company
+   * @returns {Promise<{ awsMessageId: string | null }>} A promise that resolves with the AWS message ID
    */
-  async sendEmailToEmpWhenReferralRequestCompleted(
-    emailPlaceholders: EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND,
-    toAddress: EmailSourceDestinationAddress
+  async sendEmailToCandidateOnAutoReferralCancellation(
+    candEmail: string,
+    candName: string,
+    jobUrl: string,
+    companyName: string
   ): Promise<{ awsMessageId: string | null }> {
-    // Send email using the email library with the specified template, recipient, and placeholders
-    return emailLibrary.sendEmail(
-      EmailTemplateEnum.EMP_REFFERAL_DONE_FOR_CAND,
-      toAddress,
-      emailPlaceholders
-    );
-  }
-
- /**
-   * sendEmailToEmployeesOnReferralCreation
-   * 
-   * Sends an email to all current employees of a company when a referral is created.
-   * The email notifies employees of a new candidate referral.
-   * 
-   * @param {string} companyId - The ID of the company whose employees will receive the email.
-   * @param {string} referralId - The ID of the referral for which the email is being sent.
-   * @param {string} candidateName - The name of the referred candidate.
-   * @returns {Promise<boolean>} - Returns true if emails are sent successfully.
-   * @throws {BaseError} - Throws an error if no employees are found.
-   */
-  async sendEmailToEmployeesOnReferralCreation(
-    companyId: string,
-    referralId: string,
-    candidateName: string
-  ): Promise<boolean> {
-  let companyEmployees: DbUserExperienceDto[] = [];
-  let lastKey: any = undefined;
-  const pageSize = 25;
-
-  // Continue fetching and sending emails as long as there are more employees
-  do {
-    // Get a batch of employees for the company
-    const employeesResponse = await UserExperienceService.getCompanyCurrentEmployeesByCompanyId(companyId, {
-      pageSize,
-      lastKey: lastKey,
-    });      
-
-    // Add employees to the list
-    companyEmployees = companyEmployees.concat(employeesResponse);
-
-    // Update the lastKey for the next iteration and encode it 
-    lastKey = employeesResponse.lastKey ?? null;
-  } while (lastKey);
-
-  // throw error if no employees are found
-  if (!companyEmployees.length) {
-    throw new BaseError(
-      `No employees found for the company with companyId ${companyId}.`,
-      HttpStatusCode.NOT_FOUND_404
-    );
-  }
-
-  // Fetch employee details and send emails in parallel
-  const emailPromisesBatch = companyEmployees.map(async (employee) => {
-    // Prepare the employee email address
-    const empEmail = employee.PK.split("#")[2];
-
-    // Get employee details
-    const empDetails = await UserDetailService.get(empEmail);
-    if (!empDetails.count) {
-      // Merge the current batch of promises with the accumulated ones
-      global.logger.info(`The employee details for the given email "${empEmail}" not found. Therefore, the email notification cannot be sent for the referral "${referralId}".`, {
-        companyId: companyId,
-      });
-      return false;
-    }
-
-    const refereeName = empDetails[0].name;
-    const refereeEmail = empDetails[0].emailList.primary;
-
-    // Construct the email address object
+    // Prepare the email address object
     const toAddress: EmailSourceDestinationAddress = {
-      email: refereeEmail,
-      fullName: refereeName,
+      email: candEmail,
+      fullName: candName,
     };
 
-    // Prepare the email placeholders with appropriate values
-    const emailPlaceholders: EmailTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION = {
-      emp_first_name: refereeName,
-      candidate_name: candidateName,
+    // Prepare the email placeholders
+    const emailPlaceholders: EmailTemplatePlaceholderCAND_REF_AUTO_CANCEL_AFTER_X_DAYS = {
+      candName: candName,
+      jobUrl: jobUrl,
+      companyName: companyName,
     };
 
     // Send the email using the email library
-    return emailLibrary.sendEmail(
-      EmailTemplateEnum.EMP_RECEIVED_REFERRAL_REQ_NOTIFICATION,
-      toAddress,
-      emailPlaceholders
-    );
-  });
+    return emailLibrary.sendEmail(EmailTemplateEnum.CAND_REF_AUTO_CANCEL_AFTER_X_DAYS, toAddress, emailPlaceholders);
+  }
 
-  // Merge the current batch of promises with the accumulated ones
-  global.logger.info(`Processed ${emailPromisesBatch.length} email sending tasks so far for companyId: ${companyId}`);
-
-  // Wait for all email sending promises to complete
-  await Promise.all(emailPromisesBatch);
+ /**
+ * sendEmailToCandidateOnAutoReferralRejection
+ * 
+ * Sends an email to a candidate when their referral is auto-rejected.
+ *
+ * @param {string} candEmail - The email address of the candidate.
+ * @param {string} candName - The name of the candidate.
+ * @param {string} jobUrl - The title of the job for which the referral was made.
+ * @param {string} companyName - The name of the company.
+ * @param {Array<{ userId: string, actionDate: Date, reason: string, userComment: string }>} rejectedByUserIds - An array of objects containing the userId, actionDate, reason, and userComment of the users who rejected the referral.
+ * @return {Promise<{ awsMessageId: string | null }>} A promise that resolves with the AWS message ID or null.
+ */
+  async sendEmailToCandidateOnAutoReferralRejection(
+    candEmail: string,
+    candName: string,
+    jobUrl: string,
+    companyName: string,
+    rejectedByUserIds: { userId: string; actionDate: Date; reason: string; userComment: string }[]
+  ): Promise<{ awsMessageId: string | null }> {
+    global.logger.info("Sending Email To Candidate on Auto Referral Rejection [UserReferralService]");
+    // Prepare the email address object
+    const toAddress: EmailSourceDestinationAddress = {
+      email: candEmail,
+      fullName: candName,
+    };
   
-  return true;
+    // Prepare the email placeholders
+    const emailPlaceholders: EmailTemplatePlaceholderCAND_REF_AUTO_REJECT_AFTER_X_DAYS = {
+      candName: candName,
+      jobUrl: jobUrl,
+      companyName: companyName,
+      rejectedReasons: this.prepareReferralRejectedReasons(rejectedByUserIds),
+    };
+  
+    // Send the email using the email library
+    return emailLibrary.sendEmail(EmailTemplateEnum.CAND_REF_AUTO_REJECT_AFTER_X_DAYS, toAddress, emailPlaceholders);
+  }
+  
+/**
+ * prepareReferralRejectedReasons
+ *
+ * Formats the rejected reasons as an unordered list, displaying the last two reasons if there are more than two.
+ * The format for each list item is: "Reason from drop down. - (Comment)"
+ *
+ * @param {Array<{ userId: string; actionDate: Date; reason: string; userComment: string }>} rejectedByUserIds
+ * @returns {string} Formatted rejected reasons as an HTML unordered list
+ */
+private prepareReferralRejectedReasons(
+  rejectedByUserIds: { userId: string; actionDate: Date; reason: string; userComment: string }[]
+): string {
+  /*
+     `lastTwoReasons`
+     This variable holds the last two reasons from the rejectedByUserIds array.
+     This ensures that the function always returns the last two reasons, even if there are more than two reasons in the array.
+     If there is only one reason, the function will return a single-item unordered list.
+   */
+  const lastTwoReasons = rejectedByUserIds.slice(-2);
+  
+  // Format each reason according to the specified format and join them into an unordered list
+  return `<ul>${lastTwoReasons
+    .map(
+      (item) =>
+        `<li>${item.reason} - (${item.userComment})</li>`
+    )
+    .join('')}</ul>`;
 }
 
   /**
@@ -850,143 +670,6 @@ class UserReferralService {
     referralIds: string[]
   ): Promise<(DbUserReferralDto | null)[]> {
     return userReferralDao.getReferralsByIdsUsingGsis(referralIds);
-  }
-
-  /**
-   * getEmployeeReferrals
-   *
-   * Retrieves employee referrals based on their primary email, company ID, and referral status.
-   *
-   * @param {string} empPrimaryEmail - Employee's primary email
-   * @param {string} companyId - Company ID
-   * @param {string} referralStatus - Referral status
-   */
-  async getEmployeeReferrals(
-    empPrimaryEmail: string,
-    companyId: string,
-    referralStatus: string
-  ): Promise<DbUserReferralDto[]> {
-    // If referralStatus is AWAITING then fetch the details
-    if (referralStatus === ReferralStatus.AWAITING) {
-      // If status is awaiting, call the function to get awaiting referrals
-      return this.getEmployeeAwaitingReferrals(
-        empPrimaryEmail,
-        companyId,
-        referralStatus
-      );
-    } else {
-      // Otherwise, call the function to get referrals by status
-      return this.getEmployeeReferralsByStatus(empPrimaryEmail, referralStatus);
-    }
-  }
-
-  /**
-   * getEmployeeAwaitingReferrals
-   *
-   * Retrieves employee awaiting referrals based on their primary email and company ID.
-   *
-   * @param {string} empPrimaryEmail - Employee's primary email
-   * @param {string} companyId - Company ID
-   * @param {string} referralStatus - Referral status
-   * @returns {Promise<DbUserReferralDto[]>} - A Promise that resolves to the awaiting referrals
-   */
-  async getEmployeeAwaitingReferrals(
-    empPrimaryEmail: string,
-    companyId: string,
-    referralStatus: string
-  ): Promise<DbUserReferralDto[]> {
-    try {
-      // Get employee's responses given to different referrals by empPrimaryEmail
-      const userReferralResponse = await UserReferralResponseService.get(
-        empPrimaryEmail
-      );
-      const empPassedRefIds = Array.from(
-        new Set(userReferralResponse[0]?.passedRefIds || [])
-      );
-      const empRejectedRefIds = Array.from(
-        new Set(userReferralResponse[0]?.rejectedRefIds || [])
-      );
-      const referralIdsToBeExcluded = [
-        ...empPassedRefIds,
-        ...empRejectedRefIds,
-      ];
-
-      // Get company referrals where status is awaiting
-      const companyReferrals = await this.getByGSI1PKAndStatus(
-        companyId,
-        referralStatus
-      );
-
-      // NOTE : This block filters the referrals on which the emp has not taken any action
-      // @todo : Investigated and see if this can be handle by dynamouse itself
-      const awaitingCompanyReferrals = [];
-      for (const referral of companyReferrals) {
-        if (!referralIdsToBeExcluded.includes(referral.id)) {
-          awaitingCompanyReferrals.push(referral);
-        }
-      }
-      global.logger.info(
-        "Filtered Company Referrals:",
-        awaitingCompanyReferrals
-      );
-
-      return awaitingCompanyReferrals;
-    } catch (error) {
-      global.logger.error("Error fetching employee awaiting referrals:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * getEmployeeReferralsByStatus
-   *
-   * Retrieves employee referrals based on their primary email and referral status.
-   *
-   * @param {string} empPrimaryEmail - Employee's primary email
-   * @param {string} referralStatus - Referral status
-   * @returns { Promise<QueryResponse<DbUserReferralDto>[]> } - A Promise that resolves to the employee referrals
-   */
-  async getEmployeeReferralsByStatus(
-    empPrimaryEmail: string,
-    referralStatus: string
-  ): Promise<DbUserReferralDto[]> {
-    // Get company referrals where status is referralStatus
-    let attributes: string[] = [];
-
-    // Determine the attribute based on referralStatus
-    if (referralStatus === ReferralStatus.CANCELLED) {
-      attributes = ["passedRefIds"];
-    } else if (referralStatus === ReferralStatus.ACCEPTED) {
-      attributes = ["acceptedRefIds"];
-    } else if (referralStatus === ReferralStatus.REJECTED) {
-      attributes = ["rejectedRefIds"];
-    } else if (referralStatus === ReferralStatus.DONE) {
-      attributes = ["doneRefIds"];
-    }
-
-    // Get the refIds on which emp has performed the given action
-    const userReferralResponse =
-      await UserReferralResponseService.getByEmailWithSpecifiedAttributes(
-        empPrimaryEmail,
-        attributes
-      );
-
-    if (!userReferralResponse.length) {
-      global.logger.info("No referrals found for the given email");
-      return [];
-    }
-
-    // Extract referral IDs based on referralStatus attribute
-    const refIds: string[] = userReferralResponse[0][attributes[0]];
-
-    // Fetch referral details
-    if (!refIds.length) {
-      return [];
-    }
-    let result = await this.getReferralsByIdsUsingGsis(refIds);
-    return result.filter(
-      (referral) => referral !== null
-    ) as DbUserReferralDto[];
   }
 
   /**
@@ -1063,7 +746,7 @@ class UserReferralService {
       const candidateName = candidateDetails[0].name;
 
       // Send email notification to employees about the referral creation
-      await this.sendEmailToEmployeesOnReferralCreation(
+      await userReferralEmpServiceObj.sendEmailToEmployeesOnReferralCreation(
         userReferralDetails.companyId,
         referralId,
         candidateName
@@ -1156,19 +839,58 @@ class UserReferralService {
       );
     }
 
-    // Update referral status to REJECTED if status is still AWAITING
     if (userReferralDetails.status === ReferralStatus.AWAITING) {
-      await this.updateStatus(referralId, userEmail, ReferralStatus.REJECTED);
+      // Fetch additional details needed for the email
+      let userDetails = await UserDetailService.get(userEmail);
+      if (!userDetails.count) {
+        throw new BaseError(`User Details not found for user ${userEmail}`);
+      }
+      let userDetail = userDetails[0];
+
+      // Fetch company details
+      let companyDetails = await CompanyService.getCompanyDetailsByIds([userReferralDetails.companyId]);
+      if (!companyDetails.length) {
+        throw new BaseError(`Company Details not found for company ID ${userReferralDetails.companyId}`);
+      }
+
+      // if referral has been already rejected by referree then update the referral status to REJCTED and send email 
+      if (userReferralDetails.rejectedByUserIds && userReferralDetails.rejectedByUserIds.length > 0) {
+        // Update referral status based on rejection status
+        await this.updateStatus(referralId, userEmail, ReferralStatus.REJECTED);
+        logger.info(`The Referral ${referralId} updated to ${ReferralStatus.REJECTED} after ${APP_CONSTANTS.REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS} hour(s) in Awaiting status.`);
+
+        // ===========================================================================
+        // ===== SEND EMAIL TO CANDIDATE ON AUTO-REJECTION =====
+        // ===========================================================================
+        await this.sendEmailToCandidateOnAutoReferralRejection(
+          userEmail,
+          userDetail.name, // cand name
+          userReferralDetails.jobUrl, // job url
+          companyDetails[0].name, // company name
+          userReferralDetails.rejectedByUserIds // rejected reasons
+        );
+      } else {
+        // Update referral status based on rejection status
+        await this.updateStatus(referralId, userEmail, ReferralStatus.CANCELLED);
+        logger.info(`The Referral ${referralId} updated to ${ReferralStatus.CANCELLED} after ${APP_CONSTANTS.REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS} hour(s) in Awaiting status.`);
+
+        // ===========================================================================
+        // ===== SEND EMAIL TO CANDIDATE ON AUTO-CANCELLATION =====
+        // ===========================================================================
+        await this.sendEmailToCandidateOnAutoReferralCancellation(
+          userEmail,
+          userDetail.name, // cand name
+          userReferralDetails.jobUrl, // job url
+          companyDetails[0].name // company name
+        );
+      }
+    }
+    else {
+      // Log that cancellation is not required because status is not AWAITING
       logger.info(
-        `Referral ${referralId} rejected after 5 days in awaiting status.`
-      );
-    } else {
-      // Log that rejection is not required because status is not AWAITING
-      logger.info(
-        `The status for referral ${referralId} is "${userReferralDetails.status}", therefore rejection is not required`
+        `The status for referral ${referralId} is "${userReferralDetails.status}", therefore cancellation/rejection is not required`
       );
     }
-
     return true;
   }
 

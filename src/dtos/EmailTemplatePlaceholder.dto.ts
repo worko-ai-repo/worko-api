@@ -77,3 +77,22 @@ export interface EmailTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION{
     emp_first_name: string;
     candidate_name: string;
 }
+
+/**
+ * Represents the placeholders for the email template used when a candidate's referral is automatically cancelled after a specified number of days.
+ */
+export interface EmailTemplatePlaceholderCAND_REF_AUTO_CANCEL_AFTER_X_DAYS {
+    candName: string;
+    jobUrl: string;
+    companyName: string;
+}
+
+/**
+ * Represents the placeholders for the email template used when a candidate's referral is automatically rejected after a specified number of days.
+ */
+export interface EmailTemplatePlaceholderCAND_REF_AUTO_REJECT_AFTER_X_DAYS {
+    candName: string;
+    jobUrl: string;
+    companyName: string;
+    rejectedReasons : string;
+}
