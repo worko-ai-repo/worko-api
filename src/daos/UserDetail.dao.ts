@@ -1,19 +1,23 @@
+// Import dynamoose library
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 //Load the base dao
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { DbUserDetailDto, UserDetailModel } from "../db/models/UserDetail.model";
+import {
+  DbUserDetailDto,
+  UserDetailModel,
+} from "../db/models/UserDetail.model";
 
 //Load the local dtos
-import { NewUserCandSignUpDTO, NewUserEmpSignUpDTO, UserProfileResponse, UserSignUpDTO, UserSubscriptionDetailsUpdateDto } from "../dtos/User.dto";
+import {
+  NewUserCandSignUpDTO,
+  NewUserEmpSignUpDTO,
+  UserSubscriptionDetailsUpdateDto,
+} from "../dtos/User.dto";
 import { UserDetailDTO } from "../dtos/UserDetail.dto";
-
-//Load UlidService for generating ULID IDs
-import UlidService from "../services/Ulid.service";
-
-//Load enums
-import { UserType } from "../dtos/Company.dto";
-import UserSubscriptionService from "../services/UserSubscription.service";
+import { UsersListingFilterOptions } from "../admin/dtos/User.dto";
 
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
@@ -24,6 +28,36 @@ class UserDetailDao implements BaseDao {
   };
   GSI1PK: string = "USR#";
   GSI1SK = "ID#{userId}"; // where userId is cognito provided userId for registered user
+
+  /**
+   * getUsers
+   * 
+   * Retrieves user details based on the provided filter options.
+   *
+   * @param {UsersListingFilterOptions} usersRecordListingFilterRequest - The filter options for user details.
+   * @return {Promise<QueryResponse<DbUserDetailDto>>} A promise that resolves to the user details.
+   */
+  async getUsers(
+    usersRecordListingFilterRequest: UsersListingFilterOptions
+  ): Promise<QueryResponse<DbUserDetailDto>> {
+    // Log the action of getting user details
+    global.logger.info("Get user details [DAO]");
+
+    // Fetch user details from the DAO
+    let query = UserDetailModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .beginsWith("ID#");
+
+    // if lastKey is provided, add it to the query where lastKey is equal to the provided value
+    if (usersRecordListingFilterRequest.lastKey) {
+      // Start the query from the lastKey to retrieve subsequent pages
+      query.startAt(usersRecordListingFilterRequest.lastKey);
+    }
+
+    // Execute the query with pagination
+    return query.limit(usersRecordListingFilterRequest.pageSize).exec();
+  }
 
   /**
    * Fetches user details based on the provided email.
@@ -44,6 +78,8 @@ class UserDetailDao implements BaseDao {
   }
 
   /**
+   * getUserById
+   *
    * Fetches user details based on the provided email.
    * @param userId - userId  of the user
    * @returns User details corresponding to the email

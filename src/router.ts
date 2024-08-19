@@ -44,7 +44,10 @@ import TestRouter from "./routers/Test.router";
 import ScriptRouter from "./routers/Script.router";
 // import OrderRouter from "./routers/Order.router";
 import UserOrderRouter from "./routers/UserOrder.router";
-import AdminRouter from "./routers/Admin.router";
+import AdminSubsRouter from "./routers/Admin.router";
+
+// Admin Routers
+import AdminRouter from "./admin/router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -142,8 +145,14 @@ router.use("/corporate", UserCorporateRequestRouter);
 // Register the "User Career Request " routers
 router.use("/career", UserCareerRequestRouter);
 
-// Register the "User Career Request " routers
+/**
+ * ADMIN ROUTERS
+ * Only admin users can access these routes
+ */
 router.use("/admin", AdminRouter);
+
+// Admin router @todo: discuss with shashikant to add below route in router.use("/admin", AdminRouter);
+router.use("/admin-subs", AdminSubsRouter);
 
 // Export the router
 export default router;

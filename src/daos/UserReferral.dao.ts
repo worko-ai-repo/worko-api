@@ -13,6 +13,7 @@ import {
   UserReferralDTO,
   UserReferralStatusChangeByCandDTO,
 } from "../dtos/UserReferral.dto";
+import { ReferralListingFilterOptions } from "../admin/dtos/Referral.dto";
 
 //Load the local enums
 import { ReferralStatus } from "../enums/UserReferral.enum";
@@ -21,7 +22,7 @@ import { ReferralStatus } from "../enums/UserReferral.enum";
 import UlidService from "../services/Ulid.service";
 
 // Import dynamoose library for DynamoDB queries
-import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Class definition for UserReferralDao implementing the BaseDao interface
 class UserReferralDao implements BaseDao {
@@ -32,15 +33,55 @@ class UserReferralDao implements BaseDao {
   GSI1SK = "ID#{refId}";
 
   /**
+   * getReferrals
+   *
+   * Retrieves referral details from the DAO based on the provided filter options.
+   *
+   * @param {ReferralListingFilterOptions} referralRecordListingFilterRequest - The filter options for the referral record listing.
+   * @return {Promise<QueryResponse<DbUserReferralDto>>} A promise that resolves to the query response containing the retrieved referral details.
+   */
+  async getReferrals(
+    referralRecordListingFilterRequest: ReferralListingFilterOptions
+  ): Promise<QueryResponse<DbUserReferralDto>> {
+    // Log the action of getting referral details in the dao
+    global.logger.info("Get referral details [dao]");
+
+    // Get all referral data from the DAO
+    let query = UserReferralModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .beginsWith("ID#");
+
+    // Filter by status if provided
+    if (referralRecordListingFilterRequest.status) {
+      query = query
+        .where("status")
+        .eq(referralRecordListingFilterRequest.status);
+    }
+
+    // if lastKey is provided, add it to the query where lastKey is equal to the provided value
+    if (referralRecordListingFilterRequest.lastKey) {
+      // Start the query from the lastKey to retrieve subsequent pages
+      query = query.startAt(referralRecordListingFilterRequest.lastKey);
+    }
+
+    // Execute the query with pagination
+    return query.limit(referralRecordListingFilterRequest.pageSize).exec();
+  }
+
+  /**
    * getReferralsForCand
-   * 
+   *
    * Fetches user Referral based on the provided email and status.
-   * 
+   *
    * @param email - Email address of the user
    * @param status - referral status
    * @returns {Promise<QueryResponse<DbUserReferralDto>>} - A Promise that resolves to the Referral of the user
    */
-  async getReferralsForCand(email: string, status?: string):Promise<QueryResponse<DbUserReferralDto>> {
+  async getReferralsForCand(
+    email: string,
+    status?: string
+  ): Promise<QueryResponse<DbUserReferralDto>> {
     global.logger.info("Get user Referral by status [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
@@ -68,7 +109,7 @@ class UserReferralDao implements BaseDao {
 
   /**
    * create
-   * 
+   *
    * Request a user referral by creating a new entry in the database.
    *
    * @param referralRequest - The UserReferralRequestCreateDTO containing referral request details.
@@ -104,13 +145,13 @@ class UserReferralDao implements BaseDao {
     // Create a new entry in the UserReferralModel (database model) with the referral request data
     await UserReferralModel.create(newReferralRequest);
 
-    // return only referralId 
+    // return only referralId
     return { referralRequestId: id };
   }
 
   /**
    * getReferralScoreForCand
-   * 
+   *
    * Get referral Score (matchingScore) for Cand based on request
    *
    * @param referralId
@@ -134,9 +175,9 @@ class UserReferralDao implements BaseDao {
 
   /**
    * updateStatus
-   * 
+   *
    * @todo rename this function to be specific for candidate activity
-   * 
+   *
    * @param referralId - The ID of the referral
    * @param email - The email address of the user
    * @param status - The new status of the referral
@@ -154,13 +195,13 @@ class UserReferralDao implements BaseDao {
     const SK = this.sortKeys.SK_REFERRAL.replace("{reqId}", referralId);
 
     // Create the update object with PK, SK, and status
-    let updateObject: Partial<DbUserReferralDto> = {  status: status };
+    let updateObject: Partial<DbUserReferralDto> = { status: status };
 
     // If the status is set to DONE, add the doneByCandidate field with the current date
     if (status === ReferralStatus.DONE) {
       updateObject.doneByCandidate = new Date();
     }
-    return UserReferralModel.update( {PK : PK, SK : SK} , updateObject);
+    return UserReferralModel.update({ PK: PK, SK: SK }, updateObject);
   }
 
   /**
@@ -215,7 +256,9 @@ class UserReferralDao implements BaseDao {
     userEmail: string,
     referralId: string
   ): Promise<DbUserReferralDto> {
-    global.logger.info(`Get Referral for UserEmail ${userEmail} and with Referral Id ${referralId}. [DAO]`);
+    global.logger.info(
+      `Get Referral for UserEmail ${userEmail} and with Referral Id ${referralId}. [DAO]`
+    );
     const PK = this.partitianKey.replace("{primaryEmail}", userEmail);
     const SK = this.sortKeys.SK_REFERRAL.replace("{reqId}", referralId);
     return UserReferralModel.get({ PK: PK, SK: SK });
@@ -311,7 +354,9 @@ class UserReferralDao implements BaseDao {
    * @param referralIds - Array of referral IDs
    * @returns { Promise<QueryResponse<DbUserReferralDto>[]>} - A Promise that resolves to the Referrals
    */
-  async getReferralsByIdsUsingGsis(referralIds: string[]): Promise<(DbUserReferralDto | null)[]> {
+  async getReferralsByIdsUsingGsis(
+    referralIds: string[]
+  ): Promise<(DbUserReferralDto | null)[]> {
     global.logger.info("Get Referrals by GSI1PK and Referral IDs [DAO]");
     // Construct an array of keys based on referralIds
     const promises = referralIds.map((referralId) => {
@@ -321,21 +366,24 @@ class UserReferralDao implements BaseDao {
         .where("GSI1SK")
         .eq(GSI1SK)
         .exec()
-        .then((referral) => referral.count ? referral[0] : null);
+        .then((referral) => (referral.count ? referral[0] : null));
     });
     return Promise.all(promises);
   }
 
   /**
-  * getUserReferralsByJobUrl
-  * 
-  * Retrieves a user referral by job URL.
-  *
-  * @param {string} userEmail - The email of the user.
-  * @param {string} jobUrl - The job URL.
-  * @return {Promise<QueryResponse<DbUserReferralDto>>} A promise that resolves to the user referral data.
-  */
-  async getUserReferralsByJobUrl(userEmail: string, jobUrl: string): Promise<QueryResponse<DbUserReferralDto>> {
+   * getUserReferralsByJobUrl
+   *
+   * Retrieves a user referral by job URL.
+   *
+   * @param {string} userEmail - The email of the user.
+   * @param {string} jobUrl - The job URL.
+   * @return {Promise<QueryResponse<DbUserReferralDto>>} A promise that resolves to the user referral data.
+   */
+  async getUserReferralsByJobUrl(
+    userEmail: string,
+    jobUrl: string
+  ): Promise<QueryResponse<DbUserReferralDto>> {
     let PK = this.partitianKey.strtr({ "{primaryEmail}": userEmail });
     return UserReferralModel.query("PK")
       .eq(PK)

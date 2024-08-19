@@ -1,5 +1,5 @@
 // Load dynamoose libraries
-import { QueryResponse, ScanResponse } from "dynamoose/dist/ItemRetriever";
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 //Load the base dao
 import BaseDao from "./Base.dao";
@@ -15,27 +15,134 @@ import {
   SubscriptionCreateDTO,
   SubscriptionUpdateDTO,
 } from "../dtos/Subscription.dto";
+import {RecordListingFilterOptions} from "../dtos/Common.dto";
+import { SubscriptionListingFilterOptions } from "../admin/dtos/Subscription.dto";
 
 // Load the local enums
-import { UserSubscriptionStatus } from '../enums/UserSubscription.enum';
+import { UserSubscriptionStatus, UserSubscriptionType } from "../enums/UserSubscription.enum";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
-import { RecordListingFilterOptions, RecordListingResponseDTO } from "../dtos/Common.dto";
-import { lastKeyToBase64EncodeStr } from "../helpers/dynamoose.helper";
-
 
 // Class definition for UserSubscriptionDao implementing BaseDao
 class UserSubscriptionDao implements BaseDao {
   modelName = "user";
   partitianKey = "USR#EML#{primaryEmail}";
   sortKeys = { SK_SUBS: "SUBS#CAND#ID#{subsId}" };
-  
+
   GSI1PK: string = "SUBS#CAND#";
   GSI1SK = "ID#{id}";
+
+  /**
+   * getAllUsersSubscriptionsAdmin
+   * 
+   * Retrieves all user subscriptions based on the provided options and status for admin.
+   *
+   * @param {SubscriptionListingFilterOptions} subscriptionRecordListingFilterRequest - The options for filtering the user subscriptions.
+   * @return {Promise<QueryResponse<DbUserSubsDto>>} A promise that resolves to a QueryResponse containing the user subscriptions.
+   */
+  async getAllUsersSubscriptionsAdmin(
+    subscriptionRecordListingFilterRequest: SubscriptionListingFilterOptions
+  ): Promise<QueryResponse<DbUserSubsDto>> {
+    // Log the action of fetching user bought subscription list
+    global.logger.info(
+      "Fetching User's Bought Subscription List in [admin dao]"
+    );
+
+    // query that returns all the subscriptions of a user
+    let query = UserSubModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .beginsWith("ID#")
+      .where("name")
+      .not()
+      .eq(UserSubscriptionType.FREE);
+
+    // if status is provided, add it to the query where status is equal to the provided value
+    if (subscriptionRecordListingFilterRequest.status) {
+      query = query
+        .where("status")
+        .eq(subscriptionRecordListingFilterRequest.status);
+    }
+
+    // if lastKey is provided, add it to the query where lastKey is equal to the provided value
+    if (subscriptionRecordListingFilterRequest.lastKey) {
+      // Start the query from the lastKey to retrieve subsequent pages
+      query = query.startAt(subscriptionRecordListingFilterRequest.lastKey);
+    }
+
+    // Execute the query with pagination
+    return query
+      .limit(subscriptionRecordListingFilterRequest.pageSize)
+      .exec();
+  }
+
+  /**
+   * getSubscriptionDetailById
+   *
+   * Retrieves the subscription details based on the provided ID.
+   *
+   * @param {string} subscriptionId - The ID of the subscription
+   * @return {Promise<QueryResponse<DbUserSubsDto>>} The result of the query for the subscriptions
+   */
+  async getSubscriptionDetailById(
+    subscriptionId: string
+  ): Promise<QueryResponse<DbUserSubsDto>> {
+    // Log the action of fetching user bought subscription list
+    global.logger.info("Fetching User's Bought Subscription by ID in [dao]");
+
+    // replace the {id} with the id in the GSI1SK
+    const GSI1SK = this.GSI1SK.strtr({
+      "{id}": subscriptionId,
+    });
+
+    // query that returns all the subscriptions of a user by id
+    return UserSubModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .eq(GSI1SK)
+      .exec();
+  }
+
+  /**
+   * getUserSubscriptionsByEmail
+   *
+   * Retrieves the list of user subscriptions based on the provided email and status.
+   *
+   * @param {string} userEmail - The email of the user.
+   * @param {UserSubscriptionStatus} [subscriptionStatus] [Optional] - The status of the subscriptions (optional).
+   * @return {Promise<QueryResponse<DbUserSubsDto>>} A promise that resolves to the query response containing the list of user subscriptions.
+   */
+  async getUserSubscriptionsByEmail(
+    userEmail: string,
+    subscriptionStatus?: UserSubscriptionStatus
+  ): Promise<QueryResponse<DbUserSubsDto>> {
+    // Log the action of fetching user bought subscription list by email
+    global.logger.info("get Users Bought Subscription List by email in [dao]");
+
+    // replace the {primaryEmail} with the email in the partition key
+    const PK = this.partitianKey.strtr({
+      "{primaryEmail}": userEmail,
+    });
+
+    // query that returns all the subscriptions of a user by email
+    let query = UserSubModel.query("PK")
+      .eq(PK)
+      .where("SK")
+      .beginsWith("SUBS#CAND#ID#");
+
+    // if status is provided, add the condition to the query
+    if (subscriptionStatus) {
+      query = query.where("status").eq(subscriptionStatus);
+    }
+
+    // execute the query and and using the query.sort(order) function sorts the items you receive back by the rangeKey. By default, if not provided, it will sort in ascending order.
+    return query.sort("descending").exec();
+  }
+
   /**
    * Fetches subscription details based on user email
-   * 
+   *
    * @todo rename this to "getUserSubscriptions"
    *
    * @param email - Email used to fetch subscription details
@@ -68,7 +175,7 @@ class UserSubscriptionDao implements BaseDao {
    * getById
    *
    * Retrieves a specific subscription for a user by its ID.
-   * 
+   *
    * @todo rename this to "getUserSubscriptionBySubId"
    *
    * @param email - The user's email address, used as the primary key in the database.
@@ -144,9 +251,9 @@ class UserSubscriptionDao implements BaseDao {
 
   /**
    * getActiveSubscriptionForUser
-   * 
+   *
    * Gets the active subscription for a given user.
-   * 
+   *
    * @todo rename this to "getUserActiveSubscriptions"
    *
    * @param email - The user's email address.
@@ -164,9 +271,9 @@ class UserSubscriptionDao implements BaseDao {
 
     // Query the database for an active subscription
     return UserSubModel.query("PK")
-      .eq(PK) 
+      .eq(PK)
       .where("SK")
-      .beginsWith("SUBS#CAND#ID#") 
+      .beginsWith("SUBS#CAND#ID#")
       .where("status")
       .eq(UserSubscriptionStatus.ACTIVE) // Only get active ones
       .exec();
@@ -174,19 +281,20 @@ class UserSubscriptionDao implements BaseDao {
 
   /**
    * getUsersAllSubscriptions
-   * 
-    * This function is intended to retrive the details for all user subscriptions
-   *  It should be used exclusively for this purpose and should not be
-   * used for any other operations or purposes.
-   * Retrieves all user subscriptions.
-   * Retrieves all user subscriptions from the database.
    *
+   * Retrieves all user subscriptions based on the provided options and status.
+   *
+   * @param {RecordListingFilterOptions} options - The options for filtering the user subscriptions.
+   * @return {Promise<QueryResponse<DbUserSubsDto>>} A promise that resolves to a QueryResponse containing the user subscriptions.
    */
-  async getAllUsersSubscriptions(options: RecordListingFilterOptions): Promise<QueryResponse<DbUserSubsDto>> {
-    console.log("Options for paginatins with data ", options)
+  async getAllUsersSubscriptions(
+    options: RecordListingFilterOptions
+  ): Promise<QueryResponse<DbUserSubsDto>> {
     global.logger.info("Get all user subscriptions [DAO]");
+    global.logger.info("Options for paginatins with data ", options);
+
     // construct query
-    let query = UserSubModel.query("GSI1PK").eq("SUBS#CAND#");
+    let query = UserSubModel.query("GSI1PK").eq(this.GSI1PK);
 
     // apply lastkey if provided
     if (options.lastKey) {
@@ -197,8 +305,9 @@ class UserSubscriptionDao implements BaseDao {
     if (options.pageSize) {
       query = query.limit(options.pageSize);
     }
+
     return query.exec();
-  };
+  }
 
   /**
    * updateUserSubscriptionGSIsWithSubsId
@@ -206,7 +315,7 @@ class UserSubscriptionDao implements BaseDao {
    * This function is intended to update the GSI1SK and GSI1PK for all user subscriptions
    * in the database. It should be used exclusively for this purpose and should not be
    * used for any other operations or purposes.
-   * 
+   *
    * Updates the GSI1PK and GSI1SK for a specific user subscription in the database.
    *
    * @param {string} email - The email of the user
@@ -217,7 +326,7 @@ class UserSubscriptionDao implements BaseDao {
    */
   async updateUserSubscriptionGSIsWithSubsId(
     email: string,
-    id: string,
+    id: string
   ): Promise<DbUserSubsDto> {
     global.logger.info("Update User Subscriptions GSIs[DAO}");
 
@@ -228,7 +337,7 @@ class UserSubscriptionDao implements BaseDao {
     // retrun with updated keys and valeus
     return UserSubModel.update(
       { PK, SK },
-      { GSI1PK: this.GSI1PK, GSI1SK: this.GSI1SK.replace("{id}", id) },
+      { GSI1PK: this.GSI1PK, GSI1SK: this.GSI1SK.replace("{id}", id) }
     );
   }
 }

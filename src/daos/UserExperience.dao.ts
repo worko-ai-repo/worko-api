@@ -20,6 +20,7 @@ class UserExperienceDao implements BaseDao {
   sortKeys = { SK_ID: "EXP#ID#{uuid}" }; // Sort key structure using unique IDs
   GSI1PK = "EXP#";
   GSI1SK = "COMP#ID#{companyId}#ID#{id}";
+
   /**
    * Fetches user experience based on the provided email.
    * @param email - Email address of the user
@@ -54,7 +55,7 @@ class UserExperienceDao implements BaseDao {
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    
+
     const SK = this.sortKeys.SK_ID.strtr({
       "{uuid}": id,
     });
@@ -145,7 +146,7 @@ class UserExperienceDao implements BaseDao {
   //  * @return {Promise<DbUserExperienceDto>} A promise that resolves to the updated user's experiences.
   //  */
   // async updateUserExperienceGSIsWithExpId(userEmail: string, id: string, companyId: string): Promise<DbUserExperienceDto> {
-  //   // prepare the keys 
+  //   // prepare the keys
   //   let PK = this.partitianKey.strtr({
   //     "{primaryEmail}": userEmail,
   //   });
@@ -153,7 +154,7 @@ class UserExperienceDao implements BaseDao {
   //     "{uuid}": id,
   //   });
 
-  //   // prepare the GSI1SK value to update 
+  //   // prepare the GSI1SK value to update
   //   let GSI1SK = this.GSI1SK.strtr({
   //     "{companyId}": companyId,
   //     "{id}": id,
@@ -185,7 +186,7 @@ class UserExperienceDao implements BaseDao {
       .beginsWith(`COMP#ID#${companyId}`)
       .where("isCurrent")
       .eq(true);
-  
+
     // apply lastKey if provided
     if (options.lastKey) {
       query = query.startAt(options.lastKey);
@@ -195,10 +196,9 @@ class UserExperienceDao implements BaseDao {
     if (options.pageSize) {
       query = query.limit(options.pageSize);
     }
-    
-    // perpare result 
+
+    // perpare result
     return query.exec();
-   
   }
 }
 

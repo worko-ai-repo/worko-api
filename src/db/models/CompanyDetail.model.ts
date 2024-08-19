@@ -89,4 +89,4 @@ const CompanyDetailModel = dynamoose.model<DbCompanyDetailDto>(
 );
 
 // Exporting the 'CompanyDetailModel' for external usage
-export { CompanyDetailModel };
+export { CompanyDetailModel,DbCompanyDetailDto };

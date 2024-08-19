@@ -1,3 +1,6 @@
+// import dynamoose libraries
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 // Load the local daos
 import companyDao from "../daos/Company.dao";
 import companyDetailDao from "../daos/CompanyDetail.dao";
@@ -11,6 +14,10 @@ import {
 } from "../dtos/Company.dto";
 import { RecordListingFilterOptions } from "../dtos/Common.dto";
 
+
+//Load models
+import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
+
 // @todo update the method return type, request payload types, etc for all methods.
 // @todo Kindly remove the try-catch blocks from all methods, having just one try-catch blocks in the controller methods should be helpful.
 // We should also think of somehow having global try catch, so that we dont have to write try-catch block anywhere, unless something is exceptional.
@@ -19,13 +26,26 @@ import { RecordListingFilterOptions } from "../dtos/Common.dto";
  * CompanyService class responsible for managing company-related operations.
  */
 class CompanyService {
+  constructor() {}
 
-  constructor() { }
+  /**
+   * getCompanyDetailById
+   *
+   * Retrieves the details of a company based on the provided company ID.
+   *
+   * @param {string} companyId - The ID of the company to retrieve details for.
+   * @return {Promise<QueryResponse<DbCompanyDetailDto>>} A promise that resolves with the query response containing the company details.
+   */
+  async getCompanyDetailById(
+    companyId: string
+  ): Promise<QueryResponse<DbCompanyDetailDto>> {
+    return companyDetailDao.getCompanyDetailById(companyId);
+  }
 
- /**
-  * 
-  * @param name 
-  */
+  /**
+   *
+   * @param name
+   */
   async getCompanyByName(name: string) {
     return companyDao.getCompanyByName(name);
   }
@@ -41,13 +61,14 @@ class CompanyService {
   }
 
   /**
-   * 
-   * @param ids 
+   *
+   * @param ids
    * Returns the list of companies having the InputKeys
    */
   async getCompanyDetailsByIds(ids: string[]) {
-    return companyDetailDao.getCompanyDetailsByIds(ids)
+    return companyDetailDao.getCompanyDetailsByIds(ids);
   }
+
   /**
    *
    * Retrieves a list of existing companies.
@@ -88,9 +109,9 @@ class CompanyService {
 
   /**
    * update company details
-   * @param companyDto 
-   * @param id 
-   * @returns 
+   * @param companyDto
+   * @param id
+   * @returns
    */
   async updateCompany(companyDto: CompanyDTO, id: string) {
     return companyDetailDao.update(companyDto, id);

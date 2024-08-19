@@ -10,6 +10,9 @@ const companyController = new CompanyController();
 // Route to hold the routes (CRUD, etc) related to "company" table
 const CompanyRouter = Router();
 
+// Get company details by id
+CompanyRouter.get("/:companyId", companyController.getCompanyDetailById);
+
 // Create company based on the provided query parameter by admin
 // @todo change this to "/", this should help.
 CompanyRouter.post("/", companyController.createCompany);

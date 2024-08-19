@@ -10,7 +10,7 @@ class DbUserReferralResponseDto extends BaseDbDto {
   passedRefIds!: string[];
   rejectedRefIds!: string[];
   acceptedRefIds!: string[];
-  doneRefIds!: string[];
+  doneRefIds!: string[]
 }
 
 const UserReferralResponseSchema = new dynamoose.Schema(
