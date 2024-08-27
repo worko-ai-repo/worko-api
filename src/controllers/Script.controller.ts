@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 
 // Import Services
-import ScriptService from "../services/Script.service";
+import { scriptServiceObj } from "../services/Script.service";
 
 // Import local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -33,37 +33,41 @@ class ScriptController {
   updateUserSubscriptionsGSIs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Update the GSI1PK and GSI1SK attributes for all user subscriptions
-      const updatedUserSubs = await ScriptService.updateAllUserSubscriptionsGSI1SK();
+      const updatedUserSubs = await scriptServiceObj.updateAllUserSubscriptionsGSI1SK();
       res.status(HttpStatusCode.OK_200).json(updatedUserSubs);
     } catch (error) {
       next(error);
     }
   };
 
-  // /**
-  //  * updateUserExperiencesGSIs
-  //  *
-  //  * Updates the GSI1PK and GSI1SK attributes for all user experiences.
-  //  *
-  //  * Problem: Similar to user subscriptions, the GSI1PK and GSI1SK attributes for user experiences
-  //  * need to be updated to align with the latest data structure requirements as specified in the model file.
-  //  * This operation updates these attributes to ensure the GSI is consistent with the updated data
-  //  * structure, thereby maintaining data integrity across the application.
-  //  *
-  //  * @param {Request} req - Express request object
-  //  * @param {Response} res - Express response object
-  //  * @param {NextFunction} next - Express next middleware function
-  //  * @returns {Promise<void>} - A promise that resolves to void
-  //  */
-  // updateUserExperiencesGSIs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  //   try {
-  //     // Update the GSI1PK and GSI1SK attributes for all user experiences
-  //     const updatedUserExps = await ScriptService.updateUserExperiencesGSIs();
-  //     res.status(HttpStatusCode.OK_200).json(updatedUserExps);
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
+  /**
+   * updateUserReferralsJdMatchErrorCode
+   * 
+   * @description Update the `jdMatchErrorCode` field based on specific conditions, and then updates the
+   * data in the database. Returns an array of the updated user referral data.
+   * This function handles any missing fields that need to be added to user referrals
+   * based on job descriptions matching error codes.
+   *
+   * @async
+   * @param {Request} req - The Express request object.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   *
+   * @returns {Promise<void>} - A promise that resolves to void. Sends a JSON response
+   * with the updated user referrals data if the operation is successful.
+   *
+   * @throws {Error} - Passes any encountered errors to the next middleware for error handling.
+   */
+  updateUserReferralsJdMatchErrorCode = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      // Update the GSI1PK and GSI1SK attributes for all user referrals
+      const updatedUserRefsData = await scriptServiceObj.updateUserReferralsJdMatchErrorCode();
+      res.status(HttpStatusCode.OK_200).json(updatedUserRefsData);
+    } catch (error) {
+      // Pass the error to the next middleware for error handling
+      next(error);
+    }
+  };
 }
 
 export default ScriptController;

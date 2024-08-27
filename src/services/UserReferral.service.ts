@@ -48,6 +48,7 @@ import APP_CONSTANTS from '../configs/constants.config';
 
 // Import dtos
 import { ScheduleJobCreateDto, ScheduleJobRefReviewAcceptanceStatusInputDto } from '../dtos/ScheduleJob.dto';
+import { RecordListingFilterOptions } from '../dtos/Common.dto';
 
 // Import enums
 import { ScheduleJobStatus, ScheduleJobType } from '../enums/ScheduleJob.enum';
@@ -905,6 +906,30 @@ private prepareReferralRejectedReasons(
    */
   async getUserReferralsByJobUrl(userEmail: string, jobUrl: string): Promise<QueryResponse<DbUserReferralDto>> {
     return userReferralDao.getUserReferralsByJobUrl(userEmail, jobUrl);
+  }
+
+  /**
+  *========INTERNAL SCRIPT USE ONLY==========*
+  * 
+  * updateUserReferralsJdMatchErrorCode
+  * 
+  * @description This function updates a specific user referral in the database with the provided `jdMatchErrorCode`. 
+  * It is intended exclusively for internal script operations, particularly when modifying or correcting referral data 
+  * in bulk based on specific conditions. This function directly interacts with the data access layer to perform the update.
+  * 
+  * **IMPORTANT:**
+  * - This function is **not** intended for use in production code or any external operations.
+  * - It has **no relation** to other functions, services, or API endpoints.
+  * - **Do not use this function** for any kind of user-facing operations or as part of any service logic.
+  * - Misuse of this function can lead to unintended consequences, and any such misuse will not be supported.
+  * 
+  * @param {string} candEmail - The email of the user.
+  * @param {string} referralId - The ID of the referral.
+  * @param {number} jdMatchErrorCode - The data to update the user referral with.
+  */
+  async updateUserReferralsJdMatchErrorCode(candEmail: string, referralId: string, jdMatchErrorCode: number): Promise<DbUserReferralDto> {
+    global.logger.info("Update all user referrals for jd error code [Service]");
+    return userReferralDao.updateUserReferralsJdMatchErrorCode(candEmail, referralId, jdMatchErrorCode)
   }
 }
 

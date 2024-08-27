@@ -14,6 +14,9 @@ const scriptController = new ScriptController();
 // Endpoint to update all user subscriptions
 ScriptRouter.post("/update-user-subscriptions", scriptController.updateUserSubscriptionsGSIs);
 
+// Endpoint to update the all user Referrals jd matching error code
+ScriptRouter.post("/update-user-referrals", scriptController.updateUserReferralsJdMatchErrorCode);
+
 // Endpoint to update all user experiences
 // ScriptRouter.post("/update-user-experiences", scriptController.updateUserExperiencesGSIs);
 

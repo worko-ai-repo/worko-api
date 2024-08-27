@@ -1,5 +1,6 @@
 // Import DTOs
 import { AttributeValue } from "@aws-sdk/client-dynamodb";
+import { DbUserReferralDto } from "../db/models/UserReferral.model";
 
 // Import helpers
 import { base64EncodeStrToLastKey, lastKeyToBase64EncodeStr } from "../helpers/dynamoose.helper";
@@ -11,6 +12,7 @@ import HttpStatusCode from "../utils/http-codes.util";
 // Import services
 import UserExperienceService from "./UserExperience.service";
 import UserSubscriptionService from "./UserSubscription.service";
+import UserReferralService from "./UserReferral.service";
 
 // Import libraries
 import { AwsDynamoDBLibrary } from "../libraries/aws-dynamoDb-client.library";
@@ -23,7 +25,7 @@ import { DbUserSubsDto } from "../db/models/UserSubscription.model";
  * Service for handling script-related operations related to updating GSI attributes.
  */
 class ScriptService {
-  constructor() { }
+  constructor() {}
 
   /**
    * updateAllUserSubscriptionsGSI1SK
@@ -68,56 +70,115 @@ class ScriptService {
     return updatedSubscriptions;
   }
 
-  // /**
-  //  * updateUserExperiencesGSIs
-  //  *
-  //  * Updates the GSI1PK and GSI1SK attributes for all user experiences in the DynamoDB table.
-  //  * This function retrieves all user experiences and applies the necessary updates to ensure
-  //  * consistency with the defined data model.
-  //  *
-  //  * @returns {Promise<any[]>} - A promise that resolves to an array of updated user experiences
-  //  */
-  // async updateUserExperiencesGSIs(): Promise<any[]> {
-  //   global.logger.info("updateUserExperiencesGSIs() called");
-  //   let lastKey: any = undefined;
-  //   let userExperiences: any[] = [];
+  /**
+   * @function updateUserReferralsJdMatchErrorCode
+   * @description Retrieves all user referrals in batches, processes each to update
+   * the `jdMatchErrorCode` field based on specific conditions, and then updates the
+   * data in the database. Returns an array of the updated user referral data.
+   *
+   * @async
+   * @returns {Promise<any[]>} - A promise that resolves to an array of updated user referrals.
+   * Each referral contains updated data with the correct `jdMatchErrorCode`.
+   *
+   * @throws {Error} - Passes any encountered errors during the process.
+   */
+  async updateUserReferralsJdMatchErrorCode(): Promise<any[]> {
+    let userAllReferrals: any[] = [];
+    let lastKey: any;
+    const pageSize = 25; // Number of referrals to fetch per batch
 
-  //   do {
-  //     // Retrieve a batch of user experiences
-  //     const { Items: userExps, LastEvaluatedKey: lastEvaluatedKey } = await this.scanUserExperiences(lastKey);
-  //     lastKey = lastEvaluatedKey;
+    do {
+      // Retrieve a batch of user referrals using query
+      const userReferralsData = await this.getUserAllReferralsByQuery(lastKey, pageSize);
 
-  //     // Add user experiences to the array
-  //     if (userExps?.length) {
-  //       userExperiences = userExperiences.concat(userExps);
-  //     }
-  //     lastKey = lastEvaluatedKey;
-  //   } while (lastKey);
+      // If there are any user referrals, concatenate them to the list of all referrals
+      if (userReferralsData.Items && userReferralsData.Items.length) {
+        userAllReferrals = userAllReferrals.concat(userReferralsData.Items as unknown as any[]);
+      }
+      global.logger.info(`userAllReferrals length is ${userAllReferrals.length}`);
 
-  //   if (!userExperiences.length) {
-  //     throw new BaseError("Unable to get user experiences.", HttpStatusCode.NOT_FOUND_404);
-  //   }
+      // Retrieve the last evaluated key and pass it for another loop
+      lastKey = userReferralsData.LastEvaluatedKey;
+    } while (lastKey);
+    
+    // if none referrals are found then throw a error msg
+    if (!userAllReferrals.length) {
+      throw new BaseError("Unable to get user referrals.", HttpStatusCode.NOT_FOUND_404);
+    }
+    // Process each referral to update necessary details
+    const updatePromises = userAllReferrals.map(async (userReferral) => {
 
-  //   // Update GSI1PK and GSI1SK for each experience in the batch
-  //   const updatePromises = userExperiences.map(async (userExp) => {
-  //     const userEmail = userExp.PK.split("#")[2];
-  //     return UserExperienceService.updateUserExperienceGSIsWithExpId(userEmail, userExp.id, userExp.companyId);
-  //   });
 
-  //   return Promise.all(updatePromises);
-  // }
+      // Check if userReferral and userReferral.PK exist
+      if (!userReferral) {
+        throw new Error('userReferral is undefined');
+      }
 
-  // private async scanUserExperiences(lastKey?: any): Promise<AWS.DynamoDB.ScanOutput> {
-  //   return awsDynamoDBClientLibrary.scan({
-  //     TableName: process.env.APP_AWS_DYNAMODB_TABLE_NAME || "worko",
-  //     FilterExpression: "begins_with(SK, :skPrefix)",
-  //     ExpressionAttributeValues: {
-  //       ":skPrefix": { S: "EXP#ID#" },
-  //     } as Record<string, AttributeValue>,
-  //     ExclusiveStartKey: lastKey,
-  //     Limit: 25,
-  //   });
-  // }
+      // prepare user email from pk
+      let pkValue = userReferral.PK.S || '';
+      let candEmail = pkValue.split("#")[2];
+      global.logger.info(`Processing user: ${candEmail} and with PK : ${pkValue}`);
+
+      // prepare the variable to store the feilds
+      let jdMatchErrorCode: number;
+      let matchingScore = Number(userReferral.matchingScore?.N) || 0;
+      let userReferralId = userReferral.id?.S || '';
+
+      // If the "jdMatchErrorCode" attribute is present then use it
+      if (userReferral.jdMatchErrorCode) {
+        jdMatchErrorCode = Number(userReferral.jdMatchErrorCode.N);
+      }   
+      // If the "jdMatchErrorCode" attribute is not present, determine its value based on the "matchingScore"
+      else {
+        // If the matching score is exactly 0, set the error code to 250
+        if (matchingScore == 0) {
+          jdMatchErrorCode = 250;
+        }
+        // If the matching score is between 1 and 100 (inclusive), set the error code to 200
+        else if (matchingScore <= 100) {
+          jdMatchErrorCode = 200;
+        }
+        // If the matching score is greater than 100, use the matching score itself as the error code
+        else {
+          jdMatchErrorCode = matchingScore;
+        }
+      }
+    
+      // Update the user referral data in the database
+      return UserReferralService.updateUserReferralsJdMatchErrorCode(candEmail, userReferralId , jdMatchErrorCode);
+    });
+
+    // Return the updated user referrals (excluding failed updates)
+    return Promise.all(updatePromises)
+  }
+
+  /**
+   * Retrieves a list of user referrals from the database based on the provided pagination options.
+   *
+   * @param {any} [lastKey] - The last key from the previous query to start the next query from.
+   * @param {number} [pageSize=25] - The maximum number of items to return in the query.
+   * @return {Promise<AWS.DynamoDB.QueryOutput>} A promise that resolves to a QueryOutput object containing the query results.
+   */
+  private async getUserAllReferralsByQuery(lastKey?: any, pageSize: number = 25): Promise<AWS.DynamoDB.QueryOutput> {
+    const params: AWS.DynamoDB.QueryInput = {
+      TableName: process.env.APP_AWS_DYNAMODB_TABLE_NAME || "worko",
+      IndexName: "GSI1",
+      KeyConditionExpression: "GSI1PK = :gsi1pkPrefix",
+      ExpressionAttributeValues: {
+        ":gsi1pkPrefix": { S: "REF#" },
+      },
+      Limit: pageSize,
+    };
+
+  // apply lastkey if it is there for pagination.
+    if (lastKey) {
+      params.ExclusiveStartKey = lastKey;
+    }
+    // retrun the query 
+    return awsDynamoDBClientLibrary.query(params);
+  }
 }
 
-export default new ScriptService();
+// Export the ScriptService class and its instance  
+const scriptServiceObj = new ScriptService();
+export { scriptServiceObj, ScriptService };
