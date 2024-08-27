@@ -3,8 +3,6 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import DAOs
 import userDetailDao from "../../daos/UserDetail.dao";
-import userReferralResponseDao from "../../daos/UserReferralResponse.dao";
-import userReferralDao from "../../daos/UserReferral.dao";
 
 // Import DTOs
 import { UserSubscriptionDetailsUpdateDto } from "../../dtos/User.dto";
@@ -18,7 +16,6 @@ import { DbUserDetailDto } from "../../db/models/UserDetail.model";
 
 // Import services
 import { userExperienceServiceObj } from "./UserExperience.service";
-import {userReferralServiceObj} from "../services/UserReferral.service";
 
 /**
  * UserService
@@ -57,6 +54,7 @@ class UserService {
     ->tried filter expressions in query but it didn't work
     ->tried "in" operator but it didn't work
     ->Refer the docs:- https://dynamoosejs.com/guide/Query#modelqueryfilter
+    ->Refer the docs:- https://dynamoosejs.com/guide/Condition#conditioninvalues
     */
 
     // if userType is not provided, return all userDetails
@@ -146,70 +144,6 @@ class UserService {
 
     // Fetch user details by email from the DAO
     return userDetailDao.get(userEmail);
-  }
-
-  /**
-   * getReferralResponsesByEmpEmail
-   *
-   * Retrieves user referral responses by email, including rejected, accepted, done, and passed referrals with job URLs.
-   *
-   * @param {string} userEmail - The email of the user.
-   */
-  async getReferralResponsesByEmpEmail(userEmail: string) {
-    // Log the action of getting user referral responses
-    global.logger.info(
-      "Get user referral responses by email [admin user service]"
-    );
-
-    // Fetch user referral responses by email from the DAO
-    const referralResponsesByEmpEmail = await userReferralResponseDao.get(userEmail);
-
-    // If no user referral responses found, return an empty object
-    if (!referralResponsesByEmpEmail.count) {
-      return {};
-    }
-
-    // extract refResponsesByEmpEmail from the response
-    const refResponsesByEmpEmail = referralResponsesByEmpEmail[0];
-
-    // get rejected, accepted, done, and passed referrals with jobUrl and if no referrals found, return an empty array
-    const rejectedRef =
-      refResponsesByEmpEmail.rejectedRefIds.length > 0
-        ? await userReferralServiceObj.getReferralsByIds(
-            refResponsesByEmpEmail.rejectedRefIds
-          )
-        : [];
-    const acceptedRef =
-      refResponsesByEmpEmail.acceptedRefIds.length > 0
-        ? await userReferralServiceObj.getReferralsByIds(
-            refResponsesByEmpEmail.acceptedRefIds
-          )
-        : [];
-    const doneRef =
-      refResponsesByEmpEmail.doneRefIds.length > 0
-        ? await userReferralServiceObj.getReferralsByIds(
-            refResponsesByEmpEmail.doneRefIds
-          )
-        : [];
-    const passedRef =
-      refResponsesByEmpEmail.passedRefIds.length > 0
-        ? await userReferralServiceObj.getReferralsByIds(
-            refResponsesByEmpEmail.passedRefIds
-          )
-        : [];
-
-    // response structure of referral responses with jobUrl
-    const refRespByEmpEmailWithJobUrl = {
-      rejectedRef,
-      acceptedRef,
-      doneRef,
-      passedRef,
-      PK: refResponsesByEmpEmail.PK,
-      SK: refResponsesByEmpEmail.SK,
-    };
-
-    // Fetch user referral response from the DAO
-    return refRespByEmpEmailWithJobUrl;
   }
 
   /**

@@ -32,8 +32,8 @@ CompanyRouter.get("/all", companyController.getAllCompanyNames);
 // @todo here we should not use "list", we can just have "/" and it should be helpful and consistent without naming convenstions/syntax.
 CompanyRouter.get("/", companyController.getCompanyList);
 
-//@todo remove beginsWith Api 
-CompanyRouter.get("/:beginsWith", companyController.getByBeginsWith);
+// removed below route because we can use above CompanyRouter.get("/", companyController.getCompanyList); route for search filter by company name by hitting api:- http://localhost:3000/local/company/?companyName=go
+// CompanyRouter.get("/:beginsWith", companyController.getByBeginsWith);
 
 // Export the "CompanyRouter"
 export default CompanyRouter;

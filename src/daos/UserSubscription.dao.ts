@@ -1,3 +1,6 @@
+// import luxon for date formatting
+import { DateTime } from "luxon";
+
 // Load dynamoose libraries
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
@@ -15,18 +18,22 @@ import {
   SubscriptionCreateDTO,
   SubscriptionUpdateDTO,
 } from "../dtos/Subscription.dto";
-import {RecordListingFilterOptions} from "../dtos/Common.dto";
+import { RecordListingFilterOptions } from "../dtos/Common.dto";
 import { SubscriptionListingFilterOptions } from "../admin/dtos/Subscription.dto";
 
 // Load the local enums
-import { UserSubscriptionStatus, UserSubscriptionType } from "../enums/UserSubscription.enum";
+import {
+  UserSubscriptionStatus,
+  UserSubscriptionType,
+} from "../enums/UserSubscription.enum";
+import { SortOrderTypeEnum } from "../enums/Common.enum";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
 
 // Class definition for UserSubscriptionDao implementing BaseDao
 class UserSubscriptionDao implements BaseDao {
-  modelName = "user";
+  modelName = "UserSubs";
   partitianKey = "USR#EML#{primaryEmail}";
   sortKeys = { SK_SUBS: "SUBS#CAND#ID#{subsId}" };
 
@@ -35,7 +42,7 @@ class UserSubscriptionDao implements BaseDao {
 
   /**
    * getAllUsersSubscriptionsAdmin
-   * 
+   *
    * Retrieves all user subscriptions based on the provided options and status for admin.
    *
    * @param {SubscriptionListingFilterOptions} subscriptionRecordListingFilterRequest - The options for filtering the user subscriptions.
@@ -65,16 +72,90 @@ class UserSubscriptionDao implements BaseDao {
         .eq(subscriptionRecordListingFilterRequest.status);
     }
 
+    // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
+    query.sort(
+      subscriptionRecordListingFilterRequest.sortOrder as SortOrderTypeEnum
+    );
+
+    let fromTimestamp: number | undefined;
+    let toTimestamp: number | undefined;
+
+    // check if fromDate and toDate are provided and if yes convert them to timestamps using luxon library
+    if (subscriptionRecordListingFilterRequest.fromDate) {
+      // convert fromDate to timestamp
+      fromTimestamp = DateTime.fromISO(
+        subscriptionRecordListingFilterRequest.fromDate
+      ).toMillis();
+    }
+    if (subscriptionRecordListingFilterRequest.toDate) {
+      // convert toDate to timestamp
+      toTimestamp = DateTime.fromISO(
+        subscriptionRecordListingFilterRequest.toDate
+      ).toMillis();
+    }
+
+    // Apply date range filter if provided
+    if (
+      subscriptionRecordListingFilterRequest.fromDate ||
+      subscriptionRecordListingFilterRequest.toDate
+    ) {
+      query = query.and().parenthesis((condition) => {
+        if (subscriptionRecordListingFilterRequest.fromDate) {
+          condition.where("purchaseDate").ge(fromTimestamp);
+        }
+        if (subscriptionRecordListingFilterRequest.toDate) {
+          condition.where("purchaseDate").le(toTimestamp);
+        }
+        return condition;
+      });
+    }
+
+    // search by searchText if provided
+    if (subscriptionRecordListingFilterRequest.searchText) {
+      // remove trailing and leading spaces from the search text
+      let searchTextValue =
+        subscriptionRecordListingFilterRequest.searchText.trim();
+
+      /* 
+      The and() method initiates a condition block where all conditions within it must be satisfied.
+      The parenthesis() method allows grouping of conditions for complex queries.
+      */
+      query = query.and().parenthesis((condition) => {
+        condition
+          .where("status") // "status" can be any one of "ACTIVE","EXPIRED","USED"
+          .contains(searchTextValue.toUpperCase())
+          .or()
+          .where("name")
+          .contains(searchTextValue);
+
+        // Return the built condition
+        return condition;
+      });
+    }
+
+    // If date range or search filter or both is applied, directly return query result without pagination
+    if (
+      subscriptionRecordListingFilterRequest.fromDate ||
+      subscriptionRecordListingFilterRequest.toDate ||
+      subscriptionRecordListingFilterRequest.searchText
+    ) {
+      return query.exec();
+    }
+
     // if lastKey is provided, add it to the query where lastKey is equal to the provided value
     if (subscriptionRecordListingFilterRequest.lastKey) {
       // Start the query from the lastKey to retrieve subsequent pages
-      query = query.startAt(subscriptionRecordListingFilterRequest.lastKey);
+      query.startAt(subscriptionRecordListingFilterRequest.lastKey);
     }
 
-    // Execute the query with pagination
-    return query
-      .limit(subscriptionRecordListingFilterRequest.pageSize)
-      .exec();
+    // if pageSize is provided, add it to the query
+    if (subscriptionRecordListingFilterRequest.pageSize) {
+      // Set the page size for the query
+      query.limit(subscriptionRecordListingFilterRequest.pageSize);
+    }
+
+    // Execute the query and return the result
+    return query.exec();
   }
 
   /**

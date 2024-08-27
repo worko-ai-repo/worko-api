@@ -19,6 +19,8 @@ export interface UserSupportListingFilterOptions extends RecordListingFilterOpti
   contextId?: string;
   assignedToUserId?: string;
   resolvedbyUserId?: string;
+  fromDate?: string;
+  toDate?: string;
 }
 
 /**
@@ -35,4 +37,6 @@ export interface UserSupportListingFilterRequestDTO
   contextId?: string;
   assignedToUserId?: string;
   resolvedbyUserId?: string;
+  fromDate?: string;
+  toDate?: string;
 }

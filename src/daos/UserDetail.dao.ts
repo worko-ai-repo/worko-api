@@ -19,6 +19,9 @@ import {
 import { UserDetailDTO } from "../dtos/UserDetail.dto";
 import { UsersListingFilterOptions } from "../admin/dtos/User.dto";
 
+// import types
+import { SortOrderTypeEnum } from ".././enums/Common.enum";
+
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
   modelName = "UserDetail";
@@ -47,7 +50,10 @@ class UserDetailDao implements BaseDao {
     let query = UserDetailModel.query("GSI1PK")
       .eq(this.GSI1PK)
       .where("GSI1SK")
-      .beginsWith("ID#");
+      .beginsWith("ID#")
+      
+    // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
+    query.sort(usersRecordListingFilterRequest.sortOrder ?? SortOrderTypeEnum.DESCENDING);
 
     // if lastKey is provided, add it to the query where lastKey is equal to the provided value
     if (usersRecordListingFilterRequest.lastKey) {
@@ -55,8 +61,14 @@ class UserDetailDao implements BaseDao {
       query.startAt(usersRecordListingFilterRequest.lastKey);
     }
 
-    // Execute the query with pagination
-    return query.limit(usersRecordListingFilterRequest.pageSize).exec();
+    // if pageSize is provided, add it to the query
+    if (usersRecordListingFilterRequest.pageSize) {
+      // Set the page size for the query
+      query.limit(usersRecordListingFilterRequest.pageSize);
+    }
+
+    // Execute the query and return the result
+    return query.exec();
   }
 
   /**

@@ -59,7 +59,10 @@ export const userSupportCreateApiDtoValidation = Joi.object({
 // Define validation schema for user support update API DTO
 export const userSupportUpdateApiDtoValidation = Joi.object({
     // Validate actionByUserId field
-    actionByUserId: Joi.string().required().messages({
+    actionByUserId: Joi
+    .string()
+    .required()
+    .messages({
         "any.required": "Action by user ID is required.",
         "string.empty": "Action by user ID should not be empty.",
     }),
@@ -68,13 +71,19 @@ export const userSupportUpdateApiDtoValidation = Joi.object({
     assignedToUserId: Joi.string().allow('').optional(),
 
     // Validate status field
-    status: Joi.string().valid(...Object.values(UserSupportStatusEnum))
-        .required().messages({
+    status: Joi
+        .string()
+        .valid(...Object.values(UserSupportStatusEnum))
+        .required()
+        .messages({
             "any.required": "Status is required.",
             "any.only": `Invalid status. Please provide a valid value from
          ${Object.values(UserSupportStatusEnum).join(", ")}.`,
         }),
 
     // Validate adminComment field (optional)
-    adminComment: Joi.string().allow('').optional(),
+    adminComment: Joi
+        .string()
+        .allow('')
+        .optional(),
 });

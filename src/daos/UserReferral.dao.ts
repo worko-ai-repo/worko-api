@@ -1,3 +1,9 @@
+// Import dynamoose library for DynamoDB queries
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
+// import luxon for date formatting
+import { DateTime } from "luxon";
+
 //Load the base dao
 import BaseDao from "./Base.dao";
 
@@ -13,20 +19,18 @@ import {
   UserReferralDTO,
   UserReferralStatusChangeByCandDTO,
 } from "../dtos/UserReferral.dto";
-import { ReferralListingFilterOptions } from "../admin/dtos/Referral.dto";
+import { ReferralListingFilterOptions } from "../admin/dtos/UserReferral.dto";
 
 //Load the local enums
 import { ReferralStatus } from "../enums/UserReferral.enum";
+import { SortOrderTypeEnum } from "../enums/Common.enum";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
 
-// Import dynamoose library for DynamoDB queries
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-
 // Class definition for UserReferralDao implementing the BaseDao interface
 class UserReferralDao implements BaseDao {
-  modelName = "user"; // The model name used for user referrals
+  modelName = "UserReferral"; // The model name used for user referrals
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key format for user referrals
   sortKeys = { SK_REFERRAL: "REF#ID#{reqId}" }; // Sort key format for user referrals
   GSI1PK = "REF#";
@@ -35,7 +39,13 @@ class UserReferralDao implements BaseDao {
   /**
    * getReferrals
    *
-   * Retrieves referral details from the DAO based on the provided filter options.
+   * Retrieves all referral details from the DAO based on the provided filter options.
+   *
+   * First you will get all the referrals from the DAO using the GSI1PK and GSI1SK.
+   * Then you will filter the referrals based on the status if provided.
+   * Then sort by default in descending order Or if sortOrder is given then sort by that order using dynamoose's sort() method which sorts the items based on the sort key of the index you're querying.
+   * if search by referralStatusName is provided then you will execute the query without pagination which are in sorted order(ascending or descending according to above mentioned sortOrder) and return all the results
+   * else you will execute the query with pagination and return only the results based on the offset and limit provided
    *
    * @param {ReferralListingFilterOptions} referralRecordListingFilterRequest - The filter options for the referral record listing.
    * @return {Promise<QueryResponse<DbUserReferralDto>>} A promise that resolves to the query response containing the retrieved referral details.
@@ -59,14 +69,88 @@ class UserReferralDao implements BaseDao {
         .eq(referralRecordListingFilterRequest.status);
     }
 
+    // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
+    query = query.sort(
+      referralRecordListingFilterRequest.sortOrder as SortOrderTypeEnum
+    );
+
+    let fromTimestamp: number | undefined;
+    let toTimestamp: number | undefined;
+
+    // check if fromDate and toDate are provided and if yes convert them to timestamps using luxon library 
+    if (referralRecordListingFilterRequest.fromDate) {
+      // convert fromDate to timestamp
+      fromTimestamp = DateTime.fromISO(referralRecordListingFilterRequest.fromDate).toMillis();
+    }
+    if (referralRecordListingFilterRequest.toDate) {
+      // convert toDate to timestamp
+      toTimestamp = DateTime.fromISO(referralRecordListingFilterRequest.toDate).toMillis();
+    }
+
+    console.log(fromTimestamp, toTimestamp)
+
+    // Apply date range filter if provided
+    if (
+      referralRecordListingFilterRequest.fromDate ||
+      referralRecordListingFilterRequest.toDate
+    ) {
+      query = query.and().parenthesis((condition) => {
+        if (referralRecordListingFilterRequest.fromDate) {
+          condition.where("createdAt").ge(fromTimestamp);
+        }
+        if (referralRecordListingFilterRequest.toDate) {
+          condition.where("createdAt").le(toTimestamp);
+        }
+        return condition;
+      });
+    }
+
+    // search by searchText if provided
+    if (referralRecordListingFilterRequest.searchText) {
+      // remove trailing and leading spaces from the search text
+      let searchTextValue =
+        referralRecordListingFilterRequest.searchText.trim();
+
+      /* 
+      The and() method initiates a condition block where all conditions within it must be satisfied.
+      The parenthesis() method allows grouping of conditions for complex queries.
+      */
+      query = query.and().parenthesis((condition) => {
+        condition
+          .where("status") // "status" can be any one of 'AWAITING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'WITHDRAWN', 'DONE'
+          .contains(searchTextValue.toUpperCase())
+          .or()
+          .where("PK")
+          .contains(`USR#EML#${searchTextValue}`);
+
+        // Return the built condition
+        return condition;
+      });
+    }
+
+    // If date range or search filter or both is applied, directly return query result without pagination
+    if (
+      referralRecordListingFilterRequest.fromDate ||
+      referralRecordListingFilterRequest.toDate ||
+      referralRecordListingFilterRequest.searchText
+    ) {
+      return query.exec();
+    }
+
     // if lastKey is provided, add it to the query where lastKey is equal to the provided value
     if (referralRecordListingFilterRequest.lastKey) {
       // Start the query from the lastKey to retrieve subsequent pages
       query = query.startAt(referralRecordListingFilterRequest.lastKey);
     }
 
-    // Execute the query with pagination
-    return query.limit(referralRecordListingFilterRequest.pageSize).exec();
+    // if pageSize is provided, add it to the query
+    if (referralRecordListingFilterRequest.pageSize) {
+      // Set the page size for the query
+      query = query.limit(referralRecordListingFilterRequest.pageSize);
+    }
+
+    // Execute the query and return the result
+    return query.exec();
   }
 
   /**

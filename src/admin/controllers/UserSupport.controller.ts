@@ -8,6 +8,9 @@ import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
 import { UserSupportListingFilterOptions, UserSupportListingFilterRequestDTO } from "../dtos/UserSupport.dto";
 import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
+// Load enums
+import { SortOrderTypeEnum } from "../../enums/Common.enum";
+
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
 
@@ -83,6 +86,9 @@ class UserSupportController {
           queriedCount: supportDetails.queriedCount,
           pageSize: userSupportRequestsRecordListingFilterRequest.pageSize,
           lastKey: lastKeyToBase64EncodeStr(supportDetails.lastKey),
+          sortOrder:
+            userSupportRequestsRecordListingFilterRequest.sortOrder ??
+            SortOrderTypeEnum.DESCENDING,
         },
       };
 

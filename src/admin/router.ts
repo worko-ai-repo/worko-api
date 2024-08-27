@@ -20,7 +20,7 @@ AdminRouter.use("/user", UserRouter);
 // Define the route for user referral details
 AdminRouter.use("/referral", UserReferralRouter);
 
-// Define the route for getting user bought subscriptions 
+// Define the route for getting user bought subscriptions
 AdminRouter.use("/subscription", UserSubscriptionRouter);
 
 // Define the route for users support raise request

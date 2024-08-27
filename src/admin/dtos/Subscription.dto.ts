@@ -13,13 +13,18 @@ export interface SubscriptionListingFilterOptions extends RecordListingFilterOpt
   // Represents the filter options for querying subscriptions.
   // Should be used when filtering subscription records.
   status?: UserSubscriptionStatus;
+  fromDate?: string;
+  toDate?: string;
 }
 
 /**
  * SubscriptionListingFilterRequestDTO
  */
-export interface SubscriptionListingFilterRequestDTO extends RecordListingFilterRequestDTO {
+export interface SubscriptionListingFilterRequestDTO
+  extends RecordListingFilterRequestDTO {
   // Represents the filter request DTO for querying subscriptions.
   // Should be used when requesting to filter subscription records.
   status?: UserSubscriptionStatus;
+  fromDate?: string;
+  toDate?: string;
 }

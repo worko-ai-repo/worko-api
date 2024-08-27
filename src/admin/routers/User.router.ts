@@ -5,6 +5,8 @@ import { Router } from "express";
 import UserController from "../controllers/User.controller";
 import UserExperienceController from "../controllers/UserExperience.controller";
 import UserSubscriptionController from "../controllers/UserSubscription.controller";
+import UserReferralController from "../controllers/UserReferral.controller";
+ 
 
 // Create an instance of UserController
 const userControllerObj = new UserController();
@@ -14,6 +16,9 @@ const userExperienceControllerObj = new UserExperienceController();
 
 // Create an instance of UserSubscriptionController
 const userSubscriptionControllerObj = new UserSubscriptionController();
+
+// Create an instance of UserReferralController
+const userReferralControllerObj = new UserReferralController();
 
 // Create a new Router instance
 const UserRouter = Router();
@@ -34,7 +39,7 @@ UserRouter.get("/:emailId/experience", userExperienceControllerObj.getUserExperi
 UserRouter.get("/:emailId/subscription", userSubscriptionControllerObj.getUserSubscriptionsByEmail);
 
 // Define the route to get referral responses by employee based on provided emailId as path parameter with jobUrl
-UserRouter.get("/:emailId/emp-referral-responses", userControllerObj.getReferralResponsesByEmpEmail);
+UserRouter.get("/:emailId/emp-referral-responses", userReferralControllerObj.getReferralResponsesByEmpEmail);
 
 // Export the UserRouter
 export default UserRouter;

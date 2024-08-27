@@ -10,7 +10,7 @@ const userSubscriptionControllerObj = new UserSubscriptionController();
 // Define UserSubscriptionRouter using Express Router
 const UserSubscriptionRouter = Router();
 
-// retrieve all users subscriptions and status is optional
+// retrieve all users subscriptions and status is optional and where "name" not equal to "Free"
 UserSubscriptionRouter.get("/", userSubscriptionControllerObj.getAllUsersSubscriptions);
 
 // retrieve user subscription by the subscription id

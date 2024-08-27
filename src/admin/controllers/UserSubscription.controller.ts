@@ -10,6 +10,7 @@ import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Load enums
 import { UserSubscriptionStatus } from "../../enums/UserSubscription.enum";
+import { SortOrderTypeEnum } from "../../enums/Common.enum";
 
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
@@ -19,6 +20,7 @@ import { userSubscriptionServiceObj } from "../services/UserSubscription.service
 
 // Load schemas
 import { validateEmailField } from "../../schemas/User.schema";
+import { subscriptionFilterDtoValidation } from "../schemas/Subscription.schema";
 
 // Load utils
 import HttpStatusCode from "../../utils/http-codes.util";
@@ -43,7 +45,7 @@ class UserSubscriptionController {
    * @param {Request} req - Express request object.
    * @param {Response} res - Express response object.
    * @param {NextFunction} next - Express next middleware function.
-   * @throws {BaseError} If an invalid status is provided in the filter options.
+   * @throws {RequestValidationError} - If the filter options are invalid.
    */
   getAllUsersSubscriptions = async (
     req: Request,
@@ -52,7 +54,9 @@ class UserSubscriptionController {
   ) => {
     try {
       // Log the action for debugging purposes
-      global.logger.info("Get all users subscriptions [admin user experience controller]");
+      global.logger.info(
+        "Get all users subscriptions [admin controller]"
+      );
 
       // Parse filter options from the request query parameters
       const subscriptionRecordListingFilterRequest: SubscriptionListingFilterOptions =
@@ -61,26 +65,22 @@ class UserSubscriptionController {
           SubscriptionListingFilterOptions
         >(req.query as unknown as SubscriptionListingFilterRequestDTO);
 
-      // if status is provided and it is not a valid status, throw an error. @todo:if more than one filter options are provided,In schemas folder present in admin folder use JOI to validate.
-      if (
-        subscriptionRecordListingFilterRequest.status &&
-        !Object.values(UserSubscriptionStatus).includes(
-          subscriptionRecordListingFilterRequest.status
-        )
-      ) {
-        throw new BaseError(
-          `The Provided status "${
-            subscriptionRecordListingFilterRequest.status
-          }" is an invalid. The status should be one of "${Object.values(
-            UserSubscriptionStatus
-          ).join(", ")}".`
+      // Validate the filter options and throw an error if any of them is invalid
+      let { error, value: subscriptionFilterOptions } =
+        subscriptionFilterDtoValidation.validate(
+          subscriptionRecordListingFilterRequest,
+          {
+            abortEarly: false,
+          }
         );
+      if (error) {
+        throw new RequestValidationError(error);
       }
 
       // Get all users subscriptions based on the provided filter options and if it is not provided, get all subscriptions
       const userSubscriptions =
         await userSubscriptionServiceObj.getAllUsersSubscriptions(
-          subscriptionRecordListingFilterRequest
+          subscriptionFilterOptions
         );
 
       // Response
@@ -91,6 +91,9 @@ class UserSubscriptionController {
           queriedCount: userSubscriptions.queriedCount,
           pageSize: subscriptionRecordListingFilterRequest.pageSize,
           lastKey: lastKeyToBase64EncodeStr(userSubscriptions.lastKey),
+          sortOrder:
+            subscriptionRecordListingFilterRequest.sortOrder ??
+            SortOrderTypeEnum.DESCENDING,
         },
       };
 
@@ -117,7 +120,7 @@ class UserSubscriptionController {
     next: NextFunction
   ) => {
     try {
-      global.logger.info("Get user subscriptions by id [admin user experience controller]");
+      global.logger.info("Get user subscriptions by id [admin controller]");
 
       // Extract the subscription id from the request parameters
       const subscriptionId = req.params.id as string;
@@ -160,7 +163,7 @@ class UserSubscriptionController {
   ) => {
     try {
       // Log the action for debugging purposes
-      global.logger.info("Get user subscriptions by email [admin user experience controller]");
+      global.logger.info("Get user subscriptions by email [admin controller]");
 
       // Extract the status from the query parameters and type it as a UserSubscriptionStatus
       const subscriptionStatus = req.query.status as UserSubscriptionStatus;

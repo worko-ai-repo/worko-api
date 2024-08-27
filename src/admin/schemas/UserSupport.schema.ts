@@ -7,73 +7,57 @@ import {
   UserSupportStatusEnum,
 } from "../../enums/User.enum";
 
+// Import common schema
+import {commonSchema} from "../../schemas/Common.schema"
+
 // Define validation schema for user support filter DTO
-export const userSupportFilterDtoValidation = Joi.object({
-  status: Joi.string()
-    .optional()
-    .custom((value, helpers) => {
-      if (
-        value &&
-        !Object.values(UserSupportStatusEnum).includes(
-          value as UserSupportStatusEnum
-        )
-      ) {
-        return helpers.message({
-          custom: `Invalid status. Please provide a valid value from ${Object.values(
-            UserSupportStatusEnum
-          ).join(", ")}.`,
-        });
-      }
-      return value;
+export const userSupportFilterDtoValidation = commonSchema.concat(
+  Joi.object({
+    status: Joi.string()
+      .valid(...Object.values(UserSupportStatusEnum))
+      .optional()
+      .messages({
+        "any.only": `Invalid support status. Please provide a valid value from
+      ${Object.values(UserSupportStatusEnum).join(", ")}.`,
+      }),
+
+    userEmail: Joi.string().email().optional().messages({
+      "string.email": "User email must be a valid email address.",
+      "string.empty": "User email should not be empty.",
     }),
 
-  userEmail: Joi.string().email().optional().messages({
-    "string.email": "User email must be a valid email address.",
-    "string.empty": "User email should not be empty.",
-  }),
-
-  userSupportType: Joi.string().optional().messages({
-    "string.empty": "Support type should not be empty.",
-  }),
-
-  contextType: Joi.string()
-    .optional()
-    .custom((value, helpers) => {
-      if (
-        value &&
-        !Object.values(UserSupportContextTypeEnum).includes(
-          value as UserSupportContextTypeEnum
-        )
-      ) {
-        return helpers.message({
-          custom: `Invalid context type. Please provide a valid value from ${Object.values(
-            UserSupportContextTypeEnum
-          ).join(", ")}.`,
-        });
-      }
-      return value;
+    userSupportType: Joi.string().optional().messages({
+      "string.empty": "Support type should not be empty.",
     }),
 
-  contextId: Joi.string().optional().messages({
-    "string.empty": "Context ID should not be empty.",
-  }),
+    contextType: Joi.string()
+      .optional()
+      .valid(...Object.values(UserSupportContextTypeEnum))
+      .messages({
+        "any.only": `Invalid context type. Please provide a valid value from
+      ${Object.values(UserSupportContextTypeEnum).join(", ")}.`,
+      }),
 
-  assignedToUserId: Joi.string().optional().messages({
-    "string.empty": "Assigned to user ID should not be empty.",
-  }),
+    contextId: Joi.string().optional().messages({
+      "string.empty": "Context ID should not be empty.",
+    }),
 
-  resolvedbyUserId: Joi.string().optional().messages({
-    "string.empty": "Resolved by user ID should not be empty.",
-  }),
+    assignedToUserId: Joi.string().optional().messages({
+      "string.empty": "Assigned to user ID should not be empty.",
+    }),
 
-  pageSize: Joi.number().integer().min(1).required().messages({
-    "number.base": "Page size must be a number.",
-    "number.integer": "Page size must be an integer.",
-    "number.min": "Page size must be at least 1.",
-    "any.required": "Page size is required.",
-  }),
+    resolvedbyUserId: Joi.string().optional().messages({
+      "string.empty": "Resolved by user ID should not be empty.",
+    }),
 
-  lastKey: Joi.string().optional().allow("").messages({
-    "string.empty": "Last key should not be empty.",
-  }),
-});
+    // The fromDate field can be a string in a valid ISO 8601 date format, null, or undefined.
+    fromDate: Joi.string().isoDate().optional().allow(null).messages({
+      "string.base": "Provide a valid fromDate.",
+    }),
+
+    // The toDate field can be a string in a valid ISO 8601 date format, null, or undefined.
+    toDate: Joi.string().isoDate().optional().allow(null).messages({
+      "string.base": "Provide a valid toDate.",
+    }),
+  })
+);

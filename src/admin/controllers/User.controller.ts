@@ -1,6 +1,9 @@
 // Import the necessary npm packages
 import { Request, Response, NextFunction } from "express";
 
+// Import the helpers for dynamoose
+import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
+
 // Import the DTO
 import {
   UsersListingFilterOptions,
@@ -8,11 +11,8 @@ import {
 } from "../dtos/User.dto";
 import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
-// Import the helpers for dynamoose
-import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
-
 // Import the enums
-import { UserType } from "../../enums/User.enum";
+import { SortOrderTypeEnum } from "../../enums/Common.enum";
 
 // Import the helpers
 import { RequestHelper } from "../../helpers/request.helper";
@@ -22,6 +22,7 @@ import { userServiceObj } from "../services/User.service";
 
 // Import the schemas
 import { validateEmailField } from "../../schemas/User.schema";
+import { usersFilterDtoValidation } from "../schemas/User.schema";
 
 // Import the utils
 import HttpStatusCode from "../../utils/http-codes.util";
@@ -46,41 +47,39 @@ class UserController {
    * @param {Request} req - Express request object.
    * @param {Response} res - Express response object.
    * @param {NextFunction} next - Express next middleware function.
-   * @throws {BaseError} If the provided userType is not a valid UserType.
+   * @throws {RequestValidationError} - If the filter options are invalid.
    */
   getUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Log the action of getting user details by CAND/EMP
-      global.logger.info("Get user details by CAND/EMP [admin user controller]");
+      global.logger.info(
+        "Get user details by CAND/EMP [admin user controller]"
+      );
 
       // Parse filter options from the request query parameters
       const usersRecordListingFilterRequest: UsersListingFilterOptions =
         RequestHelper.parseFilterOptions<
           UsersListingFilterRequestDTO,
           UsersListingFilterOptions
-        >(req.query as unknown as UsersListingFilterRequestDTO);
+        >(req.query as unknown as UsersListingFilterRequestDTO);  
 
-      // Validation to ensure userType is a valid UserType
-      if (
-        usersRecordListingFilterRequest.userType &&
-        !Object.values(UserType).includes(
-          usersRecordListingFilterRequest.userType
-        )
-      ) {
-        throw new BaseError(
-          `The Provided userType: "${usersRecordListingFilterRequest.userType}" is invalid.So, it should be one of "${Object.values(UserType).join(", ")}".`
-        );
+      // Validate the filter options and throw an error if any of them is invalid
+      let { error, value: usersFilterOptions } = usersFilterDtoValidation.validate(usersRecordListingFilterRequest,{abortEarly: false,});
+      if (error) {
+        throw new RequestValidationError(error);
       }
 
       // Fetch user details from the service
-      const userDetails = await userServiceObj.getUsers(usersRecordListingFilterRequest);
-      
+      const userDetails = await userServiceObj.getUsers(usersFilterOptions);
+
       // Create the response object with the fetched user details
       let usersResponse: RecordListingResponseDTO;
 
       // If userDetails is of type QueryResponse<DbUserDetailDto>
       if (
-        "count" in userDetails && "queriedCount" in userDetails && "lastKey" in userDetails
+        "count" in userDetails &&
+        "queriedCount" in userDetails &&
+        "lastKey" in userDetails
       ) {
         usersResponse = {
           data: userDetails,
@@ -88,7 +87,10 @@ class UserController {
             count: userDetails.count,
             queriedCount: userDetails.queriedCount,
             pageSize: usersRecordListingFilterRequest.pageSize,
-            lastKey: lastKeyToBase64EncodeStr(userDetails.lastKey),
+            lastKey: lastKeyToBase64EncodeStr(userDetails.lastKey), // encode the lastKey object into a Base64 string.
+            sortOrder:
+              usersRecordListingFilterRequest.sortOrder ??
+              SortOrderTypeEnum.DESCENDING,
           },
         };
       } else {
@@ -99,6 +101,7 @@ class UserController {
           pagination: {
             count: userDetails.length,
             pageSize: usersRecordListingFilterRequest.pageSize,
+            sortOrder: usersRecordListingFilterRequest.sortOrder
           },
         };
       }
@@ -194,46 +197,6 @@ class UserController {
 
       // Return the response with user details
       return res.status(HttpStatusCode.OK_200).json(userDetails[0]);
-    } catch (error) {
-      // Pass the error to the next middleware function
-      next(error);
-    }
-  };
-
-  /**
-   * getReferralResponsesByEmpEmail
-   *
-   * Controller function to retrieve the referral responses made by employee based on email
-   *
-   * @param {Request} req - Express request object
-   * @param {Response} res - Express response object
-   * @param {NextFunction} next - Express next middleware function
-   */
-  getReferralResponsesByEmpEmail = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      // Log the action of getting referral response
-      global.logger.info(
-        "Get user referral responses by employee email by [admin user controller]"
-      );
-
-      // Extract email from request parameters
-      const userEmail = req.params.emailId as string;
-
-      // Validate email field and throw error if invalid
-      const { error } = validateEmailField(userEmail);
-      if (error) {
-        throw new RequestValidationError(error);
-      }
-
-      // Fetch referral responses by employee based on email from the service
-      const referralResponsesByEmpEmail = await userServiceObj.getReferralResponsesByEmpEmail(userEmail);
-
-      // Return the response
-      return res.status(HttpStatusCode.OK_200).json(referralResponsesByEmpEmail);
     } catch (error) {
       // Pass the error to the next middleware function
       next(error);

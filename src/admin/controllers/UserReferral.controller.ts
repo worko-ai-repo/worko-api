@@ -5,11 +5,11 @@ import { Request, Response, NextFunction } from "express";
 import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
 
 // Load dtos
-import { ReferralListingFilterOptions, ReferralListingFilterRequestDTO } from "../dtos/Referral.dto";
+import { ReferralListingFilterOptions, ReferralListingFilterRequestDTO } from "../dtos/UserReferral.dto";
 import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Load enums
-import { ReferralStatus } from "../../enums/UserReferral.enum";
+import { SortOrderTypeEnum } from "../../enums/Common.enum";
 
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
@@ -17,9 +17,13 @@ import { RequestHelper } from "../../helpers/request.helper";
 // Load services
 import { userReferralServiceObj } from "../services/UserReferral.service";
 
+// Load schemas
+import { userReferralFilterDtoValidation } from "../schemas/UserReferral.schema";
+import { validateEmailField } from "../../schemas/User.schema";
+
 // Load utils
 import HttpStatusCode from "../../utils/http-codes.util";
-import { BaseError } from "../../utils/errors.util";
+import { BaseError, RequestValidationError } from "../../utils/errors.util";
 
 /**
  * UserReferralController
@@ -29,18 +33,18 @@ import { BaseError } from "../../utils/errors.util";
 class UserReferralController {
   /**
    * getReferrals
-   * 
+   *
    * Get all referrals.
-   * 
+   *
    * This function retrieves all referral details based on the provided filter options in the request query parameters.
    * If a status is provided in the filter options and it is not valid, an error is thrown.
    * It logs the action for debugging purposes, parses the filter options, validates the status,
    * retrieves the referral details from the user referral service, and sends the response as a JSON object.
-   * 
+   *
    * @param {Request} req - Express request object.
    * @param {Response} res - Express response object.
    * @param {NextFunction} next - Express next middleware function.
-   * @throws {BaseError} If an invalid referral status is provided in the filter options.
+   * @throws {RequestValidationError} - If the filter options are invalid.
    */
   getReferrals = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -54,25 +58,21 @@ class UserReferralController {
           ReferralListingFilterOptions
         >(req.query as unknown as ReferralListingFilterRequestDTO);
 
-      // If status is provided and it is not a valid status, throw an error
-      if (
-        referralRecordListingFilterRequest.status &&
-        !Object.values(ReferralStatus).includes(
-          referralRecordListingFilterRequest.status
-        )
-      ) {
-        throw new BaseError(
-          `The Provided referral status "${
-            referralRecordListingFilterRequest.status
-          }" is an invalid. The status should be one of "${Object.values(
-            ReferralStatus
-          ).join(", ")}".`
+      // Validate the filter options and throw an error if any of them is invalid
+      let { error, value: userReferralFilterOptions } =
+        userReferralFilterDtoValidation.validate(
+          referralRecordListingFilterRequest,
+          {
+            abortEarly: false,
+          }
         );
+      if (error) {
+        throw new RequestValidationError(error);
       }
 
       // Fetch the referral details from the service
       const userReferrals = await userReferralServiceObj.getReferrals(
-        referralRecordListingFilterRequest
+        userReferralFilterOptions
       );
 
       // Response
@@ -83,6 +83,9 @@ class UserReferralController {
           queriedCount: userReferrals.queriedCount,
           pageSize: referralRecordListingFilterRequest.pageSize,
           lastKey: lastKeyToBase64EncodeStr(userReferrals.lastKey),
+          sortOrder:
+            referralRecordListingFilterRequest.sortOrder ??
+            SortOrderTypeEnum.DESCENDING,
         },
       };
 
@@ -111,7 +114,9 @@ class UserReferralController {
   ) => {
     try {
       // Log the action of getting referral details in the controller
-      global.logger.info("Get referral detail by id [admin user referral controller]");
+      global.logger.info(
+        "Get referral detail by id [admin user referral controller]"
+      );
 
       // Get the id parameter from the request
       const referralId = req.params.id as string;
@@ -130,6 +135,46 @@ class UserReferralController {
       return res.status(HttpStatusCode.OK_200).json(userReferralDetails[0]);
     } catch (error) {
       // Pass the error to the error handling middleware
+      next(error);
+    }
+  };
+
+  /**
+   * getReferralResponsesByEmpEmail
+   *
+   * Controller function to retrieve the referral responses made by employee based on email
+   *
+   * @param {Request} req - Express request object
+   * @param {Response} res - Express response object
+   * @param {NextFunction} next - Express next middleware function
+   */
+  getReferralResponsesByEmpEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      // Log the action of getting referral response
+      global.logger.info("Get user referral responses by employee email by [admin controller]");
+
+      // Extract email from request parameters
+      const userEmail = req.params.emailId as string;
+
+      // Validate email field and throw error if invalid
+      const { error } = validateEmailField(userEmail);
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Fetch referral responses by employee based on email from the service
+      const referralResponsesByEmpEmail = await userReferralServiceObj.getReferralResponsesByEmpEmail(userEmail);
+
+      // Return the response
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json(referralResponsesByEmpEmail);
+    } catch (error) {
+      // Pass the error to the next middleware function
       next(error);
     }
   };

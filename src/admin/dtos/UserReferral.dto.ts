@@ -16,13 +16,18 @@ export interface ReferralListingFilterOptions extends RecordListingFilterOptions
   // Represents the filter options for querying referrals.
   // Should be used when filtering referrals records.
   status?: ReferralStatus;
+  fromDate?: string;
+  toDate?: string;
 }
 
 /**
  * ReferralListingFilterRequestDTO
  */
-export interface ReferralListingFilterRequestDTO extends RecordListingFilterRequestDTO {
+export interface ReferralListingFilterRequestDTO
+  extends RecordListingFilterRequestDTO {
   // Represents the filter request DTO for querying referrals.
   // Should be used when requesting to filter referrals records.
   status?: ReferralStatus;
+  fromDate?: string;
+  toDate?: string;
 }

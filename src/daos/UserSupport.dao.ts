@@ -1,20 +1,25 @@
+// import luxon for date formatting
+import { DateTime } from "luxon";
+
 // Import the base dao
 import BaseDao from "./Base.dao";
 
 // Import the dtos
 import {
-    UserSupportCreateDto,
-    UserSupportFilterDto,
-    UserSupportUpdateApiDto,
+  UserSupportCreateDto,
+  UserSupportFilterDto,
+  UserSupportUpdateApiDto,
 } from "../dtos/UserSupport.dto";
 import { UserSupportListingFilterOptions } from "../admin/dtos/UserSupport.dto";
 
+// Import the enums
+import { SortOrderTypeEnum } from "../enums/Common.enum";
+
 // Import the models
 import {
-    DbUserSupportDto,
-    UserSupportModel,
+  DbUserSupportDto,
+  UserSupportModel,
 } from "../db/models/UserSupport.model";
-
 
 // Import the services
 import UlidService from "../services/Ulid.service";
@@ -110,14 +115,83 @@ class UserSupportDao implements BaseDao {
         .eq(supportFilterOptions.resolvedbyUserId);
     }
 
+    // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
+    query.sort(supportFilterOptions.sortOrder as SortOrderTypeEnum);
+
+    let fromTimestamp: number | undefined;
+    let toTimestamp: number | undefined;
+
+    // check if fromDate and toDate are provided and if yes convert them to timestamps using luxon library
+    if (supportFilterOptions.fromDate) {
+      // convert fromDate to timestamp
+      fromTimestamp = DateTime.fromISO(supportFilterOptions.fromDate).toMillis();
+    }
+    if (supportFilterOptions.toDate) {
+      // convert toDate to timestamp
+      toTimestamp = DateTime.fromISO(supportFilterOptions.toDate).toMillis();
+    }
+
+    // Apply date range filter if provided
+    if (supportFilterOptions.fromDate || supportFilterOptions.toDate) {
+      query = query.and().parenthesis((condition) => {
+        if (supportFilterOptions.fromDate) {
+          condition.where("createdAt").ge(fromTimestamp);
+        }
+        if (supportFilterOptions.toDate) {
+          condition.where("createdAt").le(toTimestamp);
+        }
+        return condition;
+      });
+    }
+
+    // search by searchText if provided
+    if (supportFilterOptions.searchText) {
+      // remove trailing and leading spaces from the search text
+      let searchTextValue = supportFilterOptions.searchText.trim();
+
+      /* 
+      The and() method initiates a condition block where all conditions within it must be satisfied.
+      The parenthesis() method allows grouping of conditions for complex queries.
+      */
+      query = query.and().parenthesis((condition) => {
+        condition
+          .where("userEmail")
+          .contains(searchTextValue)
+          .or()
+          .where("userFirstName")
+          .contains(searchTextValue)
+          .or()
+          .where("userLastName")
+          .contains(searchTextValue);
+
+        // Return the built condition
+        return condition;
+      });
+    }
+
+    // If date range or search filter or both is applied, directly return query result without pagination
+    if (
+      supportFilterOptions.fromDate ||
+      supportFilterOptions.toDate ||
+      supportFilterOptions.searchText
+    ) {
+      return query.exec();
+    }
+
     // if lastKey is provided, add it to the query where lastKey is equal to the provided value
     if (supportFilterOptions.lastKey) {
       // Start the query from the lastKey to retrieve subsequent pages
       query.startAt(supportFilterOptions.lastKey);
     }
 
-    // Execute the query with pagination
-    return query.limit(supportFilterOptions.pageSize).exec();
+    // if pageSize is provided, add it to the query
+    if (supportFilterOptions.pageSize) {
+      // Set the page size for the query
+      query.limit(supportFilterOptions.pageSize);
+    }
+
+    // Execute the query and return the result
+    return query.exec();
   }
 
   /**

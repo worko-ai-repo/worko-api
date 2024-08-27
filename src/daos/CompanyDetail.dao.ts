@@ -5,6 +5,9 @@ import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
 //Load the base dao
 import BaseDao from "./Base.dao";
 
+//Load the local enums
+import { SortOrderTypeEnum } from "../enums/Common.enum";
+
 //Load the local models
 import { CompanyDetailModel, DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
 
@@ -79,11 +82,14 @@ class CompanyDetailDao implements BaseDao {
     let query: Query<AnyItem>;
     query = CompanyDetailModel.query("PK").eq(this.partitianKey);
 
+    // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
+    query.sort(filterOptions.sortOrder ?? SortOrderTypeEnum.DESCENDING);
+
     // Construct the query based on filter options
     if (filterOptions.companyName) {
       // If company name filter is provided, construct a query to search for companies by name
-      let companyName = filterOptions.companyName.toLocaleUpperCase();
-      query = query.where("name").beginsWith(companyName);
+      let companyName = filterOptions.companyName.toUpperCase();
+      query = query.where("name").contains(companyName);
       query = query.attributes(attributesToInclude);
 
       // Execute the query without pagination and return all the results for companyName
@@ -107,7 +113,7 @@ class CompanyDetailDao implements BaseDao {
       query = query.and().parenthesis((condition) => {
         let subCondition = condition;
 
-        // Iterate through each industry term
+        // Iterate through each industry term 
         industryTerms.forEach((term, index) => {
           if (index === 0) {
             // For the first term, start the condition chain
