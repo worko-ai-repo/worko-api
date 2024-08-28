@@ -90,6 +90,7 @@ export interface CompanyListingFilterOptions extends RecordListingFilterOptions 
   companyName?: string; // Filter by company name
   industryName: string; // Filter by industry name
   teamSize?: string; // Filter by team size
+  isVerified?: number | null; // Filter by verification status
 }
 
 /**
@@ -103,4 +104,5 @@ export interface CompanyListingFilterRequestDTO extends RecordListingFilterReque
   companyName?: string; // Filter by company name
   industryName: string; // Filter by industry name
   teamSize?: string; // Filter by team size
+  isVerified?: number | null; // Filter by verification status
 }

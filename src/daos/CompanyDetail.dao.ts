@@ -80,10 +80,10 @@ class CompanyDetailDao implements BaseDao {
     ];
 
     let query: Query<AnyItem>;
-    query = CompanyDetailModel.query("PK").eq(this.partitianKey);
-
-    // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
-    query.sort(filterOptions.sortOrder ?? SortOrderTypeEnum.DESCENDING);
+    query = CompanyDetailModel.query("PK")
+    .eq(this.partitianKey)
+    .sort(filterOptions.sortOrder 
+      ?? SortOrderTypeEnum.DESCENDING);
 
     // Construct the query based on filter options
     if (filterOptions.companyName) {
@@ -145,6 +145,15 @@ class CompanyDetailDao implements BaseDao {
       }
     }
 
+    // Add isVerified filter if provided
+    if (filterOptions.isVerified !== undefined && filterOptions.isVerified !== null) {
+      if (filterOptions.isVerified === 1) {
+        query = query.where("isVerified").eq(true);
+      } else if (filterOptions.isVerified === 0) {
+        query = query.where("isVerified").eq(false);
+      }
+    }
+
     // Include specified attributes in the query result
     query = query.attributes(attributesToInclude);
 
@@ -162,9 +171,14 @@ class CompanyDetailDao implements BaseDao {
       // Start the query from the lastKey to retrieve subsequent pages
       query = query.startAt(filterOptions.lastKey);
     }
+    // If no filter is applied, apply pagination
+    if (filterOptions.pageSize) {
+      query = query.limit(filterOptions.pageSize);
+    }
 
-    // Execute the query with pagination
-    return query.limit(filterOptions.pageSize).exec();
+    // Execute the query by applying sort order 
+    // return query.sort(filterOptions.sortOrder ?? SortOrderTypeEnum.DESCENDING).exec();
+    return query.exec();
   }
 
   /**

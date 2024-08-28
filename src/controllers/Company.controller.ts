@@ -178,18 +178,17 @@ class CompanyController {
           CompanyListingFilterOptions
         >(req.query as unknown as CompanyListingFilterRequestDTO);
 
+      // Set isVerified to true (1) before passing to the service
+      recordListingFilterRequest.isVerified = 1;
+
       // Call the CompanyService to get company list
       const companyList = await CompanyService.getCompanyList(
         recordListingFilterRequest
       );
-      let allCompanies = companyList.filter(
-        (company) =>
-          company.isVerified === true || company.isVerified === undefined
-      );
 
       // Response
       const response: RecordListingResponseDTO = {
-        data: allCompanies,
+        data: companyList,
         pagination: {
           count: companyList.count,
           queriedCount: companyList.queriedCount,
