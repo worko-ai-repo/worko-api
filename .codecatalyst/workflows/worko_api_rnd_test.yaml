@@ -52,7 +52,6 @@ Actions:
       Steps:
         - Run: npm install
         - Run: npm test
-        - Run: npm run test
     Compute:
       Type: Lambda
       Fleet: Linux.Arm64.Large
