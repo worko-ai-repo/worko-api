@@ -6,7 +6,9 @@ import UserController from "../controllers/User.controller";
 import UserExperienceController from "../controllers/UserExperience.controller";
 import UserSubscriptionController from "../controllers/UserSubscription.controller";
 import UserReferralController from "../controllers/UserReferral.controller";
- 
+
+// Import the middlewares
+import { validateEmailParamMiddleware } from "../../middlewares/validate-email-parameter.middleware";
 
 // Create an instance of UserController
 const userControllerObj = new UserController();
@@ -30,16 +32,32 @@ UserRouter.get("/", userControllerObj.getUsers);
 UserRouter.get("/:id", userControllerObj.getUserDetailById);
 
 // Define the route to get user details based on provided emailId as path parameter
-UserRouter.get("/:emailId/detail", userControllerObj.getUserDetailByEmail);
+UserRouter.get(
+  "/:emailId/detail",
+  validateEmailParamMiddleware,
+  userControllerObj.getUserDetailByEmail
+);
 
 // Define the route to get employee experiences based on provided emailId as path parameter
-UserRouter.get("/:emailId/experience", userExperienceControllerObj.getUserExperiencesByEmail);
+UserRouter.get(
+  "/:emailId/experience",
+  validateEmailParamMiddleware,
+  userExperienceControllerObj.getUserExperiencesByEmail
+);
 
 // list the user subscriptions by the user email and status is optional
-UserRouter.get("/:emailId/subscription", userSubscriptionControllerObj.getUserSubscriptionsByEmail);
+UserRouter.get(
+  "/:emailId/subscription",
+  validateEmailParamMiddleware,
+  userSubscriptionControllerObj.getUserSubscriptionsByEmail
+);
 
 // Define the route to get referral responses by employee based on provided emailId as path parameter with jobUrl
-UserRouter.get("/:emailId/emp-referral-responses", userReferralControllerObj.getReferralResponsesByEmpEmail);
+UserRouter.get(
+  "/:emailId/emp-referral-responses",
+  validateEmailParamMiddleware,
+  userReferralControllerObj.getReferralResponsesByEmpEmail
+);
 
 // Export the UserRouter
 export default UserRouter;

@@ -1,9 +1,14 @@
 // Load the npm packages
 import * as dynamoose from "dynamoose";
 
-// Load the local model constants and base model functionalities
-import { BaseDbDto } from "./Base.model";
+// Load the constants
 import { DB_CONSTANTS } from "../DB.constants";
+
+// Load the enums
+import { UserType } from "../../enums/User.enum";
+
+// Load the local base model functionalities
+import { BaseDbDto } from "./Base.model";
 
 // @todo the "DbUserDetailDto" and "UserDetailSchema" should be in sync.
 // For ex, the "DbUserDetailDto.CV" is required but the "UserDetailSchema.CV" is optional.
@@ -18,6 +23,7 @@ class DbUserDetailDto extends BaseDbDto {
   emailList!: { [key: string]: string }; // @todo we should consider removing this. And make the fields are always upto date. Instead use the "UserEmail" SK.
   number!: string;
   userType!: string[];
+  userRole!: UserType;
   isEmailVerified!: boolean;
   isNumberVerified!: boolean;
   isSubscribed!: boolean;
@@ -87,6 +93,10 @@ const UserDetailSchema = new dynamoose.Schema(
       schema: [String],
       required: true,
     },
+    userRole: {
+      type: String,
+      required: true,
+    }, // CAND or EMP
     isEmailVerified: {
       type: Boolean,
       required: true,

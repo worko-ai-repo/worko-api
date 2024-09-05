@@ -1,8 +1,8 @@
 // Load npm packages
 import { Request, Response, NextFunction } from "express";
 
-// Load dynamoose helpers
-import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
+// Load dynamoose library and types
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load dtos
 import { SubscriptionListingFilterOptions, SubscriptionListingFilterRequestDTO } from "../dtos/Subscription.dto";
@@ -10,16 +10,18 @@ import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Load enums
 import { UserSubscriptionStatus } from "../../enums/UserSubscription.enum";
-import { SortOrderTypeEnum } from "../../enums/Common.enum";
 
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
+import { paginationRecordListingResponse } from "../../helpers/pagination-response.helper";
+
+// Load models
+import { DbUserSubsDto } from "../../db/models/UserSubscription.model";
 
 // Load services
 import { userSubscriptionServiceObj } from "../services/UserSubscription.service";
 
 // Load schemas
-import { validateEmailField } from "../../schemas/User.schema";
 import { subscriptionFilterDtoValidation } from "../schemas/Subscription.schema";
 
 // Load utils
@@ -34,13 +36,15 @@ import { BaseError, RequestValidationError } from "../../utils/errors.util";
 class UserSubscriptionController {
   /**
    * getAllUsersSubscriptions
-   * 
+   *
    * Get all users subscriptions.
    *
    * This function retrieves all user subscriptions based on the provided filter options in the request query parameters.
    * If a status is provided in the filter options and it is not valid, an error is thrown.
    * It logs the action for debugging purposes, parses the filter options, validates the status,
    * retrieves the subscriptions from the user subscription service, and sends the response as a JSON object.
+   *
+   * REFERENCE TUTORIAL[Typescript Generics]: https://youtu.be/EcCTIExsqmI?si=3g9M7sVRUeoL3dj7
    *
    * @param {Request} req - Express request object.
    * @param {Response} res - Express response object.
@@ -54,9 +58,7 @@ class UserSubscriptionController {
   ) => {
     try {
       // Log the action for debugging purposes
-      global.logger.info(
-        "Get all users subscriptions [admin controller]"
-      );
+      global.logger.info("Get all users subscriptions [admin controller]");
 
       // Parse filter options from the request query parameters
       const subscriptionRecordListingFilterRequest: SubscriptionListingFilterOptions =
@@ -83,19 +85,13 @@ class UserSubscriptionController {
           subscriptionFilterOptions
         );
 
-      // Response
-      const subscriptionResponse: RecordListingResponseDTO = {
-        data: userSubscriptions,
-        pagination: {
-          count: userSubscriptions.count,
-          queriedCount: userSubscriptions.queriedCount,
-          pageSize: subscriptionRecordListingFilterRequest.pageSize,
-          lastKey: lastKeyToBase64EncodeStr(userSubscriptions.lastKey),
-          sortOrder:
-            subscriptionRecordListingFilterRequest.sortOrder ??
-            SortOrderTypeEnum.DESCENDING,
-        },
-      };
+      // Generate the response structure with the paginated result
+      const subscriptionResponse: RecordListingResponseDTO<
+        QueryResponse<DbUserSubsDto>
+      > = paginationRecordListingResponse<
+        QueryResponse<DbUserSubsDto>,
+        SubscriptionListingFilterOptions
+      >(userSubscriptions, subscriptionRecordListingFilterRequest);
 
       // Send the retrieved subscriptions
       return res.status(HttpStatusCode.OK_200).json(subscriptionResponse);
@@ -147,14 +143,18 @@ class UserSubscriptionController {
 
   /**
    * getUserSubscriptionsByEmail
+   * 
+   * Handles the request to get user subscriptions by email.
    *
-   * This controller handles the retrieval of user subscriptions based on the provided email and status (optional).
+   * This controller method is responsible for retrieving user subscription details
+   * from the database based on the provided email ID in the request parameters and
+   * an optional subscription status in the query parameters. If a valid status is provided,
+   * the subscriptions are filtered by that status. The subscriptions are then returned in the response.
    *
-   * @param {Request} req - The request object containing the email parameter.
-   * @param {Response} res - The response object used to send the retrieved subscriptions.
-   * @param {NextFunction} next - The next middleware function for error handling.
-   * @throws {BaseError} If status is provided and it is not a valid status.
-   * @throws {RequestValidationError} If the provided email is invalid.
+   * @param {Request} req - The Express request object containing the email ID in the path parameters and an optional status in the query parameters.
+   * @param {Response} res - The Express response object used to send the response back to the client.
+   * @param {NextFunction} next - The Express next function to pass control to the next middleware or error handler.
+   * @throws {BaseError} - Throws a `400 Bad Request` error if the provided status is invalid.
    */
   getUserSubscriptionsByEmail = async (
     req: Request,
@@ -182,14 +182,6 @@ class UserSubscriptionController {
 
       // Extract email from request parameters
       const userEmail = req.params.emailId as string;
-
-      // Validate the email and throw an error if it is invalid
-      const { error } = validateEmailField(userEmail);
-      if (error) {
-        throw new RequestValidationError(error);
-      }
-
-      // @todo: check whether the provided email is present in the database or not and if not then throw error 404, user with the provided email is not found
 
       // Get user subscriptions from service
       const userSubscriptions =

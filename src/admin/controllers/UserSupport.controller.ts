@@ -1,18 +1,18 @@
 // Load npm packages
 import { Request, Response, NextFunction } from "express";
 
-// Load dynamoose helpers
-import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
+// Load dynamoose library and types
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load local DTOs
 import { UserSupportListingFilterOptions, UserSupportListingFilterRequestDTO } from "../dtos/UserSupport.dto";
 import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
-// Load enums
-import { SortOrderTypeEnum } from "../../enums/Common.enum";
-
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
+
+// Load models
+import { DbUserSupportDto } from "../../db/models/UserSupport.model";
 
 // Load services
 import { userSupportServiceObj } from "../services/UserSupport.service";
@@ -23,6 +23,7 @@ import { userSupportFilterDtoValidation } from "../schemas/UserSupport.schema";
 // Load utils
 import { BaseError, RequestValidationError } from "../../utils/errors.util";
 import HttpStatusCode from "../../utils/http-codes.util";
+import { paginationRecordListingResponse } from "../../helpers/pagination-response.helper";
 
 /**
  * UserSupportController
@@ -32,14 +33,16 @@ import HttpStatusCode from "../../utils/http-codes.util";
 class UserSupportController {
   /**
    * getSupportRequests
-   * 
+   *
    * Get all user support requests.
    *
    * This function retrieves all user support requests based on the provided filter options in the request query parameters.
    * It validates the filter options using a validation schema, and if any validation errors are found, an error is thrown.
    * It logs the action for debugging purposes, parses and validates the filter options,
    * retrieves the support request details from the user support service, and sends the response as a JSON object.
-   * 
+   *
+   * REFERENCE TUTORIAL[Typescript Generics]: https://youtu.be/EcCTIExsqmI?si=3g9M7sVRUeoL3dj7
+   *
    * @param {Request} req - Express request object.
    * @param {Response} res - Express response object.
    * @param {NextFunction} next - Express next middleware function.
@@ -52,7 +55,9 @@ class UserSupportController {
   ) => {
     try {
       // Log the action for debugging purposes
-      global.logger.info("get all User support list [admin user support controller]");
+      global.logger.info(
+        "get all User support list [admin user support controller]"
+      );
 
       // Parse filter options from the request query parameters
       const userSupportRequestsRecordListingFilterRequest: UserSupportListingFilterOptions =
@@ -78,19 +83,13 @@ class UserSupportController {
         supportFilterOptions
       );
 
-      // Response
-      const userSupportRequestsResponse: RecordListingResponseDTO = {
-        data: supportDetails,
-        pagination: {
-          count: supportDetails.count,
-          queriedCount: supportDetails.queriedCount,
-          pageSize: userSupportRequestsRecordListingFilterRequest.pageSize,
-          lastKey: lastKeyToBase64EncodeStr(supportDetails.lastKey),
-          sortOrder:
-            userSupportRequestsRecordListingFilterRequest.sortOrder ??
-            SortOrderTypeEnum.DESCENDING,
-        },
-      };
+      // Generate the response structure with pagination details
+      const userSupportRequestsResponse: RecordListingResponseDTO<
+        QueryResponse<DbUserSupportDto>
+      > = paginationRecordListingResponse<
+        QueryResponse<DbUserSupportDto>,
+        UserSupportListingFilterOptions
+      >(supportDetails, userSupportRequestsRecordListingFilterRequest);
 
       // Send the response
       return res
@@ -119,7 +118,9 @@ class UserSupportController {
   ) => {
     try {
       // Log the action for debugging purposes
-      global.logger.info("get User support details [admin user support controller]");
+      global.logger.info(
+        "get User support details [admin user support controller]"
+      );
 
       // Get the supportId from the request
       const supportId = req.params.supportId as string;

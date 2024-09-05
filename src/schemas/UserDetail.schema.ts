@@ -48,6 +48,14 @@ export const userDetailDTOValidation = Joi.object({
       "any.required": "User type is required.",
       "array.includesOne": "Invalid user type.",
     }),
+  userRole: Joi
+    .string()
+    .required()
+    .valid(...Object.values(UserType))
+    .messages({
+        "any.only": `Invalid user Role. Please provide a valid value from
+      ${Object.values(UserType).join(", ")}.`,
+    }),
   isEmailVerified: Joi.boolean().required().messages({
     "any.required": "Email verification status is required.",
     "boolean.base": "Invalid email verification status.",

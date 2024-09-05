@@ -10,7 +10,8 @@ import {commonSchema} from "../../schemas/Common.schema"
 // Define validation schema for get all signup users filter DTO
 export const usersFilterDtoValidation = commonSchema.concat(
   Joi.object({
-    userType: Joi.string()
+    userType: Joi
+      .string()
       .optional()
       .valid(...Object.values(UserType))
       .messages({

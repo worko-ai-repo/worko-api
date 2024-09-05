@@ -27,87 +27,66 @@ class UserService {
    * getUsers
    * 
    * Retrieves user details based on the provided filter options.
-   *
+   * 
+   * If userType is CAND, then return the candidate signup list
+   * Or if userType is undefined, then return both candidate and employee signup list
+   * 
+   * If userType is EMP, get the employee signup list and also include currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified
+   * 
    * @param {UsersListingFilterOptions} usersRecordListingFilterRequest - The filter options for user details.
-   * @return {Promise<QueryResponse<DbUserDetailDto> | DbUserDetailDto[] | any[]>} A promise that resolves to the user details.
+   * 
    */
-  async getUsers(
-    usersRecordListingFilterRequest: UsersListingFilterOptions
-  ): Promise<QueryResponse<DbUserDetailDto> | DbUserDetailDto[] | any[]> {
+  async getUsers( usersRecordListingFilterRequest: UsersListingFilterOptions ) {
     // Log the action of getting user details by CAND/EMP
     global.logger.info("Get user details by CAND/EMP [admin user service]");
 
-    // Fetch all user details from the DAO including candidates and employees
-    let userDetails = await userDetailDao.getUsers(
-      usersRecordListingFilterRequest
-    );
-
-    // If no user details found, return an empty array
-    if (!userDetails.count) {
-      return [];
+    /*
+    If userType is CAND, then return the candidate signup list
+    Or if userType is undefined, then return both candidate and employee signup list
+    */
+    if (
+      usersRecordListingFilterRequest.userType === UserType.CAND ||
+      usersRecordListingFilterRequest.userType === undefined
+    ) {
+      return userDetailDao.getUsers(usersRecordListingFilterRequest);
     }
+
+    // If userType is EMP, get the employee signup list
+    const userDetails: QueryResponse<DbUserDetailDto> = await userDetailDao.getUsers(usersRecordListingFilterRequest);
 
     /*
-    @todo: try filtering by userType in DAO
-    ->tried in DAO using query.where("userType").contains([userType]) but it didn't work,
-    ->tried in DAO using query.where("userType").contains(userType) but it didn't work,
-    ->tried filter expressions in query but it didn't work
-    ->tried "in" operator but it didn't work
-    ->Refer the docs:- https://dynamoosejs.com/guide/Query#modelqueryfilter
-    ->Refer the docs:- https://dynamoosejs.com/guide/Condition#conditioninvalues
+    Extract email from the PK and get all experiences by email and 
+    find the current experience which has "isCurrent" attribute as true(boolean) and 
+    return the employee details including currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified 
     */
-
-    // if userType is not provided, return all userDetails
-    // The return type is "QueryResponse<DbUserDetailDto>"
-    if (!usersRecordListingFilterRequest.userType) {
-      return userDetails;
-    }
-
-    // Filter userDetails manually to ensure specified userType is returned
-    const filteredUserDetails = userDetails.filter(
-      (eachUserDetail: DbUserDetailDto) => {
-        return (
-          usersRecordListingFilterRequest.userType &&
-          eachUserDetail.userType.includes(
-            usersRecordListingFilterRequest.userType
-          )
-        );
-      }
-    );
-
-    // If userType is CAND, return the filtered user details
-    // The return type is "DbUserDetailDto[]"
-    if (usersRecordListingFilterRequest.userType === UserType.CAND) {
-      return filteredUserDetails;
-    }
-
-    // If userType is EMP, modify the response structure with the currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified
     const empWithExperience = await Promise.all(
-      filteredUserDetails.map(async (eachUserDetail) => {
-        // Extract email from the PK
-        const email = eachUserDetail.PK.split("#")[2];
+      userDetails.map(async (eachUserDetail) => {
+        // Extract employee email from the PK
+        const empEmail = eachUserDetail.PK.split("#")[2];
 
-        // get all experiences by email
-        const experiences =
-          await userExperienceServiceObj.getUserExperiencesByEmail(email);
+        // get all experiences by employee email
+        const empExperiences = await userExperienceServiceObj.getUserExperiencesWithCompanyInfoByEmail(empEmail);
 
-        // Find the current experience which has isCurrent true
-        const currentExperience = experiences.find((exp) => exp.isCurrent);
+        // Find the current employee experience which has isCurrent true
+        const empCurrentExperience = empExperiences.find((exp) => exp.isCurrent);
 
-        // Return the employee details with currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified
+        // Return the employee details including currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified
         return {
           ...eachUserDetail, // Include all original employee details
-          currentCompanyName: currentExperience?.companyName || "",
-          currentCompanyEmail: currentExperience?.emailId || "",
-          isCurrentCompEmailVerified:
-            currentExperience?.isEmailVerified || false,
+          currentCompanyName: empCurrentExperience?.companyName || "",
+          currentCompanyEmail: empCurrentExperience?.emailId || "",
+          isCurrentCompEmailVerified: empCurrentExperience?.isEmailVerified || false,
         };
       })
     );
 
-    // Return the employee details with currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified
-    // The return type "any[]"
-    return empWithExperience;
+    // Return the employee details including currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified with pagination
+    return {
+      ...empWithExperience,
+      lastKey: userDetails.lastKey,
+      count: userDetails.count,
+      queriedCount: userDetails.queriedCount,
+    };
   }
 
   /**

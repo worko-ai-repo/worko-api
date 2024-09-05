@@ -19,8 +19,9 @@ import {
 import { UserDetailDTO } from "../dtos/UserDetail.dto";
 import { UsersListingFilterOptions } from "../admin/dtos/User.dto";
 
-// import types
+// import enums
 import { SortOrderTypeEnum } from ".././enums/Common.enum";
+import { UserType } from "../enums/User.enum";
 
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
@@ -34,7 +35,7 @@ class UserDetailDao implements BaseDao {
 
   /**
    * getUsers
-   * 
+   *
    * Retrieves user details based on the provided filter options.
    *
    * @param {UsersListingFilterOptions} usersRecordListingFilterRequest - The filter options for user details.
@@ -46,25 +47,63 @@ class UserDetailDao implements BaseDao {
     // Log the action of getting user details
     global.logger.info("Get user details [DAO]");
 
-    // Fetch user details from the DAO
+    // Get all the user details including candidates and employees
     let query = UserDetailModel.query("GSI1PK")
       .eq(this.GSI1PK)
       .where("GSI1SK")
-      .beginsWith("ID#")
-      
-    // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
-    query.sort(usersRecordListingFilterRequest.sortOrder ?? SortOrderTypeEnum.DESCENDING);
+      .beginsWith("ID#");
+
+    // if userType is provided then get only users of that type
+    if (usersRecordListingFilterRequest.userType) {
+      query = query
+        .where("userRole")
+        .eq(usersRecordListingFilterRequest.userType);
+    }
+
+    /* 
+    ->When you use the sort() method in Dynamoose,
+    it sorts the items based on the sort key of the index you're querying.
+
+    ->By default query.sort() method sorts the items in "ascending" order but we are sorting by default in descending order
+    and if sortOrder(ascending or descending) is provided then we are sorting by that
+    */
+    query= query.sort(usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum);
+
+    // search by searchText if provided
+    if (usersRecordListingFilterRequest.searchText) {
+      // remove trailing and leading spaces from the search text
+      let searchTextValue = usersRecordListingFilterRequest.searchText.trim();
+
+      /* 
+      The and() method initiates a condition block where all conditions within it must be satisfied.
+      The parenthesis() method allows grouping of conditions for complex queries.
+      */
+      query = query.and().parenthesis((condition) => {
+        condition
+          .where("name")
+          .contains(searchTextValue)
+          .or()
+          .where("PK")
+          .contains(`USR#EML#${searchTextValue}`);
+
+        // Return the built condition
+        return condition;
+      });
+
+      // Execute the query and return the result without pagination
+      return query.exec();
+    }
 
     // if lastKey is provided, add it to the query where lastKey is equal to the provided value
     if (usersRecordListingFilterRequest.lastKey) {
       // Start the query from the lastKey to retrieve subsequent pages
-      query.startAt(usersRecordListingFilterRequest.lastKey);
+      query = query.startAt(usersRecordListingFilterRequest.lastKey);
     }
 
     // if pageSize is provided, add it to the query
     if (usersRecordListingFilterRequest.pageSize) {
       // Set the page size for the query
-      query.limit(usersRecordListingFilterRequest.pageSize);
+      query = query.limit(usersRecordListingFilterRequest.pageSize);
     }
 
     // Execute the query and return the result
@@ -302,8 +341,41 @@ class UserDetailDao implements BaseDao {
     });
     return UserDetailModel.update({ PK: PK, SK: SK }, { isSubscribed: status });
   }
+
+  /**
+   * @todo remove this function after use case is completed
+   *
+   * WARNING: This function is not intended to be used in production or development code.
+   *
+   * Updates the "userRole" attribute for all users in the database with the
+   * value in the userType array.
+   */
+  async updateUserRoleScript() {
+    global.logger.info("update user role [DAO]");
+    // Scan the table to get all users
+    const users = await UserDetailModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .beginsWith("ID#")
+      .exec();
+
+    // Iterate over each user and update the userRole attribute
+    for (const user of users) {
+      const userRole = user.userType[0] as UserType;
+
+      // Update the user record with the new userRole
+      await UserDetailModel.update(
+        { PK: user.PK, SK: user.SK },
+        { userRole: userRole }
+      );
+    }
+
+    global.logger.info("All user roles have been updated successfully.");
+  }
 }
 
+// Create an instance of the UserDetailDao
 const userDetailDao = new UserDetailDao();
 
+// Export the instance for use in other modules
 export default userDetailDao;

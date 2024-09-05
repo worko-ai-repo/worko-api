@@ -1,8 +1,11 @@
+import { UserType } from "../enums/User.enum";
+
 export interface UserDetailDTO {
   name: string;
   emailList: { [key: string]: string };
   number: string;
   userType: string[];
+  userRole: UserType;
   isEmailVerified: boolean;
   isNumberVerified: boolean;
   isSubscribed: boolean;

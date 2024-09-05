@@ -1,18 +1,18 @@
 // Load npm packages
 import { Request, Response, NextFunction } from "express";
 
-// Load dynamoose helpers
-import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
+// Load dynamoose library and types
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load dtos
 import { ReferralListingFilterOptions, ReferralListingFilterRequestDTO } from "../dtos/UserReferral.dto";
 import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
-// Load enums
-import { SortOrderTypeEnum } from "../../enums/Common.enum";
-
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
+
+// Load models
+import { DbUserReferralDto } from "../../db/models/UserReferral.model";
 
 // Load services
 import { userReferralServiceObj } from "../services/UserReferral.service";
@@ -24,6 +24,7 @@ import { validateEmailField } from "../../schemas/User.schema";
 // Load utils
 import HttpStatusCode from "../../utils/http-codes.util";
 import { BaseError, RequestValidationError } from "../../utils/errors.util";
+import { paginationRecordListingResponse } from "../../helpers/pagination-response.helper";
 
 /**
  * UserReferralController
@@ -40,6 +41,8 @@ class UserReferralController {
    * If a status is provided in the filter options and it is not valid, an error is thrown.
    * It logs the action for debugging purposes, parses the filter options, validates the status,
    * retrieves the referral details from the user referral service, and sends the response as a JSON object.
+   *
+   * REFERENCE TUTORIAL[Typescript Generics]: https://youtu.be/EcCTIExsqmI?si=3g9M7sVRUeoL3dj7
    *
    * @param {Request} req - Express request object.
    * @param {Response} res - Express response object.
@@ -75,19 +78,13 @@ class UserReferralController {
         userReferralFilterOptions
       );
 
-      // Response
-      const referralsResponse: RecordListingResponseDTO = {
-        data: userReferrals,
-        pagination: {
-          count: userReferrals.count,
-          queriedCount: userReferrals.queriedCount,
-          pageSize: referralRecordListingFilterRequest.pageSize,
-          lastKey: lastKeyToBase64EncodeStr(userReferrals.lastKey),
-          sortOrder:
-            referralRecordListingFilterRequest.sortOrder ??
-            SortOrderTypeEnum.DESCENDING,
-        },
-      };
+      // Generate the response structure with the paginated result
+      const referralsResponse: RecordListingResponseDTO<
+        QueryResponse<DbUserReferralDto>
+      > = paginationRecordListingResponse<
+        QueryResponse<DbUserReferralDto>,
+        ReferralListingFilterOptions
+      >(userReferrals, referralRecordListingFilterRequest);
 
       // Send the fetched result as JSON response
       return res.status(HttpStatusCode.OK_200).json(referralsResponse);
@@ -141,12 +138,16 @@ class UserReferralController {
 
   /**
    * getReferralResponsesByEmpEmail
+   * 
+   * Handles the request to get referral responses by employee email.
    *
-   * Controller function to retrieve the referral responses made by employee based on email
+   * This controller method is responsible for retrieving referral responses
+   * associated with a specific employee based on the provided email ID in the
+   * request parameters. The referral responses are then returned in the response.
    *
-   * @param {Request} req - Express request object
-   * @param {Response} res - Express response object
-   * @param {NextFunction} next - Express next middleware function
+   * @param {Request} req - The Express request object containing the employee's email ID in the path parameters.
+   * @param {Response} res - The Express response object used to send the response back to the client.
+   * @param {NextFunction} next - The Express next function to pass control to the next middleware or error handler.
    */
   getReferralResponsesByEmpEmail = async (
     req: Request,
@@ -155,19 +156,16 @@ class UserReferralController {
   ) => {
     try {
       // Log the action of getting referral response
-      global.logger.info("Get user referral responses by employee email by [admin controller]");
+      global.logger.info(
+        "Get user referral responses by employee email by [admin controller]"
+      );
 
       // Extract email from request parameters
       const userEmail = req.params.emailId as string;
 
-      // Validate email field and throw error if invalid
-      const { error } = validateEmailField(userEmail);
-      if (error) {
-        throw new RequestValidationError(error);
-      }
-
       // Fetch referral responses by employee based on email from the service
-      const referralResponsesByEmpEmail = await userReferralServiceObj.getReferralResponsesByEmpEmail(userEmail);
+      const referralResponsesByEmpEmail =
+        await userReferralServiceObj.getReferralResponsesByEmpEmail(userEmail);
 
       // Return the response
       return res

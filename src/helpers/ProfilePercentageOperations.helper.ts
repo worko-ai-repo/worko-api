@@ -20,7 +20,7 @@ export class UserProfilePercentageOperationHelper {
     const fields: FieldDTO[] = fieldGroup.fields.map((field) => ({
       field: field.field,
       expPerc: field.expPerc,
-      curPerc:  0,
+      curPerc: 0,
     }));
 
     return {
@@ -92,20 +92,44 @@ export class UserProfilePercentageOperationHelper {
     return fieldGroups.map((fieldGroup) => {
       const updatedFields: FieldDTO[] = fieldGroup.fields.map((field) => {
         // Checking  if the field is 'isEmailVerified' or 'isNumberVerified' is true or false
-        if (field.field === 'isEmailVerified' || field.field === 'isNumberVerified') {
+        if (
+          field.field === "isEmailVerified" ||
+          field.field === "isNumberVerified"
+        ) {
           // If isEmailVerified or isNumberVerified is false,so set curPerc to 0.
           if (!updateObject[field.field]) {
             return {
               ...field,
               curPerc: 0,
+            };  
+          }
+        }
+
+        /*
+        if isCandidateFresher is false and candidateExperience is not undefined
+        then we need to iterate through candidateExperience object and check if
+        the "updateKey" exists in the candidateExperience object is matching with
+        "field.field" and if it exists then assign expPerc to curPerc for that field and return the updated field
+        */
+        if (updateObject.isCandidateFresher === false && updateObject.candidateExperience !== undefined) {
+          // Iterate through candidateExperience object and check if the "updateKey" exists
+          const candidateExperienceObjKey = Object.keys(
+            updateObject.candidateExperience
+          ).find((updateKey) => updateKey === field.field);
+          
+          // if candidateExperienceObjKey exists then assign expPerc to curPerc for that field and return the updated field
+          if (candidateExperienceObjKey) {
+            return {
+              ...field,
+              curPerc: field.expPerc,
             };
           }
-   
         }
-        //and if its true so 
-        const key = Object.keys(updateObject).find(
-          (updateKey) => updateKey === field.field
-        );
+
+        //and if its true so
+        const key = Object.keys(updateObject).find((updateKey) => {
+          return updateKey === field.field;
+        });
 
         if (key) {
           return {
@@ -117,6 +141,10 @@ export class UserProfilePercentageOperationHelper {
         return field;
       });
 
+      /*
+      Syntax:- 
+      array.reduce(function(previousValue, nextValue, currentIndex, arr), initialValue)
+      */
       const curPerc = updatedFields.reduce(
         (total, field) => total + field.curPerc,
         0

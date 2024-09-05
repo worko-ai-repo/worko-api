@@ -1,5 +1,6 @@
 // import dynamoose libraries
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { AnyItem } from "dynamoose/dist/Item";
 
 // Load the local daos
 import companyDao from "../daos/Company.dao";
@@ -56,7 +57,9 @@ class CompanyService {
    *
    * @returns
    */
-  async getCompanyList(filterOptions: CompanyListingFilterOptions) {
+  async getCompanyList(
+    filterOptions: CompanyListingFilterOptions
+  ): Promise<QueryResponse<AnyItem>> {
     return companyDetailDao.companyList(filterOptions);
   }
 

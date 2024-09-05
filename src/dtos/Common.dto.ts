@@ -106,7 +106,30 @@ export interface RecordListingPaginationResponseDTO {
  * 
  * The main response would be retruend back in the API response. It would include the pagination details and records.
  */
-export interface RecordListingResponseDTO {
-    data: any[],
-    pagination: RecordListingPaginationResponseDTO,
+export interface RecordListingResponseDTO<EntityDetails> {
+  data: EntityDetails;
+  pagination: RecordListingPaginationResponseDTO;
+}
+
+/**
+ * These are used in the "paginationRecordListingResponse" function present in "pagination-response.helper.ts"
+ * which generates the response structure for the entity listing end points.
+ * 
+ * Interface representing pagination-related data for entity listings.
+ */
+export interface EntityDetailsPaginationData {
+  count: number;
+  queriedCount: number;
+  lastKey?: ObjectType | undefined;
+}
+
+/**
+ * These are used in the "paginationRecordListingResponse" function present in "pagination-response.helper.ts"
+ * which generates the response structure for the entity listing end points.
+ * 
+ * Interface representing the pagination filter options for listing entities.
+ */
+export interface EntityListingPaginationFilterOptions {
+  pageSize: number;
+  sortOrder?: SortOrderTypeEnum | undefined;
 }

@@ -249,6 +249,7 @@ class UserDetailController {
           userProfilePercentageDTO,
           value
         );
+      console.log("userProfilePercentageDTO in update of UserDetailController: ", userProfilePercentageDTO);  
 
       UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
 

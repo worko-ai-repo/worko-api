@@ -1,3 +1,6 @@
+// import dynamoose types 
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 // Import the necessary DAOs
 import userExperienceDao from "../../daos/UserExperience.dao";
 import companyDetailDao from "../../daos/CompanyDetail.dao";
@@ -13,19 +16,35 @@ import { DbUserExperienceDto } from "../../db/models/UserExperience.model";
 class UserExperienceService {
   /**
    * getUserExperiencesByEmail
+   * 
+   * Retrieves user experiences by email id.
    *
-   * Retrieve the user experiences along with he respective company details for the provided user email address.
-   *
-   * @param {string} userEmail - The email of the user to retrieve experience for
+   * @param userEmail - Email of the user
+   * @returns {Promise<QueryResponse<DbUserExperienceDto>>} - A promise that resolves to the query response containing the user's experience data
    */
-  async getUserExperiencesByEmail(userEmail: string) {
+  async getUserExperiencesByEmail(userEmail: string): Promise<QueryResponse<DbUserExperienceDto>> {
     // Log the action of getting user experience
     global.logger.info("Get user experience by email [admin experience service]");
 
-    // Retrieve the user experience based on the email
-    const userExperience = await userExperienceDao.get(userEmail);
+    // Retrieve the user experiences based on the email
+    return userExperienceDao.get(userEmail);
+  }
 
-    // If not experience found for the user, then return an empty array
+  /**
+   * getUserExperiencesWithCompanyInfoByEmail
+   *
+   * Retrieves user experiences with company details by email id.
+   *
+   * @param userEmail - Email of the user
+   */
+  async getUserExperiencesWithCompanyInfoByEmail(userEmail: string) {
+    // Log the action of getting user experience
+    global.logger.info("Get user experiences with company info by email [admin experience service]");
+
+    // Retrieve the user experience based on the email
+    const userExperience = await this.getUserExperiencesByEmail(userEmail);
+
+    // If no experiences found for the user, then return an empty array
     if (!userExperience.count) {
       return [];
     }
@@ -41,8 +60,9 @@ class UserExperienceService {
       uniqueCompanyIDs
     );
 
-    // Prepare response data
-    const finalUserExperience = userExperience.map((item: DbUserExperienceDto) => {
+    // Prepare response data with company details
+    const finalUserExperience = userExperience.map(
+      (item: DbUserExperienceDto) => {
         const companyDetails = companyDetailsResults.find(
           (companyDetail) => companyDetail.id === item.companyId
         );

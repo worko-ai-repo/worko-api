@@ -1,3 +1,5 @@
+import { UserType } from "../enums/User.enum";
+
 /**
  * Data required for user sign-up. Includes basic personal information,
  * optional professional details, and terms acceptance.
@@ -30,6 +32,7 @@ export interface NewUserCandSignUpDTO {
   CV?: string;
   emailList: { [key: string]: string };
   userType: string[];
+  userRole:UserType;
   isEmailVerified: boolean;
   isNumberVerified: boolean;
   lastAccessedDash: string;
@@ -107,6 +110,7 @@ export interface NewUserEmpSignUpDTO {
   YOE: number;
   emailList: { [key: string]: string };
   userType: string[];
+  userRole:UserType;
   isEmailVerified: boolean;
   isNumberVerified: boolean;
   lastAccessedDash: string;

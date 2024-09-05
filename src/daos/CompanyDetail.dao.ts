@@ -61,7 +61,7 @@ class CompanyDetailDao implements BaseDao {
    * @param filterOptions Filter options for querying companies.
    * @returns A list of companies based on the provided filter options.
    */
-  async companyList(filterOptions: CompanyListingFilterOptions) {
+  async companyList(filterOptions: CompanyListingFilterOptions):Promise<QueryResponse<AnyItem>> {
     console.log(filterOptions); // Log the filter options for debugging
 
     // Define attributes to include in the query result

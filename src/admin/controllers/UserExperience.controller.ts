@@ -4,12 +4,8 @@ import { Request, Response, NextFunction } from "express";
 // Import the services
 import { userExperienceServiceObj } from "../services/UserExperience.service";
 
-// Import the schemas
-import { validateEmailField } from "../../schemas/User.schema";
-
 // Import the utils
 import HttpStatusCode from "../../utils/http-codes.util";
-import { RequestValidationError } from "../../utils/errors.util";
 
 /**
  * UserExperienceController
@@ -19,13 +15,16 @@ import { RequestValidationError } from "../../utils/errors.util";
 class UserExperienceController {
   /**
    * getUserExperiencesByEmail
+   * 
+   * Handles the request to get user experiences by email.
    *
-   * Retrieve user experience based on the email
+   * This controller method is responsible for retrieving user experiences
+   * details from the database based on the provided email ID in the request
+   * parameters. The user experiences are then returned in the response.
    *
-   * @param {Request} req - The request object containing parameters and query information.
-   * @param {Response} res - The response object used to send the response.
-   * @param {NextFunction} next - The next middleware function in the stack.
-   * @throws {RequestValidationError} Throws an error if the provided email is invalid.  
+   * @param {Request} req - The Express request object containing the email ID in the path parameters.
+   * @param {Response} res - The Express response object used to send the response back to the client.
+   * @param {NextFunction} next - The Express next function to pass control to the next middleware or error handler.
    */
   getUserExperiencesByEmail = async (
     req: Request,
@@ -34,16 +33,12 @@ class UserExperienceController {
   ) => {
     try {
       // Log the action of getting user experience
-      global.logger.info("Get user experience by email [admin user experience controller]");
+      global.logger.info(
+        "Get user experience by email [admin user experience controller]"
+      );
 
       // Extract email from request parameters
       const userEmail = req.params.emailId as string;
-
-      // Validate email field and throw error if invalid
-      const { error } = validateEmailField(userEmail);
-      if (error) {
-        throw new RequestValidationError(error);
-      }
 
       // Fetch user experience details
       const userExperiences =

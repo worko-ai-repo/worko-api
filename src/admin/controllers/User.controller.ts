@@ -1,27 +1,30 @@
 // Import the necessary npm packages
 import { Request, Response, NextFunction } from "express";
 
-// Import the helpers for dynamoose
-import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
+// Import the dynamoose types
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import the DTO
 import {
   UsersListingFilterOptions,
   UsersListingFilterRequestDTO,
 } from "../dtos/User.dto";
-import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Import the enums
 import { SortOrderTypeEnum } from "../../enums/Common.enum";
 
 // Import the helpers
 import { RequestHelper } from "../../helpers/request.helper";
+import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
+import { paginationRecordListingResponse } from "../../helpers/pagination-response.helper";
+
+// Import the models
+import { DbUserDetailDto } from "../../db/models/UserDetail.model";
 
 // Import the services
 import { userServiceObj } from "../services/User.service";
 
 // Import the schemas
-import { validateEmailField } from "../../schemas/User.schema";
 import { usersFilterDtoValidation } from "../schemas/User.schema";
 
 // Import the utils
@@ -44,6 +47,8 @@ class UserController {
    * It logs the action for debugging purposes, parses and validates the filter options,
    * retrieves the user details from the user service, and sends the response as a JSON object.
    *
+   * REFERENCE TUTORIAL[Typescript Generics]: https://youtu.be/EcCTIExsqmI?si=3g9M7sVRUeoL3dj7
+   *
    * @param {Request} req - Express request object.
    * @param {Response} res - Express response object.
    * @param {NextFunction} next - Express next middleware function.
@@ -52,19 +57,20 @@ class UserController {
   getUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Log the action of getting user details by CAND/EMP
-      global.logger.info(
-        "Get user details by CAND/EMP [admin user controller]"
-      );
+      global.logger.info("Get user details by CAND/EMP [admin user controller]");
 
       // Parse filter options from the request query parameters
       const usersRecordListingFilterRequest: UsersListingFilterOptions =
         RequestHelper.parseFilterOptions<
           UsersListingFilterRequestDTO,
           UsersListingFilterOptions
-        >(req.query as unknown as UsersListingFilterRequestDTO);  
+        >(req.query as unknown as UsersListingFilterRequestDTO);
 
       // Validate the filter options and throw an error if any of them is invalid
-      let { error, value: usersFilterOptions } = usersFilterDtoValidation.validate(usersRecordListingFilterRequest,{abortEarly: false,});
+      let { error, value: usersFilterOptions } =
+        usersFilterDtoValidation.validate(usersRecordListingFilterRequest, {
+          abortEarly: false,
+        });
       if (error) {
         throw new RequestValidationError(error);
       }
@@ -72,42 +78,46 @@ class UserController {
       // Fetch user details from the service
       const userDetails = await userServiceObj.getUsers(usersFilterOptions);
 
-      // Create the response object with the fetched user details
-      let usersResponse: RecordListingResponseDTO;
+      let userDetailsResponse;
+      if ("timesQueried" in userDetails) {
+        global.logger.info("userDetails is of type QueryResponse<DbUserDetailDto>");
+        /*
+        Generate the response structure for the user details with pagination for userType CAND
+        or if userType is undefined,then return all users singnup list(including CAND and EMP)
+        */
+        userDetailsResponse = 
+          paginationRecordListingResponse<
+            QueryResponse<DbUserDetailDto>,
+            UsersListingFilterOptions
+          >(userDetails, usersRecordListingFilterRequest);
+      } else {
+        global.logger.info("userDetails is not of type QueryResponse<DbUserDetailDto>");
 
-      // If userDetails is of type QueryResponse<DbUserDetailDto>
-      if (
-        "count" in userDetails &&
-        "queriedCount" in userDetails &&
-        "lastKey" in userDetails
-      ) {
-        usersResponse = {
-          data: userDetails,
+        // Convert the user details object to an array
+        const userDetailData = [...Object.values(userDetails)];
+
+        // Filter the user details array to only include objects with "id" property
+        const data = userDetailData.filter((eachUserDetail) =>
+          typeof eachUserDetail === "object" &&
+          !Array.isArray(eachUserDetail) &&
+          "id" in eachUserDetail
+        );
+
+        // Generate the response structure for the user details with pagination for userType EMP
+        userDetailsResponse = {
+          data,
           pagination: {
             count: userDetails.count,
             queriedCount: userDetails.queriedCount,
             pageSize: usersRecordListingFilterRequest.pageSize,
-            lastKey: lastKeyToBase64EncodeStr(userDetails.lastKey), // encode the lastKey object into a Base64 string.
-            sortOrder:
-              usersRecordListingFilterRequest.sortOrder ??
-              SortOrderTypeEnum.DESCENDING,
-          },
-        };
-      } else {
-        // If userDetails is of type DbUserDetailDto[] or [] or employee details with current company details
-        // @todo: In near future need to apply pagination properly for retrieving data using userType CAND/EMP
-        usersResponse = {
-          data: userDetails,
-          pagination: {
-            count: userDetails.length,
-            pageSize: usersRecordListingFilterRequest.pageSize,
-            sortOrder: usersRecordListingFilterRequest.sortOrder
+            lastKey: lastKeyToBase64EncodeStr(userDetails.lastKey),
+            sortOrder:usersRecordListingFilterRequest.sortOrder ?? SortOrderTypeEnum.DESCENDING,
           },
         };
       }
-
+    
       // Send the response with the fetched user details
-      return res.status(HttpStatusCode.OK_200).json(usersResponse);
+      return res.status(HttpStatusCode.OK_200).json(userDetailsResponse);
     } catch (error) {
       // Pass the error to the next middleware
       next(error);
@@ -159,14 +169,19 @@ class UserController {
 
   /**
    * getUserDetailByEmail
+   * 
+   * Handles the request to get user details by email.
    *
-   * Controller function to get user details by email
+   * This controller method is responsible for fetching user details
+   * from the database based on the provided email ID in the request
+   * parameters. If the email ID is valid and the user is found, the
+   * details are returned in the response. If the user is not found,
+   * a `404 Not Found` error is thrown.
    *
-   * @param {Request} req - Express request object
-   * @param {Response} res - Express response object
-   * @param {NextFunction} next - Express next middleware function
-   * @throws {RequestValidationError} If the email is invalid
-   * @throws {BaseError} If the user is not found with the provided email
+   * @param {Request} req - The Express request object containing the email ID in the path parameters.
+   * @param {Response} res - The Express response object used to send the response back to the client.
+   * @param {NextFunction} next - The Express next function to pass control to the next middleware or error handler.
+   * @throws {BaseError} - Throws a `404 Not Found` error if the user is not found.
    */
   getUserDetailByEmail = async (
     req: Request,
@@ -175,16 +190,12 @@ class UserController {
   ) => {
     try {
       // Log the action of getting user details
-      global.logger.info("Get user details by email by [admin user controller]");
+      global.logger.info(
+        "Get user details by email by [admin user controller]"
+      );
 
       // Extract email from request parameters
       const userEmail = req.params.emailId as string;
-
-      // Validate email field and throw error if invalid
-      const { error } = validateEmailField(userEmail);
-      if (error) {
-        throw new RequestValidationError(error);
-      }
 
       // Fetch user details by email from the service
       const userDetails = await userServiceObj.getUserDetailByEmail(userEmail);

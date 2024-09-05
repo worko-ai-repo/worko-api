@@ -1,6 +1,10 @@
 // Load npm packages
 import { Request, Response, NextFunction } from "express";
 
+// Load dynamoose library and types
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { AnyItem } from "dynamoose/dist/Item";
+
 // Load the local dtos
 import {
   CompanyDTO,
@@ -9,15 +13,10 @@ import {
   CompanyListingFilterRequestDTO,
   CompanyRequestDTO,
 } from "../dtos/Company.dto";
-import {
-  RecordListingFilterOptions,
-  RecordListingFilterRequestDTO,
-  RecordListingResponseDTO,
-} from "../dtos/Common.dto";
+import { RecordListingResponseDTO } from "../dtos/Common.dto";
 
 // Import Helpers
 import { RequestHelper } from "../helpers/request.helper";
-import { lastKeyToBase64EncodeStr } from "../helpers/dynamoose.helper";
 
 // Load the shared service
 import CompanyService from "../services/Company.service";
@@ -31,6 +30,7 @@ import {
 //Load local util statuscode
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
+import { paginationRecordListingResponse } from "../helpers/pagination-response.helper";
 
 /**
  * CompanyController
@@ -164,6 +164,7 @@ class CompanyController {
    * getCompanyList
    *
    * Get companies based on the provided filters
+   * REFERENCE TUTORIAL[Typescript Generics]: https://youtu.be/EcCTIExsqmI?si=3g9M7sVRUeoL3dj7
    *
    * @param {Request} req
    * @param {Response} res
@@ -186,20 +187,17 @@ class CompanyController {
         recordListingFilterRequest
       );
 
-      // Response
-      const response: RecordListingResponseDTO = {
-        data: companyList,
-        pagination: {
-          count: companyList.count,
-          queriedCount: companyList.queriedCount,
-          pageSize: recordListingFilterRequest.pageSize,
-          lastKey: lastKeyToBase64EncodeStr(companyList.lastKey),
-        },
-      };
+      // Generate pagination response
+      const companyListResponse: RecordListingResponseDTO<
+        QueryResponse<AnyItem>
+      > = paginationRecordListingResponse<
+        QueryResponse<AnyItem>,
+        CompanyListingFilterOptions
+      >(companyList, recordListingFilterRequest);
 
       // Send successful response with company list data
-      res.status(HttpStatusCode.OK_200).json(response);
-    } catch (error: any) {
+      res.status(HttpStatusCode.OK_200).json(companyListResponse);
+    } catch (error) {
       // Let "app.ts" and/or expressjs handle the error
       next(error);
     }

@@ -8,17 +8,17 @@ export const UserProfilePercentage = {
         {
           field: "name",
           fieldText: "Name",
-          expPerc: 6,
+          expPerc: 5,
         },
         {
           field: "isEmailVerified",
           fieldText: "Email-Verify",
-          expPerc: 6,
+          expPerc: 5,
         },
         {
           field: "isNumberVerified",
           fieldText: "Phone No- Verify",
-          expPerc: 6,
+          expPerc: 5,
         },
         {
           field: "collage",
@@ -33,6 +33,11 @@ export const UserProfilePercentage = {
         {
           field: "socialProfile",
           fieldText: "Social Link",
+          expPerc: 3,
+        },
+        {
+          field: "profileImage",
+          fieldText: "Profile Pic",
           expPerc: 3,
         },
       ],
@@ -60,7 +65,7 @@ export const UserProfilePercentage = {
         {
           field: "CTC",
           fieldText: "CTC",
-          expPerc: 3,
+          expPerc: 5, // previously 3
         },
         {
           field: "ECTC",
@@ -70,7 +75,7 @@ export const UserProfilePercentage = {
         {
           field: "noticePeriod",
           fieldText: "Notice period",
-          expPerc: 2,
+          expPerc: 4, // previously 2
         },
         {
           field: "certifications",
@@ -80,12 +85,12 @@ export const UserProfilePercentage = {
         {
           field: "softSkills",
           fieldText: "Soft skill",
-          expPerc: 7,
+          expPerc: 5, // previously 7
         },
         {
           field: "coreSkills",
           fieldText: "Core skill",
-          expPerc: 7,
+          expPerc: 5, // previously 7
         },
         {
           field: "achievements",
@@ -126,17 +131,17 @@ export const UserProfilePercentage = {
         {
           field: "isNumberVerified",
           fieldText: "Phone No- Verify",
-          expPerc: 8,
+          expPerc: 6, // previously 8
         },
         {
           field: "about",
           fieldText: "About",
-          expPerc: 8,
+          expPerc: 10, // previously 8
         },
         {
           field: "socialProfile",
           fieldText: "Social Link",
-          expPerc: 6,
+          expPerc: 6, 
         },
         {
           field: "profileImage",
@@ -158,12 +163,12 @@ export const UserProfilePercentage = {
         {
           field: "isEmailVerified",
           fieldText: "Official Mail - Verify",
-          expPerc: 12,
+          expPerc: 12, 
         },
         {
           field: "designation",
           fieldText: "Designation",
-          expPerc: 6,
+          expPerc: 6, 
         },
         {
           field: "department",
@@ -173,12 +178,12 @@ export const UserProfilePercentage = {
         {
           field: "experienceInMonths",
           fieldText: "Working since",
-          expPerc: 6,
+          expPerc: 6, 
         },
         {
           field: "bankDetails",
           fieldText: "Bank Detail",
-          expPerc: 2,
+          expPerc: 2, 
         },
       ],
     },
