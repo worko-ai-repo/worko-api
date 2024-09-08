@@ -34,7 +34,7 @@ class UserExperienceController {
     try {
       // Log the action of getting user experience
       global.logger.info(
-        "Get user experience by email [admin user experience controller]"
+        "Get user experience by email [admin user experiences controller]"
       );
 
       // Extract email from request parameters

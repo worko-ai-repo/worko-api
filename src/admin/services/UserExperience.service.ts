@@ -19,12 +19,12 @@ class UserExperienceService {
    * 
    * Retrieves user experiences by email id.
    *
-   * @param userEmail - Email of the user
+   * @param {string} userEmail - Email of the user
    * @returns {Promise<QueryResponse<DbUserExperienceDto>>} - A promise that resolves to the query response containing the user's experience data
    */
   async getUserExperiencesByEmail(userEmail: string): Promise<QueryResponse<DbUserExperienceDto>> {
     // Log the action of getting user experience
-    global.logger.info("Get user experience by email [admin experience service]");
+    global.logger.info("Get user experience by email [admin user experiences service]");
 
     // Retrieve the user experiences based on the email
     return userExperienceDao.get(userEmail);
@@ -35,7 +35,7 @@ class UserExperienceService {
    *
    * Retrieves user experiences with company details by email id.
    *
-   * @param userEmail - Email of the user
+   * @param {string} userEmail - Email of the user
    */
   async getUserExperiencesWithCompanyInfoByEmail(userEmail: string) {
     // Log the action of getting user experience

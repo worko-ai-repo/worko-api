@@ -91,27 +91,28 @@ class UserController {
             UsersListingFilterOptions
           >(userDetails, usersRecordListingFilterRequest);
       } else {
-        global.logger.info("userDetails is not of type QueryResponse<DbUserDetailDto>");
-
-        // Convert the user details object to an array
-        const userDetailData = [...Object.values(userDetails)];
-
-        // Filter the user details array to only include objects with "id" property
-        const data = userDetailData.filter((eachUserDetail) =>
-          typeof eachUserDetail === "object" &&
-          !Array.isArray(eachUserDetail) &&
-          "id" in eachUserDetail
+        global.logger.info(
+          "userDetails is not of type QueryResponse<DbUserDetailDto>"
         );
+
+        /* 
+        This code uses the rest syntax, It allows extracting specific properties ('lastKey', 'count', 'queriedCount')
+        from the 'userDetails' object while collecting the remaining properties into 'empDetails'.
+
+        empDetails: This new object contains all the remaining properties from userDetails, 
+        excluding lastKey, count, and queriedCount.
+       */
+        const { lastKey, count, queriedCount, ...empDetails } = userDetails;
 
         // Generate the response structure for the user details with pagination for userType EMP
         userDetailsResponse = {
-          data,
+          data: Object.values(empDetails),
           pagination: {
-            count: userDetails.count,
-            queriedCount: userDetails.queriedCount,
+            count,
+            queriedCount,
             pageSize: usersRecordListingFilterRequest.pageSize,
-            lastKey: lastKeyToBase64EncodeStr(userDetails.lastKey),
-            sortOrder:usersRecordListingFilterRequest.sortOrder ?? SortOrderTypeEnum.DESCENDING,
+            lastKey: lastKeyToBase64EncodeStr(lastKey),
+            sortOrder: usersRecordListingFilterRequest.sortOrder ?? SortOrderTypeEnum.DESCENDING,
           },
         };
       }
