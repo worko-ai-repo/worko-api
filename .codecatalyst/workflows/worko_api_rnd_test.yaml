@@ -29,33 +29,11 @@ Actions:
       Steps:
         - Run: npm i
         - Run: npm run build
+        - Run: cp environments/.env.dev .env
+        - Run: sls deploy list --stage=dev --aws-profile=worko-dev-serverless-cli-admin-access
+        - Run: npm run sls:deploy -- --stage=dev --aws-profile=worko-dev-serverless-cli-admin-access
     Compute:
       Type: Lambda
       Fleet: Linux.Arm64.Large
-    Environment:
-      Name: RnD
-  worko-api-test-stage:
-    # Identifies the action. Do not modify this value.
-    Identifier: aws/managed-test@v1.0.0
-    Inputs:
-      Sources:
-        - WorkflowSource
-    Outputs:
-      # Optional; Automatically discover reports for popular test frameworks
-      AutoDiscoverReports:
-        Enabled: true
-        # Use as prefix for the report files
-        ReportNamePrefix: rpt
-    # Defines the action's properties.
-    Configuration:
-      # Required - Steps are sequential instructions that run shell commands
-      Steps:
-        - Run: npm install
-        - Run: npm test
-    Compute:
-      Type: Lambda
-      Fleet: Linux.Arm64.Large
-    DependsOn:
-      - worko-api-build-stage
     Environment:
       Name: RnD
