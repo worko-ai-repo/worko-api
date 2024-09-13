@@ -48,16 +48,6 @@ export const userSupportFilterDtoValidation = commonSchema.concat(
 
     resolvedbyUserId: Joi.string().optional().messages({
       "string.empty": "Resolved by user ID should not be empty.",
-    }),
-
-    // The fromDate field can be a string in a valid ISO 8601 date format, null, or undefined.
-    fromDate: Joi.string().isoDate().optional().allow(null).messages({
-      "string.base": "Provide a valid fromDate.",
-    }),
-
-    // The toDate field can be a string in a valid ISO 8601 date format, null, or undefined.
-    toDate: Joi.string().isoDate().optional().allow(null).messages({
-      "string.base": "Provide a valid toDate.",
-    }),
+    })
   })
 );

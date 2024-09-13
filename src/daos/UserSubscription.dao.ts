@@ -1,6 +1,3 @@
-// import luxon for date formatting
-import { DateTime } from "luxon";
-
 // Load dynamoose libraries
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
@@ -77,23 +74,6 @@ class UserSubscriptionDao implements BaseDao {
       subscriptionRecordListingFilterRequest.sortOrder as SortOrderTypeEnum
     );
 
-    let fromTimestamp: number | undefined;
-    let toTimestamp: number | undefined;
-
-    // check if fromDate and toDate are provided and if yes convert them to timestamps using luxon library
-    if (subscriptionRecordListingFilterRequest.fromDate) {
-      // convert fromDate to timestamp
-      fromTimestamp = DateTime.fromISO(
-        subscriptionRecordListingFilterRequest.fromDate
-      ).toMillis();
-    }
-    if (subscriptionRecordListingFilterRequest.toDate) {
-      // convert toDate to timestamp
-      toTimestamp = DateTime.fromISO(
-        subscriptionRecordListingFilterRequest.toDate
-      ).toMillis();
-    }
-
     // Apply date range filter if provided
     if (
       subscriptionRecordListingFilterRequest.fromDate ||
@@ -101,10 +81,10 @@ class UserSubscriptionDao implements BaseDao {
     ) {
       query = query.and().parenthesis((condition) => {
         if (subscriptionRecordListingFilterRequest.fromDate) {
-          condition.where("purchaseDate").ge(fromTimestamp);
+          condition.where("purchaseDate").ge(subscriptionRecordListingFilterRequest.fromDate);
         }
         if (subscriptionRecordListingFilterRequest.toDate) {
-          condition.where("purchaseDate").le(toTimestamp);
+          condition.where("purchaseDate").le(subscriptionRecordListingFilterRequest.toDate);
         }
         return condition;
       });

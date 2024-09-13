@@ -16,16 +16,6 @@ export const subscriptionFilterDtoValidation = commonSchema.concat(
       .messages({
         "any.only": `Invalid subscription status. Please provide a valid value from
       ${Object.values(UserSubscriptionStatus).join(", ")}.`,
-      }),
-
-    // The fromDate field can be a string in a valid ISO 8601 date format, null, or undefined.
-    fromDate: Joi.string().isoDate().optional().allow(null).messages({
-      "string.base": "Provide a valid fromDate.",
-    }),
-
-    // The toDate field can be a string in a valid ISO 8601 date format, null, or undefined.
-    toDate: Joi.string().isoDate().optional().allow(null).messages({
-      "string.base": "Provide a valid toDate.",
-    }),
+      })
   })
 );

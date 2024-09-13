@@ -17,6 +17,6 @@ export const usersFilterDtoValidation = commonSchema.concat(
       .messages({
         "any.only": `Invalid user Type. Please provide a valid value from
       ${Object.values(UserType).join(", ")}.`,
-      }),
+      })
   })
 );

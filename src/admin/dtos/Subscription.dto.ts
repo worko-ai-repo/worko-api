@@ -12,9 +12,7 @@ import { UserSubscriptionStatus } from "../../enums/UserSubscription.enum";
 export interface SubscriptionListingFilterOptions extends RecordListingFilterOptions {
   // Represents the filter options for querying subscriptions.
   // Should be used when filtering subscription records.
-  status?: UserSubscriptionStatus;
-  fromDate?: string;
-  toDate?: string;
+  status?: UserSubscriptionStatus
 }
 
 /**
@@ -24,7 +22,5 @@ export interface SubscriptionListingFilterRequestDTO
   extends RecordListingFilterRequestDTO {
   // Represents the filter request DTO for querying subscriptions.
   // Should be used when requesting to filter subscription records.
-  status?: UserSubscriptionStatus;
-  fromDate?: string;
-  toDate?: string;
+  status?: UserSubscriptionStatus
 }

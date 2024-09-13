@@ -28,10 +28,38 @@ export interface RecordListingFilterOptions {
   lastKey?: ObjectType;
 
   // sortOrder means the order in which the records should be sorted. posible values: "ascending" or "descending"
-  sortOrder?: SortOrderTypeEnum;
+  sortOrder?: SortOrderTypeEnum | undefined;
 
   // search text
-  searchText?: string;
+  searchText?: string | undefined;
+
+  /**
+   * fromDate
+   *
+   * The "fromDate" value was returned by backend code internally,
+   * after converting it from "string" to "timestamp" format.(check in "request.helper.ts")
+   * And type of the "timestamp" is number or undefined.
+   *
+   * To know more about conversion of "fromDate" from "string" to "timestamp" you can Go to "request.helper.ts" file,
+   * and check The "parseFilterOptions" function present in "RequestHelper" class.
+   *
+   * Sample Value of "fromDate" after converting from "string" to "timestamp": 1661115600000
+   */
+  fromDate?: number | undefined;
+
+  /**
+   * toDate
+   *
+   * The "toDate" value was returned by backend code internally,
+   * after converting it from "string" to "timestamp" format.(check in "request.helper.ts")
+   * And type of the "timestamp" is number or undefined.
+   *
+   * To know more about conversion of "toDate" from "string" to "timestamp" you can Go to "request.helper.ts" file,
+   * and check The "parseFilterOptions" function present in "RequestHelper" class.
+   *
+   * Sample Value of "toDate" after converting from "string" to "timestamp": 1661115600000
+   */
+  toDate?: number | undefined;
 }
 
 /**
@@ -57,13 +85,31 @@ export interface RecordListingFilterRequestDTO {
    * The "lastKey" property from Dynamoose: { SK: 'ID#01HHM4Q0DDH1A5S56HJQ71P82V', PK: 'COMP#' }
    * Sample Value: eyBTSzogJ0lEIzAxSEhNNFEwRERIMUE1UzU2SEpRNzFQODJWJywgUEs6ICdDT01QIycgfQ==
    */
-  lastKey?: string;
+  lastKey?: string | undefined;
 
   // sortOrder means the order in which the records should be sorted. posible values: "ascending" or "descending"
-  sortOrder?: SortOrderTypeEnum;
+  sortOrder?: SortOrderTypeEnum | undefined;
 
   // search text
-  searchText?: string;
+  searchText?: string | undefined;
+
+  /**
+   * fromDate
+   *
+   * The "fromDate" value will be come from frontend request payload.
+   *
+   * Sample Value of "fromDate": "2024-07-01T11:07:42.506Z"
+   */
+  fromDate?: string | undefined;
+
+  /**
+   * toDate
+   *
+   * The "toDate" value will be come from frontend request payload.
+   *
+   * Sample Value of "toDate": "2024-07-01T12:07:42.506Z"
+   */
+  toDate?: string | undefined;
 }
 
 /**
@@ -76,7 +122,7 @@ export interface RecordListingPaginationResponseDTO {
   count: number;
 
   // If filter is applied then the filtered record count from the all records. Otherwise it would be undefined.
-  queriedCount?: number;
+  queriedCount?: number | undefined;
 
   /**
    * pageSize (limit)
@@ -95,10 +141,10 @@ export interface RecordListingPaginationResponseDTO {
    * "lastKey" from Dynamoose: { SK: 'ID#01HHM4Q0DDH1A5S56HJQ71P82V', PK: 'COMP#' }
    * Sample Value: eyBTSzogJ0lEIzAxSEhNNFEwRERIMUE1UzU2SEpRNzFQODJWJywgUEs6ICdDT01QIycgfQ==
    */
-  lastKey?: string;
+  lastKey?: string | undefined;
 
   // sortOrder means the order in which the records should be sorted. posible values: "ascending" or "descending"
-  sortOrder?: SortOrderTypeEnum;
+  sortOrder?: SortOrderTypeEnum | undefined;
 }
 
 /**

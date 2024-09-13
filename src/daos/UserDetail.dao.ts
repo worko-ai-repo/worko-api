@@ -1,6 +1,7 @@
 // Import dynamoose library
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
+
 //Load the base dao
 import BaseDao from "./Base.dao";
 
@@ -60,14 +61,36 @@ class UserDetailDao implements BaseDao {
         .eq(usersRecordListingFilterRequest.userType);
     }
 
-    /* 
-    ->When you use the sort() method in Dynamoose,
-    it sorts the items based on the sort key of the index you're querying.
-
-    ->By default query.sort() method sorts the items in "ascending" order but we are sorting by default in descending order
-    and if sortOrder(ascending or descending) is provided then we are sorting by that
+    /**
+    * query.sort(order) sorts the items you receive back by the rangeKey. By default, if not provided, it will sort in ascending order.
+    * The order parameter must be a string either equal to ascending or descending.
+    * 
+    * By default query.sort() method sorts the items in "ascending" order but we are sorting by default in descending order
+    * and if sortOrder(ascending or descending) is provided then we are sorting by that
+    * 
+    * When you use the sort() method in Dynamoose,
+    * it sorts the items based on the sort key of the index you're querying.
+    * 
     */
-    query= query.sort(usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum);
+    query = query.sort(
+      usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum
+    );
+
+    // Apply date range filter if provided
+    if (
+      usersRecordListingFilterRequest.fromDate ||
+      usersRecordListingFilterRequest.toDate
+    ) {
+      query = query.and().parenthesis((condition) => {
+        if (usersRecordListingFilterRequest.fromDate) {
+          condition.where("createdAt").ge(usersRecordListingFilterRequest.fromDate);
+        }
+        if (usersRecordListingFilterRequest.toDate) {
+          condition.where("createdAt").le(usersRecordListingFilterRequest.toDate);
+        }
+        return condition;
+      });
+    }
 
     // search by searchText if provided
     if (usersRecordListingFilterRequest.searchText) {
@@ -89,8 +112,14 @@ class UserDetailDao implements BaseDao {
         // Return the built condition
         return condition;
       });
+    }
 
-      // Execute the query and return the result without pagination
+    // If date range or search filter or both is applied, directly return query result without pagination
+    if (
+      usersRecordListingFilterRequest.fromDate ||
+      usersRecordListingFilterRequest.toDate ||
+      usersRecordListingFilterRequest.searchText
+    ) {
       return query.exec();
     }
 

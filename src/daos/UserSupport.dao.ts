@@ -1,6 +1,3 @@
-// import luxon for date formatting
-import { DateTime } from "luxon";
-
 // Import the base dao
 import BaseDao from "./Base.dao";
 
@@ -118,27 +115,14 @@ class UserSupportDao implements BaseDao {
     // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
     query.sort(supportFilterOptions.sortOrder as SortOrderTypeEnum);
 
-    let fromTimestamp: number | undefined;
-    let toTimestamp: number | undefined;
-
-    // check if fromDate and toDate are provided and if yes convert them to timestamps using luxon library
-    if (supportFilterOptions.fromDate) {
-      // convert fromDate to timestamp
-      fromTimestamp = DateTime.fromISO(supportFilterOptions.fromDate).toMillis();
-    }
-    if (supportFilterOptions.toDate) {
-      // convert toDate to timestamp
-      toTimestamp = DateTime.fromISO(supportFilterOptions.toDate).toMillis();
-    }
-
     // Apply date range filter if provided
     if (supportFilterOptions.fromDate || supportFilterOptions.toDate) {
       query = query.and().parenthesis((condition) => {
         if (supportFilterOptions.fromDate) {
-          condition.where("createdAt").ge(fromTimestamp);
+          condition.where("createdAt").ge(supportFilterOptions.fromDate);
         }
         if (supportFilterOptions.toDate) {
-          condition.where("createdAt").le(toTimestamp);
+          condition.where("createdAt").le(supportFilterOptions.toDate);
         }
         return condition;
       });

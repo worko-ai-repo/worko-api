@@ -1,8 +1,6 @@
 // Import dynamoose library for DynamoDB queries
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
-// import luxon for date formatting
-import { DateTime } from "luxon";
 
 //Load the base dao
 import BaseDao from "./Base.dao";
@@ -74,21 +72,6 @@ class UserReferralDao implements BaseDao {
       referralRecordListingFilterRequest.sortOrder as SortOrderTypeEnum
     );
 
-    let fromTimestamp: number | undefined;
-    let toTimestamp: number | undefined;
-
-    // check if fromDate and toDate are provided and if yes convert them to timestamps using luxon library 
-    if (referralRecordListingFilterRequest.fromDate) {
-      // convert fromDate to timestamp
-      fromTimestamp = DateTime.fromISO(referralRecordListingFilterRequest.fromDate).toMillis();
-    }
-    if (referralRecordListingFilterRequest.toDate) {
-      // convert toDate to timestamp
-      toTimestamp = DateTime.fromISO(referralRecordListingFilterRequest.toDate).toMillis();
-    }
-
-    console.log(fromTimestamp, toTimestamp)
-
     // Apply date range filter if provided
     if (
       referralRecordListingFilterRequest.fromDate ||
@@ -96,10 +79,10 @@ class UserReferralDao implements BaseDao {
     ) {
       query = query.and().parenthesis((condition) => {
         if (referralRecordListingFilterRequest.fromDate) {
-          condition.where("createdAt").ge(fromTimestamp);
+          condition.where("createdAt").ge(referralRecordListingFilterRequest.fromDate);
         }
         if (referralRecordListingFilterRequest.toDate) {
-          condition.where("createdAt").le(toTimestamp);
+          condition.where("createdAt").le(referralRecordListingFilterRequest.toDate);
         }
         return condition;
       });

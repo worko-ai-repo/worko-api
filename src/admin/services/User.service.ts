@@ -42,11 +42,11 @@ class UserService {
 
     /*
     If userType is CAND, then return the candidate signup list
-    Or if userType is undefined, then return both candidate and employee signup list
+    Or if userType is undefined or any falsy value, then return both candidate and employee signup list
     */
     if (
       usersRecordListingFilterRequest.userType === UserType.CAND ||
-      usersRecordListingFilterRequest.userType === undefined
+      !usersRecordListingFilterRequest.userType
     ) {
       return userDetailDao.getUsers(usersRecordListingFilterRequest);
     }
@@ -65,17 +65,18 @@ class UserService {
         const empEmail = eachUserDetail.PK.split("#")[2];
 
         // get all experiences by employee email
-        const empExperiences = await userExperienceServiceObj.getUserExperiencesWithCompanyInfoByEmail(empEmail);
+        const empExperience = await userExperienceServiceObj.getUserExperiencesWithCompanyInfoByEmail(empEmail);
 
         // Find the current employee experience which has isCurrent true
-        const empCurrentExperience = empExperiences.find((exp) => exp.isCurrent);
+        const empCurrentExperience = empExperience.find((exp) => exp.isCurrent);
 
         // Return the employee details including currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified
         return {
           ...eachUserDetail, // Include all original employee details
           currentCompanyName: empCurrentExperience?.companyName || "",
           currentCompanyEmail: empCurrentExperience?.emailId || "",
-          isCurrentCompEmailVerified: empCurrentExperience?.isEmailVerified || false,
+          isCurrentCompEmailVerified:
+            empCurrentExperience?.isEmailVerified || false,
         };
       })
     );

@@ -1,3 +1,6 @@
+// Import luxon for date formatting
+import { DateTime } from "luxon";
+
 // Import configs
 import APP_CONSTANTS from "../configs/constants.config";
 
@@ -33,6 +36,20 @@ class RequestHelper {
     EntityListingFilterRequestDTO extends RecordListingFilterRequestDTO,
     EntityListingFilterOptions extends RecordListingFilterOptions
   >(filterOptions: EntityListingFilterRequestDTO): EntityListingFilterOptions {
+
+    let fromTimeStamp: number | undefined;
+    let toTimeStamp: number | undefined;
+
+    // check if fromDate and toDate are provided and if yes convert them to timestamps using luxon library
+    if (filterOptions.fromDate) {
+      // convert fromDate to timestamp
+      fromTimeStamp = DateTime.fromISO(filterOptions.fromDate).toMillis();
+    }
+    if (filterOptions.toDate) {
+      // convert toDate to timestamp
+      toTimeStamp = DateTime.fromISO(filterOptions.toDate).toMillis();
+    }
+
     // pageSize
     let pageSize = parseInt(filterOptions.pageSize as unknown as string);
 
@@ -83,6 +100,8 @@ class RequestHelper {
       ...{
         pageSize: pageSize,
         lastKey: lastKey,
+        fromDate: fromTimeStamp,
+        toDate: toTimeStamp,
       },
     };
     return newFilterOptions;

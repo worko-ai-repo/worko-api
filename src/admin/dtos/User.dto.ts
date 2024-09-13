@@ -15,7 +15,7 @@ import { UserType } from "../../enums/User.enum"
 export interface UsersListingFilterOptions extends RecordListingFilterOptions {
   // Represents the filter options for querying users.
   // Should be used when filtering users records.
-  userType?: UserType;
+  userType?: UserType
 }
 
 /**
@@ -24,5 +24,5 @@ export interface UsersListingFilterOptions extends RecordListingFilterOptions {
 export interface UsersListingFilterRequestDTO extends RecordListingFilterRequestDTO {
   // Represents the filter request DTO for querying users.
   // Should be used when requesting to filter users records.
-  userType?: UserType;
+  userType?: UserType
 }

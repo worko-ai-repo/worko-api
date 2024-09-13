@@ -39,7 +39,9 @@ class UserExperienceService {
    */
   async getUserExperiencesWithCompanyInfoByEmail(userEmail: string) {
     // Log the action of getting user experience
-    global.logger.info("Get user experiences with company info by email [admin experience service]");
+    global.logger.info(
+      "Get user experiences with company info by email [admin experience service]"
+    );
 
     // Retrieve the user experience based on the email
     const userExperience = await this.getUserExperiencesByEmail(userEmail);

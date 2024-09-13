@@ -18,9 +18,7 @@ export interface UserSupportListingFilterOptions extends RecordListingFilterOpti
   contextType?: UserSupportContextTypeEnum;
   contextId?: string;
   assignedToUserId?: string;
-  resolvedbyUserId?: string;
-  fromDate?: string;
-  toDate?: string;
+  resolvedbyUserId?: string
 }
 
 /**
@@ -36,7 +34,5 @@ export interface UserSupportListingFilterRequestDTO
   contextType?: UserSupportContextTypeEnum;
   contextId?: string;
   assignedToUserId?: string;
-  resolvedbyUserId?: string;
-  fromDate?: string;
-  toDate?: string;
+  resolvedbyUserId?: string
 }
