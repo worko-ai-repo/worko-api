@@ -7,12 +7,16 @@ import UserRouter from "./routers/User.router";
 import UserReferralRouter from "./routers/UserReferral.router";
 import UserSubscriptionRouter from "./routers/UserSubscription.router";
 import UserSupportRouter from "./routers/UserSupport.router";
+import CompanyJobRouter from "./routers/CompanyJob.router";
 
 // Create a new Router instance
 const AdminRouter = Router();
 
 // Define the route for company details 
-AdminRouter.use("/company", CompanyRouter); 
+AdminRouter.use("/company", CompanyRouter);
+
+// Import the CompanyJobRouter
+AdminRouter.use("/jobs", CompanyJobRouter);
 
 // Define the route for User details
 AdminRouter.use("/user", UserRouter);

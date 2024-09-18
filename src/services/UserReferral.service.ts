@@ -119,13 +119,13 @@ class UserReferralService {
     return createdReferral;
 
     //below block checks gets the ExtractedJd from db if it is there
-    /* const jdExtract = await CompanyJobService.getJdUrl(
+    /* const jdExtract = await CompanyJobServiceUrl.getJdUrl(
       referralRequest.jobUrl,
       referralRequest.companySK
     );
     if (jdExtract.count == 0) {
       //create new entery for company related jobUrl
-      CompanyJobService.addCompanyRelatedJob(
+      CompanyJobServiceUrl.addCompanyRelatedJob(
         referralRequest.jobUrl,
         referralRequest.companySK
       );

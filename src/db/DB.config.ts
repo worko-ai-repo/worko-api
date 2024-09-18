@@ -8,9 +8,10 @@ import { DB_CONSTANTS } from "./DB.constants";
 
 // Import all models
 import { CompanyModel } from "./models/Company.model";
+import { CompanyJobModel } from "./models/CompanyJob.model";
 import { CompanyDetailModel } from "./models/CompanyDetail.model";
 import { CompanyRequestModel } from "./models/CompanyRequest.model";
-import { CompanyJobModel } from "./models/CompanyJob.model";
+import { CompanyJobUrlModel } from "./models/CompanyJobUrl.model";
 import { UserModel } from "./models/User.model";
 import { UserDetailModel } from "./models/UserDetail.model";
 import { UserEmailModel } from "./models/UserEmail.model";
@@ -130,7 +131,7 @@ class DBConfig {
       CompanyModel,
       CompanyDetailModel,
       CompanyRequestModel,
-      CompanyJobModel,
+      CompanyJobUrlModel,
       MasterSubscriptionModel,
       MasterServiceModel,
       EmailTemplateModel,
@@ -145,6 +146,7 @@ class DBConfig {
       UserOrderProductModel,
       UserOrderTransactionModel,
       ScheduleJobModel,
+      CompanyJobModel,
     ]);
   }
 }

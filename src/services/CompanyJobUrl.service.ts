@@ -1,12 +1,12 @@
 // Load the local daos
-import companyJobDao from "../daos/CompanyJob.dao";
+import companyJobUrlDao from "../daos/CompanyJobUrl.dao";
 
 // Load the local dto
 
 /**
  * CompanyService class responsible for managing company-related operations.
  */
-class CompanyJobService {
+class CompanyJobUrlService {
   constructor() {}
   /**
    *
@@ -16,7 +16,7 @@ class CompanyJobService {
    */
   async addCompanyRelatedJob(jobUrl: string, companySK: string) {
     console.log("Add a new company related JobUrl [Service]");
-    return companyJobDao.add(jobUrl, companySK);
+    return companyJobUrlDao.add(jobUrl, companySK);
   }
 
   /**
@@ -27,9 +27,9 @@ class CompanyJobService {
    */
   async getJdUrl(jobUrl: string, companySK: string) {
     console.log("get JobUrl [Service]");
-    return companyJobDao.getJobUrl(jobUrl, companySK);
+    return companyJobUrlDao.getJobUrl(jobUrl, companySK);
   }
 }
 
 // Export an instance of the CompanyService class
-export default new CompanyJobService();
+export default new CompanyJobUrlService();
