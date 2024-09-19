@@ -28,7 +28,7 @@ Actions:
       # Required - Steps are sequential instructions that run shell commands
       Steps:
         - Run: npm install -g n
-        - Run: n lts
+        - Run: sudo n lts
         - Run: npm i -g serverless
         - Run: npm i
         - Run: npm run build
