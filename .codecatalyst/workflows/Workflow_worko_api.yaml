@@ -32,7 +32,7 @@ Actions:
         - Run: npm i
         - Run: npm run build
         - Run: cp environments/.env.dev .env
-        - Run: npm run sls:deploy --stage=dev
+        - Run: sls deploy --stage=dev
       Container:
         Registry: CODECATALYST
         Image: CodeCatalystLinuxLambda_Arm64:2024_03
