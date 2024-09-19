@@ -28,7 +28,7 @@ Actions:
       # Required - Steps are sequential instructions that run shell commands
       Steps:
         - Run: npm install -g n
-        - Run: npm i -g serverless
+        - Run: npm i -g serverless@3.38.0
         - Run: npm i
         - Run: npm run build
         - Run: export AWS_REGION=ap-south-1
