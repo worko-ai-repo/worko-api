@@ -33,10 +33,12 @@ Actions:
         - Run: npm i
         - Run: npm run build
         - Run: cp environments/.env.dev .env
-        - Run: sls deploy list --stage=dev --aws-profile=worko-dev-serverless-cli-admin-access
-        - Run: npm run sls:deploy -- --stage=dev --aws-profile=worko-dev-serverless-cli-admin-access
+        - Run: npm run sls:deploy --stage=dev
+      Container:
+        Registry: CODECATALYST
+        Image: CodeCatalystLinuxLambda_Arm64:2024_03
     Compute:
       Type: Lambda
       Fleet: Linux.Arm64.Large
     Environment:
-      Name: RnD
+      Name: dev
