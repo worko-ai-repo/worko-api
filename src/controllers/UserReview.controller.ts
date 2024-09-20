@@ -40,8 +40,11 @@ class UserReviewController {
             // Review request details
             const requestBody: UserReviewCreateApiDto = req.body;
 
-            // Get UserId
-            const userId = req.params.userId;
+            //Get Id of the user who is creating the review
+            const userId = res.locals.userId;
+
+            // Get Id for which review has to be created
+            const ratingForUserId = req.params.userId;
 
             // Validate the user input and throw a validation error if necessary
             let { error, value: reviewReceiverApiDto } = userReviewCreateApiDtoValidation.validate(requestBody, { abortEarly: false });
@@ -52,11 +55,13 @@ class UserReviewController {
             // create a new dto from the existing
             const userReviewCreateDto: UserReviewCreateDto = {
                 ...reviewReceiverApiDto,
-                ratingForUserId: userId,
-            }
-
+                ratingByUserId: userId ?? "0",
+                createdByUserId:userId ?? "0",
+                ratingForUserId: ratingForUserId,
+            };
+            
             // Retrieve user details by userId
-            const userDetail = await userDetailService.getUserById(userId);
+            const userDetail = await userDetailService.getUserById(ratingForUserId);
             if (!userDetail) {
                 return res.status(HttpStatusCode.NOT_FOUND_404).json({ error: "User not found" });
             }

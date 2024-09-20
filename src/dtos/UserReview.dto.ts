@@ -8,12 +8,9 @@ import { UserReviewEmpContext, UserReviewCandContext, UserType } from "../enums/
  * Structure for Create Review API action.
  */
 export interface UserReviewCreateApiDto {
-  ratingByUserId: string; // The user id of the user who is rating; @todo fix by reading the id from the token
   ratingForUserType: UserType; // Updated to use the enum type UserType
   rating: number; // Rating value
   reviewText?: string;
-  createdByUserId: string;
-  updatedByUserId?: string;
   reviewContext: UserReviewEmpContext | UserReviewCandContext; // ref , cand user , emp_provi  
   referalId?: string;
   masterServiceCode?: MasterServiceCode;
@@ -32,7 +29,6 @@ export interface UserReviewCreateDto {
   rating: number; // Rating value
   reviewText?: string;
   createdByUserId: string;
-  updatedByUserId?: string;
   reviewContext: UserReviewEmpContext | UserReviewCandContext; // ref , cand user , emp_provi  
   referalId?: string;
   masterServiceCode?: MasterServiceCode;
