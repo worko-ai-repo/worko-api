@@ -287,7 +287,7 @@ class UserController {
       };
 
       // Create the new user in the database
-      const newUser = await UserService.addUser(userCandSignUpDto, userType);
+      const newUser = await UserService.createNewUser(userCandSignUpDto, userType);
 
       // Create a social profile for the user
       UserSocialProfileService.create(
@@ -409,7 +409,7 @@ createEmployee = async (req: Request, res: Response, next: NextFunction) => {
     };
     
     // Create the new user in the database
-    const newUser = await UserService.addUser(userEmpSignUpDto, userType);
+    const newUser = await UserService.createNewUser(userEmpSignUpDto, userType);
     
     // Destructure to separate common user data from work-related data
     const {
@@ -430,7 +430,7 @@ createEmployee = async (req: Request, res: Response, next: NextFunction) => {
     // Store user's work experience
     /* UserEmailService.createEmailt(email, companyName, companyEmailId); */
     // Note: Previous comment suggests UserEmail table is no longer used
-    UserExperienceService.create(email, userExperienceDto);
+    UserExperienceService.createUserExperience(email, userExperienceDto);
 
     // Initialize the user's profile completion percentage
     let userProfilePercentageDTO: UserProfilePercentageDTO =

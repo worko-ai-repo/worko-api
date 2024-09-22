@@ -13,7 +13,6 @@ import UserDetailService from "./UserDetail.service";
 // Load the local dtos
 import { UserReferralRequestCreateDTO } from "../dtos/User.dto";
 import {
-  UserReferralDTO,
   UserReferralStatusChangeByCandDTO,
 } from "../dtos/UserReferral.dto";
 import {
@@ -25,6 +24,12 @@ import {
   EmailTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION,
   EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND
 } from "../dtos/EmailTemplatePlaceholder.dto";
+import {
+  WhatsappTemplatePlaceholderCAND_NEW_CHAT_MSG_FROM_EMP_NOTIFICATION,
+  WhatsappTemplatePlaceholderCAND_PENDING_CHAT_MSG_COUNT_BY_EMP_NOTIFICATION,
+  WhatsappTemplatePlaceholderCAND_REF_REQ_ACCEPTED, WhatsappTemplatePlaceholderCAND_REF_REQ_COMPLETED
+}
+  from '../dtos/WhatsappTemplatePlaceholder.dto';
 
 // import models
 import { DbUserReferralDto } from "../db/models/UserReferral.model";
@@ -36,6 +41,7 @@ import {
   emailLibrary,
 } from "../libraries/email.library";
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { whatsappLibraryObj } from '../libraries/Whatsapp.library';
 
 // Import Enums
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
@@ -52,6 +58,7 @@ import { RecordListingFilterOptions } from '../dtos/Common.dto';
 
 // Import enums
 import { ScheduleJobStatus, ScheduleJobType } from '../enums/ScheduleJob.enum';
+import { WhatsappTemplateNameEnum } from '../enums/WhatsappTemplate.enum';
 
 
 // Import services
@@ -59,12 +66,11 @@ import CompanyService from "./Company.service";
 import UserSubscriptionService from "./UserSubscription.service";
 import UserExperienceService from './UserExperience.service';
 import ScheduleJobService from './ScheduleJob.service';
-import {userReferralEmpServiceObj} from './UserReferralEmp.service';
+import { userReferralEmpServiceObj } from './UserReferralEmp.service';
 
 // Import utlis
 import { BaseError } from '../utils/errors.util';
 import HttpStatusCode from '../utils/http-codes.util';
-import { DbUserExperienceDto } from '../db/models/UserExperience.model';
 
 /**
  *  UserReferralService class responsible for managing user referral-related operations.
@@ -102,7 +108,7 @@ class UserReferralService {
       jobUrl: decodedJobUrl,
       jdExtracted: referralRequest.jdExtracted,
     }
-    
+
     // Create the referral request
     const createdReferral = await userReferralDao.create(
       referralRequestData,
@@ -115,7 +121,6 @@ class UserReferralService {
       referralRequest.userSubscriptionId,
       ReferralStatus.AWAITING
     );
-   
     return createdReferral;
 
     //below block checks gets the ExtractedJd from db if it is there
@@ -482,11 +487,11 @@ class UserReferralService {
       fullName: candName,
     };
     const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED =
-      {
-        candName: candName,
-        companyName: companyName,
-        refereeName: refereeName,
-      };
+    {
+      candName: candName,
+      companyName: companyName,
+      refereeName: refereeName,
+    };
 
     // Function responsible for sending the email to the candidate saying that his referral request has been accepted
     const sendEmailResponse =
@@ -592,18 +597,18 @@ class UserReferralService {
     return emailLibrary.sendEmail(EmailTemplateEnum.CAND_REF_AUTO_CANCEL_AFTER_X_DAYS, toAddress, emailPlaceholders);
   }
 
- /**
- * sendEmailToCandidateOnAutoReferralRejection
- * 
- * Sends an email to a candidate when their referral is auto-rejected.
- *
- * @param {string} candEmail - The email address of the candidate.
- * @param {string} candName - The name of the candidate.
- * @param {string} jobUrl - The title of the job for which the referral was made.
- * @param {string} companyName - The name of the company.
- * @param {Array<{ userId: string, actionDate: Date, reason: string, userComment: string }>} rejectedByUserIds - An array of objects containing the userId, actionDate, reason, and userComment of the users who rejected the referral.
- * @return {Promise<{ awsMessageId: string | null }>} A promise that resolves with the AWS message ID or null.
- */
+  /**
+  * sendEmailToCandidateOnAutoReferralRejection
+  * 
+  * Sends an email to a candidate when their referral is auto-rejected.
+  *
+  * @param {string} candEmail - The email address of the candidate.
+  * @param {string} candName - The name of the candidate.
+  * @param {string} jobUrl - The title of the job for which the referral was made.
+  * @param {string} companyName - The name of the company.
+  * @param {Array<{ userId: string, actionDate: Date, reason: string, userComment: string }>} rejectedByUserIds - An array of objects containing the userId, actionDate, reason, and userComment of the users who rejected the referral.
+  * @return {Promise<{ awsMessageId: string | null }>} A promise that resolves with the AWS message ID or null.
+  */
   async sendEmailToCandidateOnAutoReferralRejection(
     candEmail: string,
     candName: string,
@@ -617,7 +622,7 @@ class UserReferralService {
       email: candEmail,
       fullName: candName,
     };
-  
+
     // Prepare the email placeholders
     const emailPlaceholders: EmailTemplatePlaceholderCAND_REF_AUTO_REJECT_AFTER_X_DAYS = {
       candName: candName,
@@ -625,39 +630,39 @@ class UserReferralService {
       companyName: companyName,
       rejectedReasons: this.prepareReferralRejectedReasons(rejectedByUserIds),
     };
-  
+
     // Send the email using the email library
     return emailLibrary.sendEmail(EmailTemplateEnum.CAND_REF_AUTO_REJECT_AFTER_X_DAYS, toAddress, emailPlaceholders);
   }
-  
-/**
- * prepareReferralRejectedReasons
- *
- * Formats the rejected reasons as an unordered list, displaying the last two reasons if there are more than two.
- * The format for each list item is: "Reason from drop down. - (Comment)"
- *
- * @param {Array<{ userId: string; actionDate: Date; reason: string; userComment: string }>} rejectedByUserIds
- * @returns {string} Formatted rejected reasons as an HTML unordered list
- */
-private prepareReferralRejectedReasons(
-  rejectedByUserIds: { userId: string; actionDate: Date; reason: string; userComment: string }[]
-): string {
-  /*
-     `lastTwoReasons`
-     This variable holds the last two reasons from the rejectedByUserIds array.
-     This ensures that the function always returns the last two reasons, even if there are more than two reasons in the array.
-     If there is only one reason, the function will return a single-item unordered list.
+
+  /**
+   * prepareReferralRejectedReasons
+   *
+   * Formats the rejected reasons as an unordered list, displaying the last two reasons if there are more than two.
+   * The format for each list item is: "Reason from drop down. - (Comment)"
+   *
+   * @param {Array<{ userId: string; actionDate: Date; reason: string; userComment: string }>} rejectedByUserIds
+   * @returns {string} Formatted rejected reasons as an HTML unordered list
    */
-  const lastTwoReasons = rejectedByUserIds.slice(-2);
-  
-  // Format each reason according to the specified format and join them into an unordered list
-  return `<ul>${lastTwoReasons
-    .map(
-      (item) =>
-        `<li>${item.reason} - (${item.userComment})</li>`
-    )
-    .join('')}</ul>`;
-}
+  private prepareReferralRejectedReasons(
+    rejectedByUserIds: { userId: string; actionDate: Date; reason: string; userComment: string }[]
+  ): string {
+    /*
+       `lastTwoReasons`
+       This variable holds the last two reasons from the rejectedByUserIds array.
+       This ensures that the function always returns the last two reasons, even if there are more than two reasons in the array.
+       If there is only one reason, the function will return a single-item unordered list.
+     */
+    const lastTwoReasons = rejectedByUserIds.slice(-2);
+
+    // Format each reason according to the specified format and join them into an unordered list
+    return `<ul>${lastTwoReasons
+      .map(
+        (item) =>
+          `<li>${item.reason} - (${item.userComment})</li>`
+      )
+      .join('')}</ul>`;
+  }
 
   /**
    * getReferralsByIdsUsingGsis
@@ -752,10 +757,18 @@ private prepareReferralRejectedReasons(
         referralId,
         candidateName
       );
+
+      // send whatsappMessage to emp on new referral request
+      await userReferralEmpServiceObj.sendWhatsappMsgtoEmployeesOnReferralCreation(
+        candidateName,
+        matchingScore,
+        userReferralDetails.jobUrl,
+        userReferralDetails.companyId,
+      )
     }
     return true;
   }
-  
+
   /**
    * scheduleDelayedReferralAcceptanceReview
    * 
@@ -779,16 +792,17 @@ private prepareReferralRejectedReasons(
     // Calculate the schedule time based on the delay hours constant
     const delayHours = APP_CONSTANTS.REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS;
     const scheduleTime = DateTime.now().plus({ hours: delayHours }).toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss");
-    let schedulerInput : ScheduleJobRefReviewAcceptanceStatusInputDto = {
-      referralId,
-      userEmail,
-      userId
-    }
+    let scheduleJobRefReviewAcceptanceStatusInput: ScheduleJobRefReviewAcceptanceStatusInputDto =
+      {
+        referralId,
+        userEmail,
+        userId,
+      };
     // Prepare the payload for the scheduled job
     const scheduleJobPayload: ScheduleJobCreateDto = {
       type: ScheduleJobType.REFERRAL_REVIEW_ACCEPTANCE_STATUS,
       scheduleTime: scheduleTime,
-      input: schedulerInput,
+      input: scheduleJobRefReviewAcceptanceStatusInput,
       desc: `Review referral acceptance status for referral ID "${referralId}"`,
       status: ScheduleJobStatus.SCHEDULED,
     };
@@ -929,7 +943,115 @@ private prepareReferralRejectedReasons(
   */
   async updateUserReferralsJdMatchErrorCode(candEmail: string, referralId: string, jdMatchErrorCode: number): Promise<DbUserReferralDto> {
     global.logger.info("Update all user referrals for jd error code [Service]");
-    return userReferralDao.updateUserReferralsJdMatchErrorCode(candEmail, referralId, jdMatchErrorCode)
+    return userReferralDao.updateUserReferralsJdMatchErrorCode(candEmail, referralId, jdMatchErrorCode);
+  }
+
+  /**
+   * Sends a WhatsApp message to a candidate when a new chat message is received from an employee.
+   * 
+   * @param {string} empEmail - The email of the employee who sent the message.
+   * @param {string} toPhoneNumber - The phone number of the candidate to send the message to.
+   * @param {WhatsappTemplatePlaceholderCAND_NEW_CHAT_MSG_FROM_EMP_NOTIFICATION} whatsappPlaceholders - The placeholders for the message template.
+   * 
+   * @returns {Promise<boolean>} - Returns a promise
+   */
+  async sendWhatsappMsgToCandOnNewEmpMsgFromCand(
+    empEmail: string,
+    toPhoneNumber: string,
+    whatsappPlaceholders: WhatsappTemplatePlaceholderCAND_NEW_CHAT_MSG_FROM_EMP_NOTIFICATION
+  ): Promise<boolean> {
+    // retrive template name
+    // retrive the template name
+    const templateName = WhatsappTemplateNameEnum.CAND_NEW_CHAT_MSG_FROM_EMP_NOTIFICATION;
+
+    // send whatsapp message
+    await whatsappLibraryObj.sendWhatsappMessage(empEmail, templateName, toPhoneNumber, whatsappPlaceholders);
+    global.logger.info(`WhatsApp Message for ${templateName} Sent Successfully!`, {
+      filePath: __filename,
+      methodName: this.sendWhatsappMsgToCandOnNewEmpMsgFromCand.name,
+      empEmail: empEmail,
+    });
+    return true
+  }
+
+  /**
+   * Sends a WhatsApp message to a candidate when their referral request is completed.
+   * 
+   * @param {WhatsappTemplatePlaceholderCAND_REF_REQ_COMPLETED} placeholders - The placeholders for the message template.
+   * @param {string} toPhoneNumber - The phone number to send the message to.
+   * @param {string} userEmail - The email of the candidate.
+   * 
+   * @returns {Promise<boolean>} 
+   */
+  async sendWhatsappMsgToCandWhenReferralRequestCompleted(
+    placeholders: WhatsappTemplatePlaceholderCAND_REF_REQ_COMPLETED,
+    toPhoneNumber: string,
+    userEmail: string
+  ): Promise<boolean> {
+    // retrive the template name
+    const templateName = WhatsappTemplateNameEnum.CAND_REFERRAL_REQ_COMPLETED;
+
+    // send whatsapp message
+    await whatsappLibraryObj.sendWhatsappMessage(userEmail, templateName, toPhoneNumber, placeholders);
+    global.logger.info(`WhatsApp Message for ${templateName} Sent Successfully!`, {
+      filePath: __filename,
+      methodName: this.sendWhatsappMsgToCandWhenReferralRequestCompleted.name,
+      userEmail: userEmail,
+    });
+    return true
+  }
+
+  /**
+   * Sends a WhatsApp message to a candidate about pending chat message counts from employees.
+   * 
+   * @param {string} empEmail - The email of the employee who has pending messages.
+   * @param {string} toPhoneNumber - The phone number of the candidate to send the message to.
+   * @param {WhatsappTemplatePlaceholderCAND_PENDING_CHAT_MSG_COUNT_BY_EMP_NOTIFICATION} whatsappPlaceholders - The placeholders for the message template.
+   * 
+   * @returns {Promise<boolean>} 
+   */
+  async sendWhatsappMsgToCandAboutPendingChatMsgCountByEmp(
+    empEmail: string,
+    toPhoneNumber: string,
+    whatsappPlaceholders: WhatsappTemplatePlaceholderCAND_PENDING_CHAT_MSG_COUNT_BY_EMP_NOTIFICATION
+  ): Promise<boolean> {
+    // retrive the template name
+    const templateName = WhatsappTemplateNameEnum.CAND_NEW_CHAT_MSG_FROM_EMP_NOTIFICATION;
+
+    // send whatsapp message
+    await whatsappLibraryObj.sendWhatsappMessage(empEmail, templateName, toPhoneNumber, whatsappPlaceholders);
+    global.logger.info(`WhatsApp Message for ${templateName} Sent Successfully!`, {
+      filePath: __filename,
+      methodName: this.sendWhatsappMsgToCandAboutPendingChatMsgCountByEmp.name,
+      empEmail: empEmail,
+    });
+    return true
+  }
+  /**
+   * Sends a WhatsApp message to a candidate when their referral request is accepted.
+   * 
+   * @param {WhatsappTemplatePlaceholderCAND_REF_REQ_ACCEPTED} placeholders - The placeholders for the message template.
+   * @param {string} toPhoneNumber - The phone number to send the message to.
+   * @param {string} userEmail - The email of the candidate.
+   * 
+   * @returns {Promise<boolean>} 
+   */
+  async sendWhatsappMsgToCandWhenReferralRequestAccepted(
+    placeholders: WhatsappTemplatePlaceholderCAND_REF_REQ_ACCEPTED,
+    toPhoneNumber: string,
+    userEmail: string,
+  ): Promise<boolean> {
+    // retrive the template name
+    const templateName = WhatsappTemplateNameEnum.CAND_REFERRAL_REQ_ACCEPTED;
+
+    // send whatsapp message
+    await whatsappLibraryObj.sendWhatsappMessage(userEmail, templateName, toPhoneNumber, placeholders);
+    global.logger.info(`WhatsApp Message for ${templateName} Sent Successfully!`, {
+      filePath: __filename,
+      methodName: this.sendWhatsappMsgToCandWhenReferralRequestAccepted.name,
+      userEmail: userEmail,
+    });
+    return true;
   }
 }
 

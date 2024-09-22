@@ -69,7 +69,7 @@ export enum UserSupportStatusEnum {
   RESOLVED = 'RESOLVED',
 }
 
-export enum UserSupportContextTypeEnum {
+export enum UserContextTypeEnum {
   REFERRAL = 'REFERRAL',
   SERVICE = 'SERVICE',
 }

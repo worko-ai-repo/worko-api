@@ -120,3 +120,80 @@ export interface ScheduleJobUpdateDto {
    */
   status?: ScheduleJobStatus;
 }
+
+/**
+ * ScheduleJobWhatsAppReminderInputDto
+ *
+ * This interface defines the structure of the input data required to schedule a WhatsApp reminder job.
+ */
+export interface ScheduleJobWhatsAppReminderInputDto {
+  /**
+   * email
+   * 
+   * The email address of the user to whom the WhatsApp reminder will be sent.
+   * 
+   * @type {string}
+   */
+  email: string;
+
+  /**
+   * empName
+   * 
+   * The name of the employee for whom the WhatsApp reminder is being scheduled. This is used to personalize the reminder message.
+   * 
+   * @type {string}
+   */
+  empName: string;
+
+  /**
+   * experienceId
+   * 
+   * A unique identifier associated with the experience or event for which the reminder is being scheduled. This helps in associating the reminder with a specific experience.
+   * 
+   * @type {string}
+   */
+  experienceId: string;
+
+  /**
+   * reminderCount
+   * 
+   * The number of reminders to be sent. This field helps in scheduling multiple reminders as needed.
+   * 
+   * @type {number}
+   */
+  reminderCount: number;
+}
+
+/**
+ * ScheduleJobReferralReminderInputDto
+ *
+ * This interface defines the structure of the input data required to schedule a referral reminder job.
+ */
+export interface ScheduleJobReferralReminderInputDto {
+  /**
+   * email
+   * 
+   * The email address of the user to whom the referral reminder will be sent.
+   * 
+   * @type {string}
+   */
+  email: string;
+
+  /**
+   * empName
+   * 
+   * The name of the employee related to the referral. This is used to personalize the reminder message.
+   * 
+   * @type {string}
+   */
+  empName: string;
+
+  /**
+   * referralId
+   * 
+   * A unique identifier for the referral. This helps in associating the reminder with a specific referral record.
+   * 
+   * @type {string}
+   */
+  referralId: string;
+}

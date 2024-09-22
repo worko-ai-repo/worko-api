@@ -25,6 +25,8 @@ import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.
 import { UserType } from "../enums/User.enum";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { UserSubscriptionStatus, UserSubscriptionType } from "../enums/UserSubscription.enum";
+import { WhatsappTemplateNameEnum } from '../enums/WhatsappTemplate.enum';
+import { WhatsappMessageTypeCloudApiEnum } from '../enums/WhatsappMessageLog.enum';
 
 // Load the local model
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
@@ -34,6 +36,8 @@ import UserDetailService from "./UserDetail.service";
 import MasterSubscriptionService from "./MasterSubscription.service";
 import UserSubscriptionService from "./UserSubscription.service";
 import UserProfilePercentageService from "./UserProfilePercentage.service";
+import { WhatsappTemplatePlaceholderCAND_WELCOME_MSG, WhatsappTemplatePlaceholderEMP_WELCOME_MSG } from '../dtos/WhatsappTemplatePlaceholder.dto';
+import { whatsappLibraryObj } from '../libraries/Whatsapp.library';
 
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
@@ -96,77 +100,174 @@ class UserService {
    * @param userSignUpDTO - Details of the user to be added
    * @param email - Email of the user
    */
-  async addUser(userSignUpDTO: NewUserCandSignUpDTO | NewUserEmpSignUpDTO, userType: string):Promise<DbUserDetailDto> {
+  async createNewUser(userSignUpDTO: NewUserCandSignUpDTO | NewUserEmpSignUpDTO, userType: string): Promise<DbUserDetailDto> {
     global.logger.info("Create candidate/employee [service]");
-   
     // Create a new user in db
-    const addedNewUser = await userDetailDao.add(userSignUpDTO)
+    let createdUser = await userDetailDao.add(userSignUpDTO);
+
+    // call setupUserResources to set up additional user resources after account creation
+    await this.setupUserResources(createdUser ,createdUser.userType[0]);
     
-      // Adding the FREE subscription plan for the User(Cand/Emp)
-      let planName = UserSubscriptionType.FREE;
-      const subPlan = await MasterSubscriptionService.getByPlan(planName);
-      if (subPlan) {
-        // Create partial data for subscription
-        const subscriptionCreateRequest : SubscriptionCreateRequestDTO = {
-          status: UserSubscriptionStatus.ACTIVE,
-          orderId: "0",
-          requestedReferrals: 0,
-          acceptedReferrals: 0,
-          completedReferrals: 0,
-        };
-        await UserSubscriptionService.create(subPlan.SK, userSignUpDTO.email , subscriptionCreateRequest);
-      } else {
-        // Logger message
-        global.logger.info(
-          "The default/free subscription was not found therefore could not add free subscription to candidate while creating account.",
-          {
-            filePath: __filename,
-            methodName: userSignUpDTO.name,
-            userEmail: userSignUpDTO.email,
-            plan: planName,
-          }
-        );
-      }
+    // Create a new user in db
+    return createdUser;
+  }
+
+  /**
+   * @todo : Try to change name to "userAccountCreationAddtionalActvs", "finaliseUserAccountCreation"
+   * 
+   * Sets up additional user resources after account creation.
+   * This includes creating a subscription, sending welcome messages, etc.
+   * 
+   * @param userSignUpDTO - Details of the user
+   * @param userType - Type of user (candidate or employee)
+   * */
+  async setupUserResources(userSignUpDTO: DbUserDetailDto , userType: string) : Promise<boolean>{
+    // Adding the FREE subscription plan for the User(Cand/Emp)
+    let planName = UserSubscriptionType.FREE;
+    const subPlan = await MasterSubscriptionService.getByPlan(planName);
+    if (subPlan) {
+      // Create partial data for subscription
+      const subscriptionCreateRequest: SubscriptionCreateRequestDTO = {
+        status: UserSubscriptionStatus.ACTIVE,
+        orderId: "0",
+        requestedReferrals: 0,
+        acceptedReferrals: 0,
+        completedReferrals: 0,
+      };
+      await UserSubscriptionService.create(subPlan.SK, userSignUpDTO.emailList.primary, subscriptionCreateRequest);
+    } else {
+      // Logger message
+      global.logger.info(
+        "The default/free subscription was not found therefore could not add free subscription to candidate while creating account.",
+        {
+          filePath: __filename,
+          methodName: userSignUpDTO.name,
+          plan: planName,
+        }
+      );
+    }
 
     // send welcome email based on the userType .  
     // @todo Need to review this as this is moved to SQS and should be removed from here as there is no use of the below welcome email code 
     if (userType === UserType.CAND) {
       // Prepare details required for sending the Email
-      const candName : string = userSignUpDTO.name;
-      const candEmail : string = userSignUpDTO.email;
+      const candName: string = userSignUpDTO.name;
+      const candEmail: string = userSignUpDTO.emailList.primary;
 
       // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
       const toAddress: EmailSourceDestinationAddress = {
         email: candEmail,
-        fullName: candName
+        fullName: candName,
       };
       const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
-        candName: candName
+        candName: candName,
+      };
+
+      // Send welcome email // todo : review it to remove from here and use SQS to send email
+      await this.sendEmailToCandWelcomeMessage(emailPlaceholders, toAddress);
+
+      // Send welcome WhatsApp message
+      const whatsappPlaceholders: WhatsappTemplatePlaceholderCAND_WELCOME_MSG =
+        {
+          body: { type: WhatsappMessageTypeCloudApiEnum.TEXT, value: candName }, // replace placeholder with candName
+        };
+
+      /**
+       * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
+       * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
+       *
+       * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+       */
+      if (userSignUpDTO.isEmailVerified) {
+        // Function responsible for sending a whatsapp message to the candidate
+        await this.sendWelcomeWhatsappMessageToCand(
+          whatsappPlaceholders,
+          userSignUpDTO.number,
+          candEmail
+        );
+      } else {
+        global.logger.info(
+          "User Number is not verified therefore could not send whatsapp message",
+          {
+            //
+          }
+        );
+      }
+    } else if (userType === UserType.EMP) {
+      // Prepare details required for sending the Email
+      const empName: string = userSignUpDTO.name;
+      const empEmail: string = userSignUpDTO.emailList.primary;
+
+      // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
+      const toAddress: EmailSourceDestinationAddress = {
+        email: empEmail,
+        fullName: empName
+      };
+      const emailPlaceholders: EmailTemplatePlaceholderEMP_WELCOME_MSG = {
+        empName: empName
       }
 
-      // Function responsible for sending a welcome email to the candidate 
-      const sendEmailResponse = await this.sendEmailToCandWelcomeMessage(emailPlaceholders,toAddress);
-     
-    } else if(userType === UserType.EMP) {
-        // Prepare details required for sending the Email
-        const empName : string = userSignUpDTO.name;
-        const empEmail : string = userSignUpDTO.email;
+      // Send welcome WhatsApp message
+      const whatsappPlaceholders: WhatsappTemplatePlaceholderEMP_WELCOME_MSG = {
+        body: { type: WhatsappMessageTypeCloudApiEnum.TEXT , value: empName } // empName Placeholer
+      };
 
-        // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
-        const toAddress: EmailSourceDestinationAddress = {
-          email: empEmail,
-          fullName: empName
-        };
-        const emailPlaceholders: EmailTemplatePlaceholderEMP_WELCOME_MSG = {
-          empName: empName
-        }
+      // Send welcome email // todo : review it to remove from here and use SQS to send email
+      await this.sendEmailToEmpWelcomeMessage(emailPlaceholders, toAddress);
 
-        // Function responsible for sending a welcome email to the candidate 
-        const sendEmailResponse = await this.sendEmailToEmpWelcomeMessage(emailPlaceholders,toAddress);
+      // Check whether emp number is verified or not , if verified then whatsapp message to the candidate
+      if (userSignUpDTO.isEmailVerified) {
+        // Function responsible for sending a whatsapp message to the candidate 
+        await this.sendWelcomeWhatsappMessageToEmp(whatsappPlaceholders, userSignUpDTO.number , empEmail);
+      } else {
+        global.logger.info(" User Number is not verified therefore could not send any message")
+      }
     }
 
-    // Creating new user
-    return addedNewUser;
+    return true;
+  }
+
+  /**
+   * Sends a welcome WhatsApp message to a candidate.
+   * 
+   * @param {WhatsappTemplatePlaceholderCAND_WELCOME_MSG} placeholders - The placeholders for the message template.
+   * @param {string} toPhoneNumber - The phone number of the candidate to send the message to.
+   * @param {string} userEmail - The email of the candidate.
+   * 
+   */
+  async sendWelcomeWhatsappMessageToCand(
+    placeholders: WhatsappTemplatePlaceholderCAND_WELCOME_MSG,
+    toPhoneNumber: string,
+    userEmail: string
+  ) : Promise<boolean>{
+    await whatsappLibraryObj.sendWhatsappMessage(
+      userEmail,
+      WhatsappTemplateNameEnum.CAND_WELCOME_MSG,
+      toPhoneNumber,
+      placeholders
+    );
+    return true
+  }
+
+  /**
+   * Sends a welcome WhatsApp message to an employee.
+   * 
+   * @param {WhatsappTemplatePlaceholderEMP_WELCOME_MSG} placeholders - The placeholders for the message template.
+   * @param {string} toPhoneNumber - The phone number of the employee to send the message to.
+   * @param {string} userEmail - The email of the employee.
+   * 
+   */
+  async sendWelcomeWhatsappMessageToEmp(
+    placeholders: WhatsappTemplatePlaceholderEMP_WELCOME_MSG,
+    toPhoneNumber: string,
+    userEmail: string
+  ) {
+    return whatsappLibraryObj.sendWhatsappMessage(
+      userEmail,
+      WhatsappTemplateNameEnum.EMP_WELCOME_MSG,
+      toPhoneNumber,
+      placeholders
+    );
   }
 
   /**

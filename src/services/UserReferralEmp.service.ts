@@ -1,3 +1,6 @@
+// Import DateTime Library
+import { DateTime } from "luxon";
+
 // Import DAOs
 import userReferralDao from "../daos/UserReferral.dao";
 
@@ -15,14 +18,28 @@ import {
 } from "../dtos/EmailTemplatePlaceholder.dto";
 import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
 import { UserReferralDTO } from "../dtos/UserReferral.dto";
+import {
+  WhatsappTemplatePlaceholderCAND_REF_REQ_ACCEPTED,
+  WhatsappTemplatePlaceholderCAND_REF_REQ_COMPLETED,
+  WhatsappTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION,
+  WhatsappTemplatePlaceholderEMP_PENDING_ACCEPTED_REFERRAL_REQ_NOTIFICATION,
+  WhatsappTemplatePlaceholderEMP_NEW_CHAT_MSG_FROM_CAND_NOTIFICATION,
+  WhatsappTemplatePlaceholderEMP_PENDING_AWAITING_REFERRAL_REQ_COUNTS_NOTIFICATION,
+  WhatsappTemplatePlaceholderEMP_PENDING_ACCEPTED_REFERRAL_REQ_COUNTS_NOTIFICATION,
+  WhatsappTemplatePlaceholderEMP_PENDING_CHAT_MSG_COUNT_BY_CAND_NOTIFICATION,
+} from "../dtos/WhatsappTemplatePlaceholder.dto";
+import { ScheduleJobReferralReminderInputDto, ScheduleJobCreateDto } from "../dtos/ScheduleJob.dto";
 
 // Import Enums
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
+import { WhatsappTemplateNameEnum } from "../enums/WhatsappTemplate.enum";
+import { ScheduleJobType, ScheduleJobStatus } from "../enums/ScheduleJob.enum";
 
 // Import Libraries
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
+import { whatsappLibraryObj } from "../libraries/Whatsapp.library";
 
 // Import Utils
 import { BaseError } from "../utils/errors.util";
@@ -34,9 +51,11 @@ import UserExperienceService from "./UserExperience.service";
 import UserReferralService from "./UserReferral.service";
 import UserReferralResponseService from "./UserReferralResponse.service";
 import CompanyService from "./Company.service";
+import ScheduleJobService from "./ScheduleJob.service";
 
-// Import DateTime Library
-import { DateTime } from "luxon";
+// import constants
+import { WhatsappMessageTypeCloudApiEnum } from "../enums/WhatsappMessageLog.enum";
+import { WHATSAPP_APP_CONSTANTS } from "../configs/constants/Whatsapp.constant";
 
 /**
  *  UserReferralEmpService class responsible for managing employee-related referral operations.
@@ -59,7 +78,11 @@ class UserReferralEmpService {
     // If referralStatus is AWAITING then fetch the details
     if (referralStatus === ReferralStatus.AWAITING) {
       // If status is awaiting, call the function to get awaiting referrals
-      return this.getEmployeeAwaitingReferrals(empPrimaryEmail, companyId, referralStatus);
+      return this.getEmployeeAwaitingReferrals(
+        empPrimaryEmail,
+        companyId,
+        referralStatus
+      );
     } else {
       // Otherwise, call the function to get referrals by status
       return this.getEmployeeReferralsByStatus(empPrimaryEmail, referralStatus);
@@ -83,13 +106,25 @@ class UserReferralEmpService {
   ): Promise<DbUserReferralDto[]> {
     try {
       // Get employee's responses given to different referrals by empPrimaryEmail
-      const userReferralResponse = await UserReferralResponseService.get(empPrimaryEmail);
-      const empPassedRefIds = Array.from(new Set(userReferralResponse[0]?.passedRefIds || []));
-      const empRejectedRefIds = Array.from(new Set(userReferralResponse[0]?.rejectedRefIds || []));
-      const referralIdsToBeExcluded = [...empPassedRefIds, ...empRejectedRefIds];
+      const userReferralResponse = await UserReferralResponseService.get(
+        empPrimaryEmail
+      );
+      const empPassedRefIds = Array.from(
+        new Set(userReferralResponse[0]?.passedRefIds || [])
+      );
+      const empRejectedRefIds = Array.from(
+        new Set(userReferralResponse[0]?.rejectedRefIds || [])
+      );
+      const referralIdsToBeExcluded = [
+        ...empPassedRefIds,
+        ...empRejectedRefIds,
+      ];
 
       // Get company referrals where status is awaiting
-      const companyReferrals = await userReferralDao.getByGSI1PKAndStatus(companyId, referralStatus);
+      const companyReferrals = await userReferralDao.getByGSI1PKAndStatus(
+        companyId,
+        referralStatus
+      );
 
       // NOTE : This block filters the referrals on which the emp has not taken any action
       // @todo : Investigated and see if this can be handle by dynamouse itself
@@ -99,7 +134,10 @@ class UserReferralEmpService {
           awaitingCompanyReferrals.push(referral);
         }
       }
-      global.logger.info("Filtered Company Referrals:", awaitingCompanyReferrals);
+      global.logger.info(
+        "Filtered Company Referrals:",
+        awaitingCompanyReferrals
+      );
 
       return awaitingCompanyReferrals;
     } catch (error) {
@@ -117,7 +155,10 @@ class UserReferralEmpService {
    * @param {string} referralStatus - Referral status
    * @returns { Promise<QueryResponse<DbUserReferralDto>[]> } - A Promise that resolves to the employee referrals
    */
-  async getEmployeeReferralsByStatus(empPrimaryEmail: string, referralStatus: string): Promise<DbUserReferralDto[]> {
+  async getEmployeeReferralsByStatus(
+    empPrimaryEmail: string,
+    referralStatus: string
+  ): Promise<DbUserReferralDto[]> {
     // Get company referrals where status is referralStatus
     let attributes: string[] = [];
 
@@ -133,10 +174,11 @@ class UserReferralEmpService {
     }
 
     // Get the refIds on which emp has performed the given action
-    const userReferralResponse = await UserReferralResponseService.getByEmailWithSpecifiedAttributes(
-      empPrimaryEmail,
-      attributes
-    );
+    const userReferralResponse =
+      await UserReferralResponseService.getByEmailWithSpecifiedAttributes(
+        empPrimaryEmail,
+        attributes
+      );
 
     if (!userReferralResponse.length) {
       global.logger.info("No referrals found for the given email");
@@ -151,7 +193,9 @@ class UserReferralEmpService {
       return [];
     }
     let result = await userReferralDao.getReferralsByIdsUsingGsis(refIds);
-    return result.filter((referral) => referral !== null) as DbUserReferralDto[];
+    return result.filter(
+      (referral) => referral !== null
+    ) as DbUserReferralDto[];
   }
 
   /**
@@ -178,10 +222,14 @@ class UserReferralEmpService {
     // Continue fetching and sending emails as long as there are more employees
     do {
       // Get a batch of employees for the company
-      const employeesResponse = await UserExperienceService.getCompanyCurrentEmployeesByCompanyId(companyId, {
-        pageSize,
-        lastKey: lastKey,
-      });
+      const employeesResponse =
+        await UserExperienceService.getCompanyCurrentEmployeesByCompanyId(
+          companyId,
+          {
+            pageSize,
+            lastKey: lastKey,
+          }
+        );
 
       // Add employees to the list
       companyEmployees = companyEmployees.concat(employeesResponse);
@@ -226,10 +274,11 @@ class UserReferralEmpService {
       };
 
       // Prepare the email placeholders with appropriate values
-      const emailPlaceholders: EmailTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION = {
-        emp_first_name: refereeName,
-        candidate_name: candidateName,
-      };
+      const emailPlaceholders: EmailTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION =
+        {
+          emp_first_name: refereeName,
+          candidate_name: candidateName,
+        };
 
       // Send the email using the email library
       return emailLibrary.sendEmail(
@@ -240,11 +289,524 @@ class UserReferralEmpService {
     });
 
     // Merge the current batch of promises with the accumulated ones
-    global.logger.info(`Processed ${emailPromisesBatch.length} email sending tasks so far for companyId: ${companyId}`);
+    global.logger.info(
+      `Processed ${emailPromisesBatch.length} email sending tasks so far for companyId: ${companyId}`
+    );
 
     // Wait for all email sending promises to complete
     await Promise.all(emailPromisesBatch);
 
+    return true;
+  }
+
+  /**
+   * Sends a WhatsApp message to all employees of a company when a referral is created.
+   *
+   * @param {string} candName - The name of the candidate for the referral.
+   * @param {number} matchingScore - The matching score for the referral.
+   * @param {string} jobUrl - The URL of the job listing.
+   * @param {string} companyId - The ID of the company to send messages to.
+   *
+   * @returns {Promise<boolean>} - Returns true if all messages were sent successfully.
+   * @throws {BaseError} - Throws an error if no employees are found.
+   */
+  async sendWhatsappMsgtoEmployeesOnReferralCreation(
+    candName: string,
+    matchingScore: number,
+    jobUrl: string,
+    companyId: string
+  ): Promise<boolean> {
+    let companyEmployees: DbUserExperienceDto[] = [];
+    let lastKey: any = undefined;
+    const pageSize = 25;
+
+    // Continue fetching and sending messages as long as there are more employees
+    do {
+      // Get a batch of employees for the company
+      const employeesResponse =
+        await UserExperienceService.getCompanyCurrentEmployeesByCompanyId(
+          companyId,
+          {
+            pageSize,
+            lastKey: lastKey,
+          }
+        );
+
+      // Add employees to the list
+      companyEmployees = companyEmployees.concat(employeesResponse);
+
+      // Update the lastKey for the next iteration
+      lastKey = employeesResponse.lastKey ?? null;
+    } while (lastKey);
+
+    // Throw an error if no employees are found
+    if (!companyEmployees.length) {
+      throw new BaseError(
+        `No employees found for the company with companyId ${companyId}.`,
+        HttpStatusCode.NOT_FOUND_404
+      );
+    }
+
+    // Prepare and send WhatsApp messages in parallel
+    const employeesBatch = companyEmployees.map(async (employee) => {
+      // Extract the employee email from the PK field
+      const empEmail = employee.PK.split("#")[2];
+
+      // Fetch employee details
+      const empDetails = await UserDetailService.get(empEmail);
+      if (!empDetails.count) {
+        global.logger.info(
+          `The employee details for the given email "${empEmail}" not found. Therefore, the WhatsApp message cannot be sent for the referral.`,
+          {
+            companyId: companyId,
+          }
+        );
+        return true;
+      }
+
+      const refereeName = empDetails[0].name;
+      const refereeEmail = empDetails[0].emailList.primary;
+
+      /**
+       * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
+       * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
+       *
+       * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+       */
+      if (empDetails[0].isEmailVerified) {
+        // Prepare placeholders for the WhatsApp message
+        const whatsappPlaceholders: WhatsappTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION =
+          {
+            body1: {
+              type: WhatsappMessageTypeCloudApiEnum.TEXT,
+              value: refereeName,
+            }, // replace placeholder's value with employee's name
+            body2: {
+              type: WhatsappMessageTypeCloudApiEnum.TEXT,
+              value: candName,
+            }, // replace placeholder's value with candidate's name
+            body3: {
+              type: WhatsappMessageTypeCloudApiEnum.TEXT,
+              value: matchingScore.toLocaleString(),
+            }, // replace placeholder's value with matching score
+            body4: {
+              type: WhatsappMessageTypeCloudApiEnum.TEXT,
+              value: jobUrl,
+            }, // replace placeholder's value with job URL
+          };
+
+        const templateName =
+          WhatsappTemplateNameEnum.EMP_NEW_REFERRAL_REQ_NOTIFICATION;
+
+        // Send the WhatsApp message
+
+        // send whatsapp message using the specified template and placeholders
+        await whatsappLibraryObj.sendWhatsappMessage(
+          refereeEmail,
+          templateName,
+          empDetails[0].number,
+          whatsappPlaceholders
+        );
+      } else {
+        // Log an info message if the employee's number is not verified
+        global.logger.info(
+          `The employee's number for "${refereeEmail}" is not verified. WhatsApp message cannot be sent for the referral.`,
+          {
+            companyId: companyId,
+          }
+        );
+      }
+    });
+    global.logger.info(
+      `Processed ${employeesBatch.length} WhatsApp messages sending tasks so far for companyId: ${companyId}`
+    );
+
+    // Wait for all message sending promises to complete
+    await Promise.all(employeesBatch);
+
+    global.logger.info(`WhatsApp Message Sent Successfully!`, {
+      filePath: __filename,
+      methodName: this.sendWhatsappMsgtoEmployeesOnReferralCreation.name,
+    });
+    return true;
+  }
+
+  /**
+   * Sends a WhatsApp message to an employee when a new chat message is received from a candidate.
+   *
+   * @param {string} empEmail - The email of the employee.
+   * @param {string} toPhoneNumber - The phone number to send the message to.
+   * @param {WhatsappTemplatePlaceholderEMP_NEW_CHAT_MSG_FROM_CAND_NOTIFICATION} whatsappPlaceholders - The placeholders for the message template.
+   *
+   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
+   */
+  async sendWhatsappMsgToEmpOnNewChatMsgFromCand(
+    empEmail: string,
+    toPhoneNumber: string,
+    whatsappPlaceholders: WhatsappTemplatePlaceholderEMP_NEW_CHAT_MSG_FROM_CAND_NOTIFICATION
+  ): Promise<boolean> {
+    // retrive whatsapp template name
+    const empDetails = await UserDetailService.get(empEmail);
+    if (!empDetails.count) {
+      global.logger.info(`Employee details not found for email "${empEmail}".`);
+      return true;
+    }
+
+    /**
+     * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
+     * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
+     *
+     * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+     */
+    if (empDetails[0].isEmailVerified) {
+      const templateName =
+        WhatsappTemplateNameEnum.EMP_NEW_CHAT_MSG_FROM_CAND_NOTIFICATION;
+
+      // send whatsapp message using the specified template and placeholders
+      await whatsappLibraryObj.sendWhatsappMessage(
+        empEmail,
+        templateName,
+        empDetails[0].number,
+        whatsappPlaceholders
+      );
+      global.logger.info(
+        `WhatsApp Message for ${templateName} Sent Successfully!`,
+        {
+          filePath: __filename,
+          methodName: this.sendWhatsappMsgToEmpOnNewChatMsgFromCand.name,
+          empEmail: empEmail,
+        }
+      );
+    } else {
+      global.logger.info(
+        `Employee's number for "${empEmail}" is not verified. WhatsApp message not sent.`
+      );
+    }
+    return true;
+  }
+
+  /**
+   * Sends a WhatsApp message to an employee about pending awaiting referral request counts.
+   *
+   * @param {string} empEmail - The email of the employee.
+   * @param {string} toPhoneNumber - The phone number to send the message to.
+   * @param {WhatsappTemplatePlaceholderEMP_PENDING_AWAITING_REFERRAL_REQ_COUNTS_NOTIFICATION} whatsappPlaceholders - The placeholders for the message template.
+   *
+   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
+   */
+  /**
+   * Sends a WhatsApp message to an employee about pending awaiting referral request counts.
+   */
+  async sendWhatsappMsgToEmpAboutPendingAwaitingReferralRequestCount(
+    empEmail: string,
+    companyId: string
+  ): Promise<boolean> {
+    // Get the number of pending awaiting referrals for the employee
+    let empReferrals = await this.getEmployeeAwaitingReferrals(
+      empEmail,
+      companyId,
+      ReferralStatus.AWAITING
+    );
+    let empAwaitingReferralCounts = empReferrals.length;
+
+    // Retrive the employee details and check if the employee exists
+    const empDetails = await UserDetailService.get(empEmail);
+    if (!empDetails.count) {
+      global.logger.info(`Employee details not found for email "${empEmail}".`);
+      return true;
+    }
+
+    /**
+     * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
+     * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
+     *
+     * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+     */
+    if (empDetails[0].isEmailVerified) {
+      let whatsappPlaceholders: WhatsappTemplatePlaceholderEMP_PENDING_AWAITING_REFERRAL_REQ_COUNTS_NOTIFICATION =
+        {
+          body1: {
+            type: WhatsappMessageTypeCloudApiEnum.TEXT,
+            value: empDetails[0].name,
+          }, // replace placeholder's value with employee's name
+          body2: {
+            type: WhatsappMessageTypeCloudApiEnum.TEXT,
+            value: empAwaitingReferralCounts.toLocaleString(),
+          }, // replace placeholder's value with employee's number
+        };
+
+      // retrive whatsapp template name
+      const templateName =
+        WhatsappTemplateNameEnum.EMP_PENDING_AWAITING_REFERRAL_REQ_COUNTS_NOTIFICATION;
+
+      // send whatsapp message using the specified template and placeholders
+      await whatsappLibraryObj.sendWhatsappMessage(
+        empEmail,
+        templateName,
+        empDetails[0].number,
+        whatsappPlaceholders
+      );
+      global.logger.info(
+        `WhatsApp Message for ${templateName} Sent Successfully!`,
+        {
+          filePath: __filename,
+          methodName:
+            this.sendWhatsappMsgToEmpAboutPendingAwaitingReferralRequestCount
+              .name,
+          empEmail: empEmail,
+        }
+      );
+    } else {
+      global.logger.info(
+        `Employee's number for "${empEmail}" is not verified. WhatsApp message not sent.`
+      );
+    }
+    return true;
+  }
+
+  /**
+   * Sends a WhatsApp message to an employee about pending accepted referral request counts.
+   *
+   * @param {string} empEmail - The email of the employee.
+   * @param {string} toPhoneNumber - The phone number to send the message to.
+   * @param {WhatsappTemplatePlaceholderEMP_PENDING_ACCEPTED_REFERRAL_REQ_COUNTS_NOTIFICATION} whatsappPlaceholders - The placeholders for the message template.
+   *
+   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
+   */
+  async sendWhatsappMsgToEmpAboutPendingAcceptedReferralRequestCount(
+    empEmail: string,
+    toPhoneNumber: string,
+    whatsappPlaceholders: WhatsappTemplatePlaceholderEMP_PENDING_ACCEPTED_REFERRAL_REQ_COUNTS_NOTIFICATION
+  ): Promise<boolean> {
+    // retrive whatsapp template name
+    const templateName =
+      WhatsappTemplateNameEnum.EMP_PENDING_ACCEPTED_REFERRAL_REQ_COUNTS_NOTIFICATION;
+
+    // send whatsapp message using the specified template and placeholders
+    await whatsappLibraryObj.sendWhatsappMessage(
+      empEmail,
+      templateName,
+      toPhoneNumber,
+      whatsappPlaceholders
+    );
+    global.logger.info(
+      `WhatsApp Message for ${templateName} Sent Successfully!`,
+      {
+        filePath: __filename,
+        methodName:
+          this.sendWhatsappMsgToEmpAboutPendingAcceptedReferralRequestCount
+            .name,
+        empEmail: empEmail,
+      }
+    );
+    return true;
+  }
+
+  /**
+   * Sends a WhatsApp message to an employee about pending chat message counts from a candidate.
+   *
+   * @param {string} empEmail - The email of the employee.
+   * @param {string} toPhoneNumber - The phone number to send the message to.
+   * @param {WhatsappTemplatePlaceholderEMP_PENDING_CHAT_MSG_COUNT_BY_CAND_NOTIFICATION} whatsappPlaceholders - The placeholders for the message template.
+   *
+   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
+   */
+  async sendWhatsappMsgToEmpAboutPendingChatMsgCountByCand(
+    empEmail: string,
+    toPhoneNumber: string,
+    whatsappPlaceholders: WhatsappTemplatePlaceholderEMP_PENDING_CHAT_MSG_COUNT_BY_CAND_NOTIFICATION
+  ): Promise<boolean> {
+    // retrive whatsapp template name
+    const templateName =
+      WhatsappTemplateNameEnum.EMP_PENDING_CHAT_MSG_COUNT_BY_CAND_NOTIFICATION;
+
+    // send whatsapp message using the specified template and placeholders
+    await whatsappLibraryObj.sendWhatsappMessage(
+      empEmail,
+      templateName,
+      toPhoneNumber,
+      whatsappPlaceholders
+    );
+    global.logger.info(
+      `WhatsApp Message for ${templateName} Sent Successfully!`,
+      {
+        filePath: __filename,
+        methodName:
+          this.sendWhatsappMsgToEmpAboutPendingChatMsgCountByCand.name,
+        empEmail: empEmail,
+      }
+    );
+    return true;
+  }
+
+  async scheduleReferralDoneStatusReminder(
+    email: string,
+    empName: string,
+    referralId: string
+  ): Promise<boolean> {
+    // This is a delay before the first reminder is sent. Usually, this is 24 hours for PROD and 20 mins for Dev
+    const delay =
+      WHATSAPP_APP_CONSTANTS.EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INITIAL_DELAY;
+
+    // Calculate the schedule time
+    const scheduleTime = DateTime.now().plus({ milliseconds: delay });
+
+    // Create the input object for the scheduler
+    const scheduleJobReferralReminderInput: ScheduleJobReferralReminderInputDto =
+      {
+        email,
+        empName,
+        referralId,
+      };
+
+    // Create the payload for scheduling the job
+    const scheduleJobPayload: ScheduleJobCreateDto = {
+      type: ScheduleJobType.REFERRAL_DONE_STATUS_REMINDER,
+      scheduleTime: scheduleTime.toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss"),
+      input: scheduleJobReferralReminderInput,
+      desc: `Check referral status and send WhatsApp reminder for ${email} if still accepted`,
+      status: ScheduleJobStatus.SCHEDULED,
+    };
+
+    // Schedule the job
+    await ScheduleJobService.createScheduleJob(scheduleJobPayload);
+
+    return true;
+  }
+
+  /**
+   * reviewReferralDoneStatusReminder
+   *
+   * Reviews the status of a referral request and sends a reminder to the employee
+   * [WHEN] if the referral is in the "accepted" status and the employee has not yet completed the referral.
+   *
+   * @param {string} referralId - The ID of the referral request to review.
+   * @param {string} userEmail - The email address of the user who made the referral request.
+   *
+   * @returns {Promise<boolean>} - Returns a promise that resolves with a boolean indicating if the message was sent or not.
+   */
+  async reviewReferralDoneStatusReminder(
+    referralId: string,
+    userEmail: string
+  ): Promise<boolean> {
+    global.logger.info(
+      `Reviewing referral completion status for referral ID: ${referralId}`,
+      {
+        filePath: __filename,
+        methodName: this.reviewReferralDoneStatusReminder.name,
+        userEmail: userEmail,
+      }
+    );
+
+    // Fetch user referral details using referral ID and user email
+    let userReferralDetails =
+      await UserReferralService.getUserReferralByReferralId(
+        userEmail,
+        referralId
+      );
+
+    // If referral details are not found, throw an error
+    if (!userReferralDetails) {
+      throw new BaseError(
+        `The referral details not found for the provided referral ID "${referralId}" and email "${userEmail}".`
+      );
+    }
+
+    // Check if the referral is in the "accepted" status , if yes then send whatsapp message to employee
+    if (userReferralDetails.status === ReferralStatus.ACCEPTED) {
+      // Get the name and email of the referee who accepted the referral request
+      const empId = userReferralDetails.acceptedByUserId as string;
+      const empDetails = await UserDetailService.getUserById(empId);
+      const refereeName = empDetails[0].name;
+      const refereeEmail = empDetails[0].emailList.primary;
+      let candEmail = userReferralDetails.PK.split("#")[2];
+      let candDetails = await UserDetailService.get(candEmail);
+
+      /**
+       * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
+       * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
+       *
+       * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+       */
+      if (empDetails[0].isEmailVerified) {
+        let whatsappPlaceholders: WhatsappTemplatePlaceholderEMP_PENDING_ACCEPTED_REFERRAL_REQ_NOTIFICATION =
+          {
+            body1: {
+              type: WhatsappMessageTypeCloudApiEnum.TEXT,
+              value: refereeName,
+            }, // replace placeholder's value with employee's name
+            body2: {
+              type: WhatsappMessageTypeCloudApiEnum.TEXT,
+              value: candDetails[0].name,
+            }, // replace placeholder's value with candidate's name
+          };
+        await this.sendWhatsappMsgToEmpAboutPendingAcceptedReferralRequest(
+          refereeEmail,
+          empDetails[0].number,
+          whatsappPlaceholders
+        );
+
+        // Schedule the next reminder after the 36 hours on prod and 20 min on dev
+        const delay =
+          WHATSAPP_APP_CONSTANTS.EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INTERVAL;
+        const scheduleTime = DateTime.now().plus({ milliseconds: delay });
+
+        const scheduleJobPayload: ScheduleJobCreateDto = {
+          type: ScheduleJobType.REFERRAL_DONE_STATUS_REMINDER,
+          scheduleTime: scheduleTime.toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss"),
+          input: { email: refereeEmail, empName: refereeName, referralId },
+          desc: `Check referral status and send WhatsApp reminder for ${refereeEmail} if still accepted`,
+          status: ScheduleJobStatus.SCHEDULED,
+        };
+
+        await ScheduleJobService.createScheduleJob(scheduleJobPayload);
+      } else {
+        global.logger.info(
+          `Employee's number is not verified. WhatsApp message not sent.`
+        );
+      }
+    } else {
+      global.logger.info(
+        "Referral status has changed. No further reminders will be sent."
+      );
+    }
+
+    return true;
+  }
+  /**
+   * Sends a WhatsApp message to an employee about pending accepted referral requests.
+   *
+   * @param {string} empEmail - The email of the employee.
+   * @param {string} toPhoneNumber - The phone number to send the message to.
+   * @param {WhatsappTemplatePlaceholderEMP_PENDING_ACCEPTED_REFERRAL_REQ_NOTIFICATION} whatsappPlaceholders - The placeholders for the message template.
+   *
+   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
+   */
+  async sendWhatsappMsgToEmpAboutPendingAcceptedReferralRequest(
+    empEmail: string,
+    toPhoneNumber: string,
+    whatsappPlaceholders: WhatsappTemplatePlaceholderEMP_PENDING_ACCEPTED_REFERRAL_REQ_NOTIFICATION
+  ): Promise<boolean> {
+    // retrive whatsapp template name
+    const templateName =
+      WhatsappTemplateNameEnum.EMP_PENDING_ACCEPTED_REFERRAL_REQ_NOTIFICATION;
+
+    // send whatsapp message using the specified template and placeholders
+    await whatsappLibraryObj.sendWhatsappMessage(
+      empEmail,
+      templateName,
+      toPhoneNumber,
+      whatsappPlaceholders
+    );
+    global.logger.info(
+      `WhatsApp Message for ${templateName} Sent Successfully!`,
+      {
+        filePath: __filename,
+        methodName:
+          this.sendWhatsappMsgToEmpAboutPendingAcceptedReferralRequest.name,
+        empEmail: empEmail,
+      }
+    );
     return true;
   }
 
@@ -279,7 +841,11 @@ class UserReferralEmpService {
     toAddress: EmailSourceDestinationAddress
   ): Promise<{ awsMessageId: string | null }> {
     // Send email using the email library with the specified template, recipient, and placeholders
-    return emailLibrary.sendEmail(EmailTemplateEnum.EMP_REFFERAL_DONE_FOR_CAND, toAddress, emailPlaceholders);
+    return emailLibrary.sendEmail(
+      EmailTemplateEnum.EMP_REFFERAL_DONE_FOR_CAND,
+      toAddress,
+      emailPlaceholders
+    );
   }
 
   /**
@@ -291,7 +857,12 @@ class UserReferralEmpService {
    * @param status - The status to update the referral to (e.g. 'ACCEPT', 'DONE')
    * @returns {Promise<any>} - A Promise that resolves when the Referral is successfully updated
    */
-  async update(PK: string, SK: string, userReferralDTO: UserReferralDTO, status: string): Promise<any> {
+  async update(
+    PK: string,
+    SK: string,
+    userReferralDTO: UserReferralDTO,
+    status: string
+  ): Promise<any> {
     // Logging the action of updating user Referral in the service layer
     logger.info("Updating user Referral [UserReferralService]");
     // Extract the candidate's email from the PK
@@ -304,7 +875,9 @@ class UserReferralEmpService {
 
     // Get the name of the company for which the referral request got accepted
     const companyId = userReferralDTO.companyId;
-    const companyDetails = await CompanyService.getCompanyDetailsByIds([companyId]);
+    const companyDetails = await CompanyService.getCompanyDetailsByIds([
+      companyId,
+    ]);
 
     if (!companyDetails || companyDetails.length === 0) {
       throw new Error("Company not found");
@@ -316,9 +889,16 @@ class UserReferralEmpService {
 
     if (result) {
       // Update the referral counts if the status is 'ACCEPT' or 'DONE'
-      if (status === ReferralActions.ACCEPT || status === ReferralActions.DONE) {
+      if (
+        status === ReferralActions.ACCEPT ||
+        status === ReferralActions.DONE
+      ) {
         const userSubscriptionId = userReferralDTO.userSubscriptionId;
-        await UserReferralService.calculateAndUpdateReferralCounts(candEmail, userSubscriptionId, status);
+        await UserReferralService.calculateAndUpdateReferralCounts(
+          candEmail,
+          userSubscriptionId,
+          status
+        );
       }
 
       // Handle the different actions (accept, done) and send emails accordingly
@@ -328,17 +908,64 @@ class UserReferralEmpService {
         const empDetails = await UserDetailService.getUserById(empId);
         const refereeName = empDetails[0].name;
         const refereeEmail = empDetails[0].emailList.primary;
+        let jobUrl = userReferralDTO.jobUrl;
+
+        // Retrieve the candidate's details by email
+        const candDetails = await UserDetailService.get(candEmail);
+
+        /**
+         * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
+         * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
+         *
+         * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+         */
+        if (candDetails[0].isEmailVerified) {
+          let whatsappPlaceholders: WhatsappTemplatePlaceholderCAND_REF_REQ_ACCEPTED =
+            {
+              body1: {
+                type: WhatsappMessageTypeCloudApiEnum.TEXT,
+                value: candName,
+              }, // replace placeholder's value with candidate's name
+              body2: {
+                type: WhatsappMessageTypeCloudApiEnum.TEXT,
+                value: companyName,
+              }, // replace placeholder's value with company name
+              body3: {
+                type: WhatsappMessageTypeCloudApiEnum.TEXT,
+                value: jobUrl,
+              }, // replace placeholder's value with job url
+              body4: {
+                type: WhatsappMessageTypeCloudApiEnum.TEXT,
+                value: refereeName,
+              }, // replace placeholder's value with referee name
+            };
+          await UserReferralService.sendWhatsappMsgToCandWhenReferralRequestAccepted(
+            whatsappPlaceholders,
+            candDetails[0].number, // Use candidate's verified number
+            refereeEmail
+          );
+          await this.scheduleReferralDoneStatusReminder(
+            refereeEmail,
+            refereeName,
+            result.id
+          );
+        } else {
+          global.logger.info(
+            `Candidate's number for "${candEmail}" is not verified. WhatsApp message not sent.`
+          );
+        }
 
         // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestAccepted function
         const toAddress: EmailSourceDestinationAddress = {
           email: candEmail,
           fullName: candName,
         };
-        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED = {
-          candName: candName,
-          companyName: companyName,
-          refereeName: refereeName,
-        };
+        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED =
+          {
+            candName: candName,
+            companyName: companyName,
+            refereeName: refereeName,
+          };
 
         // Prepare the necessary parameters required for the sendEmailToEmpWhenReferralRequestAccepted function
         const emptoAddress: EmailSourceDestinationAddress = {
@@ -346,15 +973,22 @@ class UserReferralEmpService {
           fullName: refereeName,
         };
 
-        const empemailPlaceholders: EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION = {
-          empName: refereeName,
-          candName: candName,
-        };
+        const empemailPlaceholders: EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION =
+          {
+            empName: refereeName,
+            candName: candName,
+          };
 
         // Send emails to the candidate and the employee
         await Promise.all([
-          UserReferralService.sendEmailToCandWhenReferralRequestAccepted(emailPlaceholders, toAddress),
-          this.sendEmailToEmpWhenReferralRequestAccepted(empemailPlaceholders, emptoAddress),
+          UserReferralService.sendEmailToCandWhenReferralRequestAccepted(
+            emailPlaceholders,
+            toAddress
+          ),
+          this.sendEmailToEmpWhenReferralRequestAccepted(
+            empemailPlaceholders,
+            emptoAddress
+          ),
         ]);
       }
       // When employee marks the referral request as done, email will be sent to candidate
@@ -365,15 +999,52 @@ class UserReferralEmpService {
         const refereeName = empDetails[0].name;
         const refereeEmail = empDetails[0].emailList.primary;
 
+        // Retrieve the candidate's details by email
+        const candDetails = await UserDetailService.get(candEmail);
+
+        /**
+         * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
+         * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
+         *
+         * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+         */
+        if (candDetails[0].isEmailVerified) {
+          let whatsapPlaceholders: WhatsappTemplatePlaceholderCAND_REF_REQ_COMPLETED =
+            {
+              body1: {
+                type: WhatsappMessageTypeCloudApiEnum.TEXT,
+                value: candName,
+              }, // replace placeholder's value with candidate's name
+              body2: {
+                type: WhatsappMessageTypeCloudApiEnum.TEXT,
+                value: companyName,
+              }, // replace placeholder's value with company name
+              body3: {
+                type: WhatsappMessageTypeCloudApiEnum.TEXT,
+                value: refereeName,
+              }, // replace placeholder's value with referee name
+            };
+          await UserReferralService.sendWhatsappMsgToCandWhenReferralRequestCompleted(
+            whatsapPlaceholders,
+            candDetails[0].number,
+            candEmail
+          );
+        } else {
+          global.logger.info(
+            `Candidate's number for "${candEmail}" is not verified. WhatsApp message not sent.`
+          );
+        }
+
         // Prepare the necessary parameters required for the sendEmailToCandWhenReferralRequestCompleted function
         const toAddress: EmailSourceDestinationAddress = {
           email: candEmail,
           fullName: candName,
         };
-        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED = {
-          candName: candName,
-          companyName: companyName,
-        };
+        const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED =
+          {
+            candName: candName,
+            companyName: companyName,
+          };
 
         // Prepare the necessary parameters required for the sendEmailToEmpWhenReferralRequestCompleted function
         const emptoAddress: EmailSourceDestinationAddress = {
@@ -381,14 +1052,21 @@ class UserReferralEmpService {
           fullName: refereeName,
         };
 
-        const empemailPlaceholders: EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND = {
-          empName: refereeName,
-        };
+        const empemailPlaceholders: EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND =
+          {
+            empName: refereeName,
+          };
 
         // Send emails to the candidate and the employee
         await Promise.all([
-          UserReferralService.sendEmailToCandWhenReferralRequestCompleted(emailPlaceholders, toAddress),
-          this.sendEmailToEmpWhenReferralRequestCompleted(empemailPlaceholders, emptoAddress),
+          UserReferralService.sendEmailToCandWhenReferralRequestCompleted(
+            emailPlaceholders,
+            toAddress
+          ),
+          this.sendEmailToEmpWhenReferralRequestCompleted(
+            empemailPlaceholders,
+            emptoAddress
+          ),
         ]);
       }
     }
@@ -410,7 +1088,9 @@ class UserReferralEmpService {
     userId: string,
     empEmail: string
   ): Promise<any> {
-    global.logger.info("Updating Referral Status By Employee [UserReferralEMP service]");
+    global.logger.info(
+      "Updating Referral Status By Employee [UserReferralEMP service]"
+    );
     // Fetch the referral
     let referral = await UserReferralService.getByGSI1(referralId);
     if (!referral || referral.count === 0) {
@@ -437,15 +1117,25 @@ class UserReferralEmpService {
         // Check if the referral has already been passed by the employee
         if (
           referral[0].passedByUserIds &&
-          referral[0].passedByUserIds.some((passedUser: { userId: string }) => passedUser.userId === userId)
+          referral[0].passedByUserIds.some(
+            (passedUser: { userId: string }) => passedUser.userId === userId
+          )
         ) {
           throw new Error("The referral has already been passed by you.");
         }
         // Add the employee's pass action to the referral
-        if (!referral[0].passedByUserIds || referral[0].passedByUserIds.length === 0) {
-          referral[0].passedByUserIds = [{ userId, actionDate: currentDate.toISO() }];
+        if (
+          !referral[0].passedByUserIds ||
+          referral[0].passedByUserIds.length === 0
+        ) {
+          referral[0].passedByUserIds = [
+            { userId, actionDate: currentDate.toISO() },
+          ];
         } else {
-          referral[0].passedByUserIds.push({ userId, actionDate: currentDate.toISO() });
+          referral[0].passedByUserIds.push({
+            userId,
+            actionDate: currentDate.toISO(),
+          });
         }
         // Update the referral response
         if (updateReferralResponse) {
@@ -459,12 +1149,18 @@ class UserReferralEmpService {
         // Check if the referral has already been rejected by the employee
         if (
           referral[0].rejectedByUserIds &&
-          referral[0].rejectedByUserIds.some((rejectedUserId: { userId: string }) => rejectedUserId.userId === userId)
+          referral[0].rejectedByUserIds.some(
+            (rejectedUserId: { userId: string }) =>
+              rejectedUserId.userId === userId
+          )
         ) {
           throw new Error("The referral has already been rejected by you.");
         }
         // Add the employee's rejection to the referral
-        if (!referral[0].rejectedByUserIds || referral[0].rejectedByUserIds.length === 0) {
+        if (
+          !referral[0].rejectedByUserIds ||
+          referral[0].rejectedByUserIds.length === 0
+        ) {
           referral[0].rejectedByUserIds = [
             {
               userId: userId,
@@ -540,11 +1236,17 @@ class UserReferralEmpService {
 
     // Update the referral
     const { PK, SK, updatedAt, ...userReferralDTO } = referral[0];
-    const result = await this.update(PK, SK, userReferralDTO, referralStatusUpdate.action);
+    const result = await this.update(
+      PK,
+      SK,
+      userReferralDTO,
+      referralStatusUpdate.action
+    );
 
     // Update or create the referral response
     if (updateReferralResponse) {
-      const { passedRefIds, rejectedRefIds, acceptedRefIds, doneRefIds } = referralResponse[0];
+      const { passedRefIds, rejectedRefIds, acceptedRefIds, doneRefIds } =
+        referralResponse[0];
       await UserReferralResponseService.update(empEmail, {
         passedRefIds,
         rejectedRefIds,
@@ -552,7 +1254,10 @@ class UserReferralEmpService {
         doneRefIds,
       });
     } else {
-      await UserReferralResponseService.create(empEmail, userReferralResponseDTO);
+      await UserReferralResponseService.create(
+        empEmail,
+        userReferralResponseDTO
+      );
     }
 
     return result;

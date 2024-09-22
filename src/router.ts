@@ -38,6 +38,7 @@ import EmpReferralRouter from "./routers/EmpReferral.router";
 import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
 import MasterServiceRouter from "./routers/MasterService.router";
 import EmailTemplateRouter from "./routers/EmailTemplate.router";
+import WhatsappTemplateRouter from "./routers/WhatsappTemplate.router";
 
 // Other
 import TestRouter from "./routers/Test.router";
@@ -48,6 +49,7 @@ import AdminSubsRouter from "./routers/Admin.router";
 
 // Admin Routers
 import AdminRouter from "./admin/router";
+import WebhookRouter from "./routers/Webhook.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -127,6 +129,14 @@ router.use("/mservice", MasterServiceRouter);
 // Register the "Email Template" routers.
 // Note: These actions are only for users with "admin" role. @todo add required authorizations.
 router.use("/email-template", EmailTemplateRouter);
+
+// Register the "Whatsapp Template" routers.
+// Note: These actions are only for users with "admin" role. @todo add required authorizations.
+router.use("/whatsapp-template", WhatsappTemplateRouter);
+
+// Register the "Whatsapp Template" routers.
+// Note: These actions are only for users with "admin" role. @todo add required authorizations.
+router.use("/webhook", WebhookRouter);
 
 // Just a test controller to perform some testing operations required to confirm the changes made in the application.
 router.use("/test", TestRouter);

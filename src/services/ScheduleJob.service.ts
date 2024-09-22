@@ -47,14 +47,14 @@ class ScheduleJobService {
       let schedulerLambdaFunctionArn: string;
       let schedulerLambdaRoleArn: string;
 
-      // Currently, we only support REFERRAL_REVIEW_ACCEPTANCE_STATUS job type
-      if (scheduleBody.type !== ScheduleJobType.REFERRAL_REVIEW_ACCEPTANCE_STATUS) {
-        throw new BaseError(`The requested schedule job type ${scheduleBody.type} is not supported.`,
-          HttpStatusCode.BAD_REQUEST_400);
-      } else {
+      // // Currently, we only support REFERRAL_REVIEW_ACCEPTANCE_STATUS job type
+      // if (scheduleBody.type !== ScheduleJobType.REFERRAL_REVIEW_ACCEPTANCE_STATUS) {
+      //   throw new BaseError(`The requested schedule job type ${scheduleBody.type} is not supported.`,
+      //     HttpStatusCode.BAD_REQUEST_400);
+      // } else {
         schedulerLambdaFunctionArn = this.schedulerLambdaArn;
         schedulerLambdaRoleArn = this.schedulerRoleArn;
-      }
+      // }
 
       // Create the schedule job in the database
       createdJob = await scheduleJobDaoObj.create(scheduleBody);

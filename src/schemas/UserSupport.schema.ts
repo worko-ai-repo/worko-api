@@ -2,7 +2,7 @@
 import Joi from "joi"; // Joi package for validation
 
 // Import enums
-import { UserType, UserSupportContextTypeEnum, UserSupportStatusEnum } from "../enums/User.enum";
+import { UserType, UserContextTypeEnum, UserSupportStatusEnum } from "../enums/User.enum";
 
 // Define validation schema for user support creation API DTO
 export const userSupportCreateApiDtoValidation = Joi.object({
@@ -42,11 +42,11 @@ export const userSupportCreateApiDtoValidation = Joi.object({
     }),
 
     // Validate contextType field
-    contextType: Joi.string().valid(...Object.values(UserSupportContextTypeEnum))
+    contextType: Joi.string().valid(...Object.values(UserContextTypeEnum))
         .required().messages({
             "any.required": "Context type is required.",
             "any.only": `Invalid context type. Please provide a valid value from
-         ${Object.values(UserSupportContextTypeEnum).join(", ")}.`,
+         ${Object.values(UserContextTypeEnum).join(", ")}.`,
         }),
 
     // Validate contextId field

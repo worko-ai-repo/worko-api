@@ -2,7 +2,7 @@
 import {RecordListingFilterOptions,RecordListingFilterRequestDTO} from "../../dtos/Common.dto";
 
 // import enums
-import { UserSupportContextTypeEnum, UserSupportStatusEnum } from "../../enums/User.enum";
+import { UserContextTypeEnum, UserSupportStatusEnum } from "../../enums/User.enum";
 
 /**
  * ReferralListingFilterOptions
@@ -15,7 +15,7 @@ export interface UserSupportListingFilterOptions extends RecordListingFilterOpti
   status?: UserSupportStatusEnum;
   userEmail?: string;
   userSupportType?: string;
-  contextType?: UserSupportContextTypeEnum;
+  contextType?: UserContextTypeEnum;
   contextId?: string;
   assignedToUserId?: string;
   resolvedbyUserId?: string
@@ -31,7 +31,7 @@ export interface UserSupportListingFilterRequestDTO
   status?: UserSupportStatusEnum;
   userEmail?: string;
   userSupportType?: string;
-  contextType?: UserSupportContextTypeEnum;
+  contextType?: UserContextTypeEnum;
   contextId?: string;
   assignedToUserId?: string;
   resolvedbyUserId?: string

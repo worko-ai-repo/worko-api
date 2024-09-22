@@ -142,13 +142,13 @@ class UserExperienceController {
           );
         // If it has an SK, then it is an update, and if it does not have an SK, it is a create
         if (userExperienceDTO[i].SK) {
-          UserExperienceService.update(
+          UserExperienceService.updateUserExperience(
             emailId,
             userExperienceDTO[i].SK,
             value[i]
           );
         } else {
-          UserExperienceService.create(emailId, value[i]);
+          UserExperienceService.createUserExperience(emailId, value[i]);
         }
       }
 

@@ -3,7 +3,7 @@ import Joi from "joi"; // Joi package for validation
 
 // Import enums
 import {
-  UserSupportContextTypeEnum,
+  UserContextTypeEnum,
   UserSupportStatusEnum,
 } from "../../enums/User.enum";
 
@@ -32,10 +32,10 @@ export const userSupportFilterDtoValidation = commonSchema.concat(
 
     contextType: Joi.string()
       .optional()
-      .valid(...Object.values(UserSupportContextTypeEnum))
+      .valid(...Object.values(UserContextTypeEnum))
       .messages({
         "any.only": `Invalid context type. Please provide a valid value from
-      ${Object.values(UserSupportContextTypeEnum).join(", ")}.`,
+      ${Object.values(UserContextTypeEnum).join(", ")}.`,
       }),
 
     contextId: Joi.string().optional().messages({

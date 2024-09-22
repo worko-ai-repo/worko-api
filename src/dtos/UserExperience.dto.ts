@@ -11,6 +11,7 @@ export interface UserExperienceDTO {
   companyId: string;
   emailId?: string;
   isCurrent?: boolean;
+  isEmailVerified?: boolean;
 }
 
 export interface UserExperienceDTOWithId extends UserExperienceDTO {

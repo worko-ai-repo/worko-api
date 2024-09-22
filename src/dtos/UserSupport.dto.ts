@@ -1,5 +1,5 @@
 //Import necessary enums
-import { UserType, UserSupportContextTypeEnum, UserSupportStatusEnum } from "../enums/User.enum";
+import { UserType, UserContextTypeEnum, UserSupportStatusEnum } from "../enums/User.enum";
 
 /**
  * UserSupportCreateApiDto
@@ -13,7 +13,7 @@ export interface UserSupportCreateApiDto {
     userRole: UserType;
     userSupportType: string; // This is Predefined Type in Ui and it should be from Dropdown .
     userMessage: string;
-    contextType: UserSupportContextTypeEnum;
+    contextType: UserContextTypeEnum;
     contextId: string;
 }
 
@@ -31,7 +31,7 @@ export interface UserSupportCreateDto {
     userRole: UserType;
     userSupportType: string;
     userMessage: string;
-    contextType: UserSupportContextTypeEnum;
+    contextType: UserContextTypeEnum;
     contextId: string;
     createdByUserId: string;
 }
@@ -63,7 +63,7 @@ export interface UserSupportFilterDto {
     status?: UserSupportStatusEnum;
     userEmail?: string;
     userSupportType?: string;
-    contextType?: UserSupportContextTypeEnum;
+    contextType?: UserContextTypeEnum;
     contextId?: string;
     assignedToUserId?: string;
     resolvedbyUserId?: string;

@@ -4,7 +4,7 @@ import * as dynamoose from "dynamoose";
 // Load the local model constants and base model functionalities
 import { DB_CONSTANTS } from "../DB.constants";
 import { BaseDbDto } from "./Base.model";
-import { UserType, UserSupportContextTypeEnum, UserSupportStatusEnum } from "../../enums/User.enum";
+import { UserType, UserContextTypeEnum, UserSupportStatusEnum } from "../../enums/User.enum";
 
 // Define the structure for User Support Database Data Transfer Object (DTO)
 class DbUserSupportDto extends BaseDbDto {
@@ -19,7 +19,7 @@ class DbUserSupportDto extends BaseDbDto {
     userRole!: UserType;
     userSupportType!: string;
     userMessage!: string;
-    contextType!: UserSupportContextTypeEnum;
+    contextType!: UserContextTypeEnum;
     contextId?: string;
     createdByUserId!: string;
     updatedByUserId?: string;
