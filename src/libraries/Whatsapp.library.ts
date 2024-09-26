@@ -56,7 +56,14 @@ class WhatsappLibrary {
     contextType?: UserContextTypeEnum,
     contextId?: string,
     fromPhoneNumber?: string
-  ): Promise<DbWhatsappMessageLogDto> {
+  // ): Promise<DbWhatsappMessageLogDto> {
+  ): Promise<boolean> {
+    /**
+     * NOTE:- We are disabled whatsapp message sending to users functionality using "META API INTEGRATION" because we need
+     * to use "GROWAASAN API INTEGRATION" for whatsapp message sending to users.
+     */
+    return true;
+    /*
     // Log the initiation of the message sending process
     global.logger.info(
       "Sending WhatsApp message from WhatsappLibrary... ",
@@ -113,6 +120,7 @@ class WhatsappLibrary {
 
     // Create and return the WhatsApp message log entry
     return whatsappMessageLogServiceObj.createWhatsappMessageLog(whatsappMessagelogEntry);
+    */
   }
 
   /**

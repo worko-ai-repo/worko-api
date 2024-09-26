@@ -51,7 +51,7 @@ const APP_CONSTANTS = {
   AWS_S3_FILE_NAMES: {},
 
   // The possible options for the page sizes that is expected in the request payload.
-  PAGE_LENGTH_OPTIONS: [10, 25, 50, 100],
+  PAGE_LENGTH_OPTIONS: [10, 25, 50, 100, 150, 200],
 
   // If "pageSize" from the request does not match with one of the "PAGE_LENGTH_OPTIONS" value, then this value would be used.
   PAGE_LENGTH_DEFAULT: 25,

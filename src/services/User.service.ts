@@ -261,13 +261,14 @@ class UserService {
     placeholders: WhatsappTemplatePlaceholderEMP_WELCOME_MSG,
     toPhoneNumber: string,
     userEmail: string
-  ) {
-    return whatsappLibraryObj.sendWhatsappMessage(
+  ): Promise<boolean> {
+     whatsappLibraryObj.sendWhatsappMessage(
       userEmail,
       WhatsappTemplateNameEnum.EMP_WELCOME_MSG,
       toPhoneNumber,
       placeholders
     );
+    return true
   }
 
   /**
