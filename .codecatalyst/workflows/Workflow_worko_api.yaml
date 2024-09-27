@@ -8,8 +8,8 @@ Triggers:
       - dev
   - Type: PUSH
     Branches:
-      - main
-      - feature_*
+      - feature/*
+      - bug/*
 
 # Required - Define action configurations.
 Actions:
