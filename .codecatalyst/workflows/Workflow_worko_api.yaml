@@ -6,6 +6,10 @@ Triggers:
   - Type: Push
     Branches:
       - dev
+  - Type: PUSH
+    Branches:
+      - main
+      - feature_*
 
 # Required - Define action configurations.
 Actions:
