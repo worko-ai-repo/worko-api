@@ -180,21 +180,6 @@ class ScriptService {
     // retrun the query 
     return awsDynamoDBClientLibrary.query(params);
   }
-
-  /**
-   * updateUserRoleScript
-   * 
-   * @todo remove this function after use case is completed
-   *
-   * WARNING: This function is not intended to be used in production or development code.
-   *
-   * Updates the "userRole" attribute for all users in the database with the
-   * value in the userType array.
-   */
-  async updateUserRoleScript() {
-    global.logger.info("Updating user role [script service]");
-    return userDetailDao.updateUserRoleScript();
-  }
 }
 
 // Export the ScriptService class and its instance  

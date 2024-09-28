@@ -19,6 +19,7 @@ import { UserProfilePercentageDTO } from "../dtos/UserProfilePercentage.dto";
 import {
   UserSignUpDTOValidation,
   userEmployeeSignUpDTOValidation,
+  userlastAccessedDashDTOValidation,
   validateEmailField,
 } from "../schemas/User.schema";
 
@@ -181,33 +182,33 @@ class UserController {
   ) => {
 
     try {
-      
       // Extract email from request parameters
       const email = req.params.id;
 
       // Extract user profile response from request body
-      const lastAccessedDash = req.body.lastAccessedDash;
+      const requestBody:string = req.body.lastAccessedDash;
 
+      // Validate the request body against the Joi schema
+      const { error } = userlastAccessedDashDTOValidation.validate(requestBody, {
+        abortEarly: false, // Return all errors, not just the first one
+        allowUnknown: true // Allow unknown keys (optional based on your needs)
+      });
+
+      // If validation fails, throw an error
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+ 
       // Validate email
       const { error: emailError, value: emailId } = validateEmailField(email);
 
       // If email validation fails, throw a RequestValidationError
       if (emailError) {
         throw new RequestValidationError(emailError);
-      } 
-
-      // Fetch SK (Sort Key) for the user
-      // @todo If you wish to get the User Details, consider using UserDetailService.get(email)
-      const SK = await UserService.getSK(emailId); 
-
-      // Check if SK is null or indicates an error
-      if (!SK) {
-        // If user not found, return 404 status with error message
-        return res.status(404).json({ error: "User not found" });
       }
 
       // Update last accessed dashboard for the user
-      const updatedDetails = await UserService.updateLastAccessedDash(emailId,lastAccessedDash);
+      const updatedDetails = await UserDetailService.updateLastAccessedDash(emailId, requestBody);
 
       // Return success response with updated details
       res.status(HttpStatusCode.OK_200).json({
@@ -277,7 +278,6 @@ class UserController {
         id: userSignUpDto.userId,
         emailList: emailList,
         userType: [userType],
-        userRole:userType,
         isEmailVerified: false,
         isNumberVerified: false,
         lastAccessedDash: userType,
@@ -391,7 +391,6 @@ createEmployee = async (req: Request, res: Response, next: NextFunction) => {
       id: userSignUpDto.userId,
       emailList: emailList,
       userType: [userType],
-      userRole:userType,
       isEmailVerified: false,
       isNumberVerified: false,
       lastAccessedDash: userType,

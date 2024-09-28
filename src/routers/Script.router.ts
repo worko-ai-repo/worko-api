@@ -17,14 +17,6 @@ ScriptRouter.post("/update-user-subscriptions", scriptController.updateUserSubsc
 // Endpoint to update the all user Referrals jd matching error code
 ScriptRouter.post("/update-user-referrals", scriptController.updateUserReferralsJdMatchErrorCode);
 
-/* 
-@todo remove this route after use case is completed
-
-Note:- type of "userType" attribute is array of strings in "UserDetail.model.ts"
-The value present in the "userType" attribute should be updated in "userRole" attribute as "string"
-*/
-ScriptRouter.post("/update-user-role-string", scriptController.updateUserRoleScript);
-
 // Endpoint to update all user experiences
 // ScriptRouter.post("/update-user-experiences", scriptController.updateUserExperiencesGSIs);
 

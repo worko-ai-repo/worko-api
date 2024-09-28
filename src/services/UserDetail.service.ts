@@ -56,7 +56,7 @@ class UserDetailService {
   async update(
     email: string,
     SK: string,
-    userDetailDTO: UserDetailDTO
+    userDetailDTO: Partial<UserDetailDTO>
   ): Promise<any> {
     // Logging the action of updating user Detail in the service layer
     logger.info("Updating user Detail [UserDetailService]");
@@ -124,6 +124,44 @@ class UserDetailService {
     }
 
     return true;
+  }
+
+  /**
+ * updateLastAccessedDash
+ * 
+ * Updates the last accessed dashboard for a user
+ *
+ * @param email - Email of the user
+ * @param userlastAccessedDash - User's Last Accessed Dashboard
+ */
+  async updateLastAccessedDash(email: string, userLastAccessedDash: string) {
+    // Fetch the User Details .
+    let userDetails = await this.get(email);
+
+    // Throw BaseError if user not present
+    if (!userDetails.count) {
+      throw new BaseError(`The user details not found for the provided email "${email}" address.`);
+    }
+
+    // Prepare the details required to be updated for the user
+    let userModifiedDetails: Partial<UserDetailDTO> = {
+      lastAccessedDash: userLastAccessedDash
+    };
+
+    // Check if userType exists or does not exist
+    const updatedUserType = userDetails[0].userType || [];
+
+    // If the userType is not present then add it. 
+    if (!updatedUserType.includes(userLastAccessedDash)) {
+      // Push the user type as it is not present
+      updatedUserType.push(userLastAccessedDash);
+
+      // Update the user type
+      userModifiedDetails.userType = updatedUserType;
+    }
+
+    // Update the user details
+    return this.update(email, userDetails[0].SK, userModifiedDetails)
   }
 }
 

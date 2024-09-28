@@ -69,35 +69,6 @@ class ScriptController {
     }
   };
 
-  /**
-   * updateUserRoleScript
-   * 
-   * @todo remove this function after use case is completed
-   *
-   * WARNING: This function is not intended to be used in production or development code.
-   *
-   * Note:- type of "userType" attribute is array of strings, check in "UserDetail.model.ts"
-   * The value present in the "userType" attribute should be updated in "userRole" attribute as "string"
-   *
-   * @param {Request} req - The Express request object.
-   * @param {Response} res - The Express response object.
-   * @param {NextFunction} next - The Express next middleware function.
-   *
-   */
-  updateUserRoleScript = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      global.logger.info("Updating User Role [script controller]");
-
-      const updatedUserRoleData = await scriptServiceObj.updateUserRoleScript();
-      res.status(HttpStatusCode.OK_200).json(updatedUserRoleData);
-    } catch (error) {
-      next(error);
-    }
-  };
 }
 
 export default ScriptController;

@@ -57,8 +57,8 @@ class UserDetailDao implements BaseDao {
     // if userType is provided then get only users of that type
     if (usersRecordListingFilterRequest.userType) {
       query = query
-        .where("userRole")
-        .eq(usersRecordListingFilterRequest.userType);
+        .where("userType")
+        .contains(usersRecordListingFilterRequest.userType);
     }
 
     /**
@@ -192,29 +192,6 @@ class UserDetailDao implements BaseDao {
   }
 
   /**
-   * updateLastAccessedDash
-   *
-   * Updates the last accessed dashboard for a user
-   *
-   * @param email - Email address of the user
-   * @param SK - Sort Key of the user
-   * @param userlastAccessedDash - User's Last Accessed Dashboard
-   */
-  async updateLastAccessedDash(
-    email: string,
-    SK: string,
-    userlastAccessedDash: string
-  ) {
-    const PK = this.partitianKey.strtr({
-      "{primaryEmail}": email,
-    });
-    return UserDetailModel.update(
-      { PK: PK, SK: SK },
-      { lastAccessedDash: userlastAccessedDash }
-    );
-  }
-
-  /**
    * Fetches user Subscription status based on the provided PK and SK.
    * @param email - Email address of the user
    * @returns User Subscription-Status corresponding to the email and SK
@@ -285,7 +262,7 @@ class UserDetailDao implements BaseDao {
    * @param email
    * @returns
    */
-  async update(email: string, SK: string, userDetailDTO: UserDetailDTO) {
+  async update(email: string, SK: string, userDetailDTO: Partial<UserDetailDTO>) {
     global.logger.info("Update user Detail [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
@@ -370,39 +347,7 @@ class UserDetailDao implements BaseDao {
     });
     return UserDetailModel.update({ PK: PK, SK: SK }, { isSubscribed: status });
   }
-
-  /**
-   * @todo remove this function after use case is completed
-   *
-   * WARNING: This function is not intended to be used in production or development code.
-   *
-   * Updates the "userRole" attribute for all users in the database with the
-   * value in the userType array.
-   */
-  async updateUserRoleScript() {
-    global.logger.info("update user role [DAO]");
-    // Scan the table to get all users
-    const users = await UserDetailModel.query("GSI1PK")
-      .eq(this.GSI1PK)
-      .where("GSI1SK")
-      .beginsWith("ID#")
-      .exec();
-
-    // Iterate over each user and update the userRole attribute
-    for (const user of users) {
-      const userRole = user.userType[0] as UserType;
-
-      // Update the user record with the new userRole
-      await UserDetailModel.update(
-        { PK: user.PK, SK: user.SK },
-        { userRole: userRole }
-      );
-    }
-
-    global.logger.info("All user roles have been updated successfully.");
-  }
 }
-
 // Create an instance of the UserDetailDao
 const userDetailDao = new UserDetailDao();
 

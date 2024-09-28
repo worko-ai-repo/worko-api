@@ -70,20 +70,6 @@ class UserService {
   }
 
   /**
-   * updateLastAccessedDash
-   * 
-   * Updates the last accessed dashboard for a user
-   *
-   * @param email - Email of the user
-   * @param userlastAccessedDash - User's Last Accessed Dashboard
-   */
-  async updateLastAccessedDash(email: string, userlastAccessedDash: string) {
-
-    const SK = await this.getSK(email);
-    return userDetailDao.updateLastAccessedDash(email, SK, userlastAccessedDash);
-  }
-
-  /**
    *Get Count(pk)
    *
    * @param email - Email of the user

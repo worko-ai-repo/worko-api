@@ -32,7 +32,6 @@ export interface NewUserCandSignUpDTO {
   CV?: string;
   emailList: { [key: string]: string };
   userType: string[];
-  userRole:UserType;
   isEmailVerified: boolean;
   isNumberVerified: boolean;
   lastAccessedDash: string;
@@ -110,7 +109,6 @@ export interface NewUserEmpSignUpDTO {
   YOE: number;
   emailList: { [key: string]: string };
   userType: string[];
-  userRole:UserType;
   isEmailVerified: boolean;
   isNumberVerified: boolean;
   lastAccessedDash: string;

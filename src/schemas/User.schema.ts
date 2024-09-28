@@ -138,9 +138,16 @@ export const validateEmailField = (email: string) => {
   return Email.validate(email);
 };
 
-export const userlastAccessedDashDTOValidation = Joi.object({
-  lastAccessedDash: Joi.string().required().messages({
-      "any.required": "Last accessed dashboard date is required.",
-      "string.empty": "Last accessed dashboard date cannot be empty.",
-  }),
-}).options({ stripUnknown: true });
+/**
+ * userlastAccessedDashDTOValidation
+ * 
+ * This schema is used to validate the lastAccessedDash field in the UserDetail table.
+ */
+export const userlastAccessedDashDTOValidation = Joi
+      .string()
+      .valid('CAND', 'EMP') // Only allow specific string values
+      .required() // This field must be present
+      .messages({
+          "any.required": "lastAccessedDash is required.", // Custom message for missing field
+          "any.only": `lastAccessedDash must be one of the allowed values: CAND, EMP`, // Custom message for invalid values
+      });
