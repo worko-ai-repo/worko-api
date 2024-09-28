@@ -8,6 +8,9 @@ Triggers:
       - dev
   - Type: PUSH
     Branches:
+      - main
+      - rohith-await-fix-1
+      - dev
       - feature/*
       - bug/*
 
