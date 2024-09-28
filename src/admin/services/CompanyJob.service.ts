@@ -18,6 +18,8 @@ import { companyServiceObj } from "./Company.service";
 
 // Load QueryResponse from dynamoose
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import CompanyService from "../../services/Company.service";
+import { DbCompanyDetailDto } from "../../db/models/CompanyDetail.model";
 
 class CompanyJobService {
     /**
@@ -25,7 +27,7 @@ class CompanyJobService {
     * 
     * It will be responsible for creating a new job for the company, by verifying if the company exist or not and then calling the Dao for the job creatiion.
     * 
-    * @param {CompanyJobCreateApiDto} JobDetailsData
+    * @param {CompanyJobCreateDto} JobDetailsData
     * 
     * @returns {Promise<DbCompanyJobDto>} 
     */
@@ -54,6 +56,8 @@ class CompanyJobService {
      * Fetch All Company Jobs and apply filter for coreSkills and softSkills explicitly if provided
      * 
      * @param {JobListingFilterOptions} jobFilterOptions - Tells about the kind of query applied to the params
+     * 
+     * @returns {Promise<QueryResponse<DbCompanyJobDto>>}
      */
     async getAllJobs(jobFilterOptions: JobListingFilterOptions): Promise<QueryResponse<DbCompanyJobDto>> {
         // Global logger 
@@ -109,7 +113,13 @@ class CompanyJobService {
             methodName: this.getJobById.name,
         });
 
-        return companyJobDaoObj.getJobById(jobId);
+        // Fetch Job by Id and Check if the job exists
+        const jobDetailById = await companyJobDaoObj.getJobById(jobId);
+        if (!jobDetailById.length) {
+            throw new BaseError(`No Job found with ID: ${jobId}`, 404);
+        }
+
+        return jobDetailById;
     }
 
     /**
@@ -129,10 +139,10 @@ class CompanyJobService {
         });
 
         // Fetch Job by Id
-        const jobDetailById = await this.getJobById(jobId);
+        const jobDetails = await this.getJobById(jobId);
 
         // Map the Job with Company
-        return this.prepareJobsWithCompanyDetails(jobDetailById);
+        return this.prepareJobsWithCompanyDetails(jobDetails);
     }
 
     /**
@@ -152,8 +162,23 @@ class CompanyJobService {
             methodName: this.updateJobById.name,
         });
 
-        // Return type Promise<DbCompanyJobDto> for the method update
-        return companyJobDaoObj.updateJobById(jobId, jobDetailsById);
+        // Check if the job exists
+        const existingJobDetails = await this.getJobById(jobId);
+        if (!existingJobDetails.count) {
+            throw new BaseError(`Job with ID ${jobId} not found`, HttpStatusCode.NOT_FOUND_404);
+        }
+
+        // Destructure and exclude companyId from the update payload
+        const { companyId, ...jobDetailsToUpdate } = jobDetailsById;
+
+        // Log what is being updated (for debugging purposes)
+        global.logger.info("Job details being updated:", {
+            jobId: jobId,
+            jobDetailsToUpdate,
+        });
+
+        // Call DAO method to update the job, passing only the fields that should be updated
+        return companyJobDaoObj.updateJobById(jobId, jobDetailsToUpdate, companyId);
     }
 
     /**
@@ -201,26 +226,29 @@ class CompanyJobService {
      * @see companyServiceObj.getCompanyDetailById to retrieve company details for each job.
      */
     async prepareJobsWithCompanyDetails(jobsData: QueryResponse<DbCompanyJobDto>): Promise<JobsWithCompanyResDto[]> {
-        // @todo Need urgent fix for this method
-        // 1. Get the company ids from all the jobs(ensure it is unique)
-        // 2. Get the company details for all those ids
-        // 3. Prepare the final result set
+        // Check if jobsData is empty and return an empty array if true
+        if (!jobsData || jobsData.length === 0) {
+            return [];
+        }
 
-        // Map over the jobs and add company details
-        const jobsWithCompanyDetails = await Promise.all(
-            jobsData.map(async (job) => {
-                // Fetch company details
-                const companyDetails = (await companyServiceObj.getCompanyDetailById(job.companyId))[0];
+        // Get unique company IDs from jobsData
+        const uniqueCompanyIds = Array.from(new Set(jobsData.map(job => job.companyId)));
 
-                // Return job with company details added
-                return {
-                    // Spread the job object to include all its properties
-                    ...job,
+        // Fetch company details for all unique IDs using the batch method
+        const companiesDetails = await CompanyService.getCompanyDetailsByIds(uniqueCompanyIds);
 
-                    // Add a new property called companyDetails, which contains the company details
-                    companyDetails: companyDetails || null
-                };
-            }));
+        // Convert array of company details to a map for quick access
+        const companiesMap = new Map(companiesDetails.map(company => [company.id, company]));
+
+        //  Map over the jobs and add company details
+        const jobsWithCompanyDetails = jobsData.map(job => {
+            const companyDetails = companiesMap.get(job.companyId) || null;
+
+            return {
+                ...job,
+                companyDetails
+            };
+        });
 
         return jobsWithCompanyDetails;
     }

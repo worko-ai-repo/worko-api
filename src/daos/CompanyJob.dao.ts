@@ -1,3 +1,6 @@
+// Load BaseError from utils
+import { BaseError } from "../utils/errors.util";
+
 //Load Dtos
 import { CompanyJobCreateDto, CompanyJobUpdateDto, JobListingFilterOptions } from "../admin/dtos/CompanyJob.dto";
 
@@ -21,6 +24,37 @@ class CompanyJobDao {
     sortKeys: { SK_INIT: string } = { SK_INIT: "JOBS#ID#{id}" };
     GSI1PK: string = "JOBS#";
     GSI1SK = "ID#{id}";
+
+    /**
+     * getJob
+     * 
+     * Fetches a Job by its KEYS.
+     * 
+     * @todo This must only return the job details not the input key, 
+     * if you would like to validate input key, then use this function to get the job details by passing input key,
+     * if job is found then use already prepared/passed input key instead of expecting the input key from the function.
+     */
+    async getJobByPkAndSk(PK: string, SK: string): Promise<{ PK: string; SK: string; }> {
+        // Construct the input key for the Job
+        const inputKey = {
+            PK: this.partitianKey.strtr({
+                "{companyId}": PK
+            }),
+            SK: this.sortKeys.SK_INIT.strtr({
+                "{id}": SK
+            })
+        }
+        
+        // Check if the document exists in the database
+        const existingJob = await CompanyJobModel.get(inputKey);
+
+        // If the job does not exist, throw an error
+        if (!existingJob) {
+            throw new BaseError(`No Job found`, 404);
+        }
+
+        return inputKey;
+    }
 
     /**
      * createJob
@@ -85,10 +119,12 @@ class CompanyJobDao {
         let query = CompanyJobModel.query("GSI1PK")
             .eq(this.GSI1PK)
             .where("GSI1SK")
-            .beginsWith("ID#")
-            .and()
-            .where("status") // Check the status of the job which is necessary for all the jobs
-            .eq(jobFilterOptions.status);
+            .beginsWith("ID#");
+
+        // Apply status filter
+        if (jobFilterOptions.status) {
+            query = query.and().where("status").eq(jobFilterOptions.status);
+        }
 
         // Apply search options on the jobs
         if (jobFilterOptions.searchText) {
@@ -129,14 +165,35 @@ class CompanyJobDao {
             query = query.and().where('department').in(jobFilterOptions.department);
         }
 
+        // Apply softSkills filter
+        if (jobFilterOptions.softSkills?.length) {
+            jobFilterOptions.softSkills.forEach(skill => {
+                query = query.and().where("softSkills").contains(skill);
+            });
+        }
+
+        // Apply coreSkills filter
+        if (jobFilterOptions.coreSkills?.length) {
+            jobFilterOptions.coreSkills.forEach(skill => {
+                query = query.and().where("coreSkills").contains(skill);
+            });
+        }
+
+        // Apply technicalSkills filter
+        if (jobFilterOptions.technicalSkills?.length) {
+            jobFilterOptions.technicalSkills.forEach(skill => {
+                query = query.and().where("technicalSkills").contains(skill);
+            });
+        }
+
         // Apply experience range filter by greater than or equal to minExperience
         if (jobFilterOptions.minExperience !== undefined) {
-            query = query.and().where("experienceRange").ge(jobFilterOptions.minExperience);
+            query = query.and().where("experienceRange.min").ge(jobFilterOptions.minExperience);
         }
 
         // Apply experience range filter by less than or equal to maxExperience
         if (jobFilterOptions.maxExperience !== undefined) {
-            query = query.and().where("experienceRange").le(jobFilterOptions.maxExperience);
+            query = query.and().where("experienceRange.max").le(jobFilterOptions.maxExperience);
         }
 
         // Apply work mode filter
@@ -146,12 +203,12 @@ class CompanyJobDao {
 
         // Apply salary range filter by greater than or equal to minSalary
         if (jobFilterOptions.minSalary !== undefined) {
-            query = query.and().where("salaryRange").ge(jobFilterOptions.minSalary);
+            query = query.and().where("salaryRange.min").ge(jobFilterOptions.minSalary);
         }
 
         // Apply salary range filter by less than or equal to maxSalary
         if (jobFilterOptions.maxSalary !== undefined) {
-            query = query.and().where("salaryRange").le(jobFilterOptions.maxSalary);
+            query = query.and().where("salaryRange.max").le(jobFilterOptions.maxSalary);
         }
 
         // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
@@ -213,7 +270,7 @@ class CompanyJobDao {
      * 
      * @see {CompanyJobModel} - The model used to interact with the database
      */
-    async updateJobById(jobId: string, jobModifiedDetails: CompanyJobUpdateDto): Promise<DbCompanyJobDto> {
+    async updateJobById(jobId: string, jobModifiedDetails: Partial<CompanyJobUpdateDto>, companyId: string): Promise<DbCompanyJobDto> {
         // Logger message
         global.logger.info("Job Updating !. [dao]", {
             filePath: __filename,
@@ -222,15 +279,8 @@ class CompanyJobDao {
             companyJobUpdateApieDto: jobModifiedDetails,
         });
 
-        // Construct the input key for the Job
-        const inputKey = {
-            PK: this.partitianKey.strtr({
-                "{companyId}": jobModifiedDetails.companyId
-            }),
-            SK: this.sortKeys.SK_INIT.strtr({
-                "{id}": jobId
-            })
-        }
+        // Check if the Job exists if exsit then you will get the IDs to proceed further
+        const inputKey = await this.getJobByPkAndSk(companyId, jobId);
 
         // Find and update the Job
         return CompanyJobModel.update(inputKey, jobModifiedDetails)
@@ -257,15 +307,8 @@ class CompanyJobDao {
             companyId: companyId,
         });
 
-        // Construct the input key for the Job
-        const inputKey = {
-            PK: this.partitianKey.strtr({
-                "{companyId}": companyId
-            }),
-            SK: this.sortKeys.SK_INIT.strtr({
-                "{id}": jobId
-            })
-        }
+        // Check if the Job exists if exsit then you will get the IDs to proceed further
+        const inputKey = await this.getJobByPkAndSk(companyId, jobId);
 
         // Find and delete the Job
         return CompanyJobModel.update(inputKey, {

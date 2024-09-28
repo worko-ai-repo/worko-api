@@ -116,32 +116,28 @@ export const commonSchema = Joi.object({
 });
 
 /**
- * arrayFromString
+ * anyTypeToArray
  * 
- * @description: This function will convert the string to an array of strings.
- * This custom Joi validation function is used to handle the case where the
- * user provides a single string value, but the schema expects an array of
- * strings.
- *
- * So, if the user provides a single string, it will be trimmed and wrapped
- * in an array. If the user provides an array of strings, each element will
- * be trimmed. If the user provides neither a string nor an array, an empty
- * array will be returned by default.
+ * Converts any data type to an array.
+ * 
+ * The schema effectively handles both single values and arrays,
+ * ensuring that any non-array input is converted to an array,
+ * and then validating the array according to specified rules.
+ * This design keeps the validation logic clear and efficient
  */
-export const arrayFromString = Joi
+export const anyTypeToArray = Joi
   .alternatives()
   .try(
-    // If the user provides a single string, use this branch
-    Joi.string()
-      .custom((value) => {
-        // Trim the string and wrap it in an array
-        return [value.trim()];
-      }),
+    Joi.any().custom((value) => {
+      return Array.isArray(value) ? value : [value];
+    }),
 
-    // If the user provides an array of strings, use this branch
-    Joi.array().items(
-      Joi.string()
-        .trim()
-    )
+    // Validate arrays
+    Joi.array().items(Joi.any())
+      .min(1)
+      .messages({
+        'array.min': 'At least one value must be provided.',
+      }
+      )
   )
   .default([]); // If the user provides neither a string nor an array, return an empty array

@@ -16,7 +16,7 @@ const AdminRouter = Router();
 AdminRouter.use("/company", CompanyRouter);
 
 // Import the CompanyJobRouter
-AdminRouter.use("/jobs", CompanyJobRouter);
+AdminRouter.use("/job", CompanyJobRouter);
 
 // Define the route for User details
 AdminRouter.use("/user", UserRouter);

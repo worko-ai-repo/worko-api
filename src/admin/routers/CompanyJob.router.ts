@@ -27,7 +27,7 @@ CompanyJobRouter.get("/:jobId", companyJobController.getJobById);
 CompanyJobRouter.put("/:jobId", companyJobController.updateJobById);
 
 // Delete the job By Id
-CompanyJobRouter.put("/:jobId/delete", companyJobController.deleteJobById);
+CompanyJobRouter.put("/:jobId/delete", companyJobController.softDeleteJobById);
 
 // Export the CompanyJobRouter so it can be used in other parts of the application
 export default CompanyJobRouter;

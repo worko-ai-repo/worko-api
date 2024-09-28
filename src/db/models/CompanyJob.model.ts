@@ -8,7 +8,14 @@ import { DB_CONSTANTS } from "../DB.constants";
 import { BaseDbDto } from "./Base.model";
 
 //Load Enums
-import { CompanyJobEmploymentTypeEnum, CompanyJobStatusEnum, CompanyJobWorkModeEnum } from "../../enums/CompanyJob.enum";
+import {
+    CompanyJobEmploymentTypeEnum,
+    CompanyJobStatusEnum,
+    CompanyJobWorkModeEnum
+} from "../../enums/CompanyJob.enum";
+
+//Load Interface
+import { CompanyJobRangeDto } from "../../admin/dtos/CompanyJob.dto";
 
 // Define the structure for User Support Database Data Transfer Object (DTO)
 class DbCompanyJobDto extends BaseDbDto {
@@ -18,23 +25,25 @@ class DbCompanyJobDto extends BaseDbDto {
     companyId!: string;
     createdByUserId!: string;
     updatedByUserId?: string;
+    
+    coreSkills!: string[];
+    department!: string;
+    experienceRange!: CompanyJobRangeDto;
     jobTitle!: string;
     jobDescription!: string;
-    otherRequirements?: string;
-    experienceRange!: number;
+    location!: string;
+    mislaneiousSkills?: string[];
     noticePeriod!: number;
     numOfOpenings!: number;
-    salaryRange!: number;
-    department!: string;
-    location!: string;
-    workMode!: CompanyJobWorkModeEnum;
-    typeofEmployment!: CompanyJobEmploymentTypeEnum;
-    coreSkills!: string[];
+    otherRequirements?: string;
+    salaryRange!: CompanyJobRangeDto;
     softSkills!: string[];
-    technicalSkills!: string[];
-    mislaneiousSkills?: string[];
-    isDeleted!: boolean;
     status!: CompanyJobStatusEnum;
+    technicalSkills!: string[];
+    typeofEmployment!: CompanyJobEmploymentTypeEnum;
+    workMode!: CompanyJobWorkModeEnum;
+    
+    isDeleted!: boolean;
 }
 
 // Define the schema for the CompanyJob model
@@ -74,6 +83,27 @@ const CompanyJobSchema = new dynamoose.Schema(
             type: String,
             required: false,
         },
+        coreSkills: {
+            type: Array,
+            schema: String,
+            required: true,
+        },
+        department: {
+            type: String,
+            required: true,
+        },
+        experienceRange: {
+            type: Object,
+            required: true,
+            schema: {
+                min: { type: Number, required: true },
+                max: { type: Number, required: true }
+            }
+        },
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
         jobTitle: {
             type: String,
             required: true,
@@ -82,13 +112,14 @@ const CompanyJobSchema = new dynamoose.Schema(
             type: String,
             required: true,
         },
-        otherRequirements: {
+        location: {
             type: String,
-            required: false,
-        },
-        experienceRange: {
-            type: Number,
             required: true,
+        },
+        mislaneiousSkills: {
+            type: Array,
+            schema: String,
+            required: false,
         },
         noticePeriod: {
             type: Number,
@@ -98,51 +129,37 @@ const CompanyJobSchema = new dynamoose.Schema(
             type: Number,
             required: true,
         },
+        otherRequirements: {
+            type: String,
+            required: false,
+        },
         salaryRange: {
-            type: Number,
+            type: Object,
             required: true,
+            schema: {
+                min: { type: Number, required: true },
+                max: { type: Number, required: true }
+            }
         },
-        department: {
+        softSkills: {
+            type: Array,  
+            schema: String,
+            required: true 
+        },
+        status: {
             type: String,
             required: true,
         },
-        location: {
-            type: String,
-            required: true,
-        },
-        workMode: {
-            type: String,
+        technicalSkills: {
+            type: Array,
+            schema: String,
             required: true,
         },
         typeofEmployment: {
             type: String,
             required: true,
         },
-        coreSkills: {
-            type: Array,
-            schema: [String],
-            required: true,
-        },
-        softSkills: {
-            type: Array,
-            schema: [String],
-            required: true,
-        },
-        technicalSkills: {
-            type: Array,
-            schema: [String],
-            required: true,
-        },
-        mislaneiousSkills: {
-            type: Array,
-            schema: [String],
-            required: false,
-        },
-        isDeleted: {
-            type: Boolean,
-            default: false,
-        },
-        status: {
+        workMode: {
             type: String,
             required: true,
         },

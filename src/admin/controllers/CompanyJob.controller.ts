@@ -16,7 +16,6 @@ import {
     JobListingFilterOptions,
     JobListingFilterRequestDTO,
     JobsWithCompanyResDto,
-
 } from "../dtos/CompanyJob.dto";
 
 // Load the dynamoose helper for lastKeyToBase64EncodeStr
@@ -69,10 +68,10 @@ class CompanyJobController {
             // Read the "userId" of the user from the token
             const tokenUserId = res.locals.userId;
             global.logger.info("Token User ID: ", tokenUserId);
-            
+
             // Store the request body according to the dto.
             const requestBody: CompanyJobCreateApiDto = req.body;
-            
+
             // Validate the user input and throw a validation error if necessary using the Joi schema
             const { error, value: companyJobCreateApiDto } = companyJobCreateApiDtoValidation.validate(requestBody, { abortEarly: false });
             if (error) {
@@ -124,9 +123,15 @@ class CompanyJobController {
                 JobListingFilterRequestDTO,
                 JobListingFilterOptions>(req.query as unknown as JobListingFilterRequestDTO);
 
-            // Validate the filter options and throw an error if any of them is invalid
-            let { error, value: jobFilterOptions } =
-                jobsFilterDtoValidation.validate(jobListingFilterRequest, { abortEarly: false, });
+            // Determine userType based on your application logic
+            const userType = (req.baseUrl.indexOf('admin') !== -1) ? 'admin' : 'user';
+
+            // Validate the request using the appropriate schema
+            let { error, value: jobFilterOptions } = jobsFilterDtoValidation(userType)
+                .validate(
+                    jobListingFilterRequest,
+                    { abortEarly: false }
+                );
             if (error) {
                 throw new RequestValidationError(error);
             }
@@ -216,24 +221,24 @@ class CompanyJobController {
             // Extract the Job ID from the request parameters
             const jobId = req.params.jobId;
 
-            // Extract the updated industry data from the request body
-            const updateCompanyJobData: CompanyJobUpdateApiDto = req.body;
+            // Extract the updated Job data from the request body
+            const requestBody: CompanyJobUpdateApiDto = req.body;
 
             // Validate the user input
-            const { error, value: companyJobDto } = updateCompanyJobApiDtoValidation.validate(updateCompanyJobData, { abortEarly: false });
+            const { error, value: companyJobUpdateApiDto } = updateCompanyJobApiDtoValidation.validate(requestBody, { abortEarly: false });
             if (error) {
                 throw new RequestValidationError(error);
             }
 
             // Prepare the update data
             const companyJobUpdateDto: CompanyJobUpdateDto = {
-                ...companyJobDto,
+                ...companyJobUpdateApiDto,
                 updatedByUserId: tokenUserId ?? "0",
             }
 
-            // Call the service to update the Industry
-            const updatedIndustry = await companyJobServiceObj.updateJobById(jobId, companyJobUpdateDto);
-            return res.status(HttpStatusCode.OK_200).json(updatedIndustry);
+            // Call the service to update the Job
+            const updatedJob = await companyJobServiceObj.updateJobById(jobId, companyJobUpdateDto);
+            return res.status(HttpStatusCode.OK_200).json(updatedJob);
         } catch (error) {
             // Handle errors by passing the error message to the next middleware
             next(error);
@@ -251,18 +256,18 @@ class CompanyJobController {
      * 
      * @throws {Error} - If an error occurs while deleting the job.
      */
-    deleteJobById = async (req: Request, res: Response, next: NextFunction) => {
+    softDeleteJobById = async (req: Request, res: Response, next: NextFunction) => {
         // Global Logger for the Delete Job Controller
         global.logger.info("Deleting Job. [admin controller]", {
             filePath: __filename,
-            methodName: this.deleteJobById.name,
+            methodName: this.softDeleteJobById.name,
         });
 
         try {
             // Extract the Job ID from the request parameters
             const { jobId } = req.params;
 
-            // Extract the updated industry data from the request body
+            // Extract the updated Job data from the request body
             const { companyId } = req.body;
 
             // Validate the user input
@@ -270,9 +275,9 @@ class CompanyJobController {
                 throw new global.Error("CompanyId is required.");
             }
 
-            // Call the service to update the Industry
-            const updatedIndustry = await companyJobServiceObj.softDeleteJobById(jobId, companyId);
-            return res.status(HttpStatusCode.OK_200).json(updatedIndustry);
+            // Call the service to update the Job
+            const updatedJob = await companyJobServiceObj.softDeleteJobById(jobId, companyId);
+            return res.status(HttpStatusCode.OK_200).json(updatedJob);
         } catch (error) {
             // Handle errors by passing the error message to the next middleware
             next(error);

@@ -8,7 +8,16 @@ import { DbCompanyDetailDto } from '../../db/models/CompanyDetail.model';
 import { CompanyJobEmploymentTypeEnum, CompanyJobStatusEnum, CompanyJobWorkModeEnum } from '../../enums/CompanyJob.enum';
 
 /**
- * IndustryCreateApiDto:
+ * SalaryRange
+ * 
+ * This is the DTO for the Salary Range.
+ */
+export interface CompanyJobRangeDto {
+    min: number;
+    max: number;
+}
+/**
+ * CompanyJobCreateApiDto:
  * 
  * This DTO is used to validate and structure the data received from the client (API request).
  */
@@ -17,10 +26,10 @@ export interface CompanyJobCreateApiDto {
     jobTitle: string;
     jobDescription: string;
     otherRequirements?: string;
-    experienceRange: number;
+    experienceRange: CompanyJobRangeDto;
     noticePeriod: number;
     numOfOpenings: number;
-    salaryRange: number;
+    salaryRange: CompanyJobRangeDto;
     department: string;
     location: string;
     workMode: CompanyJobWorkModeEnum;
@@ -55,10 +64,10 @@ export interface CompanyJobUpdateApiDto {
     jobTitle?: string;
     jobDescription?: string;
     otherRequirements?: string;
-    experienceRange?: number;
+    experienceRange?: CompanyJobRangeDto;
     noticePeriod?: number;
     numOfOpenings?: number;
-    salaryRange?: number;
+    salaryRange?: CompanyJobRangeDto;
     department?: string;
     location?: string;
     workMode?: CompanyJobWorkModeEnum;
@@ -97,12 +106,13 @@ export interface JobListingFilterOptions extends RecordListingFilterOptions {
     department?: string[];
     softSkills?: string[];
     coreSkills?: string[];
+    technicalSkills?: string[];
     minExperience?: number;
     maxExperience?: number;
     workMode?: CompanyJobWorkModeEnum[];
     minSalary?: number;
     maxSalary?: number;
-    status: CompanyJobStatusEnum;
+    status?: CompanyJobStatusEnum;
 }
 
 /**
@@ -116,12 +126,13 @@ export interface JobListingFilterRequestDTO extends RecordListingFilterRequestDT
     department?: string[];
     softSkills?: string[];
     coreSkills?: string[];
+    technicalSkills?: string[];
     minExperience?: number;
     maxExperience?: number;
     workMode?: CompanyJobWorkModeEnum[];
     minSalary?: number;
     maxSalary?: number;
-    status: CompanyJobStatusEnum;
+    status?: CompanyJobStatusEnum;
 }
 
 /**
@@ -130,5 +141,9 @@ export interface JobListingFilterRequestDTO extends RecordListingFilterRequestDT
  * This DTO is used to return the Jobs with the Company Details.
  */
 export interface JobsWithCompanyResDto extends CompanyJobCreateDto {
+    PK: string;
+    SK: string;
+    GSI1PK:string;
+    GSI1SK:string;
     companyDetails: DbCompanyDetailDto | null;
 }

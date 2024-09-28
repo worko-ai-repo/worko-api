@@ -6,6 +6,9 @@ import { Router } from "express";
 // Company routers
 import CompanyRouter from "./routers/Company.router";
 
+// CompanyJob routers
+import CompanyJobRouter from "./routers/CompanyJob.router";
+
 // User routers
 import UserRouter from "./routers/User.router";
 import UserDetailRouter from "./routers/UserDetail.router";
@@ -59,6 +62,9 @@ router.use("/company", CompanyRouter);
 
 // Regitser the "EventRouter CRUD" routers
 router.use("/event", EventRouter);
+
+// Regitser the "Company CRUD" routers
+router.use("/job", CompanyJobRouter);
 
 // Regitser the "User CRUD" routers
 router.use("/user", UserRouter);

@@ -48,3 +48,8 @@ export enum CompanyJobStatusEnum {
   // JOB IS CLOSED 
   CLOSED = 'CLOSED',
 }
+
+export enum UserCompanyJobListingStatusEnum {
+  // JOB IS CREATED AND ACTIVE 
+  PUBLISHED = 'PUBLISHED',
+}

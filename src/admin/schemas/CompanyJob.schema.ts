@@ -1,11 +1,16 @@
 // Import enums
-import { CompanyJobEmploymentTypeEnum, CompanyJobStatusEnum, CompanyJobWorkModeEnum } from '../../enums/CompanyJob.enum';
+import { 
+    CompanyJobEmploymentTypeEnum,
+    CompanyJobStatusEnum,
+    CompanyJobWorkModeEnum,
+    UserCompanyJobListingStatusEnum
+} from '../../enums/CompanyJob.enum';
 
 // Import Joi
 import Joi from 'joi';
 
 // Import common schema
-import { arrayFromString, commonSchema } from '../../schemas/Common.schema';
+import { anyTypeToArray, commonSchema } from '../../schemas/Common.schema';
 
 /**
  * CompanyJobCreateApiDtoValidation
@@ -20,110 +25,208 @@ import { arrayFromString, commonSchema } from '../../schemas/Common.schema';
  */
 export const companyJobCreateApiDtoValidation = Joi.object({
     // Validate companyID field
-    companyId: Joi.string().required().messages({
-        "any.required": "Company ID is required.",
-        "string.empty": "Company ID should not be empty.",
-    }),
+    companyId: Joi
+        .string()
+        .required()
+        .messages({
+            "any.required": "Company ID is required.",
+            "string.empty": "Company ID should not be empty.",
+        }),
 
     // Validate jobTitle field
-    jobTitle: Joi.string().required().messages({
-        "any.required": "Job title is required.",
-        "string.empty": "Job title should not be empty.",
-    }),
+    jobTitle: Joi
+        .string()
+        .lowercase()
+        .min(1)
+        .required()
+        .messages({
+            "any.required": "Job title is required.",
+            "string.min": "Job title must be at least 1 character long.",
+        }),
 
     // Validate jobDescription field
-    jobDescription: Joi.string().required().messages({
-        "any.required": "Job description is required.",
-        "string.empty": "Job description should not be empty.",
-    }),
+    jobDescription: Joi
+        .string()
+        .min(1)
+        .required()
+        .messages({
+            "any.required": "Job description is required.",
+            "string.min": "Job description must be at least 1 character long.",
+        }),
 
     // Validate otherRequirements field
-    otherRequirements: Joi.string().optional().messages({
-        "string.empty": "Other requirements should not be empty.",
-    }),
+    otherRequirements: Joi
+        .string()
+        .min(1)
+        .optional()
+        .messages({
+            "string.min": "Other requirements should be at least 1 character long.",
+        }),
 
     // Validate experienceRange field
-    experienceRange: Joi.number().integer().min(0).required().messages({
-        "any.required": "Experience range is required.",
-        "number.base": "Experience range must be a number.",
-        "number.min": "Experience range cannot be negative.",
+    experienceRange: Joi.object({
+        min: Joi.number()
+            .integer()
+            .min(0)
+            .required()
+            .messages({
+                'number.base': 'Minimum experience must be a number.',
+                'number.min': 'Minimum experience must be a positive integer.'
+            }),
+        max: Joi.number()
+            .integer()
+            .min(Joi.ref('min')) // Ensure max is greater than or equal to min
+            .required()
+            .messages({
+                'number.base': 'Maximum experience must be a number.',
+                'number.min': 'Maximum experience cannot be less than minimum experience.'
+            })
+    }).required().messages({
+        "any.required": "Experience range is required."
     }),
+
 
     // Validate noticePeriod field
-    noticePeriod: Joi.number().integer().min(0).required().messages({
-        "any.required": "Notice period is required.",
-        "number.base": "Notice period must be a number.",
-        "number.min": "Notice period cannot be negative.",
-    }),
+    noticePeriod: Joi
+        .number()
+        .integer()
+        .min(0)
+        .required()
+        .messages({
+            "any.required": "Notice period is required.",
+            "number.base": "Notice period must be a number.",
+            "number.min": "Notice period cannot be negative.",
+        }),
 
     // Validate numOfOpenings field
-    numOfOpenings: Joi.number().integer().min(1).required().messages({
-        "any.required": "Number of openings is required.",
-        "number.base": "Number of openings must be a number.",
-        "number.min": "There must be at least one opening.",
-    }),
+    numOfOpenings: Joi
+        .number()
+        .integer()
+        .min(1)
+        .required()
+        .messages({
+            "any.required": "Number of openings is required.",
+            "number.base": "Number of openings must be a number.",
+            "number.min": "There must be at least one opening.",
+        }),
 
     // Validate salaryRange field
-    salaryRange: Joi.number().min(0).required().messages({
+    salaryRange: Joi.object({
+        min: Joi.number()
+            .min(0)
+            .required()
+            .messages({
+                "any.required": "Minimum salary is required.",
+                "number.base": "Minimum salary must be a number.",
+                "number.min": "Minimum salary cannot be negative.",
+            }),
+        max: Joi.number()
+            .min(Joi.ref('min')) // Ensure max is greater than or equal to min
+            .required()
+            .messages({
+                "any.required": "Maximum salary is required.",
+                "number.base": "Maximum salary must be a number.",
+                "number.min": "Maximum salary cannot be less than minimum salary.",
+            })
+    }).required().messages({
         "any.required": "Salary range is required.",
-        "number.base": "Salary range must be a number.",
-        "number.min": "Salary range cannot be negative.",
     }),
 
     // Validate department field
-    department: Joi.string().lowercase().required().messages({
-        "any.required": "Department is required.",
-        "string.empty": "Department should not be empty",
-    }),
+    department: Joi
+        .string()
+        .lowercase()
+        .min(1)
+        .required()
+        .messages({
+            "any.required": "Department is required.",
+            "string.min": "Department should be at least 1 character long."
+        }),
 
-    location: Joi.string().lowercase().required().messages({
-        "any.required": "Location is required.",
-        "string.empty": "Location should not be empty",
-    }),
+    location: Joi
+        .string()
+        .lowercase()
+        .required()
+        .messages({
+            "any.required": "Location is required.",
+            "string.empty": "Location should not be empty",
+        }),
 
     // Validate workMode field
-    workMode: Joi.string().required().valid(...Object.values(CompanyJobWorkModeEnum)).messages({
-        "any.required": "Work mode is required.",
-        "any.only": `Work mode must be one of the allowed values i.e. ${Object.values(CompanyJobWorkModeEnum).join(", ")}.`,
-    }),
+    workMode: Joi
+        .string()
+        .required()
+        .valid(...Object.values(CompanyJobWorkModeEnum))
+        .messages({
+            "any.required": "Work mode is required.",
+            "any.only": `Work mode must be one of the allowed values i.e. ${Object.values(CompanyJobWorkModeEnum).join(", ")}.`,
+        }),
 
     // Validate typeofEmployment field
-    typeofEmployment: Joi.string().required().valid(...Object.values(CompanyJobEmploymentTypeEnum)).messages({
-        "any.required": "Type of employment is required.",
-        "any.only": `Type of employment must be one of the allowed values i.e. ${Object.values(CompanyJobEmploymentTypeEnum).join(", ")}`,
-    }),
+    typeofEmployment: Joi
+        .string()
+        .required()
+        .valid(...Object.values(CompanyJobEmploymentTypeEnum))
+        .messages({
+            "any.required": "Type of employment is required.",
+            "any.only": `Type of employment must be one of the allowed values i.e. ${Object.values(CompanyJobEmploymentTypeEnum).join(", ")}`,
+        }),
 
     //Validate coreSkills field
-    coreSkills: Joi.array().min(1).required().messages({
-        "array.base": "Core skills must be an array.",
-        "array.min": "At least one core skill is required.",
-        "any.required": "Core skills are required.",
-    }),
+    coreSkills: Joi
+        .array()
+        .min(1)
+        .items(Joi.string().lowercase())
+        .required()
+        .messages({
+            "array.base": "Core skills must be an array.",
+            "array.min": "At least one core skill is required.",
+            "any.required": "Core skills are required.",
+        }),
 
     //Validate softSkills field
-    softSkills: Joi.array().min(1).required().messages({
-        "array.base": "Soft skills must be an array.",
-        "array.min": "At least one soft skill is required.",
-        "any.required": "Soft skills are required.",
-    }),
+    softSkills: Joi
+        .array()
+        .min(1)
+        .items(Joi.string().lowercase())
+        .required()
+        .messages({
+            "array.base": "Soft skills must be an array.",
+            "array.min": "At least one soft skill is required.",
+            "any.required": "Soft skills are required.",
+        }),
 
     //Validate technicalSkills field
-    technicalSkills: Joi.array().min(1).required().messages({
-        "array.base": "Technical skills must be an array.",
-        "array.min": "At least one technical skill is required.",
-        "any.required": "Technical skills are required.",
-    }),
+    technicalSkills: Joi
+        .array()
+        .min(1)
+        .items(Joi.string().lowercase())
+        .required()
+        .messages({
+            "array.base": "Technical skills must be an array.",
+            "array.min": "At least one technical skill is required.",
+            "any.required": "Technical skills are required.",
+        }),
 
-    mislaneiousSkills: Joi.array().min(1).optional().messages({
-        "array.base": "Miscellaneous skills must be an array.",
-        "array.min": "At least one miscellaneous skill is required.",
-    }),
+    mislaneiousSkills: Joi
+        .array()
+        .min(1)
+        .items(Joi.string().lowercase())
+        .optional()
+        .messages({
+            "array.base": "Miscellaneous skills must be an array.",
+            "array.min": "At least one miscellaneous skill is required.",
+        }),
 
     // Validate status field
-    status: Joi.string().required().valid(...Object.values(CompanyJobStatusEnum)).messages({
-        "any.required": "Status is required.",
-        "any.only": `Status must be one of the allowed values  i.e. ${Object.values(CompanyJobStatusEnum).join(", ")} `,
-    }),
+    status: Joi
+        .string()
+        .required()
+        .valid(...Object.values(CompanyJobStatusEnum))
+        .messages({
+            "any.required": "Status is required.",
+            "any.only": `Status must be one of the allowed values  i.e. ${Object.values(CompanyJobStatusEnum).join(", ")} `,
+        }),
 });
 
 
@@ -137,124 +240,255 @@ export const companyJobCreateApiDtoValidation = Joi.object({
  * @see {CompanyJobWorkModeEnum} workMode - The work mode.
  */
 export const updateCompanyJobApiDtoValidation = Joi.object({
-    companyId: Joi.string().required()
+    companyId: Joi
+        .string()
+        .required()
         .messages({
             'any.required': 'Company ID is required.',
             'string.uuid': 'Invalid company ID format. It must be a valid UUID.',
         }),
 
-    status: Joi.string().required().valid(...Object.values(CompanyJobStatusEnum)).messages({
-        "any.required": "Status is required.",
-        "any.only": `Status must be one of the allowed values  i.e. ${Object.values(CompanyJobStatusEnum).join(", ")} `,
-    }),
+    status: Joi
+        .string()
+        .required()
+        .valid(...Object.values(CompanyJobStatusEnum))
+        .messages({
+            "any.required": "Status is required.",
+            "any.only": `Status must be one of the allowed values  i.e. ${Object.values(CompanyJobStatusEnum).join(", ")} `,
+        }),
 
-    jobTitle: Joi.string().min(1).optional()
+    jobTitle: Joi
+        .string()
+        .min(1)
+        .lowercase()
+        .optional()
         .messages({
             'string.min': 'Job title must not be empty.',
         }),
 
-    jobDescription: Joi.string().min(1).optional()
+    jobDescription: Joi
+        .string()
+        .min(1)
+        .optional()
         .messages({
             'string.min': 'Job description must not be empty.',
         }),
 
-    otherRequirements: Joi.string().optional().messages({
-        "string.empty": "Other requirements should not be empty.",
-    }),
-
-    experienceRange: Joi.number().integer().min(0).optional()
+    otherRequirements: Joi
+        .string()
+        .min(1)
+        .optional()
         .messages({
-            'number.min': 'Experience range must be a positive integer.',
+            "string.min": "Other requirements should not be empty.",
         }),
 
-    noticePeriod: Joi.number().integer().min(0).optional()
+    // Validate experienceRange field
+    experienceRange: Joi.object({
+        min: Joi.number()
+            .integer()
+            .min(0)
+            .optional()
+            .messages({
+                'number.base': 'Minimum experience must be a number.',
+                'number.min': 'Minimum experience must be a positive integer.'
+            }),
+        max: Joi.number()
+            .integer()
+            .min(Joi.ref('min')) // Ensure max is greater than or equal to min
+            .optional()
+            .messages({
+                'number.base': 'Maximum experience must be a number.',
+                'number.min': 'Maximum experience cannot be less than minimum experience.'
+            })
+    }).optional(),
+
+
+    noticePeriod: Joi
+        .number()
+        .integer()
+        .min(0)
+        .optional()
         .messages({
+            'number.base': 'Notice period must be a number.',
             'number.min': 'Notice period must be a positive integer.',
         }),
 
-    numOfOpenings: Joi.number().integer().min(1).optional()
+    numOfOpenings: Joi
+        .number()
+        .integer()
+        .min(1)
+        .optional()
         .messages({
-            'number.min': 'Number of openings must be at least 1.',
+            'number.base': 'Number of openings must be a number.',
+            'number.min': 'Number of openings must be a positive integer.',
         }),
 
-    salaryRange: Joi.number().min(0).optional()
-        .messages({
-            'number.min': 'Salary range must be a positive number.',
-        }),
+    // Validate salaryRange field
+    salaryRange: Joi.object({
+        min: Joi.number()
+            .min(0)
+            .optional()
+            .messages({
+                "number.base": "Minimum salary must be a number.",
+                "number.min": "Minimum salary cannot be negative.",
+            }),
+        max: Joi.number()
+            .min(Joi.ref('min')) // Ensure max is greater than or equal to min
+            .optional()
+            .messages({
+                "number.base": "Maximum salary must be a number.",
+                "number.min": "Maximum salary cannot be less than minimum salary.",
+            })
+    }).optional(),
 
-    department: Joi.string().lowercase().optional()
+    department: Joi
+        .string()
+        .min(1)
+        .lowercase()
+        .optional()
         .messages({
             'string.min': 'Department must not be empty.',
         }),
 
-    location: Joi.string().lowercase().optional()
+    location: Joi
+        .string()
+        .lowercase()
+        .optional()
         .messages({
-            'string.min': 'Location must not be empty.',
+            'string.empty': 'Location must not be empty.',
         }),
 
-    workMode: Joi.string().optional().valid(...Object.values(CompanyJobWorkModeEnum)).messages({
-        "any.only": `Work mode must be one of the allowed values i.e. ${Object.values(CompanyJobWorkModeEnum).join(", ")}.`,
-    }),
+    workMode: Joi
+        .string()
+        .optional()
+        .valid(...Object.values(CompanyJobWorkModeEnum))
+        .messages({
+            "any.only": `Work mode must be one of the allowed values i.e. ${Object.values(CompanyJobWorkModeEnum).join(", ")}.`,
+        }),
 
-    typeofEmployment: Joi.string().optional().valid(...Object.values(CompanyJobEmploymentTypeEnum)).messages({
-        "any.only": `Type of employment must be one of the allowed values i.e. ${Object.values(CompanyJobEmploymentTypeEnum).join(", ")}`,
-    }),
+    typeofEmployment: Joi
+        .string()
+        .optional()
+        .valid(...Object.values(CompanyJobEmploymentTypeEnum))
+        .messages({
+            "any.only": `Type of employment must be one of the allowed values i.e. ${Object.values(CompanyJobEmploymentTypeEnum).join(", ")}`,
+        }),
 
-    coreSkills: Joi.array().min(1).optional()
+    coreSkills: Joi
+        .array()
+        .min(1)
+        .items(Joi.string().lowercase())
+        .optional()
         .messages({
             'array.min': 'At least one core skill is required.',
         }),
 
-    softSkills: Joi.array().min(1).optional()
+    softSkills: Joi
+        .array()
+        .min(1)
+        .items(Joi.string().lowercase())
+        .optional()
         .messages({
             'array.min': 'At least one soft skill is required.',
         }),
 
-    technicalSkills: Joi.array().min(1).optional()
+    technicalSkills: Joi
+        .array()
+        .min(1)
+        .items(Joi.string().lowercase())
+        .optional()
         .messages({
             'array.min': 'At least one technical skill is required.',
         }),
 
-    mislaneiousSkills: Joi.array().min(1).optional().messages({
-        "array.base": "Miscellaneous skills must be an array.",
-        "array.min": "At least one miscellaneous skill is required.",
-    }),
+    mislaneiousSkills: Joi
+        .array()
+        .min(1)
+        .items(Joi.string().lowercase())
+        .optional()
+        .messages({
+            "array.base": "Miscellaneous skills must be an array.",
+            "array.min": "At least one miscellaneous skill is required.",
+        }),
 
 });
 
 /**
+ * jobsFilterDtoValidation
+ * 
  * Validation schema for filtering jobs.
  * 
  * Combines common schema with job-specific filters.
  * 
- * @type {Joi.ObjectSchema}
+ * Utility function to create the validation schema
+ * 
+ * @param {string} userType - The type of user making the request.
  * 
  * @see {commonSchema} - Common validation rules shared across DTOs.
  * @see {CompanyJobStatusEnum} - Enum defining the allowed job status values.
+ * @see {UserCompanyJobListingStatusEnum} - Enum defining the allowed job status values for users.
  */
-export const jobsFilterDtoValidation = commonSchema.concat(
-    Joi.object({
-        companyId: arrayFromString,
-        location: arrayFromString,
-        department: arrayFromString,
-        coreSkills: arrayFromString,
-        softSkills: arrayFromString,
-        workMode: arrayFromString,
-        minExperience: Joi.number().integer().min(0).optional().messages({
-            'number.min': 'Minimum experience must be a positive integer.',
-        }),
-        maxExperience: Joi.number().integer().min(0).optional().messages({
-            'number.min': 'Maximum experience must be a positive integer.',
-        }),
-        minSalary: Joi.number().integer().min(0).optional().messages({
-            'number.min': 'Minimum experience must be a positive integer.',
-        }),
-        maxSalary: Joi.number().integer().min(0).optional().messages({
-            'number.min': 'Maximum experience must be a positive integer.',
-        }),
-        status: Joi.string().required().valid(...Object.values(CompanyJobStatusEnum)).messages({
-            "any.required": "status is required.",
-            "any.only": `Status must be one of the allowed values  i.e. ${Object.values(CompanyJobStatusEnum).join(", ")} `,
-        }),
-    })
-)
+export const jobsFilterDtoValidation = (userType: string) => {
+    // Status validation rules based on the provided user type
+    const statusValidation = (userType === 'admin')
+        ? Joi
+            .string()
+            .optional()
+            .valid(...Object.values(CompanyJobStatusEnum))
+            .messages({
+                "any.only": `Status must be one of the allowed values i.e. ${Object.values(CompanyJobStatusEnum).join(", ")}.`,
+            })
+        : Joi
+            .string()
+            .required()
+            .valid(...Object.values(UserCompanyJobListingStatusEnum)) // Assuming this is the enum for users
+            .messages({
+                "any.required": "Status is required for users.",
+                "any.only": `Status must be one of the allowed values i.e. ${Object.values(UserCompanyJobListingStatusEnum).join(", ")}.`,
+            }); 
+
+    return commonSchema.concat(
+        Joi.object({
+            companyId: anyTypeToArray,
+            location: anyTypeToArray,
+            department: anyTypeToArray,
+            coreSkills: anyTypeToArray,
+            softSkills: anyTypeToArray,
+            technicalSkills: anyTypeToArray,
+            workMode: anyTypeToArray,
+            minExperience: Joi
+                .number()
+                .integer()
+                .min(0)
+                .optional()
+                .messages({
+                    'number.min': 'Minimum experience must be a positive integer.',
+                }),
+            maxExperience: Joi
+                .number()
+                .integer()
+                .min(0)
+                .optional()
+                .messages({
+                    'number.min': 'Maximum experience must be a positive integer.',
+                }),
+            minSalary: Joi
+                .number()
+                .integer()
+                .min(0)
+                .optional()
+                .messages({
+                    'number.min': 'Minimum salary must be a positive integer.',
+                }),
+            maxSalary: Joi
+                .number()
+                .integer()
+                .min(0)
+                .optional()
+                .messages({
+                    'number.min': 'Maximum salary must be a positive integer.',
+                }),
+            status: statusValidation, // Use the dynamically created validation here
+        })
+    );
+};
