@@ -10,8 +10,7 @@ Triggers:
     Branches:
       - main
       - dev
-      - feature/*
-      - bug/*
+      - feature\/.*
 
 # Required - Define action configurations.
 Actions:
