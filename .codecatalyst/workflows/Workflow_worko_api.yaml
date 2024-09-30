@@ -11,6 +11,7 @@ Triggers:
       - main
       - rohith-await-fix-1
       - dev
+      - feature/rohith-emp-await-bug
       - feature/*
       - bug/*
 
