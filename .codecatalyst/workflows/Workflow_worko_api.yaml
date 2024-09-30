@@ -8,10 +8,11 @@ Triggers:
       - dev
   - Type: PUSH
     Branches:
+      - feature/rohith-emp-await-bug
       - main
       - rohith-await-fix-1
       - dev
-      - feature/rohith-emp-await-bug
+      - feature/mini_job_portal_patch
       - feature/*
       - bug/*
 
