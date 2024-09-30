@@ -3,9 +3,6 @@ SchemaVersion: "1.0"
 
 # Optional - Set automatic triggers.
 Triggers:
-  - Type: Push
-    Branches:
-      - dev
   - Type: PUSH
     Branches:
       - main
