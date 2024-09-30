@@ -11,6 +11,7 @@ Triggers:
       - main
       - dev
       - feature\/.*
+      - bug\/.*
 
 # Required - Define action configurations.
 Actions:
