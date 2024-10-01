@@ -344,6 +344,9 @@ class UserReferralDao implements BaseDao {
     global.logger.info("Get Referral by GSI1PK and status [DAO]");
     return UserReferralModel.query("GSI1PK")
       .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .beginsWith("ID#")
+      .sort("descending")
       .where("companyId")
       .eq(companyId)
       .where("status")

@@ -126,6 +126,17 @@ class UserReferralEmpService {
         referralStatus
       );
 
+      /**
+       * `!` negates the value, meaning if the length is 0 (i.e., the array is empty), 
+       * the condition evaluates to true.
+       * 
+       * If the condition is true (i.e., referralIdsToBeExcluded is an empty array), 
+       * the function immediately returns companyReferrals.
+       */
+      if (!referralIdsToBeExcluded.length){
+        return companyReferrals;
+      }
+
       // NOTE : This block filters the referrals on which the emp has not taken any action
       // @todo : Investigated and see if this can be handle by dynamouse itself
       const awaitingCompanyReferrals = [];
