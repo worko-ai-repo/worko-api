@@ -27,6 +27,14 @@ class DbUserReferralDto extends BaseDbDto {
   jdMatchErrorDesc?: string; // Cv Extract details
   jobPortal?:string;
 
+  /**
+   * when the matching score is less than 70, the system will provide feedback content in the `rejectionFeedbackBySystem` attribute,
+   * explaining the reason for rejection.
+   *
+   * If the matching score is 70 or higher, then the `rejectionFeedbackBySystem` attribute will be set to an empty string.
+   */
+  rejectionFeedbackBySystem?: string;
+
   // Below are only for when status is WITHDRAWN
   // @todo Fix the attributes structures as per this in Dyamoose Schema below
   withdrawnByUser?: {
@@ -113,6 +121,10 @@ const UserReferralSchema = new dynamoose.Schema(
     jdMatchErrorDesc: {
       type: String,
       required: false,
+    },
+    rejectionFeedbackBySystem:{
+      type: String,
+      required: false
     },
     passedByUserIds: {
       type: Array,

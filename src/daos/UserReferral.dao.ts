@@ -236,7 +236,12 @@ class UserReferralDao implements BaseDao {
       .eq(PK)
       .where("SK")
       .eq(SK)
-      .attributes(["matchingScore", "jdMatchErrorCode", "jdMatchErrorDesc"])
+      .attributes([
+        "matchingScore",
+        "jdMatchErrorCode",
+        "jdMatchErrorDesc",
+        "rejectionFeedbackBySystem",
+      ])
       .exec();
   }
 
