@@ -243,10 +243,10 @@ class UserController {
       global.logger.info("Create candidate [controller]");
 
       // Extract user sign-up data from request body
-      const userSignUpDto: UserSignUpDTO = req.body;
+      const userSignUpDTO: UserSignUpDTO = req.body;
 
       // Validate the input data using Joi schema
-      const { error, value } = UserSignUpDTOValidation.validate(userSignUpDto, {
+      const { error, value: userSignUpDto } = UserSignUpDTOValidation.validate(userSignUpDTO, {
         abortEarly: false,
       });
 
@@ -303,7 +303,7 @@ class UserController {
       userProfilePercentageDTO =
         UserProfilePercentageOperationHelper.updateCurPerc(
           userProfilePercentageDTO,
-          value
+          userSignUpDto
         );
 
       // Update field-specific percentages (in this case, for social profile)
@@ -356,15 +356,13 @@ createEmployee = async (req: Request, res: Response, next: NextFunction) => {
     global.logger.info("Create employee [controller]");
 
     // Extract employee sign-up data from request body
-    const userSignUpDto: UserEmployeeSignUpDTO = req.body;
+    const userSignUpDTO: UserEmployeeSignUpDTO = req.body;
 
     // Validate the input data using Joi schema
-    const { error } = userEmployeeSignUpDTOValidation.validate(
-      userSignUpDto,
-      {
+    const { error, value: userSignUpDto } =
+      userEmployeeSignUpDTOValidation.validate(userSignUpDTO, {
         abortEarly: false,
-      }
-    );
+      });
 
     // If validation fails, throw a custom error
     if (error) {

@@ -5,13 +5,13 @@ import { UserCorporateRequestStatusEnum } from "../enums/User.enum";
 // Define validation schema for user corporate request creation API DTO
 export const userCorporateRequestCreateApiDtoValidation = Joi.object({
     // Validate userFullName field
-    userFullName: Joi.string().required().messages({
+    userFullName: Joi.string().required().lowercase().messages({
         "any.required": "User full name is required.",
         "string.empty": "User full name should not be empty.",
     }),
 
     // Validate userEmail field
-    userEmail: Joi.string().email().required().messages({
+    userEmail: Joi.string().email().required().lowercase().messages({
         "any.required": "User email is required.",
         "string.email": "User email must be a valid email address.",
         "string.empty": "User email should not be empty.",

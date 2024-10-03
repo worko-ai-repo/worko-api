@@ -63,7 +63,9 @@ class UserCorporateRequestController {
             }
 
             // Checking whether user is submitting another response or not
-            const userCheck = await userCorporateRequestService.getCountByEmail(requestBody.userEmail);
+            const userCheck = await userCorporateRequestService.getCountByEmail(
+              userCorporateRequestDto.userEmail
+            );
             if (userCheck.count) {
                 return res.status(HttpStatusCode.CONFLICT_409).json({ error: "User has already Submitted the Form" });
             }

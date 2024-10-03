@@ -7,20 +7,20 @@ import { UserType, UserContextTypeEnum, UserSupportStatusEnum } from "../enums/U
 // Define validation schema for user support creation API DTO
 export const userSupportCreateApiDtoValidation = Joi.object({
     // Validate userEmail field
-    userEmail: Joi.string().email().required().messages({
+    userEmail: Joi.string().email().lowercase().required().messages({
         "any.required": "User email is required.",
         "string.email": "User email must be a valid email address.",
         "string.empty": "User email should not be empty.",
     }),
 
     // Validate userFirstName field
-    userFirstName: Joi.string().required().messages({
+    userFirstName: Joi.string().lowercase().required().messages({
         "any.required": "User first name is required.",
         "string.empty": "User first name should not be empty.",
     }),
 
     // Validate userLastName field
-    userLastName: Joi.string().allow("").optional(),
+    userLastName: Joi.string().lowercase().allow("").optional(),
 
     // Validate userRole field
     userRole: Joi.string().valid(...Object.values(UserType)).required().messages({

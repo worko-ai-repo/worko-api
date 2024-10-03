@@ -17,6 +17,9 @@ ScriptRouter.post("/update-user-subscriptions", scriptController.updateUserSubsc
 // Endpoint to update the all user Referrals jd matching error code
 ScriptRouter.post("/update-user-referrals", scriptController.updateUserReferralsJdMatchErrorCode);
 
+// Endpoint to update all users name and `email` present in the `PK` to lowercase
+ScriptRouter.post("/update-users-to-lowercase",scriptController.scriptUpdateUsersToLowerCase);
+
 // Endpoint to update all user experiences
 // ScriptRouter.post("/update-user-experiences", scriptController.updateUserExperiencesGSIs);
 

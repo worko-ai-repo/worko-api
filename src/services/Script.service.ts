@@ -46,10 +46,11 @@ class ScriptService {
 
     do {
       // Retrieve a batch of user subscriptions
-      let userSubscriptions = await UserSubscriptionService.getAllUsersSubscriptions({
-        pageSize,
-        lastKey,
-      });
+      let userSubscriptions =
+        await UserSubscriptionService.getAllUsersSubscriptions({
+          pageSize,
+          lastKey,
+        });
 
       // If there are any user subscriptions, concatenate them to the list of all subscriptions
       if (userSubscriptions.length) {
@@ -64,12 +65,17 @@ class ScriptService {
     const updatePromises = userAllSubscriptions.map(async (subscription) => {
       const userEmail = subscription.PK.split("#")[2];
       console.log(`User Email is ${userEmail}`);
-      return UserSubscriptionService.updateUserSubscriptionGSIsWithSubsId(userEmail, subscription.id);
+      return UserSubscriptionService.updateUserSubscriptionGSIsWithSubsId(
+        userEmail,
+        subscription.id
+      );
     });
 
     // Wait for all updates to complete
     const updatedSubscriptions = await Promise.all(updatePromises);
-    global.logger.info(`Updated ${updatedSubscriptions.length} subscriptions so far`);
+    global.logger.info(
+      `Updated ${updatedSubscriptions.length} subscriptions so far`
+    );
     return updatedSubscriptions;
   }
 
@@ -92,45 +98,55 @@ class ScriptService {
 
     do {
       // Retrieve a batch of user referrals using query
-      const userReferralsData = await this.getUserAllReferralsByQuery(lastKey, pageSize);
+      const userReferralsData = await this.getUserAllReferralsByQuery(
+        lastKey,
+        pageSize
+      );
 
       // If there are any user referrals, concatenate them to the list of all referrals
       if (userReferralsData.Items && userReferralsData.Items.length) {
-        userAllReferrals = userAllReferrals.concat(userReferralsData.Items as unknown as any[]);
+        userAllReferrals = userAllReferrals.concat(
+          userReferralsData.Items as unknown as any[]
+        );
       }
-      global.logger.info(`userAllReferrals length is ${userAllReferrals.length}`);
+      global.logger.info(
+        `userAllReferrals length is ${userAllReferrals.length}`
+      );
 
       // Retrieve the last evaluated key and pass it for another loop
       lastKey = userReferralsData.LastEvaluatedKey;
     } while (lastKey);
-    
+
     // if none referrals are found then throw a error msg
     if (!userAllReferrals.length) {
-      throw new BaseError("Unable to get user referrals.", HttpStatusCode.NOT_FOUND_404);
+      throw new BaseError(
+        "Unable to get user referrals.",
+        HttpStatusCode.NOT_FOUND_404
+      );
     }
     // Process each referral to update necessary details
     const updatePromises = userAllReferrals.map(async (userReferral) => {
-
-
       // Check if userReferral and userReferral.PK exist
       if (!userReferral) {
-        throw new Error('userReferral is undefined');
+        throw new Error("userReferral is undefined");
       }
 
       // prepare user email from pk
-      let pkValue = userReferral.PK.S || '';
+      let pkValue = userReferral.PK.S || "";
       let candEmail = pkValue.split("#")[2];
-      global.logger.info(`Processing user: ${candEmail} and with PK : ${pkValue}`);
+      global.logger.info(
+        `Processing user: ${candEmail} and with PK : ${pkValue}`
+      );
 
       // prepare the variable to store the feilds
       let jdMatchErrorCode: number;
       let matchingScore = Number(userReferral.matchingScore?.N) || 0;
-      let userReferralId = userReferral.id?.S || '';
+      let userReferralId = userReferral.id?.S || "";
 
       // If the "jdMatchErrorCode" attribute is present then use it
       if (userReferral.jdMatchErrorCode) {
         jdMatchErrorCode = Number(userReferral.jdMatchErrorCode.N);
-      }   
+      }
       // If the "jdMatchErrorCode" attribute is not present, determine its value based on the "matchingScore"
       else {
         // If the matching score is exactly 0, set the error code to 250
@@ -146,13 +162,17 @@ class ScriptService {
           jdMatchErrorCode = matchingScore;
         }
       }
-    
+
       // Update the user referral data in the database
-      return UserReferralService.updateUserReferralsJdMatchErrorCode(candEmail, userReferralId , jdMatchErrorCode);
+      return UserReferralService.updateUserReferralsJdMatchErrorCode(
+        candEmail,
+        userReferralId,
+        jdMatchErrorCode
+      );
     });
 
     // Return the updated user referrals (excluding failed updates)
-    return Promise.all(updatePromises)
+    return Promise.all(updatePromises);
   }
 
   /**
@@ -162,7 +182,10 @@ class ScriptService {
    * @param {number} [pageSize=25] - The maximum number of items to return in the query.
    * @return {Promise<AWS.DynamoDB.QueryOutput>} A promise that resolves to a QueryOutput object containing the query results.
    */
-  private async getUserAllReferralsByQuery(lastKey?: any, pageSize: number = 25): Promise<AWS.DynamoDB.QueryOutput> {
+  private async getUserAllReferralsByQuery(
+    lastKey?: any,
+    pageSize: number = 25
+  ): Promise<AWS.DynamoDB.QueryOutput> {
     const params: AWS.DynamoDB.QueryInput = {
       TableName: process.env.APP_AWS_DYNAMODB_TABLE_NAME || "worko",
       IndexName: "GSI1",
@@ -173,12 +196,22 @@ class ScriptService {
       Limit: pageSize,
     };
 
-  // apply lastkey if it is there for pagination.
+    // apply lastkey if it is there for pagination.
     if (lastKey) {
       params.ExclusiveStartKey = lastKey;
     }
-    // retrun the query 
+    // retrun the query
     return awsDynamoDBClientLibrary.query(params);
+  }
+
+  /**
+   * scriptUpdateUsersToLowerCase
+   *
+   * Updates all user details to convert email addresses present in `PK` attribute to lower case and `name` attribute to lower case in the DynamoDB table.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean value indicating whether the script was successful or not.
+   */
+  async scriptUpdateUsersToLowerCase(): Promise<boolean> {
+    return userDetailDao.scriptUpdateUsersToLowerCase();
   }
 }
 

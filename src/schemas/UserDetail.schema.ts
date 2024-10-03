@@ -19,6 +19,7 @@ const candidateExperienceSchema = Joi.object({
 export const userDetailDTOValidation = Joi.object({
   name: Joi.string()
     .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
+    .lowercase() // Convert the name to lowercase
     .required()
     .messages({
       "any.required": "Name is required",

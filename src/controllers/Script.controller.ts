@@ -24,16 +24,21 @@ class ScriptController {
    * and maintains data integrity.
    * This operation updates these attributes to ensure the GSI is consistent with the updated data
    * structure, thereby maintaining data integrity across the application.
-   * 
+   *
    * @param {Request} req - Express request object
    * @param {Response} res - Express response object
    * @param {NextFunction} next - Express next middleware function
    * @returns {Promise<void>} - A promise that resolves to void
    */
-  updateUserSubscriptionsGSIs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateUserSubscriptionsGSIs = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       // Update the GSI1PK and GSI1SK attributes for all user subscriptions
-      const updatedUserSubs = await scriptServiceObj.updateAllUserSubscriptionsGSI1SK();
+      const updatedUserSubs =
+        await scriptServiceObj.updateAllUserSubscriptionsGSI1SK();
       res.status(HttpStatusCode.OK_200).json(updatedUserSubs);
     } catch (error) {
       next(error);
@@ -42,7 +47,7 @@ class ScriptController {
 
   /**
    * updateUserReferralsJdMatchErrorCode
-   * 
+   *
    * @description Update the `jdMatchErrorCode` field based on specific conditions, and then updates the
    * data in the database. Returns an array of the updated user referral data.
    * This function handles any missing fields that need to be added to user referrals
@@ -58,10 +63,15 @@ class ScriptController {
    *
    * @throws {Error} - Passes any encountered errors to the next middleware for error handling.
    */
-  updateUserReferralsJdMatchErrorCode = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateUserReferralsJdMatchErrorCode = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       // Update the GSI1PK and GSI1SK attributes for all user referrals
-      const updatedUserRefsData = await scriptServiceObj.updateUserReferralsJdMatchErrorCode();
+      const updatedUserRefsData =
+        await scriptServiceObj.updateUserReferralsJdMatchErrorCode();
       res.status(HttpStatusCode.OK_200).json(updatedUserRefsData);
     } catch (error) {
       // Pass the error to the next middleware for error handling
@@ -69,6 +79,31 @@ class ScriptController {
     }
   };
 
+  /**
+   * scriptUpdateUsersToLowerCase
+   *
+   * To update all users name and `email` present in the `PK` to lowercase
+   *
+   * @param {Request} req - The Express request object.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   */
+  scriptUpdateUsersToLowerCase = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await scriptServiceObj.scriptUpdateUsersToLowerCase();
+
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json({ message: "User Details Updated Successfully" });
+    } catch (error) {
+      // Pass the error to the next middleware for error handling
+      next(error);
+    }
+  };
 }
 
 export default ScriptController;

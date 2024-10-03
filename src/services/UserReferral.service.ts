@@ -96,8 +96,8 @@ class UserReferralService {
 
     // If job url already exists, throw an error
     if (existingJoburlCheck.count) {
-      throw new BaseError("You have already requested for referral for this job. Check your dashboard for reference",
-        HttpStatusCode.BAD_REQUEST_400
+      throw new BaseError("You have already requested for referral for this job. Check your dashboard for reference.",
+        HttpStatusCode.FORBIDDEN_403
       );
     }
 

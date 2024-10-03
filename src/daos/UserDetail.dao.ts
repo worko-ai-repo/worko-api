@@ -1,5 +1,5 @@
 // Import dynamoose library
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { QueryResponse, ScanResponse } from "dynamoose/dist/ItemRetriever";
 
 
 //Load the base dao
@@ -62,16 +62,16 @@ class UserDetailDao implements BaseDao {
     }
 
     /**
-    * query.sort(order) sorts the items you receive back by the rangeKey. By default, if not provided, it will sort in ascending order.
-    * The order parameter must be a string either equal to ascending or descending.
-    * 
-    * By default query.sort() method sorts the items in "ascending" order but we are sorting by default in descending order
-    * and if sortOrder(ascending or descending) is provided then we are sorting by that
-    * 
-    * When you use the sort() method in Dynamoose,
-    * it sorts the items based on the sort key of the index you're querying.
-    * 
-    */
+     * query.sort(order) sorts the items you receive back by the rangeKey. By default, if not provided, it will sort in ascending order.
+     * The order parameter must be a string either equal to ascending or descending.
+     *
+     * By default query.sort() method sorts the items in "ascending" order but we are sorting by default in descending order
+     * and if sortOrder(ascending or descending) is provided then we are sorting by that
+     *
+     * When you use the sort() method in Dynamoose,
+     * it sorts the items based on the sort key of the index you're querying.
+     *
+     */
     query = query.sort(
       usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum
     );
@@ -83,10 +83,14 @@ class UserDetailDao implements BaseDao {
     ) {
       query = query.and().parenthesis((condition) => {
         if (usersRecordListingFilterRequest.fromDate) {
-          condition.where("createdAt").ge(usersRecordListingFilterRequest.fromDate);
+          condition
+            .where("createdAt")
+            .ge(usersRecordListingFilterRequest.fromDate);
         }
         if (usersRecordListingFilterRequest.toDate) {
-          condition.where("createdAt").le(usersRecordListingFilterRequest.toDate);
+          condition
+            .where("createdAt")
+            .le(usersRecordListingFilterRequest.toDate);
         }
         return condition;
       });
@@ -95,7 +99,8 @@ class UserDetailDao implements BaseDao {
     // search by searchText if provided
     if (usersRecordListingFilterRequest.searchText) {
       // remove trailing and leading spaces from the search text
-      let searchTextValue = usersRecordListingFilterRequest.searchText.trim().toLocaleLowerCase();
+      let searchTextValue = usersRecordListingFilterRequest.searchText
+        .trim();
 
       /* 
       The and() method initiates a condition block where all conditions within it must be satisfied.
@@ -104,16 +109,19 @@ class UserDetailDao implements BaseDao {
       query = query.and().parenthesis((condition) => {
         condition
           .where("name")
-          .contains(searchTextValue)
+          .contains(searchTextValue.toLocaleLowerCase())
           .or()
           .where("PK")
-          .contains(`USR#EML#${searchTextValue}`)
+          .contains(`USR#EML#${searchTextValue}`); // Currently the email in the `PK` attribute is stored as lowercase,uppercase and mixed case
 
-        // If user type is not provided or if user type is candidate, 
+        // If user type is not provided or if user type is candidate,
         // search by candidate experience company name
-        if (!usersRecordListingFilterRequest.userType
-          || usersRecordListingFilterRequest.userType === UserType.CAND) {
-          condition.or()
+        if (
+          !usersRecordListingFilterRequest.userType ||
+          usersRecordListingFilterRequest.userType === UserType.CAND
+        ) {
+          condition
+            .or()
             .where("candidateExperience.companyName")
             .contains(searchTextValue.toLocaleUpperCase());
         }
@@ -271,7 +279,11 @@ class UserDetailDao implements BaseDao {
    * @param email
    * @returns
    */
-  async update(email: string, SK: string, userDetailDTO: Partial<UserDetailDTO>) {
+  async update(
+    email: string,
+    SK: string,
+    userDetailDTO: Partial<UserDetailDTO>
+  ) {
     global.logger.info("Update user Detail [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
@@ -355,6 +367,42 @@ class UserDetailDao implements BaseDao {
       "{primaryEmail}": email,
     });
     return UserDetailModel.update({ PK: PK, SK: SK }, { isSubscribed: status });
+  }
+
+  async scriptUpdateUsersToLowerCase(): Promise<boolean> {
+    global.logger.info("update user details to lower case [DAO]");
+
+    // Query the table to get all user details
+    const allUsers: QueryResponse<DbUserDetailDto> =
+      await UserDetailModel.query("GSI1PK")
+        .eq(this.GSI1PK)
+        .where("GSI1SK")
+        .beginsWith("ID#")
+        .exec();
+
+    // Array to store the update operations (promise)
+    const updateOperations = [];
+
+    // Loop through all the users and update their name to lowercase
+    for (const user of allUsers) {
+      const originalName = user.name;
+      const lowercasedName = originalName.toLowerCase();
+
+      // Save the updated user back to the database
+      updateOperations.push(
+        UserDetailModel.update(
+          { PK: user.PK, SK: user.SK },
+          {
+            name: lowercasedName,
+          }
+        )
+      );
+    }
+
+    // Execute the update operations in parallel
+    await Promise.all(updateOperations);
+
+    return true;
   }
 }
 // Create an instance of the UserDetailDao
