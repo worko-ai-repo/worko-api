@@ -16,6 +16,7 @@ import UlidService from "../services/Ulid.service";
 
 // Load QueryResponse from dynamoose
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import dynamoose from 'dynamoose';
 
 class CompanyJobDao {
     // Define the model name, partitian key and sort keys for CompanyJob
@@ -44,7 +45,7 @@ class CompanyJobDao {
                 "{id}": SK
             })
         }
-        
+
         // Check if the document exists in the database
         const existingJob = await CompanyJobModel.get(inputKey);
 
@@ -186,29 +187,31 @@ class CompanyJobDao {
             });
         }
 
-        // Apply experience range filter by greater than or equal to minExperience
-        if (jobFilterOptions.minExperience !== undefined) {
-            query = query.and().where("experienceRange.min").ge(jobFilterOptions.minExperience);
+
+        // Filter by experience range
+        if (jobFilterOptions.minExperience !== undefined || jobFilterOptions.maxExperience !== undefined) {
+            query = query.and().parenthesis(
+                new dynamoose.Condition()
+                    .where("experienceRange.min").le(jobFilterOptions.maxExperience)  // To include jobs with maxExperience in the range
+                    .and()
+                    .where("experienceRange.max").ge(jobFilterOptions.minExperience)  // To include jobs with minExperience in the range
+
+            );
         }
 
-        // Apply experience range filter by less than or equal to maxExperience
-        if (jobFilterOptions.maxExperience !== undefined) {
-            query = query.and().where("experienceRange.max").le(jobFilterOptions.maxExperience);
-        }
+        // Filter options for salary 
+        if (jobFilterOptions.minSalary !== undefined || jobFilterOptions.maxSalary !== undefined) {
+            query = query.and().parenthesis(
+                new dynamoose.Condition()
+                    .where("salaryRange.min").le(jobFilterOptions.maxSalary)  // To include jobs with maxSalary in the range
+                    .and()
+                    .where("salaryRange.max").ge(jobFilterOptions.minSalary)  // To include jobs with maxSalary in the range
 
+            );
+        }
         // Apply work mode filter
         if (jobFilterOptions.workMode?.length) {
             query = query.and().where('workMode').in(jobFilterOptions.workMode);
-        }
-
-        // Apply salary range filter by greater than or equal to minSalary
-        if (jobFilterOptions.minSalary !== undefined) {
-            query = query.and().where("salaryRange.min").ge(jobFilterOptions.minSalary);
-        }
-
-        // Apply salary range filter by less than or equal to maxSalary
-        if (jobFilterOptions.maxSalary !== undefined) {
-            query = query.and().where("salaryRange.max").le(jobFilterOptions.maxSalary);
         }
 
         // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.

@@ -12,6 +12,7 @@ class DbUserReferralDto extends BaseDbDto {
   GSI1PK!: string;
   GSI1SK!: string;
   companyId!: string;
+  jobId?:string;
 
   // user's subscriptionId
   userSubscriptionId!: string;
@@ -24,6 +25,7 @@ class DbUserReferralDto extends BaseDbDto {
   scoreDetails?: string;
   jdMatchErrorCode?: number; // Error code details
   jdMatchErrorDesc?: string; // Cv Extract details
+  jobPortal?:string;
 
   // Below are only for when status is WITHDRAWN
   // @todo Fix the attributes structures as per this in Dyamoose Schema below
@@ -68,6 +70,10 @@ const UserReferralSchema = new dynamoose.Schema(
       type: String,
       required: true,
     },
+    jobId:{
+      type: String,
+      required: false,
+    },
     status: {
       type: String,
       required: true,
@@ -95,6 +101,10 @@ const UserReferralSchema = new dynamoose.Schema(
     jdMatchErrorCode: {
       type: Number,
       required: false,
+    },
+    jobPortal:{
+      type : String,
+      required : false
     },
     scoreDetails: {
       type: String,

@@ -15,7 +15,7 @@ const CompanyJobRouter = Router();
  */
 
 //Fetch all Jobs
-CompanyJobRouter.get("/", companyJobController.getAllJobs);
+CompanyJobRouter.get("", companyJobController.getAllJobs);
 
 // Fetch Jobs By JobId
 CompanyJobRouter.get("/:jobId", companyJobController.getJobById);

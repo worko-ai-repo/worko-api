@@ -105,6 +105,8 @@ class UserReferralService {
     let referralRequestData: UserReferralRequestCreateDTO = {
       userSubscriptionId: referralRequest.userSubscriptionId,
       companyId: referralRequest.companyId,
+      jobPortal:referralRequest.jobPortal,
+      jobId: referralRequest.jobId,
       jobUrl: decodedJobUrl,
       jdExtracted: referralRequest.jdExtracted,
     }

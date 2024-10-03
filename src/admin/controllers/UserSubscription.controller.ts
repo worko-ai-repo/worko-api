@@ -189,9 +189,9 @@ class UserSubscriptionController {
           userEmail,
           subscriptionStatus
         );
-
+        
       // Send the response
-      return res.status(HttpStatusCode.OK_200).json(userSubscriptions);
+      return res.status(HttpStatusCode.OK_200).json( userSubscriptions );
     } catch (error) {
       // Handle errors by passing the error message to the next middleware
       next(error);

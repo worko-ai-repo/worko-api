@@ -95,7 +95,7 @@ class UserDetailDao implements BaseDao {
     // search by searchText if provided
     if (usersRecordListingFilterRequest.searchText) {
       // remove trailing and leading spaces from the search text
-      let searchTextValue = usersRecordListingFilterRequest.searchText.trim();
+      let searchTextValue = usersRecordListingFilterRequest.searchText.trim().toLocaleLowerCase();
 
       /* 
       The and() method initiates a condition block where all conditions within it must be satisfied.
@@ -107,7 +107,16 @@ class UserDetailDao implements BaseDao {
           .contains(searchTextValue)
           .or()
           .where("PK")
-          .contains(`USR#EML#${searchTextValue}`);
+          .contains(`USR#EML#${searchTextValue}`)
+
+        // If user type is not provided or if user type is candidate, 
+        // search by candidate experience company name
+        if (!usersRecordListingFilterRequest.userType
+          || usersRecordListingFilterRequest.userType === UserType.CAND) {
+          condition.or()
+            .where("candidateExperience.companyName")
+            .contains(searchTextValue.toLocaleUpperCase());
+        }
 
         // Return the built condition
         return condition;

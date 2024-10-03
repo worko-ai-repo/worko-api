@@ -49,6 +49,8 @@ export interface UserReferralRequestCreateApiDTO {
   companyId: string;
   jobUrl: string;
   jdExtracted?: string;
+  jobId?:string;
+  jobPortal?:string;
 }
 
 /**
@@ -60,6 +62,8 @@ export interface UserReferralRequestCreateDTO {
   companyId: string;
   jobUrl: string;
   jdExtracted?: string;
+  jobId?:string;
+  jobPortal?:string;
 }
 
 /**

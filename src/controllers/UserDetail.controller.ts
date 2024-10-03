@@ -1,3 +1,9 @@
+// Load aws s3 client library
+import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
+
+// Load local constants
+import APP_CONSTANTS from "../configs/constants.config";
+
 // Load npm packages
 import { Request, Response, NextFunction } from "express";
 
@@ -17,13 +23,9 @@ import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
-import { GroupingHelper } from "../helpers/grouping.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 import InvokeLambdaService from "../services/InvokeLambda.service";
-import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
-import APP_CONSTANTS from "../configs/constants.config";
 import UserExperienceService from "../services/UserExperience.service";
-import userExperienceDao from '../daos/UserExperience.dao';
 
 /**
  * UserDetailController

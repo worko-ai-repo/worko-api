@@ -3,17 +3,22 @@ import Joi from "joi";
 export const UserSignUpDTOValidation = Joi.object({
   name: Joi.string()
     .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
+    .lowercase()
     .required()
     .messages({
       "any.required": "Name is required",
       "string.pattern.base":
         "Name must contain only alphabetic characters, spaces, dots, apostrophes, or hyphens",
     }),
-  email: Joi.string().email().required().messages({
-    "any.required": "Email is required.",
-    "string.email": "Please provide a valid email address.",
-    "string.empty": "Email cannot be empty.",
-  }),
+  email: Joi.string()
+    .email()
+    .required()
+    .lowercase()
+    .messages({
+      "any.required": "Email is required.",
+      "string.email": "Please provide a valid email address.",
+      "string.empty": "Email cannot be empty.",
+    }),
   number: Joi.string()
     .required()
     .regex(/^\+?\d{2,16}$/)
@@ -58,16 +63,21 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
   name: Joi.string()
     .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
     .required()
+    .lowercase()
     .messages({
       "any.required": "Name is required",
       "string.pattern.base":
         "Name must contain only alphabetic characters, spaces, dots, apostrophes, or hyphens",
     }),
-  email: Joi.string().email().required().messages({
-    "any.required": "Email is required.",
-    "string.email": "Please provide a valid email address.",
-    "string.empty": "Email cannot be empty.",
-  }),
+  email: Joi.string()
+    .email()
+    .required()
+    .lowercase()
+    .messages({
+      "any.required": "Email is required.",
+      "string.email": "Please provide a valid email address.",
+      "string.empty": "Email cannot be empty.",
+    }),
   number: Joi.string()
     .required()
     .regex(/^\+?\d{2,16}$/)
