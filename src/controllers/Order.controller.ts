@@ -32,7 +32,7 @@ const APP_PAYMENT_BILL_DESK = {
 // configs/constants/payment.contant.ts
 // ******************************************************************************** //
 const PAYMENT_CONSTANTS = {
-  ORDER_RETURN_URL: "https://app.worko.ai/payment/response",
+  ORDER_RETURN_URL: "https://worko.ai/payment/response", // Previously "https://app.worko.ai/payment/response",
 };
 
 // ******************************************************************************** //

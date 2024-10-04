@@ -95,8 +95,8 @@ const APP_CONSTANTS = {
   },
 
   FRONTEND_URLS: {
-    SUBS_PREMIUM_RENEW: "https://app.worko.ai/",
-    SUBS_PREMIUM_UPGRADE: "https://app.worko.ai/",
+    SUBS_PREMIUM_RENEW: "https://worko.ai/", // Previously "https://app.worko.ai/",
+    SUBS_PREMIUM_UPGRADE: "https://worko.ai/", // Previously "https://app.worko.ai/",
   },
 
   SCHEDULE_JOB: {
