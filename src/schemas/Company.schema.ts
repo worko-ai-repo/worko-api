@@ -74,6 +74,6 @@ export const CompanyRequestDTOValidation = Joi.object({
     
     logo: Joi.string().allow("").optional(),
   }),
-  userEmail: Joi.string().allow("").optional(),
+  userEmail: Joi.string().allow("").optional().lowercase(),
   userContactNumber : Joi.string().allow("").optional(),
 });

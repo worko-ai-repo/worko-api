@@ -1,5 +1,6 @@
 interface String {
     strtr(replacePairs: Record<string, string>): string;
+    toTitleCase(): string; // Method to convert a string to Title Case
 }
 
 /**
@@ -20,4 +21,22 @@ String.prototype.strtr = function (replacePairs: Record<string, string>): string
         .join('|');
     const regex = new RegExp(search, 'g');
     return this.replace(regex, (match) => replacePairs[match]);
+};
+
+/**
+ * toTitleCase
+ * 
+ * Converts a string to Title Case.
+ * 
+ * This method converts entire string to lowercase first, then
+ * splits string by spaces into an array of words, capitalizes first letter of each word,
+ * and finally joins words back into a single string.
+ * 
+ * @returns {string}
+ */
+String.prototype.toTitleCase = function (): string {
+  return this.toLowerCase() // Convert entire string to lowercase first
+    .split(" ") // Split string by spaces into an array of words
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize first letter of each word
+    .join(" "); // Join words back into a single string
 };
