@@ -52,7 +52,7 @@ class UserReviewService {
         
         // Prepare email destination
         const emailPlaceholders: EmailTemplatePlaceholderEMP_REVIEW_RATING_BY_CAND = {
-          empName: refereeName,
+          empName: refereeName.toTitleCase(),
           feedback: userReviewCreateDto.reviewText as string,
           rating: userReviewCreateDto.rating
         }

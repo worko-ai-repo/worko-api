@@ -332,7 +332,7 @@ class UserExperienceService {
       fullName: userFullName,
     };
     const emailPlaceholders: Partial<EmailTemplatePlaceholderUSER_WORK_EMAIL_VERIFICATION_OTP> = {
-      userFullName: userFullName,
+      userFullName: userFullName.toTitleCase(),
     };
 
     // Send OTP to user's work email to verify the same.

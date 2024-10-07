@@ -283,7 +283,7 @@ class UserSupportService {
     // Prepare email placeholders for the referral query notification
     const emailPlaceholders: EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND =
     {
-      empName: refereeName,
+      empName: refereeName.toTitleCase(),
       query: query,
     };
 

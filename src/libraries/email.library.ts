@@ -224,7 +224,7 @@ class EmailLibrary {
         ...item,
         fullName: item.fullName?.toLowerCase(),
       })),
-      emailPlaceholders: placeholders,
+      emailPlaceholders: placeholders, // @todo: need to find solution to store the `name` in lowercase in database because it will be stored as titlecase now
 
       // @todo fix theses by saving the correct parsed value.
       // It is not possible because the parsing is taken care by AWS SES itself.

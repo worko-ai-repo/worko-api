@@ -347,7 +347,7 @@ class UserService {
           fullName: candName
         };
         const emailPlaceholders: EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER = {
-          candName: candName
+          candName: candName.toTitleCase(),
         }
         // Function responsible for sending the email to the candidate a profile completion reminder
         const sendEmailResponse = await this.sendEmailToCandProfileCompletionReminder(emailPlaceholders,toAddress);
@@ -422,7 +422,7 @@ class UserService {
         // Prepare email placeholders for profile completion reminder
         const emailPlaceholders: EmailTemplatePlaceholderEMP_PROFILE_COMPLETION_REMINDER =
         {
-          empName: empName,
+          empName: empName.toTitleCase(),
         };
         // Function responsible for sending the email to the employee a profile completion reminder
         const sendEmailResponse =
@@ -474,7 +474,7 @@ class UserService {
       };
       // Prepare email placeholders for free subscription upgrade notification
       const emailPlaceholders: EmailTemplatePlaceholderCAND_PREMIUM_UPGRADE_NOTIFICATION = {
-        candName: candName,
+        candName: candName.toTitleCase(),
         candPremiumUpgradeNowMsg: APP_CONSTANTS.FRONTEND_URLS.SUBS_PREMIUM_UPGRADE
       }
       // Send email to remind upgrading subscription
@@ -576,7 +576,7 @@ class UserService {
         };
         // Prepare email placeholders for profile switch notification
         const emailPlaceholders: EmailTemplatePlaceholderCAND_PROFILE_SWITCH_NOTIFICATION = {
-          candName: candName
+          candName: candName.toTitleCase(),
         }
         // Send email to remind creating multiple profiles
         const sendEmailResponse = await this.sendCandReminderMailtoCreateMutlipleProfiles(emailPlaceholders,toAddress);
@@ -643,7 +643,7 @@ class UserService {
         };
         // Prepare email placeholders for profile switch notification
         const emailPlaceholders: EmailTemplatePlaceholderEMP_SWITCH_PROFILE_NOTIFICATION = {
-          empName: empName
+          empName: empName.toTitleCase(),
         }
         // Send email to remind creating multiple profiles
         const sendEmailResponse = await this.sendEmpReminderMailtoCreateMutlipleProfiles(emailPlaceholders,toAddress);

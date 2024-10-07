@@ -101,7 +101,7 @@ class UserDetailService {
     // Check if the user type is cand then send candidate email
     if (userType === UserType.CAND) {
       const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
-        candName: name,
+        candName: name.toTitleCase(),
       };
 
       // Send a welcome email to the candidate

@@ -287,8 +287,8 @@ class UserReferralEmpService {
       // Prepare the email placeholders with appropriate values
       const emailPlaceholders: EmailTemplatePlaceholderEMP_RECEIVED_REFERRAL_REQ_NOTIFICATION =
         {
-          emp_first_name: refereeName,
-          candidate_name: candidateName,
+          emp_first_name: refereeName.toTitleCase(),
+          candidate_name: candidateName.toTitleCase(),
         };
 
       // Send the email using the email library
@@ -973,9 +973,9 @@ class UserReferralEmpService {
         };
         const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED =
           {
-            candName: candName,
+            candName: candName.toTitleCase(),
             companyName: companyName,
-            refereeName: refereeName,
+            refereeName: refereeName.toTitleCase(),
           };
 
         // Prepare the necessary parameters required for the sendEmailToEmpWhenReferralRequestAccepted function
@@ -986,8 +986,8 @@ class UserReferralEmpService {
 
         const empemailPlaceholders: EmailTemplatePlaceholderEMP_ACCEPTED_REFERRAL_REQ_NOTIFCATION =
           {
-            empName: refereeName,
-            candName: candName,
+            empName: refereeName.toTitleCase(),
+            candName: candName.toTitleCase(),
           };
 
         // Send emails to the candidate and the employee
@@ -1053,7 +1053,7 @@ class UserReferralEmpService {
         };
         const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED =
           {
-            candName: candName,
+            candName: candName.toTitleCase(),
             companyName: companyName,
           };
 
@@ -1065,7 +1065,7 @@ class UserReferralEmpService {
 
         const empemailPlaceholders: EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND =
           {
-            empName: refereeName,
+            empName: refereeName.toTitleCase(),
           };
 
         // Send emails to the candidate and the employee

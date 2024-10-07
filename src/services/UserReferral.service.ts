@@ -490,9 +490,9 @@ class UserReferralService {
     };
     const emailPlaceholders: EmailTemplatePlaceholderCAND_REFERRAL_REQ_ACCEPTED =
     {
-      candName: candName,
+      candName: candName.toTitleCase(),
       companyName: companyName,
-      refereeName: refereeName,
+      refereeName: refereeName.toTitleCase(),
     };
 
     // Function responsible for sending the email to the candidate saying that his referral request has been accepted
@@ -590,7 +590,7 @@ class UserReferralService {
 
     // Prepare the email placeholders
     const emailPlaceholders: EmailTemplatePlaceholderCAND_REF_AUTO_CANCEL_AFTER_X_DAYS = {
-      candName: candName,
+      candName: candName.toTitleCase(),
       jobUrl: jobUrl,
       companyName: companyName,
     };
@@ -627,7 +627,7 @@ class UserReferralService {
 
     // Prepare the email placeholders
     const emailPlaceholders: EmailTemplatePlaceholderCAND_REF_AUTO_REJECT_AFTER_X_DAYS = {
-      candName: candName,
+      candName: candName.toTitleCase(),
       jobUrl: jobUrl,
       companyName: companyName,
       rejectedReasons: this.prepareReferralRejectedReasons(rejectedByUserIds),

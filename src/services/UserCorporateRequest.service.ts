@@ -126,7 +126,7 @@ class UserCorporateRequestService {
 
         const emailPlaceholders: Partial<EmailTemplatePlaceholderUSER_CORPORATE_REQUEST_EMAIL_OTP> = 
         {
-            userFullName: fullName,
+            userFullName: fullName.toTitleCase(),
             logoUrl: APP_CONSTANTS.WORKO_LOGO_URL
         };
 
