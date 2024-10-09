@@ -20,6 +20,7 @@ import { companyServiceObj } from "./Company.service";
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import CompanyService from "../../services/Company.service";
 import { DbCompanyDetailDto } from "../../db/models/CompanyDetail.model";
+import { CompanyJobStatusEnum } from "../../enums/CompanyJob.enum";
 
 class CompanyJobService {
     /**
@@ -131,20 +132,29 @@ class CompanyJobService {
      * 
      * @returns {Promise<JobsWithCompanyResDto[]>}
      */
-    async getJobByIdWithCompanyDetails(jobId: string): Promise<JobsWithCompanyResDto[]> {
+    async getJobByIdWithCompanyDetails(jobId: string, userType: string): Promise<JobsWithCompanyResDto[]> {
         // Global Logger for the service
         global.logger.info(`Fetching Job by ID: ${jobId} [service]`, {
             filePath: __filename,
             methodName: this.getJobById.name,
         });
-
+    
         // Fetch Job by Id
-        const jobDetails = await this.getJobById(jobId);
-
+        const jobDetailById = await this.getJobById(jobId);
+        global.logger.debug(`Checking userType: ${userType}`);
+    
+        if (userType !== 'admin') {
+            const jobStatus = jobDetailById[0].status;
+            // Use includes for status check
+            if (![CompanyJobStatusEnum.PUBLISHED, CompanyJobStatusEnum.ARCHIVED].includes(jobStatus)) {
+                throw new BaseError(`No Job found with ID: ${jobId}`, 404);
+            }
+        }
+    
         // Map the Job with Company
-        return this.prepareJobsWithCompanyDetails(jobDetails);
+        return this.prepareJobsWithCompanyDetails(jobDetailById);
     }
-
+    
     /**
      * updateJobById
      * 

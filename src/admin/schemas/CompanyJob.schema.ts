@@ -57,11 +57,8 @@ export const companyJobCreateApiDtoValidation = Joi.object({
     // Validate otherRequirements field
     otherRequirements: Joi
         .string()
-        .min(1)
-        .optional()
-        .messages({
-            "string.min": "Other requirements should be at least 1 character long.",
-        }),
+        .allow('')
+        .optional(),
 
     // Validate experienceRange field
     experienceRange: Joi.object({
@@ -210,12 +207,11 @@ export const companyJobCreateApiDtoValidation = Joi.object({
 
     mislaneiousSkills: Joi
         .array()
-        .min(1)
+        .allow('')
         .items(Joi.string().lowercase())
         .optional()
         .messages({
             "array.base": "Miscellaneous skills must be an array.",
-            "array.min": "At least one miscellaneous skill is required.",
         }),
 
     // Validate status field
@@ -276,11 +272,8 @@ export const updateCompanyJobApiDtoValidation = Joi.object({
 
     otherRequirements: Joi
         .string()
-        .min(1)
-        .optional()
-        .messages({
-            "string.min": "Other requirements should not be empty.",
-        }),
+        .allow('')
+        .optional(),
 
     // Validate experienceRange field
     experienceRange: Joi.object({
@@ -403,12 +396,11 @@ export const updateCompanyJobApiDtoValidation = Joi.object({
 
     mislaneiousSkills: Joi
         .array()
-        .min(1)
+        .allow('')
         .items(Joi.string().lowercase())
         .optional()
         .messages({
             "array.base": "Miscellaneous skills must be an array.",
-            "array.min": "At least one miscellaneous skill is required.",
         }),
 
 });

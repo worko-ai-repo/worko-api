@@ -177,11 +177,14 @@ class CompanyJobController {
         });
 
         try {
+             // Determine userType based on your application logic
+             const userType = (req.baseUrl.indexOf('admin') !== -1) ? 'admin' : 'user';
+
             // Extract the Job ID from the request parameters
             const jobId = req.params.jobId;
 
             // Call the service to fetch the Job by ID [Service Call]
-            const jobDetailsById = await companyJobServiceObj.getJobByIdWithCompanyDetails(jobId);
+            const jobDetailsById = await companyJobServiceObj.getJobByIdWithCompanyDetails(jobId,userType);
 
             //Return the final data structure in abstracted form
             return res.status(HttpStatusCode.OK_200).json(jobDetailsById);

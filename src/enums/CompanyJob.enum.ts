@@ -9,6 +9,10 @@ export enum CompanyJobWorkModeEnum {
 
   // Work from Office
   WFO = 'WFO',
+
+  // HYBRID
+  HYBRID = 'HYBRID',
+
 }
 
 /**
