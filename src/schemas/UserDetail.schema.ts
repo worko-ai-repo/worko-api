@@ -66,7 +66,7 @@ export const userDetailDTOValidation = Joi.object({
     "number.base": "Referral count must be a valid number.",
   }),
   location: Joi.string().optional(),
-  about: Joi.string().optional(),
+  about: Joi.string().optional().allow(""),
   CTC: Joi.number().optional(),
   ECTC: Joi.number().optional(),
   noticePeriod: Joi.number().optional(),
