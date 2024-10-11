@@ -15,7 +15,7 @@ import { lastKeyToBase64EncodeStr } from "../helpers/dynamoose.helper";
 
 // UserExperienceDao class implementing the BaseDao interface
 class UserExperienceDao implements BaseDao {
-  modelName = "userExperience";
+  modelName = "UserExperience";
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
   sortKeys = { SK_ID: "EXP#ID#{uuid}" }; // Sort key structure using unique IDs
   GSI1PK = "EXP#";

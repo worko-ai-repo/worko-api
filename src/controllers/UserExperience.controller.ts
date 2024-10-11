@@ -99,6 +99,8 @@ class UserExperienceController {
    *
    * Creates/updates the user's experience URLs
    *
+   * If payload has an SK, then this `create` function is used to update, and if payload does not have an SK,then this `create` function is used to create
+   *
    * @param {Request} req
    * @param {Response} res
    * @param {NextFunction} next
@@ -108,7 +110,9 @@ class UserExperienceController {
       // Log the action for debugging purposes
       logger.info("Create/update user Experience by email [controller]");
 
-      // Extract email from request parameters
+      /**
+       * The email id which was extracted from the request parameters should belongs to the PK
+       */
       const email = req.params.id;
 
       const { error: emailError, value: emailId } = validateEmailField(email);

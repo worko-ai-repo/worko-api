@@ -9,7 +9,7 @@ export interface UserExperienceDTO {
   experienceInMonths?: number;
   companyName: string;
   companyId: string;
-  emailId?: string;
+  emailId?: string; // company email id of employee
   isCurrent?: boolean;
   isEmailVerified?: boolean;
 }

@@ -143,7 +143,7 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
         
       }),
       otherwise: Joi.forbidden(),
-    }),
+    }), // company email id of employee
   }).options({ stripUnknown: true })
 );
 
