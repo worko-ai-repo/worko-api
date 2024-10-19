@@ -106,7 +106,7 @@ class UserSubscriptionDao implements BaseDao {
           .contains(searchTextValue.toUpperCase())
           .or()
           .where("name")
-          .contains(searchTextValue);
+          .contains(searchTextValue.toLowerCase());
 
         // Return the built condition
         return condition;

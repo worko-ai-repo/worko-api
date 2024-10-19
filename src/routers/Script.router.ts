@@ -20,6 +20,9 @@ ScriptRouter.post("/update-user-referrals", scriptController.updateUserReferrals
 // Endpoint to update all users name and `email` present in the `PK` to lowercase
 ScriptRouter.post("/update-users-to-lowercase",scriptController.scriptUpdateUsersToLowerCase);
 
+// Endpoint to update email present in the `PK` to lowercase
+ScriptRouter.post("/update-emails-to-lowercase/:oldEmail/:newEmail", scriptController.scriptUpdatePkEmailToLowerCase );
+
 // Endpoint to update all user experiences
 // ScriptRouter.post("/update-user-experiences", scriptController.updateUserExperiencesGSIs);
 

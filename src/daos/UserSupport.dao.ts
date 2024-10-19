@@ -140,12 +140,12 @@ class UserSupportDao implements BaseDao {
       query = query.and().parenthesis((condition) => {
         condition
           .where("userEmail")
+          .contains(searchTextValue.toLowerCase())
+          .or()
+          .where("userFirstName") // @todo: Need to check in the Dynamod db whether all the values are in lower case or not
           .contains(searchTextValue)
           .or()
-          .where("userFirstName")
-          .contains(searchTextValue)
-          .or()
-          .where("userLastName")
+          .where("userLastName") // @todo: Need to check in the Dynamod db whether all the values are in lower case or not
           .contains(searchTextValue);
 
         // Return the built condition

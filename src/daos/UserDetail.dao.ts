@@ -1,6 +1,5 @@
 // Import dynamoose library
-import { QueryResponse, ScanResponse } from "dynamoose/dist/ItemRetriever";
-
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 //Load the base dao
 import BaseDao from "./Base.dao";
@@ -23,6 +22,9 @@ import { UsersListingFilterOptions } from "../admin/dtos/User.dto";
 // import enums
 import { SortOrderTypeEnum } from ".././enums/Common.enum";
 import { UserType } from "../enums/User.enum";
+
+// import lib dynamodb library
+import { awsLibDynamodbLibraryObj } from "../libraries/aws-lib-dynamodb.library";
 
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
@@ -100,7 +102,8 @@ class UserDetailDao implements BaseDao {
     if (usersRecordListingFilterRequest.searchText) {
       // remove trailing and leading spaces from the search text
       let searchTextValue = usersRecordListingFilterRequest.searchText
-        .trim();
+        .trim()
+        .toLowerCase();
 
       /* 
       The and() method initiates a condition block where all conditions within it must be satisfied.
@@ -109,10 +112,10 @@ class UserDetailDao implements BaseDao {
       query = query.and().parenthesis((condition) => {
         condition
           .where("name")
-          .contains(searchTextValue.toLocaleLowerCase())
+          .contains(searchTextValue)
           .or()
           .where("PK")
-          .contains(`USR#EML#${searchTextValue}`); // Currently the email in the `PK` attribute is stored as lowercase,uppercase and mixed case
+          .contains(`USR#EML#${searchTextValue}`); 
 
         // If user type is not provided or if user type is candidate,
         // search by candidate experience company name
@@ -123,7 +126,7 @@ class UserDetailDao implements BaseDao {
           condition
             .or()
             .where("candidateExperience.companyName")
-            .contains(searchTextValue.toLocaleUpperCase());
+            .contains(searchTextValue.toUpperCase());
         }
 
         // Return the built condition
@@ -404,7 +407,92 @@ class UserDetailDao implements BaseDao {
 
     return true;
   }
+
+  
+  /**
+   * scriptUpdatePkEmailToLowerCase
+   *
+   * Updates the specific email present in `PK` attribute to lower case in the DynamoDB table.
+   * 
+   * @param {string} oldEmail - The old email address.
+   * @param {string} newEmail - The new email address.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean value indicating whether the script was successful or not.
+   */
+  async scriptUpdatePkEmailToLowerCase(
+    oldEmail: string,
+    newEmail: string
+  ): Promise<boolean> {
+    global.logger.info("update Pk email to lower case [DAO]",
+      {
+        filePath: __filename,
+        methodName: this.scriptUpdatePkEmailToLowerCase.name
+      }
+    );
+
+    // Generate the old partition key using the old email
+    const oldPk: string = this.partitianKey.strtr({
+      "{primaryEmail}": oldEmail,
+    });
+    console.log("oldPk: ", oldPk);
+
+    // Query to fetch all items with the old partition key using the reusable query method
+    const queryResult = await awsLibDynamodbLibraryObj.queryItems(
+      process.env.APP_AWS_DYNAMODB_TABLE_NAME!,
+      "#PK = :oldPk",
+      { "#PK": "PK" },
+      { ":oldPk": oldPk }
+    );
+
+    const getByEmail: Record<string, any>[] | undefined = queryResult.Items;
+    console.log("getByEmail: ", getByEmail);
+
+    if (!getByEmail || !getByEmail.length) {
+      console.log("No items found for the given old email.");
+      return false;
+    }
+
+    // Iterate over the fetched items
+    for (const item of getByEmail) {
+      // Generate the new partition key using the new email
+      const newPK: string = this.partitianKey.strtr({
+        "{primaryEmail}": newEmail,
+      });
+      console.log("newPK: ", newPK);
+
+      // Clone the item and update the PK
+      const newItem = {
+        ...item,
+        PK: newPK,
+      };
+      console.log("newItem: ", newItem);
+
+      // Save the new item using the reusable putItem method
+      const savedNewItem = await awsLibDynamodbLibraryObj.putItem(
+        process.env.APP_AWS_DYNAMODB_TABLE_NAME!,
+        newItem
+      );
+      console.log("savedNewItem: ", savedNewItem);
+
+      // Delete the old item using the reusable deleteItem method
+      const deletedOldItem = await awsLibDynamodbLibraryObj.deleteItem(
+        process.env.APP_AWS_DYNAMODB_TABLE_NAME!,
+        { PK: oldPk, SK: item.SK } 
+      );
+      console.log("deletedOldItem: ", deletedOldItem);
+
+      global.logger.info(
+        `Recreated item with PK: ${newPK} and deleted old item with PK: ${oldPk}`,
+        {
+          filePath: __filename,
+          methodName: this.scriptUpdatePkEmailToLowerCase.name,
+        }
+      );
+    }
+
+    return true;
+  }
 }
+
 // Create an instance of the UserDetailDao
 const userDetailDao = new UserDetailDao();
 

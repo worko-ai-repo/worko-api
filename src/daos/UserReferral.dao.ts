@@ -104,7 +104,7 @@ class UserReferralDao implements BaseDao {
           .contains(searchTextValue.toUpperCase())
           .or()
           .where("PK")
-          .contains(`USR#EML#${searchTextValue}`);
+          .contains(`USR#EML#${searchTextValue.toLowerCase()}`);
 
         // Return the built condition
         return condition;

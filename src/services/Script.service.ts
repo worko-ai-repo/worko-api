@@ -213,6 +213,22 @@ class ScriptService {
   async scriptUpdateUsersToLowerCase(): Promise<boolean> {
     return userDetailDao.scriptUpdateUsersToLowerCase();
   }
+
+  /**
+   * scriptUpdatePkEmailToLowerCase
+   *
+   * Updates the specific email present in `PK` attribute to lower case in the DynamoDB table.
+   *
+   * @param {string} oldEmail - The old email address.
+   * @param {string} newEmail - The new email address.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean value indicating whether the script was successful or not.
+   */
+  async scriptUpdatePkEmailToLowerCase(
+    oldEmail: string,
+    newEmail: string
+  ): Promise<boolean> {
+    return userDetailDao.scriptUpdatePkEmailToLowerCase(oldEmail, newEmail);
+  }
 }
 
 // Export the ScriptService class and its instance  

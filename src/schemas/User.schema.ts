@@ -139,7 +139,7 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
 });
 
 export const validateEmailField = (email: string) => {
-  const Email = Joi.string().email().required().messages({
+  const Email = Joi.string().email().required().lowercase().messages({
     "any.required": "Email is required.",
     "string.email": "Please provide a valid email address.",
     "string.empty": "Email cannot be empty.",

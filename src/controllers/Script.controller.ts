@@ -4,8 +4,12 @@ import { Request, Response, NextFunction } from "express";
 // Import Services
 import { scriptServiceObj } from "../services/Script.service";
 
+// Import Schemas
+import { scriptValidateEmailFieldSchema } from "../schemas/Script.schema";
+
 // Import local utils
 import HttpStatusCode from "../utils/http-codes.util";
+import { RequestValidationError } from "../utils/errors.util";
 
 /**
  * ScriptController
@@ -82,7 +86,7 @@ class ScriptController {
   /**
    * scriptUpdateUsersToLowerCase
    *
-   * To update all users name and `email` present in the `PK` to lowercase
+   * To update all users name to lowercase
    *
    * @param {Request} req - The Express request object.
    * @param {Response} res - The Express response object.
@@ -99,6 +103,47 @@ class ScriptController {
       return res
         .status(HttpStatusCode.OK_200)
         .json({ message: "User Details Updated Successfully" });
+    } catch (error) {
+      // Pass the error to the next middleware for error handling
+      next(error);
+    }
+  };
+
+  /**
+   * scriptUpdatePkEmailToLowerCase
+   *
+   * Updates the specific email present in `PK` attribute to lower case in the DynamoDB table.
+   *
+   * @param {Request} req - The Express request object.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   * @throws {RequestValidationError} If the email parameter is invalid.
+   */
+  scriptUpdatePkEmailToLowerCase = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const reqParams = req.params;
+
+      // Validate the email field using Joi schema and throw error if not valid
+      const {
+        error,
+        value: { oldEmail, newEmail },
+      } = scriptValidateEmailFieldSchema.validate({
+        oldEmail: reqParams.oldEmail,
+        newEmail: reqParams.newEmail,
+      });
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      await scriptServiceObj.scriptUpdatePkEmailToLowerCase(oldEmail, newEmail);
+
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json({ message: `${oldEmail} has been updated to ${newEmail}` });
     } catch (error) {
       // Pass the error to the next middleware for error handling
       next(error);

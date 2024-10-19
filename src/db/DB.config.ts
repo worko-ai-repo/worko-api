@@ -65,16 +65,16 @@ class DBConfig {
    * Initialise the required components to enable DynamoDB connection.
    */
   init() {
-    this.setDynamoDbConnection();
+    this.setDynamooseConnection();
     this.registerDynamooseModels();
   }
 
   /**
-   * setDynamoDbConnection
+   * setDynamooseConnection
    *
    * Set up the DynamoDB connection to couunicate with the database.
    */
-  setDynamoDbConnection() {
+  setDynamooseConnection() {
     // Log message
     global.logger.info(
       "Establish the 'DynamoDB' connection through 'Dynamoose'."
