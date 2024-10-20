@@ -43,6 +43,7 @@ import { UserOrderProductModel } from "./models/UserOrderProduct.model";
 import { UserOrderTransactionModel } from "./models/UserOrderTransaction.model";
 import { WhatsappTemplateModel } from "./models/WhatsappTemplate.model";
 import { WhatsappMessageLogModel } from "./models/WhatsappMessageLog.model";
+import { GrowaasanMessageLogModel } from "./models/GrowaasanMessageLog.model";
 
 import { ScheduleJobModel } from "./models/ScheduleJob.model";
 
@@ -152,6 +153,7 @@ class DBConfig {
       WhatsappMessageLogModel,
       ScheduleJobModel,
       CompanyJobModel,
+      GrowaasanMessageLogModel,
     ]);
   }
 }

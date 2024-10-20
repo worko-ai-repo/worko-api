@@ -11,9 +11,9 @@ import {
   WhatsappTemplateRequestDtoApi,
   WhatsappTemplateUpdateDtoApi,
 } from "../dtos/WhatsappTemplate.dto";
-import { WhatsappMessagingApiTypeCloudApiEnum } from "../enums/WhatsappTemplate.enum";
 
 // import enums
+import { WhatsappMessagingApiTypeCloudApiEnum } from "../enums/WhatsappTemplate.enum";
 
 /**
  * WhatsappCloudApiLibrary

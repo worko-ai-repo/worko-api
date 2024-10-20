@@ -1,12 +1,6 @@
 Name: Worko-Api-Deployment-dev-main
 SchemaVersion: "1.0"
 
-# Optional - Set automatic triggers.
-Triggers:
-  - Type: PUSH
-    Branches:
-      - main
-      - dev
 
 # Required - Define action configurations.
 Actions:

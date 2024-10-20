@@ -15,6 +15,10 @@ export default interface BaseDao {
    * partitianKey
    *
    * Partitian key from the DynamoDB
+   *
+   * @todo: The current spelling `partitianKey` does not align with DynamoDB terminology.
+   * The correct spelling should be `partitionKey`. This has been used across our backend codebase,
+   * but we should consider updating it in the future after discussing with the team lead.
    */
   partitianKey: string;
 

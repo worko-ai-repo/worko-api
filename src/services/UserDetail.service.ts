@@ -113,7 +113,7 @@ class UserDetailService {
     // Check if the user type is EMP then send employee email
     else if (userType === UserType.EMP) {
       const emailPlaceholders: EmailTemplatePlaceholderEMP_WELCOME_MSG = {
-        empName: name,
+        empName: name.toTitleCase(),
       };
 
       // Send a welcome email to the employer
