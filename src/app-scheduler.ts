@@ -1,6 +1,12 @@
 // Import AWS Lambda types
 import { Context, ScheduledEvent } from 'aws-lambda';
 
+// Import extensions (must be done after natural imports and before any scope-modifying imports)
+import './extensions/string.extension';
+
+// Import logger library
+import './libraries/logger.library';
+
 // Import services
 import scheduleJobService from './services/ScheduleJob.service';
 import userReferralService from './services/UserReferral.service';
@@ -19,12 +25,6 @@ import DBConfig from './db/DB.config';
 
 // Import Dtos
 import { ScheduleJobRefReviewAcceptanceStatusInputDto, ScheduleJobWhatsAppReminderInputDto } from './dtos/ScheduleJob.dto';
-
-// Import extensions (must be done after natural imports and before any scope-modifying imports)
-import './extensions/string.extension';
-
-// Import logger library
-import './libraries/logger.library';
 
 /**
  * Initializes the database configuration.

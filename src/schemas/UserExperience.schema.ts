@@ -73,12 +73,6 @@ export const userExperienceDTOValidation = Joi.object({
 // Schema for validating an array of user experience objects
 export const userExperienceDTOArrayValidation = Joi.array().items(
   Joi.object({
-    // Validation for user type, must be either "EMP" or "CAND"
-    userType: Joi.string().valid("EMP", "CAND").required().messages({
-      "any.required": "The User Type  is required.",
-      "string.empty": "The User type should not be empty.",
-    }),
-
     // Department field validation
     department: Joi.string().required().messages({
       "any.required": "Department is required.",
@@ -86,40 +80,29 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
     }),
 
     // Designation field validation
-    designation: Joi.string().required().messages({
-      "any.required": "Designation is required.",
-      "string.empty": "Designation should not be empty.",
-    }),
+    designation: Joi.string().optional().allow(""),
 
     // Optional field for designation tag
-    designationTag: Joi.number(),
-    // Validation for isCurrent
-    isCurrent : Joi.boolean().required().messages({
-      "any.required": "isCurrent is required.",
-      "string.empty": "isCurrent should not be empty.",
+    designationTag: Joi.number().optional(),
 
-    }),
     // Validation for startedMonth field
-    startedMonth: Joi.number().integer().min(1).max(12),
+    startedMonth: Joi.number().optional().integer().min(1).max(12),
 
     // Validation for endedMonth field
-    endedMonth: Joi.number().integer().min(1).max(12),
+    endedMonth: Joi.number().optional().integer().min(1).max(12),
 
     // Validation for startedYear field
-    startedYear: Joi.number().integer().min(1900).max(new Date().getFullYear()),
+    startedYear: Joi.number()
+      .optional()
+      .integer()
+      .min(1900)
+      .max(new Date().getFullYear()),
 
     // Validation for endedYear field
-    endedYear: Joi.number().integer().min(1900).max(new Date().getFullYear()),
+    endedYear: Joi.number().optional().integer().min(1900).max(new Date().getFullYear()),
 
     // Validation for experience in months, only required when userType is "EMP" ,
-    experienceInMonths: Joi.when("userType", {
-      is: "EMP",
-      then: Joi.number().integer().min(1).required().messages({
-        "any.required": "The Experience field is required.",
-        "string.empty": "The Experience field should not be empty.",
-      }),
-      otherwise: Joi.forbidden(),
-    }),
+    experienceInMonths: Joi.number().integer().min(1).optional(),
 
     // Validation for company name
     companyName: Joi.string().required().messages({
@@ -134,16 +117,18 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
     }),
 
     // Validation for email ID
-    emailId: Joi.when("userType", {
-      is: "EMP",
-      then: Joi.string().email().lowercase().required().messages({
-        "any.required": "Email ID is required.",
-        "string.empty": "Email ID should not be empty.",
-        "string.email": "Email ID must be a valid email address.",
-        
-      }),
-      otherwise: Joi.forbidden(),
+    emailId: Joi.string().email().lowercase().optional().allow("").messages({
+      "string.email": "Email ID must be a valid email address.",
     }), // company email id of employee
+
+    // Validation for isCurrent
+    isCurrent: Joi.boolean().required().messages({
+      "any.required": "isCurrent is required.",
+      "string.empty": "isCurrent should not be empty.",
+    }),
+
+    // Validation for isEmailVerified
+    isEmailVerified: Joi.boolean().optional(),
   }).options({ stripUnknown: true })
 );
 

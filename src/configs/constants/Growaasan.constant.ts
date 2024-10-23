@@ -12,6 +12,15 @@ const GROWAASAN_APP_CONSTANTS = {
    COUNTRY_CODE: 91,
 
    /**
+    * COUNTRY_CODE_WITH_PLUS_SIGN
+    * 
+    * This constant defines the default country code with plus sign for the Growaasan whatsapp integration.
+    * 
+    * NOTE : This constant is used to remove the `+91` from the `COUNTRY_CODE` 
+    */
+   COUNTRY_CODE_WITH_PLUS_SIGN: "+91",
+
+   /**
     * COMMUNICATION_TYPE
     * 
     * This constant defines the default communication type for the Growaasan whatsapp integration.

@@ -106,6 +106,16 @@ APP_GROWAASAN_CLOUD_API_FROM_PHONE_NUMBER="9811929282"
    }
    ```
 
+8. when placeholder count mismatch in the meta dashboard and in backend code below error message will occur and message was not sent [WITHOUT_BREAKING_APPLICATION], and below is in dynamodb's json which was copied from aws dynamodb:
+```json
+   { 
+      "growaasanException" : { "BOOL" : true }, 
+      "whatasappUniqueId" : { "S" : "{\"status\":\"failed\",\"message\":\"body: number of localizable_params (4) does not match the expected number of params (3)\",\"whatsapp_uniqueid\":0}" }, 
+      "message" : { "S" : "Message sent successfully" }, 
+      "status" : { "N" : "1" } 
+   }
+```
+
 ```sh
 ## Growaasan API Integration Code Implemented in the Following Files
 
@@ -122,6 +132,7 @@ APP_GROWAASAN_CLOUD_API_FROM_PHONE_NUMBER="9811929282"
 
 4. UserReferralEmp.service.ts
    sendGrowaasanWhatsappMsgToEmpAboutPendingAcceptedReferralRequest [referral_request_pending_employee] 
+      1. In `app-scheduler.ts` file, find `handler` function then find `REFERRAL_DONE_STATUS_REMINDER`, and navigate to       `reviewReferralDoneStatusReminder` Function 
 
 5. UserSupport.service.ts
    sendGrowaasanWhatsappMessageToCandAboutEmpReferralQuery [referee_raise_dispute_candidate] 
@@ -129,6 +140,7 @@ APP_GROWAASAN_CLOUD_API_FROM_PHONE_NUMBER="9811929282"
 
 6. UserExperience.service.ts
    sendGrowaasanWhatsappMsgToEmpAboutPendingWorkEmailVerification [emp_pending_work_email_verification] 
+      1. In `app-scheduler.ts` file, find `handler` function then find `EMP_WORK_EMAIL_VERIFICATION_REMINDER`, and navigate to `reviewWhatsAppWorkEmailVerificationReminder` Function 
 ```
 
 ```sh

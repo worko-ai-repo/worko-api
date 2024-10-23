@@ -4,14 +4,14 @@ import express, { Express, Request, Response, NextFunction } from "express";
 import serverless from "serverless-http";
 import cors from "cors";
 
-// Import configs
-import DBConfig from "./db/DB.config";
-
 // Import extensions
 import "./extensions/string.extension";
 
 // Import libraries
 import "./libraries/logger.library";
+
+// Import configs
+import DBConfig from "./db/DB.config";
 
 // Import middlewares
 import { getAuthorizerContext } from "./middlewares/authorizer-context.middleware";

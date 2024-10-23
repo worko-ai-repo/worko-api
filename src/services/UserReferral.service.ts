@@ -102,7 +102,24 @@ class UserReferralService {
       jobPortal: referralRequest.jobPortal,
       jobId: referralRequest.jobId,
       jobUrl: decodedJobUrl,
-      jdExtracted: referralRequest.jdExtracted,
+
+      /**
+       * NOTE: To convert `jdExtracted` data type to `string` data type, we decided to use the `JSON.stringify()` method. because
+       * the `JSON.stringify()` method will convert the data type to `string` data type efficiently, please refer to the following example:
+       * const obj = {
+       *   "a":9,
+       *   "b":"b"
+       * }
+       * console.log(JSON.stringify(obj),typeof JSON.stringify(obj)) // [LOG]: "{"a":9,"b":"b"}",  "string"
+       * console.log(obj.toString(), typeof obj.toString()) // [LOG]: "[object Object]",  "string"
+       *
+       * const str = 10
+       * console.log(JSON.stringify(str),typeof JSON.stringify(str)) // [LOG]: "10",  "string"
+       * console.log(str.toString(),typeof str.toString()) // [LOG]: "10",  "string"
+       */
+      jdExtracted: referralRequest.jdExtracted
+        ? JSON.stringify(referralRequest.jdExtracted)
+        : undefined,
     };
 
     // Create the referral request
@@ -715,10 +732,8 @@ class UserReferralService {
     );
 
     // Fetch user referral details using referral ID and user email
-    let userReferralDetails = await this.getUserReferralByReferralId(
-      userEmail,
-      referralId
-    );
+    let userReferralDetails: DbUserReferralDto =
+      await this.getUserReferralByReferralId(userEmail, referralId);
 
     // If referral details are not found, throw an error
     if (!userReferralDetails) {

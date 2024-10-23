@@ -1,8 +1,14 @@
+// import dynamoose library
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 // Load npm packages
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 import { UserExperienceDTOWithId } from "../dtos/UserExperience.dto";
+
+// Load the local model
+import { DbUserExperienceDto } from "../db/models/UserExperience.model";
 
 // Load the local schema
 import { validateEmailField } from "../schemas/User.schema";
@@ -47,7 +53,8 @@ class UserExperienceController {
       }
 
       // Retrieve the user experience based on the email
-      const userExperience = await UserExperienceService.get(email);
+      const userExperience: QueryResponse<DbUserExperienceDto> =
+        await UserExperienceService.get(email);
 
       // If not experience found for the user, then return an empty array
       if (!userExperience.count){

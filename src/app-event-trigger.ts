@@ -1,6 +1,13 @@
 // Import npm packages
 import { Context, SQSEvent } from "aws-lambda";
 
+// Import extensions, the extensions must be imported after all natural imports
+// and before any direct imports like this which defines something and adds to the current scope.
+import "./extensions/string.extension";
+
+// Import libraries
+import "./libraries/logger.library";
+
 // Import configurations
 import DBConfig from "./db/DB.config";
 
@@ -21,13 +28,6 @@ import UserDetailService from "./services/UserDetail.service";
 // Import utils
 import { BaseError } from "./utils/errors.util";
 import HttpStatusCode from "./utils/http-codes.util";
-
-// Import extensions, the extensions must be imported after all natural imports
-// and before any direct imports like this which defines something and adds to the current scope.
-import "./extensions/string.extension";
-
-// Import libraries
-import "./libraries/logger.library";
 
 /**
  * initDatabaseConfig
@@ -165,16 +165,22 @@ const validateReferralMatchingScore = async (
   context: Context
 ): Promise<object> => {
   try {
+    global.logger.debug(`message: ${message}`, {
+      filePath: __filename,
+      methodName: "validateReferralMatchingScore",
+    });
+
     // Retrieve the necessary information from the message
     const { referralId } = message.context;
     const { userEmail, userId } = message;
 
+
     // Validate the referral matching score
-    const isReferralMatchingScoreValid = await UserReferralService.validateReferralMatchingScore(
-      referralId,
-      userEmail,
-      userId
-    );
+    const isReferralMatchingScoreValid: boolean = await UserReferralService.validateReferralMatchingScore(
+        referralId,
+        userEmail,
+        userId
+      );
 
     // Return success response if validation was successful
     if (isReferralMatchingScoreValid) {
@@ -260,16 +266,19 @@ export const handler = async (
 
     // Extract message body from event
     let messageBody = event.Records[0].body;
-    global.logger.info("App event trigger: messageBody: " + messageBody, {
-      filePath: __filename,
-      methodName: "handler",
-    });
+    global.logger.info(
+      `App event trigger: messageBody: ${messageBody}`,
+      {
+        filePath: __filename,
+        methodName: "handler",
+      }
+    );
 
     // Convert message body to string if not already a string
     if (typeof messageBody !== "string") {
       messageBody = JSON.stringify(messageBody);
       global.logger.info(
-        "App event trigger: messageBody (converted to string): " + messageBody,
+        `App event trigger: messageBody (converted to string): ${messageBody}`,
         {
           filePath: __filename,
           methodName: "handler",

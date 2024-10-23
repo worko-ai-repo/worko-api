@@ -17,6 +17,9 @@ import {
 
 // Import Models 
 import { DbUserSupportDto } from "../db/models/UserSupport.model";
+import { DbUserReferralDto } from "../db/models/UserReferral.model";
+import { DbUserDetailDto } from "../db/models/UserDetail.model";
+import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
 
 // Import Enums
 import {
@@ -80,7 +83,7 @@ class UserSupportService {
       if (userSupportCreateDto.contextType === UserContextTypeEnum.REFERRAL) {
         // Retrieve referral details using referral ID
         let referralId = userSupportCreateDto.contextId;
-        let userReferralDetails = await UserReferralService.getReferralById(
+        let userReferralDetails: QueryResponse<DbUserReferralDto> = await UserReferralService.getReferralById(
           referralId
         );
         if (!userReferralDetails.count) {
@@ -92,7 +95,8 @@ class UserSupportService {
 
         // Extract candidate email and details
         let candEmail = userReferralDetails[0].PK.split("#")[2];
-        let userDetails = await UserDetailService.get(candEmail);
+        let userDetails: QueryResponse<DbUserDetailDto> =
+          await UserDetailService.get(candEmail);
         if (!userDetails.count) {
           throw new BaseError(
             `Candidate with email ${candEmail} not found.`,
@@ -101,9 +105,10 @@ class UserSupportService {
         }
 
         // Retrieve company details using company ID
-        let companyDetails = await CompanyService.getCompanyDetailsByIds([
-          userReferralDetails[0].companyId,
-        ]);
+        let companyDetails: QueryResponse<DbCompanyDetailDto> =
+          await CompanyService.getCompanyDetailById(
+            userReferralDetails[0].companyId
+          );
         if (!companyDetails) {
           throw new BaseError(
             `Company with ID ${userReferralDetails[0].companyId} not found.`,
@@ -128,6 +133,7 @@ class UserSupportService {
             {
               candidateName: candName.toTitleCase(),
               employeeName: refereeName.toTitleCase(),
+              referralStatus: userReferralDetails[0].status,
               companyName: companyName,
             };
 
@@ -136,7 +142,12 @@ class UserSupportService {
             growaasanPlaceholders,
             {
               countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-              phoneNumber: parseInt(userDetails[0].number),
+              phoneNumber: parseInt(
+                userDetails[0].number.replace(
+                  GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
+                  ""
+                )
+              ),
             },
             candEmail
           );
@@ -151,9 +162,8 @@ class UserSupportService {
       if (userSupportCreateDto.contextType === UserContextTypeEnum.REFERRAL) {
         // Retrieve referral details using referral ID
         let referralId = userSupportCreateDto.contextId;
-        let userReferralDetails = await UserReferralService.getReferralById(
-          referralId
-        );
+        let userReferralDetails: QueryResponse<DbUserReferralDto> =
+          await UserReferralService.getReferralById(referralId);
         if (!userReferralDetails.count) {
           throw new BaseError(
             `Referral with ID ${referralId} not found.`,
@@ -161,47 +171,53 @@ class UserSupportService {
           );
         }
 
-        // Extract candidate email and details
-        let candEmail = userReferralDetails[0].PK.split("#")[2];
-        let userDetails = await UserDetailService.get(candEmail);
-        if (!userDetails.count) {
-          throw new BaseError(
-            `Candidate with email ${candEmail} not found.`,
-            HttpStatusCode.NOT_FOUND_404
-          );
-        }
+        // Extract employee user ID from referral details
+        const employeeUserId: string | undefined = userReferralDetails[0].acceptedByUserId || userReferralDetails[0].doneByUserId;
 
-        // Extract candidate name and referee name
-        let candName = userDetails[0].name;
-        let refereeName = userSupportCreateDto.userFirstName;
+        let employeeDetails;
+        if(employeeUserId){
+          employeeDetails = await UserDetailService.getUserById(employeeUserId);
+          if (!employeeDetails.count) {
+            throw new BaseError(
+              `Employee not found.`,
+              HttpStatusCode.NOT_FOUND_404
+            );
+          }          
 
-        /**
-         * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-         * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-         *
-         * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
-         */
-        if (userDetails[0].isEmailVerified) {
-          // Prepare WhatsApp placeholders for the message to employee
-          const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE =
-            {
-              employeeName: refereeName.toTitleCase(),
-              candidateName: candName.toTitleCase(),
-            };
-
-          // Send WhatsApp message to employee
-          await this.sendGrowaasanWhatsappMessageToEmpAboutCandReferralQuery(
-            growaasanPlaceholders,
-            {
-              countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-              phoneNumber: parseInt(userDetails[0].number),
-            },
-            candEmail
-          );
-        } else {
-          global.logger.info(
-            `Candidate's number for "${candEmail}" is not verified. WhatsApp message not sent.`
-          );
+          // Extract candidate name and referee name
+          let candName = employeeDetails[0].name;
+          let refereeName = userSupportCreateDto.userFirstName;
+          let empEmail = employeeDetails[0].PK.split("#")[2];
+  
+          /**
+           * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
+           * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
+           *
+           * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+           */
+          if (employeeDetails[0].isEmailVerified) {
+            // Prepare WhatsApp placeholders for the message to employee
+            const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE =
+              {
+                employeeName: refereeName.toTitleCase(),
+                candidateName: candName.toTitleCase(),
+                referralStatus: userReferralDetails[0].status
+              };
+  
+            // Send WhatsApp message to employee
+            await this.sendGrowaasanWhatsappMessageToEmpAboutCandReferralQuery(
+              growaasanPlaceholders,
+              {
+                countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
+                phoneNumber: parseInt(employeeDetails[0].number.replace(GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN, "")),
+              },
+              empEmail
+            );
+          } else {
+            global.logger.info(
+              `Employee's email for "${empEmail}" is not verified. WhatsApp message not sent.`
+            );
+          }
         }
       }
     }

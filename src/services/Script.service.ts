@@ -1,5 +1,6 @@
 // Import daos
 import userDetailDao from "../daos/UserDetail.dao";
+import userReferralDao from "../daos/UserReferral.dao";
 
 // Import DTOs
 import { AttributeValue } from "@aws-sdk/client-dynamodb";
@@ -228,6 +229,17 @@ class ScriptService {
     newEmail: string
   ): Promise<boolean> {
     return userDetailDao.scriptUpdatePkEmailToLowerCase(oldEmail, newEmail);
+  }
+
+  /**
+   * scriptUpdatejdExtractedToStringDataType
+   *
+   * To update all `jdExtracted` data type to `string` data type
+   * 
+   * @returns {Promise<boolean>} A promise that resolves to a boolean value indicating whether the script was successful or not.
+   */
+  scriptUpdatejdExtractedToStringDataType(): Promise<boolean> {
+    return userReferralDao.scriptUpdatejdExtractedToStringDataType();
   }
 }
 

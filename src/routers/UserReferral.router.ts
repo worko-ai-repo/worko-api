@@ -14,7 +14,7 @@ const UserReferralRouter = Router();
 UserReferralRouter.post("/:userEmail/referral/request", userReferralController.createReferralByCand
 );
 
-// Create referral based on the provided query parameter
+// Get referral based on the provided query parameter
 UserReferralRouter.get("/:userEmail/referral", userReferralController.getReferralsForCand);
 
 // Get matching Score

@@ -60,7 +60,7 @@ class UserService {
     return the employee details including currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified 
     */
     const empWithExperience = await Promise.all(
-      userDetails.map(async (eachUserDetail) => {
+      userDetails.map(async (eachUserDetail: DbUserDetailDto) => {
         // Extract employee email from the PK
         const empEmail = eachUserDetail.PK.split("#")[2];
 

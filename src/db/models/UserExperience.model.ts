@@ -21,8 +21,8 @@ class DbUserExperienceDto extends BaseDbDto {
   companyName!: string;
   companyId!: string;
   emailId?: String;
-  isEmailVerified?: boolean;
   isCurrent?: boolean;
+  isEmailVerified?: boolean;
 }
 
 // Define the schema for the User Experience model using DynamoDB

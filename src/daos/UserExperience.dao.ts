@@ -22,20 +22,23 @@ class UserExperienceDao implements BaseDao {
   GSI1SK = "COMP#ID#{companyId}#ID#{id}";
 
   /**
-   * Fetches user experience based on the provided email.
-   * @param email - Email address of the user
-   * @returns User details corresponding to the email
+   * get
+   *
+   * Retrieves a Employee experiences by their email id which was present in PK.
+   *
+   * @param {string} email - The primary email of the user.
+   * @returns {Promise<QueryResponse<DbUserExperienceDto>>} A promise that resolves with the query response containing the user's experience data.
    */
-  async get(email: string) {
+  async get(email: string): Promise<QueryResponse<DbUserExperienceDto>> {
     global.logger.info("Get user experience by id [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    const [skBegins] = this.sortKeys.SK_ID.split("#", 2);
+
     return UserExperienceModel.query("PK")
       .eq(PK)
       .where("SK")
-      .beginsWith(skBegins)
+      .beginsWith("EXP#ID#")
       .exec();
   }
 

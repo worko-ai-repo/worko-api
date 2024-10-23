@@ -160,6 +160,7 @@ class UserReferralDao implements BaseDao {
     if (status) {
       query = query.where("status").eq(status);
     }
+
     return query.exec();
   }
 
@@ -502,8 +503,66 @@ class UserReferralDao implements BaseDao {
     },
       {
         // update only jdMatchErrorCode feild
-        jdMatchErrorCode: jdMatchErrorCode
+        jdMatchErrorCode: jdMatchErrorCode,
+      }
+    );
+  }
+
+  /**
+   * scriptUpdatejdExtractedToStringDataType
+   *
+   * Updates all `jdExtracted` data type to `string` data type.
+   *
+   * NOTE: To convert `jdExtracted` data type to `string` data type, we decided to use the `JSON.stringify()` method. because
+   * the `JSON.stringify()` method will convert the data type to `string` data type efficiently, please refer to the following example:
+   * const obj = {
+   *   "a":9,
+   *   "b":"b"
+   * }
+   * console.log(JSON.stringify(obj),typeof JSON.stringify(obj)) // [LOG]: "{"a":9,"b":"b"}",  "string"
+   * console.log(obj.toString(), typeof obj.toString()) // [LOG]: "[object Object]",  "string"
+   *
+   * const str = 10
+   * console.log(JSON.stringify(str),typeof JSON.stringify(str)) // [LOG]: "10",  "string"
+   * console.log(str.toString(),typeof str.toString()) // [LOG]: "10",  "string"
+   *
+   * @returns {Promise<boolean>} A promise that resolves to a boolean value indicating whether the script was successful or not.
+   */
+  async scriptUpdatejdExtractedToStringDataType(): Promise<boolean> {
+    global.logger.info("update `jdExtracted` to string data type [DAO]");
+
+    const userReferrals: QueryResponse<DbUserReferralDto> =
+      await UserReferralModel.query("GSI1PK")
+        .eq(this.GSI1PK)
+        .where("GSI1SK")
+        .beginsWith("ID#")
+        .exec();
+
+    const updateOperations: any[] = [];
+
+    userReferrals.forEach((eachReferral: DbUserReferralDto) => {
+      const originalJdExtracted = eachReferral.jdExtracted;
+      console.log({
+        originalJdExtracted,
+        type: typeof originalJdExtracted,
       });
+
+      updateOperations.push(
+        UserReferralModel.update(
+          { PK: eachReferral.PK, SK: eachReferral.SK },
+          {
+            jdExtracted: eachReferral.jdExtracted
+              ? JSON.stringify(eachReferral.jdExtracted)
+              : undefined,
+          }
+        )
+      );
+    });
+
+    // Execute the update operations in parallel
+    await Promise.all(updateOperations);
+
+    return true;
   }
 }
 

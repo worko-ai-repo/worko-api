@@ -23,6 +23,8 @@ ScriptRouter.post("/update-users-to-lowercase",scriptController.scriptUpdateUser
 // Endpoint to update email present in the `PK` to lowercase
 ScriptRouter.post("/update-emails-to-lowercase/:oldEmail/:newEmail", scriptController.scriptUpdatePkEmailToLowerCase );
 
+ScriptRouter.post("/update-jd-extracted-to-string-data-type",scriptController.scriptUpdatejdExtractedToStringDataType);
+
 // Endpoint to update all user experiences
 // ScriptRouter.post("/update-user-experiences", scriptController.updateUserExperiencesGSIs);
 

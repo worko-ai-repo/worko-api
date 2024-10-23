@@ -1,3 +1,6 @@
+// Import required dynamoose libraries
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 // Import DateTime Library
 import { DateTime } from "luxon";
 
@@ -7,6 +10,7 @@ import userReferralDao from "../daos/UserReferral.dao";
 // Import Models
 import { DbUserExperienceDto } from "../db/models/UserExperience.model";
 import { DbUserReferralDto } from "../db/models/UserReferral.model";
+import { DbUserDetailDto } from "../db/models/UserDetail.model";
 
 // Import DTOs
 import {
@@ -326,7 +330,7 @@ class UserReferralEmpService {
     // Continue fetching and sending messages as long as there are more employees
     do {
       // Get a batch of employees for the company
-      const employeesResponse =
+      const employeesResponse: QueryResponse<DbUserExperienceDto> =
         await UserExperienceService.getCompanyCurrentEmployeesByCompanyId(
           companyId,
           {
@@ -335,13 +339,19 @@ class UserReferralEmpService {
           }
         );
 
-      // Add employees to the list
+      /**
+       * companyEmployees
+       * 
+       * Add employees to the list
+       * 
+       * .concat(employeesResponse) adds the elements of `employeesResponse` to `companyEmployees`, creating a new array that contains the employee objects.
+       */
       companyEmployees = companyEmployees.concat(employeesResponse);
 
       // Update the lastKey for the next iteration
       lastKey = employeesResponse.lastKey ?? null;
     } while (lastKey);
-
+    
     // Throw an error if no employees are found
     if (!companyEmployees.length) {
       throw new BaseError(
@@ -351,12 +361,13 @@ class UserReferralEmpService {
     }
 
     // Prepare and send WhatsApp messages in parallel
-    const employeesBatch = companyEmployees.map(async (employee) => {
-      // Extract the employee email from the PK field
-      const empEmail = employee.PK.split("#")[2];
+    const employeesBatch = companyEmployees.map(
+      async (employee: DbUserExperienceDto) => {
+        // Extract the employee email from the PK field
+        const empEmail: string = employee.PK.split("#")[2];
 
       // Fetch employee details
-      const empDetails = await UserDetailService.get(empEmail);
+      const empDetails: QueryResponse<DbUserDetailDto> = await UserDetailService.get(empEmail);
       if (!empDetails.count) {
         global.logger.info(
           `The employee details for the given email "${empEmail}" not found. Therefore, the WhatsApp message cannot be sent for the referral.`,
@@ -370,41 +381,47 @@ class UserReferralEmpService {
       const refereeName = empDetails[0].name;
       const refereeEmail = empDetails[0].emailList.primary;
 
-      /**
-       * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-       * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-       *
-       * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
-       */
-      if (empDetails[0].isEmailVerified) {
-        // Prepare placeholders for the Growaasan message
-        const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE =
-          {
-            employeeName: refereeName.toTitleCase(),
-            candidateName: candName.toTitleCase(),
-            matchingScore: matchingScore.toString(),
-            jobUrl: jobUrl,
-          };
-
-        await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-          GrowaasanTemplateNameEnum.EMP_NEW_REFERRAL_REQUEST_EMPLOYEE,
-          refereeEmail,
-          {
-            countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-            phoneNumber: parseInt(empDetails[0].number as string),
-          },
-          growaasanPlaceholders
-        );
-      } else {
-        // Log an info message if the employee's number is not verified
-        global.logger.info(
-          `The employee's "${refereeEmail}" is not verified. WhatsApp message cannot be sent for the referral.`,
-          {
-            companyId: companyId,
-          }
-        );
+        /**
+         * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
+         * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
+         *
+         * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+         */
+        if (empDetails[0].isEmailVerified) {
+          // Prepare placeholders for the Growaasan message
+          const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE =
+            {
+              employeeName: refereeName.toTitleCase(),
+              candidateName: candName.toTitleCase(),
+              matchingScore: matchingScore.toString(),
+              jobUrl: jobUrl,
+            };
+          console.log("employeeNumber: ", empDetails[0].number);
+          await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
+            GrowaasanTemplateNameEnum.EMP_NEW_REFERRAL_REQUEST_EMPLOYEE,
+            refereeEmail,
+            {
+              countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
+              phoneNumber: parseInt(
+                empDetails[0].number.replace(
+                  GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
+                  ""
+                )
+              ),
+            },
+            growaasanPlaceholders
+          );
+        } else {
+          // Log an info message if the employee's number is not verified
+          global.logger.info(
+            `The employee's "${refereeEmail}" is not verified. WhatsApp message cannot be sent for the referral.`,
+            {
+              companyId: companyId,
+            }
+          );
+        }
       }
-    });
+    );
     global.logger.info(
       `Processed ${employeesBatch.length} WhatsApp messages sending tasks so far for companyId: ${companyId}`
     );
@@ -467,7 +484,12 @@ class UserReferralEmpService {
         empEmail,
         {
           countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-          phoneNumber: parseInt(empDetails[0].number),
+          phoneNumber: parseInt(
+            empDetails[0].number.replace(
+              GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
+              ""
+            )
+          ),
         },
         growaasanPlaceholders
       );
@@ -631,7 +653,12 @@ class UserReferralEmpService {
           growaasanPlaceholders,
           {
             countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-            phoneNumber: parseInt(empDetails[0].number as string),
+            phoneNumber: parseInt(
+              empDetails[0].number.replace(
+                GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
+                ""
+              )
+            ),
           },
           refereeEmail
         );
@@ -821,7 +848,9 @@ class UserReferralEmpService {
             growaasanPlaceholders,
             {
               countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-              phoneNumber: parseInt(candDetails[0].number),
+              phoneNumber: parseInt(
+                candDetails[0].number.replace(GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN, "")
+              ),
             },
             refereeEmail // employee's email
           );
@@ -903,7 +932,7 @@ class UserReferralEmpService {
             growaasanPlaceholders,
             {
               countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-              phoneNumber: parseInt(candDetails[0].number),
+              phoneNumber: parseInt(candDetails[0].number.replace(GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN, "")),
             },
             candEmail // user email
           );

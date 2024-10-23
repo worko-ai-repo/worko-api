@@ -44,7 +44,8 @@ class UserExperienceService {
     );
 
     // Retrieve the user experience based on the email
-    const userExperience = await this.getUserExperiencesByEmail(userEmail);
+    const userExperience: QueryResponse<DbUserExperienceDto> =
+      await this.getUserExperiencesByEmail(userEmail);
 
     // If no experiences found for the user, then return an empty array
     if (!userExperience.count) {

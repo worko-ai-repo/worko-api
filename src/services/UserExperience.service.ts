@@ -1,6 +1,8 @@
+// import required library and types
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 // Import DateTime library
 import { DateTime } from "luxon";
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import Services
 import UserDetailService from "./UserDetail.service";
@@ -14,7 +16,6 @@ import { GROWAASAN_APP_CONSTANTS } from "../configs/constants/Growaasan.constant
 import userExperienceDao from "../daos/UserExperience.dao";
 
 // Import DTOs
-import { DbUserExperienceDto } from "../db/models/UserExperience.model";
 import { UserExperienceDTO } from "../dtos/UserExperience.dto";
 import { ScheduleJobCreateDto, ScheduleJobWhatsAppReminderInputDto } from "../dtos/ScheduleJob.dto";
 import { RecordListingFilterOptions } from "../dtos/Common.dto";
@@ -23,6 +24,7 @@ import { GrowaasanTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION } from 
 import { GrowaasanPhoneNumberDto } from "../dtos/Growaasan.dto";
 
 // Import Models
+import { DbUserExperienceDto } from "../db/models/UserExperience.model";
 import { DbUserOtpDto } from "../db/models/UserOTP.model";
 
 // Import Libraries
@@ -46,12 +48,14 @@ import { growaasanLibraryObj } from "../libraries/Growaasan.library";
  */
 class UserExperienceService {
   /**
-   * Retrieves user Experience by email id.
+   * get
    *
-   * @param email - Email of the user
-   * @returns {Promise<any>} - Experience of the user
+   * Retrieves a Employee experiences by their email id which was present in PK.
+   *
+   * @param {string} email - The primary email of the user.
+   * @returns {Promise<QueryResponse<DbUserExperienceDto>>} A promise that resolves with the query response containing the user's experience data.
    */
-  async get(email: string) {
+  async get(email: string): Promise<QueryResponse<DbUserExperienceDto>> {
     global.logger.info("Get user experience by id [service]");
     return userExperienceDao.get(email);
   }
@@ -214,7 +218,12 @@ class UserExperienceService {
         growaasanPlaceholders,
         {
           countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-          phoneNumber: parseInt(userDetails[0].number),
+          phoneNumber: parseInt(
+            userDetails[0].number.replace(
+              GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
+              ""
+            )
+          ),
         },
         inputDetails.email
       );

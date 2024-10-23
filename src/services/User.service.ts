@@ -172,32 +172,20 @@ class UserService {
           candidateName: candName.toTitleCase(),
         };
 
-      /**
-       * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-       * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-       *
-       * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
-       */
-      if (userSignUpDTO.isEmailVerified) {
         // Function responsible for sending a whatsapp message to the candidate using the "GROWAASAN API INTEGRATION"
         await this.sendGrowaasanWelcomeWhatsappMessageToCand(
           growaasanPlaceholders,
           {
             countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-            phoneNumber: parseInt(userSignUpDTO.number),
+            phoneNumber: parseInt(
+              userSignUpDTO.number.replace(
+                GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
+                ""
+              )
+            ),
           },
           candEmail
         );
-      } else {
-        global.logger.info(
-          "User Email is not verified therefore could not send growaasan whatsapp message",
-          {
-            filePath: __filename,
-            methodName: this.setupUserResources.name,
-            email: candEmail,
-          }
-        );
-      }
     } else if (userType === UserType.EMP) {
       // Prepare details required for sending the Email
       const empName: string = userSignUpDTO.name;
@@ -221,31 +209,19 @@ class UserService {
           employeeName: empName.toTitleCase(),
         };
 
-      /**
-       * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-       * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-       *
-       * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
-       */
-      if (userSignUpDTO.isEmailVerified) {
         // Function responsible for sending a whatsapp message to the candidate
         await this.sendGrowaasanWelcomeWhatsappMessageToEmp(
           growaasanPlaceholders,
           {
             countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-            phoneNumber: parseInt(userSignUpDTO.number),
+            phoneNumber: parseInt(
+                userSignUpDTO.number.replace(
+                GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN, ''
+              )
+            ),
           },
           empEmail
         );
-      } else {
-        global.logger.info(
-          "User Email is not verified therefore could not send growaasan whatsapp message",
-          {
-            filePath: __filename,
-            email: empEmail,
-          }
-        );
-      }
     }
 
     return true;

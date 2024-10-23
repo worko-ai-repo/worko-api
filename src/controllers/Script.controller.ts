@@ -149,6 +149,34 @@ class ScriptController {
       next(error);
     }
   };
+
+  /**
+   * scriptUpdateUsersToLowerCase
+   *
+   * To update all `jdExtracted` data type to `string` data type
+   *
+   * @param {Request} req - The Express request object.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   */
+  scriptUpdatejdExtractedToStringDataType = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await scriptServiceObj.scriptUpdatejdExtractedToStringDataType();
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json({
+          message:
+            "Data Type of `jdExtracted` Updated to `String` Data Type Successfully",
+        });
+    } catch (error) {
+      // Pass the error to the next middleware for error handling
+      next(error);
+    }
+  };
 }
 
 export default ScriptController;

@@ -1,14 +1,15 @@
+// import dynamoose types
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 //npm import
 import { Request, Response, NextFunction } from "express";
 
-// import luxon
-import { DateTime } from 'luxon';
-
 // Load the local dtos
 import { UserReferralRequestCreateApiDTO ,UserReferralRequestCreateDTO } from "../dtos/User.dto";
-import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
 import { UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
-import { Status } from "../dtos/Company.dto";
+
+// import models
+import { DbUserReferralDto } from "../db/models/UserReferral.model";
 
 // Load the local schema
 import {
@@ -21,26 +22,17 @@ import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserReferralService from "../services/UserReferral.service";
-import UserReferralResponseService from "../services/UserReferralResponse.service";
 import InvokeLambdaService from "../services/InvokeLambda.service";
 import CompanyService from "../services/Company.service";
-import UserService from "../services/User.service";
-import UserDetailService from "../services/UserDetail.service";
 import UserSubscriptionService from "../services/UserSubscription.service";
 import {userReferralEmpServiceObj} from "../services/UserReferralEmp.service";
 
 //Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
-import { BaseError, RequestValidationError } from "../utils/errors.util";
+import { RequestValidationError } from "../utils/errors.util";
 
 // Load the Enums
-import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
-
-import { EmailSourceDestinationAddress } from "../libraries/email.library";
-import { EmailTemplatePlaceholderCAND_REFERRAL_REQ_COMPLETED } from "../dtos/EmailTemplatePlaceholder.dto";
-
-
 
 /**
  * UserReferralController
@@ -72,7 +64,11 @@ class UserReferralController {
       }
 
       // Get the candidate referrals for the given "candEmail" and "referralStatus", if no referral found then just return empty response
-      let candReferrals = await UserReferralService.getReferralsForCand(candEmail, referralStatus);
+      let candReferrals: QueryResponse<DbUserReferralDto> =
+        await UserReferralService.getReferralsForCand(
+          candEmail,
+          referralStatus
+        );
       if (!candReferrals.count){
         return res.status(HttpStatusCode.OK_200).json([]);
       }

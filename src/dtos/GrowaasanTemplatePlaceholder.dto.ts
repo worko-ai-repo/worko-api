@@ -1,3 +1,6 @@
+// import enums
+import { ReferralStatus } from "../enums/UserReferral.enum";
+
 /**
  * GrowaasanPlaceholderParamDto
  * 
@@ -205,6 +208,15 @@ export interface GrowaasanTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDAT
   employeeName: string;
 
   /**
+   * referralStatus
+   *
+   * The third body placeholder, containing the referral status.
+   * 
+   * @see ReferralStatus
+   */
+  referralStatus: string;
+
+  /**
    * companyName
    * 
    * The third body placeholder, potentially containing the query or question.
@@ -234,6 +246,15 @@ export interface GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYE
    * The second body placeholder, possibly containing the candidate's name.
    */
   candidateName: string;
+
+  /**
+   * referralStatus
+   * 
+   * The third body placeholder, containing the referral status.
+   * 
+   * @see ReferralStatus
+   */
+  referralStatus: string;
 }
 
 /**
