@@ -187,8 +187,8 @@ class UserSupportService {
           }          
 
           // Extract candidate name and referee name
-          let candName = employeeDetails[0].name;
-          let refereeName = userSupportCreateDto.userFirstName;
+          let refereeName = employeeDetails[0].name;
+          let candName= userSupportCreateDto.userFirstName;
           let empEmail = employeeDetails[0].PK.split("#")[2];
 
           /**
