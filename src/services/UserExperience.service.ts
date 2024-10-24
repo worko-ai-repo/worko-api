@@ -175,13 +175,13 @@ class UserExperienceService {
   async reviewWhatsAppWorkEmailVerificationReminder(
     inputDetails: ScheduleJobWhatsAppReminderInputDto
   ): Promise<boolean> {
-    global.logger.info(`Reviewing WhatsApp work email verification reminder for ${inputDetails.email}`);
+    global.logger.info( `Reviewing WhatsApp work email verification reminder for ${inputDetails["email"]}` );
 
     // Get the maximum number of allowed reminders from constants
     const maxReminders = WHATSAPP_APP_CONSTANTS.EMP_WORK_EMAIL_REMINDER_X_TIMES;
 
     // Check if maximum reminders have been sent
-    if (inputDetails.reminderCount > maxReminders) {
+    if (inputDetails["reminderCount"] > maxReminders) {
       global.logger.info(`Skipping reminder as ${maxReminders} reminders have already been sent`, {
         filePath: __filename,
         methodName: "reviewWhatsAppWorkEmailVerificationReminder",
@@ -191,28 +191,42 @@ class UserExperienceService {
     }
 
     // Check if email is already verified
-    const experience = await this.getByUserPrimaryEmailAndId(inputDetails.email, inputDetails.experienceId);
+    const experience = await this.getByUserPrimaryEmailAndId(
+      inputDetails["email"],
+      inputDetails["experienceId"]
+    );
     if (experience[0].isEmailVerified) {
-      global.logger.info(`Skipping reminder as employee's work email is already verified`, {
-        filePath: __filename,
-        methodName: "reviewWhatsAppWorkEmailVerificationReminder",
-        email: inputDetails.email,
-        experienceId: inputDetails.experienceId
-      });
+      global.logger.info(
+        `Skipping reminder as employee's work email is already verified`,
+        {
+          filePath: __filename,
+          methodName: "reviewWhatsAppWorkEmailVerificationReminder",
+          email: inputDetails["email"],
+          experienceId: inputDetails["experienceId"],
+        }
+      );
       return true;
     }
 
     // Get user details
-    let userDetails = await UserDetailService.get(inputDetails.email);
+    let userDetails = await UserDetailService.get(inputDetails["email"]);
     if (!userDetails.count) {
-      throw new BaseError(`The user with provided email:${inputDetails.email} doesn't exist`, HttpStatusCode.NOT_FOUND_404);
+      throw new BaseError(
+        `The user with provided email:${inputDetails["email"]} doesn't exist`,
+        HttpStatusCode.NOT_FOUND_404
+      );
     }
 
-    // Send WhatsApp reminder if user's email is verified
-    if (userDetails[0].isEmailVerified) {
-      const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION = {
-        employeeName: inputDetails.empName.toTitleCase(),
-      }
+    /**
+     * - If isWhatsappNotificationEnabled is `undefined` then Send whatsapp message
+     * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
+     * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
+     */
+    if (userDetails[0].isWhatsappNotificationEnabled !== false) {
+      const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION =
+        {
+          employeeName: inputDetails["empName"].toTitleCase(),
+        };
 
       await this.sendGrowaasanWhatsappMsgToEmpAboutPendingWorkEmailVerification(
         growaasanPlaceholders,
@@ -225,26 +239,31 @@ class UserExperienceService {
             )
           ),
         },
-        inputDetails.email
+        inputDetails["email"]
       );
-      global.logger.info(`Sent WhatsApp reminder ${inputDetails.reminderCount} for work email verification`);
+      global.logger.info(
+        `Sent WhatsApp reminder ${inputDetails["reminderCount"]} for work email verification`
+      );
 
       // Schedule the next reminder if we haven't reached the maximum
-      if (inputDetails.reminderCount < maxReminders) {
+      if (inputDetails["reminderCount"] < maxReminders) {
         await this.scheduleWhatsAppWorkEmailVerificationReminder(
-          inputDetails.email,
-          inputDetails.empName,
-          inputDetails.experienceId,
-          inputDetails.reminderCount + 1
+          inputDetails["email"],
+          inputDetails["empName"],
+          inputDetails["experienceId"],
+          inputDetails["reminderCount"] + 1
         );
       }
     } else {
-      global.logger.info(`Skipping reminder as user's mobile number is not verified`, {
-        filePath: __filename,
-        methodName: "reviewWhatsAppWorkEmailVerificationReminder",
-        email: inputDetails.email,
-        experienceId: inputDetails.experienceId
-      });
+      global.logger.info(
+        `Skipping reminder as employee's whatsapp notification is disabled`,
+        {
+          filePath: __filename,
+          methodName: "reviewWhatsAppWorkEmailVerificationReminder",
+          email: inputDetails["email"],
+          experienceId: inputDetails["experienceId"],
+        }
+      );
     }
 
     return true;

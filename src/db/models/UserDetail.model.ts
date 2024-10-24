@@ -45,7 +45,8 @@ class DbUserDetailDto extends BaseDbDto {
     companyName: string;
     designation: string;
     department: string;
-  }
+  };
+  isWhatsappNotificationEnabled?: boolean;
 }
 
 // Define the schema for the User Details model using DynamoDB
@@ -182,6 +183,11 @@ const UserDetailSchema = new dynamoose.Schema(
       },
       required: false,
     },
+    isWhatsappNotificationEnabled: {
+      type: Boolean,
+      default: true,
+      required: false,
+    }
   },
   {
     ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,

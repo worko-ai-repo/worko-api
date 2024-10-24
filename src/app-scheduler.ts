@@ -146,70 +146,115 @@ export const handler = async (event: any, context: Context): Promise<object> => 
 
         // Process the scheduled job based on its type
         switch (scheduleJob.type) {
-            /**
-             * REFERRAL_REVIEW_ACCEPTANCE_STATUS
-             * 
-             * Processes the Referral Review Acceptance Status schedule job.
-             */
-            case ScheduleJobType.REFERRAL_REVIEW_ACCEPTANCE_STATUS:
-                global.logger.info('App scheduler handler: referralId and userEmail: ', {
-                    filePath: __filename,
-                    methodName: 'handler',
-                    referralId: inputDetails.referralId,
-                    userEmail: inputDetails.userEmail,
-                });
+          /**
+           * REFERRAL_REVIEW_ACCEPTANCE_STATUS
+           *
+           * Processes the Referral Review Acceptance Status schedule job.
+           */
+          case ScheduleJobType.REFERRAL_REVIEW_ACCEPTANCE_STATUS:
+            global.logger.info(
+              "App scheduler handler: referralId and userEmail: ",
+              {
+                filePath: __filename,
+                methodName: "handler",
+                referralId: inputDetails["referralId"],
+                userEmail: inputDetails["userEmail"],
+              }
+            );
 
-                // Call the user referral service to review the referral acceptance status
-                await userReferralService.reviewReferralAcceptanceStatus(inputDetails.referralId, inputDetails.userEmail);
-                break;
+            // Call the user referral service to review the referral acceptance status
+            await userReferralService.reviewReferralAcceptanceStatus(
+              inputDetails["referralId"],
+              inputDetails["userEmail"]
+            );
+            break;
 
-            /**
-             * EMP_WORK_EMAIL_VERIFICATION_REMINDER
-             * 
-             * Handles the Employee Work Email Verification Reminder schedule job.
-             * 
-             * @description Sends a WhatsApp reminder to employees about pending work email (corporate email) verification,
-             *              triggered if the work email is not verified within 24 hours after creation.
-             */
-            case ScheduleJobType.EMP_WORK_EMAIL_VERIFICATION_REMINDER:
-                const input = scheduleJob.input as ScheduleJobWhatsAppReminderInputDto;
-                global.logger.info('App scheduler handler: referralId and userEmail: ', {
-                    filePath: __filename,
-                    methodName: 'handler',
-                    referralId: inputDetails.referralId,
-                    userEmail: inputDetails.userEmail,
-                });
+          /**
+           * EMP_WORK_EMAIL_VERIFICATION_REMINDER
+           *
+           * Handles the Employee Work Email Verification Reminder schedule job.
+           *
+           * @description Sends a WhatsApp reminder to employees about pending work email (corporate email) verification,
+           *              triggered if the work email is not verified within 24 hours after creation.
+           */
+          case ScheduleJobType.EMP_WORK_EMAIL_VERIFICATION_REMINDER:
+            const input =
+              scheduleJob.input as ScheduleJobWhatsAppReminderInputDto;
+            global.logger.info(
+              "App scheduler handler: referralId and userEmail [EMP_WORK_EMAIL_VERIFICATION_REMINDER]: ",
+              {
+                filePath: __filename,
+                methodName: "handler",
+                referralId: inputDetails["referralId"],
+              }
+            );
 
-                // Send the WhatsApp reminder for work email verification
-                await UserExperienceService.reviewWhatsAppWorkEmailVerificationReminder(input);
-                break;
+            // Send the WhatsApp reminder for work email verification
+            await UserExperienceService.reviewWhatsAppWorkEmailVerificationReminder(
+              input
+            );
+            break;
 
-            /**
-             * REFERRAL_DONE_STATUS_REMINDER
-             * 
-             * Processes the Referral Done Status Reminder schedule job.
-             * 
-             * @description Sends a WhatsApp reminder to the employee if a referral has been accepted for a long time
-             *              (typically 24 hours) but has not been completed yet.
-             */
-            case ScheduleJobType.REFERRAL_DONE_STATUS_REMINDER:
-                global.logger.info('App scheduler handler: referralId and userEmail: ', {
-                    filePath: __filename,
-                    methodName: 'handler',
-                    referralId: inputDetails.referralId,
-                    userEmail: inputDetails.userEmail,
-                });
+          /**
+           * REFERRAL_DONE_STATUS_REMINDER
+           *
+           * Processes the Referral Done Status Reminder schedule job.
+           *
+           * @description Sends a WhatsApp reminder to the employee if a referral has been accepted for a long time
+           *              (typically 24 hours) but has not been completed yet.
+           *
+           * We decided to use `Bracket Notation` to retrieve the `referralId` and `userEmail` from the `inputDetails` object.
+           *
+           * @example
+           * const inputDetails = {
+           *     "userId": "e1134dca-6071-70ff-2941-54fcce656f38",
+           *     "referralId": "01JAW61V473GMTWMQHGXXEHZB8",
+           *     "userEmail": "divy.raushan26@gmail.com"
+           * }
+           *
+           * // Attempt to retrieve userEmail using dot notation
+           * const userEmailRetrievingUsingDotNotation = inputDetails.userEmail;
+           * console.log(userEmail); // [ERR]: userEmail is not defined
+           *
+           * // Correctly retrieving userEmail using bracket notation
+           * const userEmailRetrievingUsingBracketNotation = inputDetails["userEmail"];
+           * console.log(userEmailRetrievingUsingBracketNotation); // [LOG]: "divy.raushan26@gmail.com"
+           *
+           * const inputDetailsSecond = {
+           *     userId: "second.e1134dca-6071-70ff-2941-54fcce656f38",
+           *     referralId: "second.01JAW61V473GMTWMQHGXXEHZB8",
+           *     userEmail: "second.divy.raushan26@gmail.com"
+           * }
+           *
+           * // Retrieving userEmail using bracket notation in inputDetailsSecond
+           * const userEmailRetrievingUsingBracketNotationSecond = inputDetailsSecond["userEmail"];
+           * console.log(userEmailRetrievingUsingBracketNotationSecond); // [LOG]: "second.divy.raushan26@gmail.com"
+           *
+           * // Retrieving userEmail using dot notation in inputDetailsSecond
+           * const userEmailRetrievingUsingDotNotationSecond = inputDetailsSecond.userEmail;
+           * console.log(userEmailRetrievingUsingDotNotationSecond); // [LOG]: "second.divy.raushan26@gmail.com"
+           */
+          case ScheduleJobType.REFERRAL_DONE_STATUS_REMINDER:
+            global.logger.info(
+              "App scheduler handler [REFERRAL_DONE_STATUS_REMINDER]: referralId and userEmail: ",
+              {
+                filePath: __filename,
+                methodName: "handler",
+                referralId: inputDetails["referralId"],
+              }
+            );
 
-                // Send the reminder for referral completion
-                await userReferralEmpServiceObj.reviewReferralDoneStatusReminder(
-                  inputDetails.referralId,
-                  inputDetails.userEmail
-                );
-                break;
+            // Send the reminder for referral completion
+            await userReferralEmpServiceObj.reviewReferralDoneStatusReminder(
+              inputDetails["referralId"],
+            );
+            break;
 
-            // Handle unknown or unsupported schedule job types
-            default:
-                throw new BaseError(`No schedule found for job type: ${scheduleJob.type}`);
+          // Handle unknown or unsupported schedule job types
+          default:
+            throw new BaseError(
+              `No schedule found for job type: ${scheduleJob.type}`
+            );
         }
 
         // Mark the scheduled job as completed

@@ -102,24 +102,7 @@ class UserReferralService {
       jobPortal: referralRequest.jobPortal,
       jobId: referralRequest.jobId,
       jobUrl: decodedJobUrl,
-
-      /**
-       * NOTE: To convert `jdExtracted` data type to `string` data type, we decided to use the `JSON.stringify()` method. because
-       * the `JSON.stringify()` method will convert the data type to `string` data type efficiently, please refer to the following example:
-       * const obj = {
-       *   "a":9,
-       *   "b":"b"
-       * }
-       * console.log(JSON.stringify(obj),typeof JSON.stringify(obj)) // [LOG]: "{"a":9,"b":"b"}",  "string"
-       * console.log(obj.toString(), typeof obj.toString()) // [LOG]: "[object Object]",  "string"
-       *
-       * const str = 10
-       * console.log(JSON.stringify(str),typeof JSON.stringify(str)) // [LOG]: "10",  "string"
-       * console.log(str.toString(),typeof str.toString()) // [LOG]: "10",  "string"
-       */
-      jdExtracted: referralRequest.jdExtracted
-        ? JSON.stringify(referralRequest.jdExtracted)
-        : undefined,
+      jdExtracted: referralRequest.jdExtracted,
     };
 
     // Create the referral request
@@ -290,10 +273,32 @@ class UserReferralService {
     referralId: string
   ): Promise<DbUserReferralDto> {
     // Logging the action of getting user Referral by companyId in the service layer
-    logger.info(
+    global.logger.info(
       `Fetching Referrals by referralId :${referralId} and userEmail:${userEmail}  [UserReferralService]`
     );
     return userReferralDao.getUserReferralByReferralId(userEmail, referralId);
+  }
+
+  /**
+   * getReferralDetailsByReferralId
+   *
+   * Fetches Referral based on referralId.
+   *
+   * @param referralId - Referral id
+   * @returns {Promise<QueryResponse<DbUserReferralDto>>} - A Promise that resolves to the query response containing the referral details.
+   */
+  async getReferralDetailsByReferralId(
+    referralId: string
+  ): Promise<QueryResponse<DbUserReferralDto>> {
+    global.logger.info(
+      `Get Referral Details for Referral Id ${referralId}. [DAO]`,
+      {
+        filePath: __filename,
+        methodName: this.getReferralDetailsByReferralId.name,
+      }
+    );
+
+    return userReferralDao.getReferralDetailsByReferralId(referralId);
   }
 
   /**
@@ -1012,7 +1017,7 @@ class UserReferralService {
 
   /**
    * sendGrowaasanWhatsappMsgToCandWhenReferralRequestCompleted
-   * 
+   *
    * Sends a WhatsApp message to a candidate when their referral request has been completed.
    *
    * @param {GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE} placeholders - The placeholders for the message template.

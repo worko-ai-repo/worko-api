@@ -79,10 +79,14 @@ class UserReferralDao implements BaseDao {
     ) {
       query = query.and().parenthesis((condition) => {
         if (referralRecordListingFilterRequest.fromDate) {
-          condition.where("createdAt").ge(referralRecordListingFilterRequest.fromDate);
+          condition
+            .where("createdAt")
+            .ge(referralRecordListingFilterRequest.fromDate);
         }
         if (referralRecordListingFilterRequest.toDate) {
-          condition.where("createdAt").le(referralRecordListingFilterRequest.toDate);
+          condition
+            .where("createdAt")
+            .le(referralRecordListingFilterRequest.toDate);
         }
         return condition;
       });
@@ -338,6 +342,35 @@ class UserReferralDao implements BaseDao {
   }
 
   /**
+   * getReferralDetailsByReferralId
+   * 
+   * Fetches Referral based on referralId.
+   *
+   * @param referralId - Referral id
+   * @returns {Promise<QueryResponse<DbUserReferralDto>>} - A Promise that resolves to the query response containing the referral details.
+   */
+  async getReferralDetailsByReferralId(
+    referralId: string
+  ): Promise<QueryResponse<DbUserReferralDto>> {
+    global.logger.info(
+      `Get Referral Details for Referral Id ${referralId}. [DAO]`,
+      {
+        filePath: __filename,
+        methodName: this.getReferralDetailsByReferralId.name,
+      }
+    );
+
+    const GSI1SK = this.GSI1SK.strtr({ "{refId}": referralId });
+
+    // return Referral details 
+    return UserReferralModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .eq(GSI1SK)
+      .exec();
+  }
+
+  /**
    * Fetches Referral based on GSI1PK, companySK, and status.
    * @param companyId - Company sort key
    * @param status - Referral status
@@ -472,35 +505,41 @@ class UserReferralDao implements BaseDao {
 
   /**
    *========INTERNAL SCRIPT USE ONLY==========*
-  * 
-  * updateUserReferralsJdMatchErrorCode
-  * 
-  * @description This function updates a specific user referral in the database with the provided `jdMatchErrorCode`. 
-  * It is intended exclusively for internal script operations, particularly when modifying or correcting referral data 
-  * in bulk based on specific conditions. This function directly interacts with the data access layer to perform the update.
-  * 
-  * **IMPORTANT:**
-  * - This function is **not** intended for use in production code or any external operations.
-  * - It has **no relation** to other functions, services, or API endpoints.
-  * - **Do not use this function** for any kind of user-facing operations or as part of any service logic.
-  * - Misuse of this function can lead to unintended consequences, and any such misuse will not be supported.
-  * 
-  * @param {string} candEmail - The email of the user.
-  * @param {string} referralId - The ID of the referral.
-  * @param {number} jdMatchErrorCode - The data to update the user referral with.
-  */
-  async updateUserReferralsJdMatchErrorCode(userEmail: string, referralId: string, jdMatchErrorCode: number) {
-    global.logger.info(`
+   *
+   * updateUserReferralsJdMatchErrorCode
+   *
+   * @description This function updates a specific user referral in the database with the provided `jdMatchErrorCode`.
+   * It is intended exclusively for internal script operations, particularly when modifying or correcting referral data
+   * in bulk based on specific conditions. This function directly interacts with the data access layer to perform the update.
+   *
+   * **IMPORTANT:**
+   * - This function is **not** intended for use in production code or any external operations.
+   * - It has **no relation** to other functions, services, or API endpoints.
+   * - **Do not use this function** for any kind of user-facing operations or as part of any service logic.
+   * - Misuse of this function can lead to unintended consequences, and any such misuse will not be supported.
+   *
+   * @param {string} candEmail - The email of the user.
+   * @param {string} referralId - The ID of the referral.
+   * @param {number} jdMatchErrorCode - The data to update the user referral with.
+   */
+  async updateUserReferralsJdMatchErrorCode(
+    userEmail: string,
+    referralId: string,
+    jdMatchErrorCode: number
+  ) {
+    global.logger.info(
+      `
       UserEmail is ${userEmail},
       ReferralId is ${referralId},
       jdMatchErrorCode is ${jdMatchErrorCode}`,
       "Updating User Referral jdMatcherrroCode [DAO]"
     );
     // retrun the updated User Referral with JdMatchErrorCode
-    return UserReferralModel.update({
-      PK: this.partitianKey.strtr({ "{primaryEmail}": userEmail }),
-      SK: this.sortKeys.SK_REFERRAL.replace("{reqId}", referralId)
-    },
+    return UserReferralModel.update(
+      {
+        PK: this.partitianKey.strtr({ "{primaryEmail}": userEmail }),
+        SK: this.sortKeys.SK_REFERRAL.replace("{reqId}", referralId),
+      },
       {
         // update only jdMatchErrorCode feild
         jdMatchErrorCode: jdMatchErrorCode,
@@ -510,6 +549,10 @@ class UserReferralDao implements BaseDao {
 
   /**
    * scriptUpdatejdExtractedToStringDataType
+   *
+   * NOTE: This script we are not using it currently. because earlier we have anticipated the
+   * issues in the `jdExtracted` data type was not string, but we realise that is not the case.
+   * And we may use this script in the future by reviewing with team lead.
    *
    * Updates all `jdExtracted` data type to `string` data type.
    *

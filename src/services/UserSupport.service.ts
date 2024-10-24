@@ -122,12 +122,11 @@ class UserSupportService {
         let refereeName = userSupportCreateDto.userFirstName;
 
         /**
-         * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-         * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-         *
-         * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+         * - If isWhatsappNotificationEnabled is `undefined` then Send whatsapp message
+         * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
+         * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
-        if (userDetails[0].isEmailVerified) {
+        if (userDetails[0].isWhatsappNotificationEnabled !== false) {
           // Prepare Growaasan placeholders for the message to candidate
           const growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDATE =
             {
@@ -153,7 +152,7 @@ class UserSupportService {
           );
         } else {
           global.logger.info(
-            `Candidate's number for "${candEmail}" is not verified. WhatsApp message not sent.`
+            `Candidate with email ${candEmail} does not have whatsapp notifications enabled, so no whatsapp message will be sent.`
           );
         }
       }
@@ -188,14 +187,13 @@ class UserSupportService {
           let candName = employeeDetails[0].name;
           let refereeName = userSupportCreateDto.userFirstName;
           let empEmail = employeeDetails[0].PK.split("#")[2];
-  
+
           /**
-           * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-           * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-           *
-           * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+           * - If isWhatsappNotificationEnabled is `undefined` then Send whatsapp message
+           * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
+           * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
            */
-          if (employeeDetails[0].isEmailVerified) {
+          if (employeeDetails[0].isWhatsappNotificationEnabled !== false) {
             // Prepare WhatsApp placeholders for the message to employee
             const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE =
               {
@@ -209,13 +207,18 @@ class UserSupportService {
               growaasanPlaceholders,
               {
                 countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-                phoneNumber: parseInt(employeeDetails[0].number.replace(GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN, "")),
+                phoneNumber: parseInt(
+                  employeeDetails[0].number.replace(
+                    GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
+                    ""
+                  )
+                ),
               },
               empEmail
             );
           } else {
             global.logger.info(
-              `Employee's email for "${empEmail}" is not verified. WhatsApp message not sent.`
+              `Employee with email ${empEmail} does not have whatsapp notifications enabled, so no whatsapp message will be sent.`
             );
           }
         }

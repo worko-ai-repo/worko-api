@@ -35,7 +35,7 @@ const WHATSAPP_APP_CONSTANTS = {
   get EMP_WORK_EMAIL_REMINDER_INTERVAL(): number {
     return process.env.APP_SLS_STAGE === APP_CONSTANTS.STAGES.PROD
       ? 24 * 60 * 60 * 1000 // 24 hours in milliseconds
-      : 10 * 60 * 1000; // 10 minutes in milliseconds
+      : 5 * 60 * 1000; // 5 minutes in milliseconds
   },
 
   /**
@@ -52,7 +52,7 @@ const WHATSAPP_APP_CONSTANTS = {
   get EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INITIAL_DELAY(): number {
     return process.env.APP_SLS_STAGE === APP_CONSTANTS.STAGES.PROD
       ? 24 * 60 * 60 * 1000 // 24 hours in milliseconds
-      : 10 * 60 * 1000; // 10 minutes in milliseconds
+      : 5 * 60 * 1000; // 5 minutes in milliseconds
   },
 
   /**
@@ -69,7 +69,7 @@ const WHATSAPP_APP_CONSTANTS = {
   get EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INTERVAL(): number {
     return process.env.APP_SLS_STAGE === APP_CONSTANTS.STAGES.PROD
       ? 36 * 60 * 60 * 1000 // 36 hours in milliseconds
-      : 20 * 60 * 1000; // 20 minutes in milliseconds
+      : 5 * 60 * 1000; // 5 minutes in milliseconds
   },
 };
 

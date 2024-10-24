@@ -382,12 +382,11 @@ class UserReferralEmpService {
       const refereeEmail = empDetails[0].emailList.primary;
 
         /**
-         * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-         * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-         *
-         * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+         * - If isWhatsappNotificationEnabled is `undefined` then Send whatsapp message
+         * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
+         * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
-        if (empDetails[0].isEmailVerified) {
+        if (empDetails[0].isWhatsappNotificationEnabled !== false) {
           // Prepare placeholders for the Growaasan message
           const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE =
             {
@@ -414,7 +413,7 @@ class UserReferralEmpService {
         } else {
           // Log an info message if the employee's number is not verified
           global.logger.info(
-            `The employee's "${refereeEmail}" is not verified. WhatsApp message cannot be sent for the referral.`,
+            `Whatsapp notification is not enabled for the employee with email "${refereeEmail}". Therefore, the WhatsApp message cannot be sent for the referral.`,
             {
               companyId: companyId,
             }
@@ -553,12 +552,24 @@ class UserReferralEmpService {
     return true;
   }
 
+  /**
+   * scheduleReferralDoneStatusReminder
+   *
+   * Schedules a reminder to check if a referral request is still in the "ACCEPT" status.
+   * If the referral request is still in the "ACCEPT" status, a WhatsApp reminder is sent to the employee.
+   * The reminder is scheduled after a certain delay, usually 24 hours for `PROD` environment and 5 minutes for `DEV` environment.
+   *
+   * @param {string} email - Email address of the employee.
+   * @param {string} empName - Name of the employee.
+   * @param {string} referralId - ID of the referral request to check the status.
+   * @returns {Promise<boolean>} - Promise that resolves when the reminder is successfully scheduled.
+   */
   async scheduleReferralDoneStatusReminder(
     email: string,
     empName: string,
     referralId: string
   ): Promise<boolean> {
-    // This is a delay before the first reminder is sent. Usually, this is 24 hours for PROD and 20 mins for Dev
+    // This is a delay before the first reminder is sent. Usually, this is 24 hours for PROD and 5 mins for Dev
     const delay =
       WHATSAPP_APP_CONSTANTS.EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INITIAL_DELAY;
 
@@ -600,49 +611,42 @@ class UserReferralEmpService {
    * @returns {Promise<boolean>} - Returns a promise that resolves with a boolean indicating if the message was sent or not.
    */
   async reviewReferralDoneStatusReminder(
-    referralId: string,
-    userEmail: string
+    referralId: string
   ): Promise<boolean> {
     global.logger.info(
       `Reviewing referral completion status for referral ID: ${referralId}`,
       {
         filePath: __filename,
         methodName: this.reviewReferralDoneStatusReminder.name,
-        userEmail: userEmail,
       }
     );
 
     // Fetch user referral details using referral ID and user email
-    let userReferralDetails =
-      await UserReferralService.getUserReferralByReferralId(
-        userEmail,
-        referralId
-      );
+    let userReferralDetails: QueryResponse<DbUserReferralDto> = await UserReferralService.getReferralDetailsByReferralId(referralId);
 
     // If referral details are not found, throw an error
-    if (!userReferralDetails) {
+    if (!userReferralDetails.count) {
       throw new BaseError(
-        `The referral details not found for the provided referral ID "${referralId}" and email "${userEmail}".`
+        `The referral details not found for the provided referral ID "${referralId}" ".`
       );
     }
 
     // Check if the referral is in the "accepted" status , if yes then send whatsapp message to employee
-    if (userReferralDetails.status === ReferralStatus.ACCEPTED) {
+    if (userReferralDetails[0].status === ReferralStatus.ACCEPTED) {
       // Get the name and email of the referee who accepted the referral request
-      const empId = userReferralDetails.acceptedByUserId as string;
+      const empId = userReferralDetails[0].acceptedByUserId as string;
       const empDetails = await UserDetailService.getUserById(empId);
       const refereeName = empDetails[0].name;
       const refereeEmail = empDetails[0].emailList.primary;
-      let candEmail = userReferralDetails.PK.split("#")[2];
+      let candEmail = userReferralDetails[0].PK.split("#")[2];
       let candDetails = await UserDetailService.get(candEmail);
 
       /**
-       * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-       * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-       *
-       * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+       * - If isWhatsappNotificationEnabled is `undefined` then Send whatsapp message
+       * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
+       * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
        */
-      if (empDetails[0].isEmailVerified) {
+      if (empDetails[0].isWhatsappNotificationEnabled !== false) {
         let growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE =
           {
             employeeName: refereeName.toTitleCase(),
@@ -663,7 +667,7 @@ class UserReferralEmpService {
           refereeEmail
         );
 
-        // Schedule the next reminder after the 36 hours on prod and 20 min on dev
+        // Schedule the next reminder after the 36 hours on prod and 5 min on dev
         const delay =
           WHATSAPP_APP_CONSTANTS.EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INTERVAL;
         const scheduleTime = DateTime.now().plus({ milliseconds: delay });
@@ -679,7 +683,7 @@ class UserReferralEmpService {
         await ScheduleJobService.createScheduleJob(scheduleJobPayload);
       } else {
         global.logger.info(
-          `Employee's number is not verified. WhatsApp message not sent.`
+          `Skipping sending WhatsApp message to ${refereeEmail} as the employee has disabled the WhatsApp notification.`
         );
       }
     } else {
@@ -830,12 +834,11 @@ class UserReferralEmpService {
         const candDetails = await UserDetailService.get(candEmail);
 
         /**
-         * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-         * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-         *
-         * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+         * - If isWhatsappNotificationEnabled is `undefined` then Send whatsapp message
+         * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
+         * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
-        if (candDetails[0].isEmailVerified) {
+        if (candDetails[0].isWhatsappNotificationEnabled !== false) {
           let growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE =
             {
               candidateName: candName.toTitleCase(),
@@ -849,10 +852,13 @@ class UserReferralEmpService {
             {
               countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
               phoneNumber: parseInt(
-                candDetails[0].number.replace(GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN, "")
+                candDetails[0].number.replace(
+                  GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
+                  ""
+                )
               ),
             },
-            refereeEmail // employee's email
+            candEmail
           );
           await this.scheduleReferralDoneStatusReminder(
             refereeEmail,
@@ -861,7 +867,7 @@ class UserReferralEmpService {
           );
         } else {
           global.logger.info(
-            `Candidate's number for "${candEmail}" is not verified. WhatsApp message not sent.`
+            `Whatsapp notification is not enabled for email: ${candEmail}`
           );
         }
 
@@ -914,12 +920,11 @@ class UserReferralEmpService {
         const candDetails = await UserDetailService.get(candEmail);
 
         /**
-         * NOTE:- As of now we are verifying user "isEmailVerified" attribute to send whatsapp message to the user
-         * but in near future we will verify user "isNumberVerified" attribute to send whatsapp message to the user
-         *
-         * Check if user has isEmailVerified true or false, if true then send whatsapp message to the user
+         * - If isWhatsappNotificationEnabled is `undefined` then Send whatsapp message
+         * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
+         * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
-        if (candDetails[0].isEmailVerified) {
+        if (candDetails[0].isWhatsappNotificationEnabled !== false) {
           let growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE =
             {
               candidateName: candName.toTitleCase(),
@@ -932,13 +937,18 @@ class UserReferralEmpService {
             growaasanPlaceholders,
             {
               countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-              phoneNumber: parseInt(candDetails[0].number.replace(GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN, "")),
+              phoneNumber: parseInt(
+                candDetails[0].number.replace(
+                  GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
+                  ""
+                )
+              ),
             },
             candEmail // user email
           );
         } else {
           global.logger.info(
-            `Candidate's "${candEmail}" is not verified. WhatsApp message not sent.`
+            `Candidate's whatsapp notification is not enabled for email: ${candEmail}`
           );
         }
 

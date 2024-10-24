@@ -126,21 +126,6 @@ const serverlessConfiguration: AWS = {
     ]
   },
   functions: {
-    appeventtrigger:{
-      handler: "dist/src/app-event-trigger.handler",
-      events: [
-        {
-          sqs: {
-            arn: "arn:aws:sqs:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:worko-app-event-queue",
-            batchSize: 1,
-            maximumBatchingWindow: 0
-          }
-        }
-      ]
-    },
-    "app-scheduler-handler": {
-      handler: "dist/src/app-scheduler.handler",
-    },
     app: {
       handler: "dist/src/app.handler",
       events: [
@@ -191,6 +176,21 @@ const serverlessConfiguration: AWS = {
           }
         },
       ],
+    },
+    appeventtrigger:{
+      handler: "dist/src/app-event-trigger.handler",
+      events: [
+        {
+          sqs: {
+            arn: "arn:aws:sqs:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:worko-app-event-queue",
+            batchSize: 1,
+            maximumBatchingWindow: 0
+          }
+        }
+      ]
+    },
+    "app-scheduler-handler": {
+      handler: "dist/src/app-scheduler.handler",
     },
   },
   resources: {},

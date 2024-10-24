@@ -20,12 +20,15 @@ class DbUserReferralDto extends BaseDbDto {
   // The main referaal body related to referal
   status!: string; // @todo: Add enum for referral status i.e AWAITING, DONE, WITHDRAWN, REJECTED, ACCEPTED, CANCELLED
   jobUrl!: string;
+
   jdExtracted?: string;
   matchingScore!: number;
   scoreDetails?: string;
   jdMatchErrorCode?: number; // Error code details
   jdMatchErrorDesc?: string; // Cv Extract details
-  jobPortal?:string;
+  jobPortal?: string;
+  cvExtract?: string;
+  scoreFetchedDate?: string;
 
   /**
    * when the matching score is less than 70, the system will provide feedback content in the `rejectionFeedbackBySystem` attribute,
@@ -69,9 +72,6 @@ class DbUserReferralDto extends BaseDbDto {
 
   // If the referal is marked as done by cand then this will be updated with the time when it was done
   doneByCandidate?: Date;
-
-  cvExtract?: string;
-  scoreFetchedDate?: string;
 }
 
 const UserReferralSchema = new dynamoose.Schema(
@@ -128,6 +128,14 @@ const UserReferralSchema = new dynamoose.Schema(
     rejectionFeedbackBySystem:{
       type: String,
       required: false
+    },
+    cvExtract: {
+      type: String,
+      required: false,
+    },
+    scoreFetchedDate:{
+      type: String,
+      required: false,
     },
     passedByUserIds: {
       type: Array,
@@ -190,15 +198,6 @@ const UserReferralSchema = new dynamoose.Schema(
         type: "global",
       },
     },
-
-    cvExtract: {
-      type: String,
-      required: false,
-    },
-    scoreFetchedDate:{
-      type: String,
-      required: false,
-    }
     // Add other user-specific attributes here
   },
   {

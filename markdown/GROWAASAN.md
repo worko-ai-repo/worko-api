@@ -125,6 +125,7 @@ APP_GROWAASAN_CLOUD_API_FROM_PHONE_NUMBER="9811929282"
 
 2. UserReferralEmp.service.ts -> UserReferal.service.ts
    sendGrowaasanWhatsappMsgToCandWhenReferralRequestAccepted [referral_request_accepted_candidate] 
+      1. `this.scheduleReferralDoneStatusReminder` in `UserReferralEmp.service.ts`
    sendGrowaasanWhatsappMsgToCandWhenReferralRequestCompleted [referral_request_completed_candidate] 
 
 3. UserReferal.service.ts -> UserReferralEmp.service.ts
