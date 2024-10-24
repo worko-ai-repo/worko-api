@@ -126,7 +126,10 @@ class UserSupportService {
          * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
          * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
-        if (userDetails[0].isWhatsappNotificationEnabled !== false) {
+        if (
+          GROWAASAN_APP_CONSTANTS.ENABLED &&
+          userDetails[0].isWhatsappNotificationEnabled !== false
+        ) {
           // Prepare Growaasan placeholders for the message to candidate
           const growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDATE =
             {
@@ -193,7 +196,10 @@ class UserSupportService {
            * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
            * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
            */
-          if (employeeDetails[0].isWhatsappNotificationEnabled !== false) {
+          if (
+            GROWAASAN_APP_CONSTANTS.ENABLED &&
+            employeeDetails[0].isWhatsappNotificationEnabled !== false
+          ) {
             // Prepare WhatsApp placeholders for the message to employee
             const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE =
               {

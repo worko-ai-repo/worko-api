@@ -386,7 +386,10 @@ class UserReferralEmpService {
          * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
          * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
-        if (empDetails[0].isWhatsappNotificationEnabled !== false) {
+        if (
+          GROWAASAN_APP_CONSTANTS.ENABLED &&
+          empDetails[0].isWhatsappNotificationEnabled !== false
+        ) {
           // Prepare placeholders for the Growaasan message
           const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE =
             {
@@ -646,7 +649,10 @@ class UserReferralEmpService {
        * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
        * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
        */
-      if (empDetails[0].isWhatsappNotificationEnabled !== false) {
+      if (
+        GROWAASAN_APP_CONSTANTS.ENABLED &&
+        empDetails[0].isWhatsappNotificationEnabled !== false
+      ) {
         let growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE =
           {
             employeeName: refereeName.toTitleCase(),
@@ -838,7 +844,10 @@ class UserReferralEmpService {
          * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
          * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
-        if (candDetails[0].isWhatsappNotificationEnabled !== false) {
+        if (
+          GROWAASAN_APP_CONSTANTS.ENABLED &&
+          candDetails[0].isWhatsappNotificationEnabled !== false
+        ) {
           let growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE =
             {
               candidateName: candName.toTitleCase(),
@@ -924,7 +933,10 @@ class UserReferralEmpService {
          * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
          * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
-        if (candDetails[0].isWhatsappNotificationEnabled !== false) {
+        if (
+          GROWAASAN_APP_CONSTANTS.ENABLED &&
+          candDetails[0].isWhatsappNotificationEnabled !== false
+        ) {
           let growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE =
             {
               candidateName: candName.toTitleCase(),

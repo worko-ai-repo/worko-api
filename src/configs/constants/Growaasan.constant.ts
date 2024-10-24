@@ -4,6 +4,14 @@
  * This object contains constants and configuration details specifically for the Growaasan WhatsApp api integration.
  */
 const GROWAASAN_APP_CONSTANTS = {
+
+  /**
+   * ENABLED
+   * 
+   * This constant defines whether the Growaasan whatsapp send message to users is enabled or not at system level.
+   */
+  ENABLED: true,
+
    /**
     * COUNTRY_CODE
     * 

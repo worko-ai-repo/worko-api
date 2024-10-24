@@ -222,7 +222,10 @@ class UserExperienceService {
      * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
      * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
      */
-    if (userDetails[0].isWhatsappNotificationEnabled !== false) {
+    if (
+      GROWAASAN_APP_CONSTANTS.ENABLED &&
+      userDetails[0].isWhatsappNotificationEnabled !== false
+    ) {
       const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION =
         {
           employeeName: inputDetails["empName"].toTitleCase(),
