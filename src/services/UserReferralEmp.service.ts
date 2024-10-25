@@ -33,6 +33,9 @@ import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ScheduleJobType, ScheduleJobStatus } from "../enums/ScheduleJob.enum";
 import { GrowaasanTemplateNameEnum } from "../enums/GrowaasanTemplate.enum";
 
+// Import Helpers
+import { urlHelperObj } from "../helpers/Url.helper";
+
 // Import Libraries
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 import { growaasanLibraryObj } from "../libraries/Growaasan.library";
@@ -390,13 +393,16 @@ class UserReferralEmpService {
           GROWAASAN_APP_CONSTANTS.ENABLED &&
           empDetails[0].isWhatsappNotificationEnabled !== false
         ) {
+          // Encode the job URL
+          const encodedUrl: string = urlHelperObj.encodeQueryString(jobUrl);
+
           // Prepare placeholders for the Growaasan message
           const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE =
             {
               employeeName: refereeName.toTitleCase(),
               candidateName: candName.toTitleCase(),
               matchingScore: matchingScore.toString(),
-              jobUrl: jobUrl,
+              jobUrl: encodedUrl,
             };
           console.log("employeeNumber: ", empDetails[0].number);
           await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
@@ -848,11 +854,14 @@ class UserReferralEmpService {
           GROWAASAN_APP_CONSTANTS.ENABLED &&
           candDetails[0].isWhatsappNotificationEnabled !== false
         ) {
+          // Encode the job URL
+          const encodedUrl: string = urlHelperObj.encodeQueryString(jobUrl);
+
           let growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE =
             {
               candidateName: candName.toTitleCase(),
               companyName: companyName,
-              jobUrl: jobUrl,
+              jobUrl: encodedUrl,
               employeeName: refereeName.toTitleCase(),
             };
 
@@ -937,11 +946,14 @@ class UserReferralEmpService {
           GROWAASAN_APP_CONSTANTS.ENABLED &&
           candDetails[0].isWhatsappNotificationEnabled !== false
         ) {
+          // Encode the job URL
+          const encodedUrl: string = urlHelperObj.encodeQueryString(jobUrl);
+
           let growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE =
             {
               candidateName: candName.toTitleCase(),
               companyName: companyName,
-              jobUrl: jobUrl,
+              jobUrl: encodedUrl,
               employeeName: refereeName.toTitleCase(),
             };
 

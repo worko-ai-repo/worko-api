@@ -116,11 +116,6 @@ class UserSupportService {
           );
         }
 
-        // Extract company name, candidate name, and referee name
-        let companyName = companyDetails[0].name;
-        let candName = userDetails[0].name;
-        let refereeName = userSupportCreateDto.userFirstName;
-
         /**
          * - If isWhatsappNotificationEnabled is `undefined` then Send whatsapp message
          * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
@@ -133,10 +128,10 @@ class UserSupportService {
           // Prepare Growaasan placeholders for the message to candidate
           const growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDATE =
             {
-              candidateName: candName.toTitleCase(),
-              employeeName: refereeName.toTitleCase(),
+              candidateName: userDetails[0].name.toTitleCase(),
+              employeeName: userSupportCreateDto.userFirstName.toTitleCase(),
               referralStatus: userReferralDetails[0].status,
-              companyName: companyName,
+              companyName: companyDetails[0].name,
             };
 
           // Send WhatsApp message to candidate
@@ -186,9 +181,6 @@ class UserSupportService {
             );
           }          
 
-          // Extract candidate name and referee name
-          let refereeName = employeeDetails[0].name;
-          let candName= userSupportCreateDto.userFirstName;
           let empEmail = employeeDetails[0].PK.split("#")[2];
 
           /**
@@ -203,9 +195,9 @@ class UserSupportService {
             // Prepare WhatsApp placeholders for the message to employee
             const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE =
               {
-                employeeName: refereeName.toTitleCase(),
-                candidateName: candName.toTitleCase(),
-                referralStatus: userReferralDetails[0].status
+                employeeName: employeeDetails[0].name.toTitleCase(),
+                candidateName: userSupportCreateDto.userFirstName.toTitleCase(),
+                referralStatus: userReferralDetails[0].status,
               };
   
             // Send WhatsApp message to employee
