@@ -75,11 +75,13 @@ const logger = createLogger({
 
 // set log format to json
 if (process.env.APP_LOGGER_LOG_FORMAT === 'json') {
+    console.log('Log format is set to JSON');
     logger.format = format.json();
 }
 // Set the global logger to make it accessible everywhere
 // Make sure to import this file in the "app.ts"
-global.logger = logger;
+if(global.logger === undefined)
+    global.logger = logger;
 
 // Export
 export { logger };
