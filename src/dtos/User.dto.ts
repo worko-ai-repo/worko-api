@@ -87,11 +87,11 @@ export interface UserEmployeeSignUpDTO {
   email: string;
   number: string;
   linkedinUrl: string;
-  YOE: number;
+  YOE: number; // @todo: `YOE` is not being used in UI, while employee sign-up, need to be removed by discussing with team
   companyName: string;
   companySK: string;
-  companyEmailId: string;
-  department: string;
+  companyEmailId?: string;
+  department?: string;
   /* UI removed these fields from sign-up page
   designation: string;
   designationTag: number; */
@@ -118,8 +118,8 @@ export interface NewUserEmpSignUpDTO {
   lastAccessedDash: string;
   companyName: string;
   companySK: string;
-  companyEmailId: string;
-  department: string;
+  companyEmailId?: string;
+  department?: string;
   referralCount: number;
   expiryDate: Date;
   isSubscribed: boolean;

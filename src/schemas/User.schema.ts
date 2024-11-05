@@ -105,15 +105,10 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
     "any.required": "Company SK is required.",
     "string.empty": "Company SK should not be empty.",
   }),
-  companyEmailId: Joi.string().email().required().messages({
-    "any.required": "Company Email ID is required.",
-    "string.email": "Please provide a valid company email address.",
-    "string.empty": "Company Email ID cannot be empty.",
+  companyEmailId: Joi.string().email().optional().allow("").messages({
+    "string.email": "Please provide a valid email address.",
   }),
-  department: Joi.string().required().messages({
-    "any.required": "Department is required.",
-    "string.empty": "Department cannot be empty.",
-  }),
+  department: Joi.string().optional().allow(""),
   // UI removed the `designation` & `designationTag` fields from sign-up page
   /* designation: Joi.string().required().messages({
     "any.required": "Designation is required.",

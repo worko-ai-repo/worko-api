@@ -1,6 +1,6 @@
 export interface FieldDTO {
-  field: string;
-  expPerc: number;
+  field: string; // Examples: "name","isEmailVerified"
+  expPerc: number; // Examples: 5,10
   curPerc: number;
 }
 

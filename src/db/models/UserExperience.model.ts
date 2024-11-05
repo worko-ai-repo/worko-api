@@ -10,7 +10,7 @@ class DbUserExperienceDto extends BaseDbDto {
   GSI1PK!: string;
   GSI1SK!: string;
   id!: string;
-  department!: string;
+  department?: string;
   designation?: string;
   designationTag?: number;
   startedMonth?: number;
@@ -20,7 +20,7 @@ class DbUserExperienceDto extends BaseDbDto {
   experienceInMonths?: number;
   companyName!: string;
   companyId!: string;
-  emailId?: String;
+  emailId?: string;
   isCurrent?: boolean;
   isEmailVerified?: boolean;
 }
@@ -53,7 +53,7 @@ const UserExperienceSchema = new dynamoose.Schema(
     },
     department: {
       type: String,
-      required: true,
+      required: false,
     },
     designation: {
       type: String,

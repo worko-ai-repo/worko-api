@@ -65,7 +65,7 @@ export const userDetailDTOValidation = Joi.object({
     "any.required": "Referral count is required.",
     "number.base": "Referral count must be a valid number.",
   }),
-  location: Joi.string().optional(),
+  location: Joi.string().optional().allow(""),
   about: Joi.string().optional().allow(""),
   CTC: Joi.number().optional(),
   ECTC: Joi.number().optional(),
@@ -81,11 +81,8 @@ export const userDetailDTOValidation = Joi.object({
   }),
   profileImage: Joi.string().optional(),
   //country
-  country: Joi.string().required().messages({
-    "any.required": "Country is Required.",
-    "string.empty": "Country Cannot be Empty !",
-  }),
-  // validate isCandidateFresher when lastAccessedDash is set to be cand or other dont accept it and throw forbiden error 
+  country: Joi.string().optional().allow(""),
+  // validate isCandidateFresher when lastAccessedDash is set to be cand or other dont accept it and throw forbiden error
   isCandidateFresher: Joi.when("lastAccessedDash", {
     is: UserType.CAND,
     then: Joi.boolean().required().messages({
@@ -97,7 +94,7 @@ export const userDetailDTOValidation = Joi.object({
   }),
   // Validate candidateExperience when lastAccessedDash is set to be cand
   candidateExperience: Joi.when("lastAccessedDash", {
-    // check before validating whether the isCandidateFresher is set to false then only validate 
+    // check before validating whether the isCandidateFresher is set to false then only validate
     is: UserType.CAND,
     then: Joi.when("isCandidateFresher", {
       is: false,
@@ -109,4 +106,5 @@ export const userDetailDTOValidation = Joi.object({
     }),
     otherwise: Joi.forbidden(),
   }),
+  isWhatsappNotificationEnabled: Joi.boolean().default(true).optional(),
 }).options({ stripUnknown: true });

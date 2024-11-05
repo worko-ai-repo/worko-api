@@ -81,6 +81,9 @@ export class UserProfilePercentageOperationHelper {
 
   /**
    * Helper function to update fields and calculate new curPerc values.
+   *
+   * `fieldGroups` are either `candidate` or `employee`, check `UserProfilePercentage.constant.ts`
+   *
    * @param fieldGroups - Array of field groups to update.
    * @param updateObject - Key-value pairs for updating curPerc values.
    * @returns The updated array of FieldGroupDTOs.
@@ -90,20 +93,20 @@ export class UserProfilePercentageOperationHelper {
     updateObject: Record<string, any>
   ): FieldGroupDTO[] {
     return fieldGroups.map((fieldGroup) => {
-      const updatedFields: FieldDTO[] = fieldGroup.fields.map((field) => {
-        // Checking  if the field is 'isEmailVerified' or 'isNumberVerified' is true or false
-        if (
-          field.field === "isEmailVerified" ||
-          field.field === "isNumberVerified"
-        ) {
-          // If isEmailVerified or isNumberVerified is false,so set curPerc to 0.
-          if (!updateObject[field.field]) {
-            return {
-              ...field,
-              curPerc: 0,
-            };  
+      const updatedFields: FieldDTO[] = fieldGroup.fields.map((field: FieldDTO) => {
+          // Checking  if the field is 'isEmailVerified' or 'isNumberVerified' is true or false
+          if (
+            field.field === "isEmailVerified" ||
+            field.field === "isNumberVerified"
+          ) {
+            // If isEmailVerified or isNumberVerified is false,so set curPerc to 0.
+            if (updateObject[field.field] === false) {
+              return {
+                ...field,
+                curPerc: 0,
+              };
+            }
           }
-        }
 
         /*
         if isCandidateFresher is false and candidateExperience is not undefined

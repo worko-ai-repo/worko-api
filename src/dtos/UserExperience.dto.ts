@@ -1,5 +1,5 @@
 export interface UserExperienceDTO {
-  department: string;
+  department?: string;
   designation?: string;
   designationTag?: number;
   startedMonth?: number;

@@ -38,10 +38,7 @@ export const userExperienceDTOValidation = Joi.object({
   // Validation for experience in months, only required when userType is "EMP"
   experienceInMonths: Joi.when("userType", {
     is: "EMP",
-    then: Joi.number().integer().min(1).required().messages({
-      "any.required": "The Experience field is required.",
-      "string.empty": "The Experience field should not be empty.",
-    }),
+    then: Joi.number().integer().optional(),
     otherwise: Joi.forbidden(),
   }),
 
@@ -64,7 +61,6 @@ export const userExperienceDTOValidation = Joi.object({
       "any.required": "Email ID is required.",
       "string.empty": "Email ID should not be empty.",
       "string.email": "Email ID must be a valid email address.",
-      
     }),
     otherwise: Joi.forbidden(),
   }),
@@ -74,10 +70,7 @@ export const userExperienceDTOValidation = Joi.object({
 export const userExperienceDTOArrayValidation = Joi.array().items(
   Joi.object({
     // Department field validation
-    department: Joi.string().required().messages({
-      "any.required": "Department is required.",
-      "string.empty": "Department should not be empty.",
-    }),
+    department: Joi.string().optional().allow(""),
 
     // Designation field validation
     designation: Joi.string().optional().allow(""),
@@ -102,7 +95,7 @@ export const userExperienceDTOArrayValidation = Joi.array().items(
     endedYear: Joi.number().optional().integer().min(1900).max(new Date().getFullYear()),
 
     // Validation for experience in months, only required when userType is "EMP" ,
-    experienceInMonths: Joi.number().integer().min(1).optional(),
+    experienceInMonths: Joi.number().integer().optional(),
 
     // Validation for company name
     companyName: Joi.string().required().messages({

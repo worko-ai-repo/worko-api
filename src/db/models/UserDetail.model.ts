@@ -39,6 +39,8 @@ class DbUserDetailDto extends BaseDbDto {
   lastAccessedDash!: string;
   profileImage?: string;
   country?: string;
+  companyEmailId?: string; // Current company email id of the user(mostly for employee)
+  department?: string; // Department of the user in the company for which he is currently working(mostly for employee)
   isCandidateFresher?: boolean;
   candidateExperience?: {
     companyId?: string;
@@ -154,6 +156,14 @@ const UserDetailSchema = new dynamoose.Schema(
       required: false,
     },
     country: {
+      type: String,
+      required: false,
+    },
+    companyEmailId: {
+      type: String,
+      required: false,
+    },
+    department: {
       type: String,
       required: false,
     },
