@@ -6,15 +6,23 @@ import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 import { UserReferralRequestCreateApiDTO ,UserReferralRequestCreateDTO } from "../dtos/User.dto";
-import { UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
+import { EmpReferralListingFilterOptions, EmpReferralListingFilterRequestDTO, ReferralStatusListingFilterOptions, ReferralStatusListingFilterRequestDTO, UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
+import { RecordListingResponseDTO } from "../dtos/Common.dto";
+
+// Load helpers
+import { RequestHelper } from "../helpers/request.helper";
+import { paginationResponseHelperObj } from "../helpers/pagination-response.helper";
 
 // import models
+import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
 import { DbUserReferralDto } from "../db/models/UserReferral.model";
 
 // Load the local schema
 import {
+  empReferralFilterDtoValidation,
   UserReferralEmployeeStatusValidation,
   UserReferralRequestDTOValidation,
+  userReferralStatusFilterDtoValidation,
   UserReferralStatusValidation,
   withdrawnReferralPayloadValidation,
 } from "../schemas/UserReferral.schema";
@@ -43,7 +51,7 @@ class UserReferralController {
   /**
    * getReferralsForCand
    *
-   * Retrieves the user based on the provided query parameters
+   * Retrieves the user based on the provided filter options
    *
    * @param {Request} req
    * @param {Response} res
@@ -54,27 +62,84 @@ class UserReferralController {
       // Log the action for debugging purposes
       logger.info("Get user Referral by email [controller]");
 
-      // Get the status from the request query parameter
-      const referralStatus = req.query.status as string;
+      // Parse filter options from the request query parameters
+      const referralStatusRecordListingFilterRequest: ReferralStatusListingFilterOptions =
+        RequestHelper.parseFilterOptions<
+          ReferralStatusListingFilterRequestDTO,
+          ReferralStatusListingFilterOptions
+        >(req.query as unknown as ReferralStatusListingFilterRequestDTO);
 
-      // Validate the email from the request
-      const { error, value: candEmail } = validateEmailField(req.params.userEmail);
+      // Validate the filter options and throw an error if any of them is invalid
+      let {
+        error: referralStatusError,
+        value: userReferralStatusFilterOptions,
+      } = userReferralStatusFilterDtoValidation.validate(
+        referralStatusRecordListingFilterRequest,
+        {
+          abortEarly: false,
+        }
+      );
+      if (referralStatusError) {
+        throw new RequestValidationError(referralStatusError);
+      }
+
+      // Validate the email from the request and throw an error if invalid
+      const { error, value: candEmail } = validateEmailField(
+        req.params.userEmail
+      );
       if (error) {
         throw new RequestValidationError(error);
       }
 
-      // Get the candidate referrals for the given "candEmail" and "referralStatus", if no referral found then just return empty response
-      let candReferrals: QueryResponse<DbUserReferralDto> =
-        await UserReferralService.getReferralsForCand(
-          candEmail,
-          referralStatus
-        );
-      if (!candReferrals.count){
-        return res.status(HttpStatusCode.OK_200).json([]);
+      // Get the candidate referrals for the given "candEmail" and "referralStatus"
+      let candidateReferrals = await UserReferralService.getReferralsForCand(
+        candEmail,
+        userReferralStatusFilterOptions
+      );
+
+      // Extract the count, timesQueried, lastKey, and additional fields from the candidateReferrals
+      const {
+        count,
+        timesQueried,
+        lastKey,
+        queriedCount,
+        ...candReferralDetails
+      } = candidateReferrals;
+
+      // if no referral found then just return empty response
+      if (!count) {
+        // Generate the pagination response
+        const referralsResponse: RecordListingResponseDTO<any> =
+          paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralStatusListingFilterOptions>(
+            [],
+            referralStatusRecordListingFilterRequest,
+            count,
+            timesQueried,
+            lastKey,
+            queriedCount
+          );
+        return res.status(HttpStatusCode.OK_200).json(referralsResponse);
       }
 
+      /**
+       * Note: The below code should be implemented in `UserReferral.service.ts`.
+       *
+       * - **Separation of Concerns**: The `service` layer is responsible for handling all TypeScript logic and business operations.
+       * - **Controller Responsibilities**: The `controller` layer should manage only request handling, request payload validation handling, response handling
+       * - **DAO Responsibilities**: The `dao` layer should focus exclusively on database interactions.
+       *
+       * While the existing code can remain unchanged, it's important to follow these guidelines for any new features going forward.
+       */
+
+      // Example Output If `candReferralDetails` type is `object`: [UserReferral {...},UserReferral {...},UserReferral {...}, ......]
+      const candReferrals =typeof candReferralDetails === "object"
+          ? Object.values(candReferralDetails)
+          : candReferralDetails;
+
       // Get unique company IDs from the retrieved referrals
-      const companyIDs: string[] = candReferrals.map((referral) => referral.companyId);
+      const companyIDs: string[] = candReferrals.map(
+        (referral: any) => referral.companyId
+      );
       const uniqueCompanyIDs: string[] = Array.from(new Set(companyIDs));
 
       // Fetch company details for each unique company ID
@@ -83,19 +148,55 @@ class UserReferralController {
       );
 
       // Loop over the retrieved referrals and include the company name in the response
-      const finalUserReferral = candReferrals.map((referral) => {
+      const finalUserReferral = candReferrals.map((referral: any) => {
         // Find the company details corresponding to the current referral
-        const companyDetails = companyDetailsResults.find((companyDetail) => companyDetail.id === referral.companyId);
+        const companyDetails = companyDetailsResults.find(
+          (companyDetail: DbCompanyDetailDto) =>
+            companyDetail.id === referral.companyId
+        );
 
         // Return the company name along with referral details
         return {
           ...referral,
-          companyName: companyDetails?.name ?? null
+          companyName: companyDetails?.name ?? null,
         };
       });
+      /*
+      # Example Output for `finalUserReferral`:
+      [
+          {
+            jdExtracted: '"\\"\\\\\\"3+ years of non-internship professional software development experience\\\\\\"\\""',
+            userSubscriptionId: '01J8FMCH621R3Y2MR21NQJJXQY',
+            matchingScore: 0,
+            createdAt: 2024-09-23T14:53:57.309Z,
+            companyId: '01J7ZVK6WX6KTPJBH4HDAJ66XM',
+            GSI1PK: 'REF#',
+            GSI1SK: 'ID#01J8FNZZ5PMSF6P6QCZGVRFN29',
+            SK: 'REF#ID#01J8FNZZ5PMSF6P6QCZGVRFN29',
+            jobUrl: 'https://g.co/kgs/N9ZT24G',
+            PK: 'USR#EML#kaan@gmail.com',
+            id: '01J8FNZZ5PMSF6P6QCZGVRFN29',
+            status: 'AWAITING',
+            updatedAt: 2024-10-21T06:26:00.276Z,
+            companyName: 'GOOGLE'
+          }, 
+          {..},{...},....
+      ]
+      */
+
+      // Generate the pagination response
+      const referralsResponse: RecordListingResponseDTO<any> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralStatusListingFilterOptions>(
+          finalUserReferral,
+          userReferralStatusFilterOptions,
+          count,
+          timesQueried,
+          lastKey,
+          queriedCount
+        );
 
       // Send a successful response with user data
-      res.status(HttpStatusCode.OK_200).json(finalUserReferral);
+      res.status(HttpStatusCode.OK_200).json(referralsResponse);
     } catch (error: any) {
       // Handle errors
       // Check if the error is due to user not found
@@ -128,60 +229,108 @@ class UserReferralController {
     try {
       logger.info("Fetching referrals for employee by company ID and status");
 
-      // @todo: The "companyId" should be optional when status is other than awaiting. 
-      // And status must be mandatory and the emplyee should not be able to get/call the API to get the WITHDRAWN referrals.
-      // Extract company ID and status from request query parameters
-      const companyId: string = req.query.companyId as string;
-      const referralStatus: string = req.query.status as string;
+      // Parse filter options from the request query parameters
+      const empReferralRecordListingFilterRequest: EmpReferralListingFilterOptions =
+        RequestHelper.parseFilterOptions<
+          EmpReferralListingFilterRequestDTO,
+          EmpReferralListingFilterOptions
+        >(req.query as unknown as EmpReferralListingFilterRequestDTO);
 
-      // get the employee email
-      const empPrimaryEmail = req.params.emailId;
+      // Validate the filter options and throw an error if any of them is invalid
+      let { error: empReferralError, value: empReferralListingFilterOptions } =
+        empReferralFilterDtoValidation.validate(
+          empReferralRecordListingFilterRequest,
+          {
+            abortEarly: false,
+          }
+        );
+      if (empReferralError) {
+        throw new RequestValidationError(empReferralError);
+      }
 
-       // Validate the newStatus parameter
-       const { error } = UserReferralStatusValidation.validate(referralStatus, {
-        abortEarly: false,
-      });
-
-      // If the newStatus validation fails, throw a RequestValidationError
+      // Validate the email from the request and throw an error if invalid
+      const { error, value: empPrimaryEmail } = validateEmailField(
+        req.params.emailId
+      );
       if (error) {
         throw new RequestValidationError(error);
       }
+
+      // Fetch employee referrals based on the filter options
+      const empReferralDetails =
+        await userReferralEmpServiceObj.getEmployeeReferrals(
+          empPrimaryEmail,
+          empReferralListingFilterOptions
+        );
       
-      // call the Employee Referral Service to Get referrals for emp based on provided status 
-      let empReferrals = await userReferralEmpServiceObj.getEmployeeReferrals(
-        empPrimaryEmail,
-        companyId,
-        referralStatus
-      );
-  
+      // Destructure the retrieved employee referrals
+      const { lastKey, count, timesQueried, queriedCount, ...employeeReferrals } = empReferralDetails;
+      
       // Check if any company referrals exist
-      if (!empReferrals.length) {
-        // Send employee referrals as response if no company referrals found
-        return res.status(HttpStatusCode.OK_200).json([]);
+      if (!count) {
+        // Generate the pagination response
+        const empReferralsResponse: RecordListingResponseDTO<any> =
+          paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralStatusListingFilterOptions>(
+            [],
+            empReferralListingFilterOptions,
+            count,
+            timesQueried,
+            lastKey,
+            queriedCount
+          );
+          
+          // Send employee referrals as response if no company referrals found
+          return res.status(HttpStatusCode.OK_200).json(empReferralsResponse);
+        }
         
-      }
-  
-      // Get unique company IDs from the retrieved referrals
-      const uniqueCompanyIDs: string[] = Array.from(new Set(empReferrals.map(referral => referral.companyId)));
-  
+        // Convert the retrieved employee referrals to an array
+        const empReferrals = (
+          typeof employeeReferrals === "object"
+            ? Object.values(employeeReferrals)
+            : employeeReferrals
+        ) as DbUserReferralDto[];
+
+        // Get unique company IDs from the retrieved referrals
+        const uniqueCompanyIDs: string[] = Array.from(
+          new Set(
+            empReferrals.map(
+              (referral: DbUserReferralDto) => referral.companyId
+            )
+          )
+        );
+        
       // Fetch company details for each unique company ID
       const companyDetailsResults = await CompanyService.getCompanyDetailsByIds(uniqueCompanyIDs);
   
       // Loop over the retrieved referrals and include the company name in the response
-      const finalUserReferrals = empReferrals.map(referral => {
-  
-        // Find the company details corresponding to the current referral
-        const companyDetails = companyDetailsResults.find(companyDetail => companyDetail.id === referral.companyId);
-        
-        // Return the referral along with the company name
-        return {
-          ...referral,
-          companyName: companyDetails?.name ?? null,
-        };
-      });
-      
+      const finalUserReferrals = empReferrals.map(
+        (referral: DbUserReferralDto) => {
+          // Find the company details corresponding to the current referral
+          const companyDetails = companyDetailsResults.find(
+            (companyDetail) => companyDetail.id === referral.companyId
+          );
+
+          // Return the referral along with the company name
+          return {
+            ...referral,
+            companyName: companyDetails?.name ?? null,
+          };
+        }
+      );
+
+      // Generate the pagination response
+      const empReferralsResponse: RecordListingResponseDTO<any> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralStatusListingFilterOptions>(
+          finalUserReferrals,
+          empReferralListingFilterOptions,
+          count,
+          timesQueried,
+          lastKey,
+          queriedCount
+        );
+
       // Send a successful response with combined user data and referral details
-      res.status(HttpStatusCode.OK_200).json(finalUserReferrals);
+      res.status(HttpStatusCode.OK_200).json(empReferralsResponse);
     } catch (error: any) {
       // Handle errors
       // If it's another type of error, pass it to the next error handler

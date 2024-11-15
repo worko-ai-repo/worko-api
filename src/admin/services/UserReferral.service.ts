@@ -43,11 +43,10 @@ class UserReferralService {
    * Retrieves referral details from the DAO based on the provided filter options.
    *
    * @param {ReferralListingFilterOptions} referralRecordListingFilterRequest - The filter options for the referral record listing.
-   * @return {Promise<QueryResponse<DbUserReferralDto>>} A promise that resolves to the query response containing the retrieved referral details.
    */
   async getReferrals(
     referralRecordListingFilterRequest: ReferralListingFilterOptions
-  ): Promise<QueryResponse<DbUserReferralDto>> {
+  ) {
     // Log the action of getting referral details in the service
     global.logger.info("Get all referrals [admin user referral service]");
 

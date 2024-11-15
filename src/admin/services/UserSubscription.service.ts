@@ -25,11 +25,10 @@ class UserSubscriptionService {
    * A function to fetch all user subscriptions.
    *
    * @param {SubscriptionListingFilterOptions} subscriptionRecordListingFilterRequest - Options for filtering user subscriptions.
-   * @return {Promise<QueryResponse<DbUserSubsDto>>} A promise that resolves to the query response containing all user subscriptions.
    */
   async getAllUsersSubscriptions(
     subscriptionRecordListingFilterRequest: SubscriptionListingFilterOptions
-  ): Promise<QueryResponse<DbUserSubsDto>> {
+  ) {
     // Log the action of fetching user bought subscription list
     global.logger.info(
       "Fetching User's Bought Subscription List in [admin user subscription service]"

@@ -1,7 +1,11 @@
 import Joi from "joi";
 
+// Import enums
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ReferralActions } from "../enums/User.enum";
+
+// Import common schema
+import { commonSchema } from "../schemas/Common.schema";
 
 export const UserReferralRequestDTOValidation = Joi.object({
   companyId: Joi.string().required().messages({
@@ -84,3 +88,38 @@ export const UserReferralEmployeeStatusValidation = Joi.object({
 
   userComment: Joi.string().allow('').optional()
 });
+
+// Define validation schema for referral status filter DTO
+export const userReferralStatusFilterDtoValidation = commonSchema.concat(
+  Joi.object({
+    status: Joi.string()
+      .required()
+      .valid(...Object.values(ReferralStatus))
+      .messages({
+        "any.only": `Invalid referral status. Please provide a valid value from
+      ${Object.values(ReferralStatus).join(", ")}.`,
+        "any.required": "Referral Status is required.",
+        "string.empty": "Referral Status should not be empty.",
+      })
+  })
+);
+
+// Define validation schema for employee referral filter DTO
+export const empReferralFilterDtoValidation = commonSchema.concat(
+  Joi.object({
+    status: Joi.string()
+      .required()
+      .valid(...Object.values(ReferralStatus))
+      .messages({
+        "any.required": "Referral Status is required.",
+        "any.only": `Invalid referral status. Please provide a valid value from
+      ${Object.values(ReferralStatus).join(", ")}.`,
+        "string.empty": "Referral Status should not be empty.",
+      }),
+    
+    companyId: Joi.string().required().messages({
+      "any.required": "Company ID is required",
+      "string.empty": "Company ID should not be empty.",
+    }),
+  })
+);

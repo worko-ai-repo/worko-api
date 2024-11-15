@@ -1,3 +1,7 @@
+// import required Npm packages
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { Query } from "dynamoose/dist/ItemRetriever";
+
 // Import the base dao
 import BaseDao from "./Base.dao";
 
@@ -12,6 +16,9 @@ import { UserSupportListingFilterOptions } from "../admin/dtos/UserSupport.dto";
 // Import the enums
 import { SortOrderTypeEnum } from "../enums/Common.enum";
 
+// Import the helpers
+import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
+
 // Import the models
 import {
   DbUserSupportDto,
@@ -20,10 +27,6 @@ import {
 
 // Import the services
 import UlidService from "../services/Ulid.service";
-
-// Import necessary enums
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-import { Query } from "dynamoose/dist/ItemRetriever";
 
 /**
  * UserSupportDao
@@ -51,11 +54,10 @@ class UserSupportDao implements BaseDao {
    * Retrieves support requests from the database based on the provided filter options.
    *
    * @param {UserSupportListingFilterOptions} supportFilterOptions - The filter options to apply when retrieving the support requests.
-   * @return {Promise<QueryResponse<DbUserSupportDto>>} A Promise that resolves to a QueryResponse containing the list of support requests.
    */
   async getSupportRequests(
     supportFilterOptions: UserSupportListingFilterOptions
-  ): Promise<QueryResponse<DbUserSupportDto>> {
+  ) {
     // Log the action of getting support requests in the dao
     global.logger.info("Get support requests [admin dao]");
 
@@ -153,29 +155,11 @@ class UserSupportDao implements BaseDao {
       });
     }
 
-    // If date range or search filter or both is applied, directly return query result without pagination
-    if (
-      supportFilterOptions.fromDate ||
-      supportFilterOptions.toDate ||
-      supportFilterOptions.searchText
-    ) {
-      return query.exec();
-    }
-
-    // if lastKey is provided, add it to the query where lastKey is equal to the provided value
-    if (supportFilterOptions.lastKey) {
-      // Start the query from the lastKey to retrieve subsequent pages
-      query.startAt(supportFilterOptions.lastKey);
-    }
-
-    // if pageSize is provided, add it to the query
-    if (supportFilterOptions.pageSize) {
-      // Set the page size for the query
-      query.limit(supportFilterOptions.pageSize);
-    }
-
-    // Execute the query and return the result
-    return query.exec();
+    // Execute the query by applying the paginateQuery helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbUserSupportDto,
+      UserSupportListingFilterOptions
+    >(query, supportFilterOptions);
   }
 
   /**

@@ -13,6 +13,7 @@ import UserDetailService from "./UserDetail.service";
 // Load the local dtos
 import { UserReferralRequestCreateDTO } from "../dtos/User.dto";
 import {
+  ReferralStatusListingFilterOptions,
   UserReferralStatusChangeByCandDTO,
 } from "../dtos/UserReferral.dto";
 import {
@@ -352,16 +353,18 @@ class UserReferralService {
    * Retrieves user Referral by status.
    *
    * @param email - Email of the user
-   * @param status - referral status
-   * @returns {Promise<any>} - A Promise that resolves to the Referral of the user
+   * @param userReferralStatusFilterOptions - userReferralStatusFilterOptions
    */
   async getReferralsForCand(
     email: string,
-    status?: string
-  ): Promise<QueryResponse<DbUserReferralDto>> {
+    userReferralStatusFilterOptions: ReferralStatusListingFilterOptions
+  ) {
     // Logging the action of getting user Referral by status in the service layer
     logger.info("Fetching user Referral by status [UserReferralService]");
-    return userReferralDao.getReferralsForCand(email, status);
+    return userReferralDao.getReferralsForCand(
+      email,
+      userReferralStatusFilterOptions
+    );
   }
 
   /**

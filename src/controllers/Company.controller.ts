@@ -30,7 +30,7 @@ import {
 //Load local util statuscode
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
-import { paginationRecordListingResponse } from "../helpers/pagination-response.helper";
+import { paginationResponseHelperObj } from "../helpers/pagination-response.helper";
 
 /**
  * CompanyController
@@ -190,7 +190,7 @@ class CompanyController {
       // Generate pagination response
       const companyListResponse: RecordListingResponseDTO<
         QueryResponse<AnyItem>
-      > = paginationRecordListingResponse<
+      > = paginationResponseHelperObj.paginationRecordListingResponse<
         QueryResponse<AnyItem>,
         CompanyListingFilterOptions
       >(companyList, recordListingFilterRequest);

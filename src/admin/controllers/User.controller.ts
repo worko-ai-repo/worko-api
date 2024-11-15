@@ -9,6 +9,7 @@ import {
   UsersListingFilterOptions,
   UsersListingFilterRequestDTO,
 } from "../dtos/User.dto";
+import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Import the enums
 import { SortOrderTypeEnum } from "../../enums/Common.enum";
@@ -16,7 +17,7 @@ import { SortOrderTypeEnum } from "../../enums/Common.enum";
 // Import the helpers
 import { RequestHelper } from "../../helpers/request.helper";
 import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
-import { paginationRecordListingResponse } from "../../helpers/pagination-response.helper";
+import { paginationResponseHelperObj } from "../../helpers/pagination-response.helper";
 
 // Import the models
 import { DbUserDetailDto } from "../../db/models/UserDetail.model";
@@ -78,45 +79,20 @@ class UserController {
       // Fetch user details from the service
       const userDetails = await userServiceObj.getUsers(usersFilterOptions);
 
-      let userDetailsResponse;
-      if ("timesQueried" in userDetails) {
-        global.logger.info("userDetails is of type QueryResponse<DbUserDetailDto>");
-        /*
-        Generate the response structure for the user details with pagination for userType CAND
-        or if userType is undefined,then return all users singnup list(including CAND and EMP)
-        */
-        userDetailsResponse = 
-          paginationRecordListingResponse<
-            QueryResponse<DbUserDetailDto>,
-            UsersListingFilterOptions
-          >(userDetails, usersRecordListingFilterRequest);
-      } else {
-        global.logger.info(
-          "userDetails is not of type QueryResponse<DbUserDetailDto>"
+      // Destructure the fetched user details
+      const {lastKey,count, timesQueried,queriedCount, ...usersDetails} = userDetails;
+
+      // Generate the pagination response
+      const userDetailsResponse: RecordListingResponseDTO<any> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<UsersListingFilterOptions>(
+          Object.values(usersDetails),
+          usersRecordListingFilterRequest,
+          count,
+          timesQueried,
+          lastKey,
+          queriedCount
         );
 
-        /* 
-        This code uses the rest syntax, It allows extracting specific properties ('lastKey', 'count', 'queriedCount')
-        from the 'userDetails' object while collecting the remaining properties into 'empDetails'.
-
-        empDetails: This new object contains all the remaining properties from userDetails, 
-        excluding lastKey, count, and queriedCount.
-       */
-        const { lastKey, count, queriedCount, ...empDetails } = userDetails;
-
-        // Generate the response structure for the user details with pagination for userType EMP
-        userDetailsResponse = {
-          data: Object.values(empDetails),
-          pagination: {
-            count,
-            queriedCount,
-            pageSize: usersRecordListingFilterRequest.pageSize,
-            lastKey: lastKeyToBase64EncodeStr(lastKey),
-            sortOrder: usersRecordListingFilterRequest.sortOrder ?? SortOrderTypeEnum.DESCENDING,
-          },
-        };
-      }
-    
       // Send the response with the fetched user details
       return res.status(HttpStatusCode.OK_200).json(userDetailsResponse);
     } catch (error) {

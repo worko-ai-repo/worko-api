@@ -8,8 +8,13 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import { ReferralListingFilterOptions, ReferralListingFilterRequestDTO } from "../dtos/UserReferral.dto";
 import { RecordListingResponseDTO } from "../../dtos/Common.dto";
 
+// Load enums
+import { SortOrderTypeEnum } from "../../enums/Common.enum";
+
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
+import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
+import { paginationResponseHelperObj } from "../../helpers/pagination-response.helper";
 
 // Load models
 import { DbUserReferralDto } from "../../db/models/UserReferral.model";
@@ -24,7 +29,6 @@ import { validateEmailField } from "../../schemas/User.schema";
 // Load utils
 import HttpStatusCode from "../../utils/http-codes.util";
 import { BaseError, RequestValidationError } from "../../utils/errors.util";
-import { paginationRecordListingResponse } from "../../helpers/pagination-response.helper";
 
 /**
  * UserReferralController
@@ -78,13 +82,19 @@ class UserReferralController {
         userReferralFilterOptions
       );
 
-      // Generate the response structure with the paginated result
-      const referralsResponse: RecordListingResponseDTO<
-        QueryResponse<DbUserReferralDto>
-      > = paginationRecordListingResponse<
-        QueryResponse<DbUserReferralDto>,
-        ReferralListingFilterOptions
-      >(userReferrals, referralRecordListingFilterRequest);
+      // Extract the count, timesQueried,lastKey and other details from the response
+      const { lastKey, count,timesQueried,queriedCount, ...referralDetails } = userReferrals;
+
+      // Generate the pagination response
+      const referralsResponse: RecordListingResponseDTO<any> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralListingFilterOptions>(
+          Object.values(referralDetails),
+          referralRecordListingFilterRequest,
+          count,
+          timesQueried,
+          lastKey,
+          queriedCount
+        );      
 
       // Send the fetched result as JSON response
       return res.status(HttpStatusCode.OK_200).json(referralsResponse);

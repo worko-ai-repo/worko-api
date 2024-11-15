@@ -121,9 +121,6 @@ export interface RecordListingPaginationResponseDTO {
   // The number of records returned back in the API response.
   count: number;
 
-  // If filter is applied then the filtered record count from the all records. Otherwise it would be undefined.
-  queriedCount?: number | undefined;
-
   /**
    * pageSize (limit)
    *
@@ -145,6 +142,12 @@ export interface RecordListingPaginationResponseDTO {
 
   // sortOrder means the order in which the records should be sorted. posible values: "ascending" or "descending"
   sortOrder?: SortOrderTypeEnum | undefined;
+
+  // The `timesQueried` is the number of requests made to AWS DynamoDB to fulfill the query response.
+  timesQueried?: number | undefined;
+
+  // If filter is applied then the filtered record count from the all records. Otherwise it would be undefined.
+  queriedCount?: number | undefined;
 }
 
 /**
@@ -165,17 +168,7 @@ export interface RecordListingResponseDTO<EntityDetails> {
  */
 export interface EntityDetailsPaginationData {
   count: number;
-  queriedCount: number;
   lastKey?: ObjectType | undefined;
-}
-
-/**
- * These are used in the "paginationRecordListingResponse" function present in "pagination-response.helper.ts"
- * which generates the response structure for the entity listing end points.
- * 
- * Interface representing the pagination filter options for listing entities.
- */
-export interface EntityListingPaginationFilterOptions {
-  pageSize: number;
-  sortOrder?: SortOrderTypeEnum | undefined;
+  timesQueried?: number | undefined;
+  queriedCount?: number | undefined;
 }

@@ -13,7 +13,7 @@ import { UserSubscriptionStatus } from "../../enums/UserSubscription.enum";
 
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
-import { paginationRecordListingResponse } from "../../helpers/pagination-response.helper";
+import { paginationResponseHelperObj } from "../../helpers/pagination-response.helper";
 
 // Load models
 import { DbUserSubsDto } from "../../db/models/UserSubscription.model";
@@ -85,13 +85,20 @@ class UserSubscriptionController {
           subscriptionFilterOptions
         );
 
+      // Retrieve the details of the subscriptions from the response
+      const { count, lastKey, timesQueried,queriedCount, ...userSubscriptionDetails } =
+        userSubscriptions;
+
       // Generate the response structure with the paginated result
-      const subscriptionResponse: RecordListingResponseDTO<
-        QueryResponse<DbUserSubsDto>
-      > = paginationRecordListingResponse<
-        QueryResponse<DbUserSubsDto>,
-        SubscriptionListingFilterOptions
-      >(userSubscriptions, subscriptionRecordListingFilterRequest);
+      const subscriptionResponse: RecordListingResponseDTO<any> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<SubscriptionListingFilterOptions>(
+          Object.values(userSubscriptionDetails),
+          subscriptionRecordListingFilterRequest,
+          count,
+          timesQueried,
+          lastKey,
+          queriedCount
+        );
 
       // Send the retrieved subscriptions
       return res.status(HttpStatusCode.OK_200).json(subscriptionResponse);

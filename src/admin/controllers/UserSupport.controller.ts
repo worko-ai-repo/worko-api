@@ -23,7 +23,7 @@ import { userSupportFilterDtoValidation } from "../schemas/UserSupport.schema";
 // Load utils
 import { BaseError, RequestValidationError } from "../../utils/errors.util";
 import HttpStatusCode from "../../utils/http-codes.util";
-import { paginationRecordListingResponse } from "../../helpers/pagination-response.helper";
+import { paginationResponseHelperObj } from "../../helpers/pagination-response.helper";
 
 /**
  * UserSupportController
@@ -83,13 +83,19 @@ class UserSupportController {
         supportFilterOptions
       );
 
+      // Extract the details from the response
+      const {count,lastKey,timesQueried,queriedCount, ...supportRequestDetails} = supportDetails;
+
       // Generate the response structure with pagination details
-      const userSupportRequestsResponse: RecordListingResponseDTO<
-        QueryResponse<DbUserSupportDto>
-      > = paginationRecordListingResponse<
-        QueryResponse<DbUserSupportDto>,
-        UserSupportListingFilterOptions
-      >(supportDetails, userSupportRequestsRecordListingFilterRequest);
+      const userSupportRequestsResponse: RecordListingResponseDTO<any> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<UserSupportListingFilterOptions>(
+          Object.values(supportRequestDetails),
+          userSupportRequestsRecordListingFilterRequest,
+          count,
+          timesQueried,
+          lastKey,
+          queriedCount
+        );
 
       // Send the response
       return res

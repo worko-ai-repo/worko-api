@@ -34,7 +34,6 @@ class UserService {
    * If userType is EMP, get the employee signup list and also include currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified
    * 
    * @param {UsersListingFilterOptions} usersRecordListingFilterRequest - The filter options for user details.
-   * 
    */
   async getUsers( usersRecordListingFilterRequest: UsersListingFilterOptions ) {
     // Log the action of getting user details by CAND/EMP
@@ -52,7 +51,13 @@ class UserService {
     }
 
     // If userType is EMP, get the employee signup list
-    const userDetails: QueryResponse<DbUserDetailDto> = await userDetailDao.getUsers(usersRecordListingFilterRequest);
+    const userDetails = await userDetailDao.getUsers(usersRecordListingFilterRequest);
+
+    // Destructure the fetched user details
+    const { lastKey, count, timesQueried, queriedCount, ...remainingUserDetails } = userDetails;
+    
+    // Convert the remainingUserDetails object to an array
+    const userDetailsArray = Object.values(remainingUserDetails) as unknown as DbUserDetailDto[];
 
     /*
     Extract email from the PK and get all experiences by email and 
@@ -60,12 +65,15 @@ class UserService {
     return the employee details including currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified 
     */
     const empWithExperience = await Promise.all(
-      userDetails.map(async (eachUserDetail: DbUserDetailDto) => {
+      userDetailsArray.map(async (eachUserDetail: DbUserDetailDto) => {
         // Extract employee email from the PK
         const empEmail = eachUserDetail.PK.split("#")[2];
 
         // get all experiences by employee email
-        const empExperience = await userExperienceServiceObj.getUserExperiencesWithCompanyInfoByEmail(empEmail);
+        const empExperience =
+          await userExperienceServiceObj.getUserExperiencesWithCompanyInfoByEmail(
+            empEmail
+          );
 
         // Find the current employee experience which has isCurrent true
         const empCurrentExperience = empExperience.find((exp) => exp.isCurrent);
@@ -84,9 +92,10 @@ class UserService {
     // Return the employee details including currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified with pagination
     return {
       ...empWithExperience,
-      lastKey: userDetails.lastKey,
-      count: userDetails.count,
-      queriedCount: userDetails.queriedCount,
+      lastKey,
+      count,
+      timesQueried,
+      queriedCount
     };
   }
 

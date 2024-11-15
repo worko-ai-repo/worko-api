@@ -4,6 +4,9 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 //Load the base dao
 import BaseDao from "./Base.dao";
 
+// Load the helpers
+import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
+
 //Load the local model
 import {
   DbUserSubsDto,
@@ -43,11 +46,10 @@ class UserSubscriptionDao implements BaseDao {
    * Retrieves all user subscriptions based on the provided options and status for admin.
    *
    * @param {SubscriptionListingFilterOptions} subscriptionRecordListingFilterRequest - The options for filtering the user subscriptions.
-   * @return {Promise<QueryResponse<DbUserSubsDto>>} A promise that resolves to a QueryResponse containing the user subscriptions.
    */
   async getAllUsersSubscriptionsAdmin(
     subscriptionRecordListingFilterRequest: SubscriptionListingFilterOptions
-  ): Promise<QueryResponse<DbUserSubsDto>> {
+  ) {
     // Log the action of fetching user bought subscription list
     global.logger.info(
       "Fetching User's Bought Subscription List in [admin dao]"
@@ -113,29 +115,11 @@ class UserSubscriptionDao implements BaseDao {
       });
     }
 
-    // If date range or search filter or both is applied, directly return query result without pagination
-    if (
-      subscriptionRecordListingFilterRequest.fromDate ||
-      subscriptionRecordListingFilterRequest.toDate ||
-      subscriptionRecordListingFilterRequest.searchText
-    ) {
-      return query.exec();
-    }
-
-    // if lastKey is provided, add it to the query where lastKey is equal to the provided value
-    if (subscriptionRecordListingFilterRequest.lastKey) {
-      // Start the query from the lastKey to retrieve subsequent pages
-      query.startAt(subscriptionRecordListingFilterRequest.lastKey);
-    }
-
-    // if pageSize is provided, add it to the query
-    if (subscriptionRecordListingFilterRequest.pageSize) {
-      // Set the page size for the query
-      query.limit(subscriptionRecordListingFilterRequest.pageSize);
-    }
-
-    // Execute the query and return the result
-    return query.exec();
+    // Execute the query by applying the paginateQuery helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbUserSubsDto,
+      SubscriptionListingFilterOptions
+    >(query, subscriptionRecordListingFilterRequest);
   }
 
   /**

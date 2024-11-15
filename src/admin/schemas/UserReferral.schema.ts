@@ -7,7 +7,7 @@ import { ReferralStatus } from "../../enums/UserReferral.enum";
 // Import common schema
 import { commonSchema } from "../../schemas/Common.schema";
 
-// Define validation schema for get all signup users filter DTO
+// Define validation schema for get all referrals filter DTO
 export const userReferralFilterDtoValidation = commonSchema.concat(
   Joi.object({
     status: Joi.string()

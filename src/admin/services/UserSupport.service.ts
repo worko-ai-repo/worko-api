@@ -20,11 +20,10 @@ class UserSupportService {
    * Retrieves support requests based on the provided filter options.
    *
    * @param {UserSupportListingFilterOptions} supportFilterOptions - The filter options for retrieving support requests.
-   * @return {Promise<QueryResponse<DbUserSupportDto>>} A Promise that resolves to the list of support requests.
    */
   async getSupportRequests(
     supportFilterOptions: UserSupportListingFilterOptions
-  ): Promise<QueryResponse<DbUserSupportDto>> {
+  ) {
     global.logger.info("get User support list [admin user support service]");
 
     // return support list from dao

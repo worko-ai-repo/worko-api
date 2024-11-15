@@ -23,6 +23,9 @@ import { UsersListingFilterOptions } from "../admin/dtos/User.dto";
 import { SortOrderTypeEnum } from ".././enums/Common.enum";
 import { UserType } from "../enums/User.enum";
 
+// Load helpers
+import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
+
 // import lib dynamodb library
 import { awsLibDynamodbLibraryObj } from "../libraries/aws-lib-dynamodb.library";
 
@@ -42,11 +45,10 @@ class UserDetailDao implements BaseDao {
    * Retrieves user details based on the provided filter options.
    *
    * @param {UsersListingFilterOptions} usersRecordListingFilterRequest - The filter options for user details.
-   * @return {Promise<QueryResponse<DbUserDetailDto>>} A promise that resolves to the user details.
    */
   async getUsers(
     usersRecordListingFilterRequest: UsersListingFilterOptions
-  ): Promise<QueryResponse<DbUserDetailDto>> {
+  ) {
     // Log the action of getting user details
     global.logger.info("Get user details [DAO]");
 
@@ -115,7 +117,7 @@ class UserDetailDao implements BaseDao {
           .contains(searchTextValue)
           .or()
           .where("PK")
-          .contains(`USR#EML#${searchTextValue}`); 
+          .contains(`USR#EML#${searchTextValue}`);
 
         // If user type is not provided or if user type is candidate,
         // search by candidate experience company name
@@ -134,29 +136,11 @@ class UserDetailDao implements BaseDao {
       });
     }
 
-    // If date range or search filter or both is applied, directly return query result without pagination
-    if (
-      usersRecordListingFilterRequest.fromDate ||
-      usersRecordListingFilterRequest.toDate ||
-      usersRecordListingFilterRequest.searchText
-    ) {
-      return query.exec();
-    }
-
-    // if lastKey is provided, add it to the query where lastKey is equal to the provided value
-    if (usersRecordListingFilterRequest.lastKey) {
-      // Start the query from the lastKey to retrieve subsequent pages
-      query = query.startAt(usersRecordListingFilterRequest.lastKey);
-    }
-
-    // if pageSize is provided, add it to the query
-    if (usersRecordListingFilterRequest.pageSize) {
-      // Set the page size for the query
-      query = query.limit(usersRecordListingFilterRequest.pageSize);
-    }
-
-    // Execute the query and return the result
-    return query.exec();
+    // Execute the query by applying the paginateQuery helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbUserDetailDto,
+      UsersListingFilterOptions
+    >(query, usersRecordListingFilterRequest);
   }
 
   /**

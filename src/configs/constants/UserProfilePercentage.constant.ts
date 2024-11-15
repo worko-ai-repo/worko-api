@@ -215,6 +215,6 @@ export const UserProfilePercentage = {
 export const profilePercentageField = {
   isEmailVerified: "isEmailVerified",
   isNumberVerified: "isNumberVerified",
-  socialProfile: "socialProfile",
+  socialProfile: "socialProfile", 
   CV: "CV",
 };

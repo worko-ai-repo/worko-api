@@ -14,6 +14,8 @@ import {
 //Load the local dtos
 import { UserReferralRequestCreateDTO } from "../dtos/User.dto";
 import {
+  EmpReferralListingFilterOptions,
+  ReferralStatusListingFilterOptions,
   UserReferralDTO,
   UserReferralStatusChangeByCandDTO,
 } from "../dtos/UserReferral.dto";
@@ -22,6 +24,9 @@ import { ReferralListingFilterOptions } from "../admin/dtos/UserReferral.dto";
 //Load the local enums
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import { SortOrderTypeEnum } from "../enums/Common.enum";
+
+// Load helpers
+import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
@@ -42,15 +47,12 @@ class UserReferralDao implements BaseDao {
    * First you will get all the referrals from the DAO using the GSI1PK and GSI1SK.
    * Then you will filter the referrals based on the status if provided.
    * Then sort by default in descending order Or if sortOrder is given then sort by that order using dynamoose's sort() method which sorts the items based on the sort key of the index you're querying.
-   * if search by referralStatusName is provided then you will execute the query without pagination which are in sorted order(ascending or descending according to above mentioned sortOrder) and return all the results
-   * else you will execute the query with pagination and return only the results based on the offset and limit provided
    *
    * @param {ReferralListingFilterOptions} referralRecordListingFilterRequest - The filter options for the referral record listing.
-   * @return {Promise<QueryResponse<DbUserReferralDto>>} A promise that resolves to the query response containing the retrieved referral details.
    */
   async getReferrals(
     referralRecordListingFilterRequest: ReferralListingFilterOptions
-  ): Promise<QueryResponse<DbUserReferralDto>> {
+  ) {
     // Log the action of getting referral details in the dao
     global.logger.info("Get referral details [dao]");
 
@@ -115,29 +117,11 @@ class UserReferralDao implements BaseDao {
       });
     }
 
-    // If date range or search filter or both is applied, directly return query result without pagination
-    if (
-      referralRecordListingFilterRequest.fromDate ||
-      referralRecordListingFilterRequest.toDate ||
-      referralRecordListingFilterRequest.searchText
-    ) {
-      return query.exec();
-    }
-
-    // if lastKey is provided, add it to the query where lastKey is equal to the provided value
-    if (referralRecordListingFilterRequest.lastKey) {
-      // Start the query from the lastKey to retrieve subsequent pages
-      query = query.startAt(referralRecordListingFilterRequest.lastKey);
-    }
-
-    // if pageSize is provided, add it to the query
-    if (referralRecordListingFilterRequest.pageSize) {
-      // Set the page size for the query
-      query = query.limit(referralRecordListingFilterRequest.pageSize);
-    }
-
-    // Execute the query and return the result
-    return query.exec();
+    // Execute the query by applying the paginateQuery helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbUserReferralDto,
+      ReferralListingFilterOptions
+    >(query, referralRecordListingFilterRequest);
   }
 
   /**
@@ -147,12 +131,11 @@ class UserReferralDao implements BaseDao {
    *
    * @param email - Email address of the user
    * @param status - referral status
-   * @returns {Promise<QueryResponse<DbUserReferralDto>>} - A Promise that resolves to the Referral of the user
    */
   async getReferralsForCand(
     email: string,
-    status?: string
-  ): Promise<QueryResponse<DbUserReferralDto>> {
+    userReferralStatusFilterOptions: ReferralStatusListingFilterOptions
+  ) {
     global.logger.info("Get user Referral by status [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
@@ -161,11 +144,20 @@ class UserReferralDao implements BaseDao {
       .eq(PK)
       .where("SK")
       .beginsWith("REF#ID#");
-    if (status) {
-      query = query.where("status").eq(status);
+    if (userReferralStatusFilterOptions.status) {
+      query = query.where("status").eq(userReferralStatusFilterOptions.status);
     }
 
-    return query.exec();
+    // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
+    query = query.sort(
+      userReferralStatusFilterOptions.sortOrder as SortOrderTypeEnum
+    );
+
+    // Execute the query by applying the paginateQuery helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbUserReferralDto,
+      ReferralStatusListingFilterOptions
+    >(query, userReferralStatusFilterOptions);
   }
 
   /**
@@ -343,7 +335,7 @@ class UserReferralDao implements BaseDao {
 
   /**
    * getReferralDetailsByReferralId
-   * 
+   *
    * Fetches Referral based on referralId.
    *
    * @param referralId - Referral id
@@ -362,12 +354,57 @@ class UserReferralDao implements BaseDao {
 
     const GSI1SK = this.GSI1SK.strtr({ "{refId}": referralId });
 
-    // return Referral details 
+    // return Referral details
     return UserReferralModel.query("GSI1PK")
       .eq(this.GSI1PK)
       .where("GSI1SK")
       .eq(GSI1SK)
       .exec();
+  }
+
+  
+  /**
+   * getCompanyReferralsByEmpEmailForAwaiting
+   * 
+   * Retrieves company referrals for an employee based on the provided filter options, excluding specific referral IDs.
+   *
+   * @param {EmpReferralListingFilterOptions} empReferralListingFilterOptions - The filter options for the referral listing, including sort order, company ID, and status.
+   * @param {string[]} referralIdsToBeExcluded - An array of referral IDs to be excluded from the results.
+   */
+  async getCompanyReferralsByEmpEmailForAwaiting(
+    empReferralListingFilterOptions: EmpReferralListingFilterOptions,
+    referralIdsToBeExcluded: string[]
+  ) {
+    global.logger.info("Get Company Referrals for Employee by Awaiting referral status [DAO]");
+
+    // Construct the query based on the provided filter options
+    let query = UserReferralModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .beginsWith("ID#")
+      .sort(empReferralListingFilterOptions.sortOrder as SortOrderTypeEnum)
+      .where("companyId")
+      .eq(empReferralListingFilterOptions.companyId)
+      .where("status")
+      .eq(empReferralListingFilterOptions.status);
+
+    /**
+     * Exclude specific referral IDs from the results
+     * 
+     * This method we are using is not the best way to do this, but it works for now.
+     * But we should find a better way to do this. I have tried using the "not()" operator followed by "in()", but it does not work.
+     * 
+     * @see https://dynamoosejs.com/guide/Condition#conditionnot
+     */
+    referralIdsToBeExcluded.forEach((excludedId) => {
+      query = query.where("id").not().eq(excludedId);
+    });
+
+    // Execute the query by applying the paginateQuery helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbUserReferralDto,
+      EmpReferralListingFilterOptions
+    >(query, empReferralListingFilterOptions);
   }
 
   /**
@@ -458,6 +495,34 @@ class UserReferralDao implements BaseDao {
       .eq(userId)
       .exec();
   }
+
+  /**
+   * getEmployeeReferralsByFilterOptions
+   * 
+   * Fetches referrals for an employee based on the provided filter options and an array of referral IDs.
+   *
+   * @param {string[]} refIds - An array of referral IDs to be fetched.
+   * @param {EmpReferralListingFilterOptions} empReferralListingFilterOptions - Filter options for the referral listing.
+   */
+  async getEmployeeReferralsByFilterOptions(
+    refIds:string[], 
+    empReferralListingFilterOptions: EmpReferralListingFilterOptions
+  ) {
+    let query = UserReferralModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .beginsWith("ID#")
+      .sort(empReferralListingFilterOptions.sortOrder as SortOrderTypeEnum)
+      .where("id")
+      .in(refIds);
+
+    // Execute the query by applying the paginateQuery helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbUserReferralDto,
+      EmpReferralListingFilterOptions
+    >(query, empReferralListingFilterOptions);
+  }
+
   /**
    * Fetches referrals based on GSI1PK and array of referral IDs.
    * @param referralIds - Array of referral IDs
