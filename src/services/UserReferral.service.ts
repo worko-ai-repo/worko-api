@@ -48,6 +48,7 @@ import APP_CONSTANTS from '../configs/constants.config';
 import { ScheduleJobCreateDto, ScheduleJobRefReviewAcceptanceStatusInputDto } from '../dtos/ScheduleJob.dto';
 import { GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE, GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE } from '../dtos/GrowaasanTemplatePlaceholder.dto';
 import { GrowaasanPhoneNumberDto } from '../dtos/Growaasan.dto';
+import { PaginatedResultsWithMatchingConditionsResponse } from '../dtos/Common.dto';
 
 // Import enums
 import { ScheduleJobStatus, ScheduleJobType } from '../enums/ScheduleJob.enum';
@@ -358,7 +359,7 @@ class UserReferralService {
   async getReferralsForCand(
     email: string,
     userReferralStatusFilterOptions: ReferralStatusListingFilterOptions
-  ) {
+  ):Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto>> {
     // Logging the action of getting user Referral by status in the service layer
     logger.info("Fetching user Referral by status [UserReferralService]");
     return userReferralDao.getReferralsForCand(

@@ -18,6 +18,7 @@ import {
 } from "../dtos/User.dto";
 import { UserDetailDTO } from "../dtos/UserDetail.dto";
 import { UsersListingFilterOptions } from "../admin/dtos/User.dto";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 
 // import enums
 import { SortOrderTypeEnum } from ".././enums/Common.enum";
@@ -45,10 +46,11 @@ class UserDetailDao implements BaseDao {
    * Retrieves user details based on the provided filter options.
    *
    * @param {UsersListingFilterOptions} usersRecordListingFilterRequest - The filter options for user details.
+   * @return {Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserDetailDto>>} A promise that resolves to the user details.
    */
   async getUsers(
     usersRecordListingFilterRequest: UsersListingFilterOptions
-  ) {
+  ): Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserDetailDto>> {
     // Log the action of getting user details
     global.logger.info("Get user details [DAO]");
 

@@ -6,7 +6,7 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load dtos
 import { SubscriptionListingFilterOptions, SubscriptionListingFilterRequestDTO } from "../dtos/Subscription.dto";
-import { RecordListingResponseDTO } from "../../dtos/Common.dto";
+import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Load enums
 import { UserSubscriptionStatus } from "../../enums/UserSubscription.enum";
@@ -80,7 +80,7 @@ class UserSubscriptionController {
       }
 
       // Get all users subscriptions based on the provided filter options and if it is not provided, get all subscriptions
-      const userSubscriptions =
+      const userSubscriptions: PaginatedResultsWithMatchingConditionsResponse<DbUserSubsDto> =
         await userSubscriptionServiceObj.getAllUsersSubscriptions(
           subscriptionFilterOptions
         );
@@ -90,8 +90,8 @@ class UserSubscriptionController {
         userSubscriptions;
 
       // Generate the response structure with the paginated result
-      const subscriptionResponse: RecordListingResponseDTO<any> =
-        paginationResponseHelperObj.customizedPaginationRecordListingResponse<SubscriptionListingFilterOptions>(
+      const subscriptionResponse: RecordListingResponseDTO<DbUserSubsDto[]> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<DbUserSubsDto[],SubscriptionListingFilterOptions>(
           Object.values(userSubscriptionDetails),
           subscriptionRecordListingFilterRequest,
           count,

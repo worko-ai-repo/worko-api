@@ -7,7 +7,7 @@ import { Request, Response, NextFunction } from "express";
 // Load the local dtos
 import { UserReferralRequestCreateApiDTO ,UserReferralRequestCreateDTO } from "../dtos/User.dto";
 import { EmpReferralListingFilterOptions, EmpReferralListingFilterRequestDTO, ReferralStatusListingFilterOptions, ReferralStatusListingFilterRequestDTO, UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
-import { RecordListingResponseDTO } from "../dtos/Common.dto";
+import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../dtos/Common.dto";
 
 // Load helpers
 import { RequestHelper } from "../helpers/request.helper";
@@ -92,7 +92,7 @@ class UserReferralController {
       }
 
       // Get the candidate referrals for the given "candEmail" and "referralStatus"
-      let candidateReferrals = await UserReferralService.getReferralsForCand(
+      let candidateReferrals: PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto> = await UserReferralService.getReferralsForCand(
         candEmail,
         userReferralStatusFilterOptions
       );
@@ -109,8 +109,8 @@ class UserReferralController {
       // if no referral found then just return empty response
       if (!count) {
         // Generate the pagination response
-        const referralsResponse: RecordListingResponseDTO<any> =
-          paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralStatusListingFilterOptions>(
+        const referralsResponse: RecordListingResponseDTO<DbUserReferralDto[]> =
+          paginationResponseHelperObj.customizedPaginationRecordListingResponse<DbUserReferralDto[],ReferralStatusListingFilterOptions>(
             [],
             referralStatusRecordListingFilterRequest,
             count,
@@ -132,13 +132,13 @@ class UserReferralController {
        */
 
       // Example Output If `candReferralDetails` type is `object`: [UserReferral {...},UserReferral {...},UserReferral {...}, ......]
-      const candReferrals =typeof candReferralDetails === "object"
+      const candReferrals: DbUserReferralDto[] = typeof candReferralDetails === "object"
           ? Object.values(candReferralDetails)
           : candReferralDetails;
 
       // Get unique company IDs from the retrieved referrals
       const companyIDs: string[] = candReferrals.map(
-        (referral: any) => referral.companyId
+        (referral: DbUserReferralDto) => referral.companyId
       );
       const uniqueCompanyIDs: string[] = Array.from(new Set(companyIDs));
 
@@ -148,19 +148,6 @@ class UserReferralController {
       );
 
       // Loop over the retrieved referrals and include the company name in the response
-      const finalUserReferral = candReferrals.map((referral: any) => {
-        // Find the company details corresponding to the current referral
-        const companyDetails = companyDetailsResults.find(
-          (companyDetail: DbCompanyDetailDto) =>
-            companyDetail.id === referral.companyId
-        );
-
-        // Return the company name along with referral details
-        return {
-          ...referral,
-          companyName: companyDetails?.name ?? null,
-        };
-      });
       /*
       # Example Output for `finalUserReferral`:
       [
@@ -183,10 +170,23 @@ class UserReferralController {
           {..},{...},....
       ]
       */
+      const finalUserReferral = candReferrals.map((referral: DbUserReferralDto) => {
+        // Find the company details corresponding to the current referral
+        const companyDetails = companyDetailsResults.find(
+          (companyDetail: DbCompanyDetailDto) =>
+            companyDetail.id === referral.companyId
+        );
+
+        // Return the company name along with referral details
+        return {
+          ...referral,
+          companyName: companyDetails?.name ?? null,
+        };
+      });
 
       // Generate the pagination response
-      const referralsResponse: RecordListingResponseDTO<any> =
-        paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralStatusListingFilterOptions>(
+      const referralsResponse: RecordListingResponseDTO<any[]> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<any[],ReferralStatusListingFilterOptions>(
           finalUserReferral,
           userReferralStatusFilterOptions,
           count,
@@ -269,8 +269,8 @@ class UserReferralController {
       // Check if any company referrals exist
       if (!count) {
         // Generate the pagination response
-        const empReferralsResponse: RecordListingResponseDTO<any> =
-          paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralStatusListingFilterOptions>(
+        const empReferralsResponse: RecordListingResponseDTO<DbUserReferralDto[]> =
+          paginationResponseHelperObj.customizedPaginationRecordListingResponse<DbUserReferralDto[],ReferralStatusListingFilterOptions>(
             [],
             empReferralListingFilterOptions,
             count,
@@ -319,8 +319,8 @@ class UserReferralController {
       );
 
       // Generate the pagination response
-      const empReferralsResponse: RecordListingResponseDTO<any> =
-        paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralStatusListingFilterOptions>(
+      const empReferralsResponse: RecordListingResponseDTO<any[]> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<any[],ReferralStatusListingFilterOptions>(
           finalUserReferrals,
           empReferralListingFilterOptions,
           count,

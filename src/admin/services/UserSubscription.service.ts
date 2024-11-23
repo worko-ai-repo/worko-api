@@ -3,6 +3,7 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load dtos
 import { SubscriptionListingFilterOptions } from "../dtos/Subscription.dto";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../../dtos/Common.dto";
 
 // Import DAOs
 import userSubscriptionDao from "../../daos/UserSubscription.dao";
@@ -28,7 +29,7 @@ class UserSubscriptionService {
    */
   async getAllUsersSubscriptions(
     subscriptionRecordListingFilterRequest: SubscriptionListingFilterOptions
-  ) {
+  ): Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserSubsDto>> {
     // Log the action of fetching user bought subscription list
     global.logger.info(
       "Fetching User's Bought Subscription List in [admin user subscription service]"

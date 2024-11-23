@@ -6,7 +6,7 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load local DTOs
 import { UserSupportListingFilterOptions, UserSupportListingFilterRequestDTO } from "../dtos/UserSupport.dto";
-import { RecordListingResponseDTO } from "../../dtos/Common.dto";
+import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
@@ -79,7 +79,7 @@ class UserSupportController {
       }
 
       // Get user support requests from service
-      const supportDetails = await userSupportServiceObj.getSupportRequests(
+      const supportDetails: PaginatedResultsWithMatchingConditionsResponse<DbUserSupportDto> = await userSupportServiceObj.getSupportRequests(
         supportFilterOptions
       );
 
@@ -87,8 +87,8 @@ class UserSupportController {
       const {count,lastKey,timesQueried,queriedCount, ...supportRequestDetails} = supportDetails;
 
       // Generate the response structure with pagination details
-      const userSupportRequestsResponse: RecordListingResponseDTO<any> =
-        paginationResponseHelperObj.customizedPaginationRecordListingResponse<UserSupportListingFilterOptions>(
+      const userSupportRequestsResponse: RecordListingResponseDTO<DbUserSupportDto[]> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<DbUserSupportDto[],UserSupportListingFilterOptions>(
           Object.values(supportRequestDetails),
           userSupportRequestsRecordListingFilterRequest,
           count,

@@ -6,7 +6,7 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load dtos
 import { ReferralListingFilterOptions, ReferralListingFilterRequestDTO } from "../dtos/UserReferral.dto";
-import { RecordListingResponseDTO } from "../../dtos/Common.dto";
+import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Load enums
 import { SortOrderTypeEnum } from "../../enums/Common.enum";
@@ -78,16 +78,16 @@ class UserReferralController {
       }
 
       // Fetch the referral details from the service
-      const userReferrals = await userReferralServiceObj.getReferrals(
+      const userReferrals: PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto> = await userReferralServiceObj.getReferrals(
         userReferralFilterOptions
       );
 
       // Extract the count, timesQueried,lastKey and other details from the response
-      const { lastKey, count,timesQueried,queriedCount, ...referralDetails } = userReferrals;
+      const { lastKey, count, timesQueried, queriedCount, ...referralDetails } = userReferrals;
 
       // Generate the pagination response
-      const referralsResponse: RecordListingResponseDTO<any> =
-        paginationResponseHelperObj.customizedPaginationRecordListingResponse<ReferralListingFilterOptions>(
+      const referralsResponse: RecordListingResponseDTO<DbUserReferralDto[]> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<DbUserReferralDto[],ReferralListingFilterOptions>(
           Object.values(referralDetails),
           referralRecordListingFilterRequest,
           count,

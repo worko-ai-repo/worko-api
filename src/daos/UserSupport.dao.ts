@@ -12,6 +12,7 @@ import {
   UserSupportUpdateApiDto,
 } from "../dtos/UserSupport.dto";
 import { UserSupportListingFilterOptions } from "../admin/dtos/UserSupport.dto";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 
 // Import the enums
 import { SortOrderTypeEnum } from "../enums/Common.enum";
@@ -57,7 +58,7 @@ class UserSupportDao implements BaseDao {
    */
   async getSupportRequests(
     supportFilterOptions: UserSupportListingFilterOptions
-  ) {
+  ): Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserSupportDto>> {
     // Log the action of getting support requests in the dao
     global.logger.info("Get support requests [admin dao]");
 

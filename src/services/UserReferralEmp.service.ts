@@ -25,6 +25,7 @@ import { EmpReferralListingFilterOptions, UserReferralDTO } from "../dtos/UserRe
 import { ScheduleJobReferralReminderInputDto, ScheduleJobCreateDto } from "../dtos/ScheduleJob.dto";
 import { GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE, GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE, GrowaasanTemplatePlaceholderEMP_ACCEPTED_REQUEST_COUNT_EMPLOYEE, GrowaasanTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE, GrowaasanTemplatePlaceholderEMP_PENDING_REQUEST_COUNT_EMPLOYEE, GrowaasanTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE } from "../dtos/GrowaasanTemplatePlaceholder.dto";
 import { GrowaasanPhoneNumberDto } from "../dtos/Growaasan.dto";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 
 // Import Enums
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
@@ -105,7 +106,7 @@ class UserReferralEmpService {
   async getEmployeeAwaitingReferrals(
     empPrimaryEmail: string,
     empReferralListingFilterOptions: EmpReferralListingFilterOptions
-  ) {
+  ):Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto>> {
     try {
       // Get employee's responses given to different referrals by empPrimaryEmail
       const userReferralResponse: QueryResponse<DbUserReferralResponseDto> =
@@ -131,13 +132,10 @@ class UserReferralEmpService {
       });
 
       // Get company referrals where status is awaiting
-      const companyReferrals =
-        await userReferralDao.getCompanyReferralsByEmpEmailForAwaiting(
+      return userReferralDao.getCompanyReferralsByEmpEmailForAwaiting(
           empReferralListingFilterOptions,
           referralIdsToBeExcluded
         );
-      
-      return companyReferrals;
     } catch (error) {
       global.logger.error("Error fetching employee awaiting referrals:", error);
       throw error;
@@ -189,7 +187,7 @@ class UserReferralEmpService {
       }
     )
     if (!userReferralResponse.length) {
-      const emptyArr: any[] = [];
+      const emptyArr: DbUserReferralDto[] = [];
       return {
         emptyArr,
         count: 0,
@@ -212,7 +210,7 @@ class UserReferralEmpService {
       }
     )
     if (!refIds.length) {
-      const emptyArr:any[] = [];
+      const emptyArr: DbUserReferralDto[] = [];
       return {
         emptyArr,
         count: 0,
@@ -223,14 +221,10 @@ class UserReferralEmpService {
     }
 
     // Get employee referrals by filter options and refIds( `refIds` contains referral IDs)
-    const employeeReferralsByEmail =
-      await userReferralDao.getEmployeeReferralsByFilterOptions(
+    return userReferralDao.getEmployeeReferralsByFilterOptions(
         refIds,
         empReferralListingFilterOptions
       );
-    
-    // Return the employee referrals
-    return employeeReferralsByEmail;
   }
 
   /**

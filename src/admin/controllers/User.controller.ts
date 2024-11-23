@@ -9,7 +9,7 @@ import {
   UsersListingFilterOptions,
   UsersListingFilterRequestDTO,
 } from "../dtos/User.dto";
-import { RecordListingResponseDTO } from "../../dtos/Common.dto";
+import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Import the enums
 import { SortOrderTypeEnum } from "../../enums/Common.enum";
@@ -77,14 +77,14 @@ class UserController {
       }
 
       // Fetch user details from the service
-      const userDetails = await userServiceObj.getUsers(usersFilterOptions);
+      const userDetails: PaginatedResultsWithMatchingConditionsResponse<DbUserDetailDto> = await userServiceObj.getUsers(usersFilterOptions);
 
       // Destructure the fetched user details
-      const {lastKey,count, timesQueried,queriedCount, ...usersDetails} = userDetails;
+      const { lastKey, count, timesQueried, queriedCount, ...usersDetails } = userDetails;
 
       // Generate the pagination response
-      const userDetailsResponse: RecordListingResponseDTO<any> =
-        paginationResponseHelperObj.customizedPaginationRecordListingResponse<UsersListingFilterOptions>(
+      const userDetailsResponse: RecordListingResponseDTO<DbUserDetailDto[]> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse<DbUserDetailDto[],UsersListingFilterOptions>(
           Object.values(usersDetails),
           usersRecordListingFilterRequest,
           count,

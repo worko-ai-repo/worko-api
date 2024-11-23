@@ -7,6 +7,7 @@ import userDetailDao from "../../daos/UserDetail.dao";
 // Import DTOs
 import { UserSubscriptionDetailsUpdateDto } from "../../dtos/User.dto";
 import { UsersListingFilterOptions } from "../dtos/User.dto";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../../dtos/Common.dto";
 
 // Import enums
 import { UserType } from "../../enums/User.enum";
@@ -34,8 +35,9 @@ class UserService {
    * If userType is EMP, get the employee signup list and also include currentCompanyName, currentCompanyEmail, isCurrentCompEmailVerified
    * 
    * @param {UsersListingFilterOptions} usersRecordListingFilterRequest - The filter options for user details.
+   * @return {Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserDetailDto>>} A promise that resolves to the user details.
    */
-  async getUsers( usersRecordListingFilterRequest: UsersListingFilterOptions ) {
+  async getUsers( usersRecordListingFilterRequest: UsersListingFilterOptions ): Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserDetailDto>> {
     // Log the action of getting user details by CAND/EMP
     global.logger.info("Get user details by CAND/EMP [admin user service]");
 
@@ -51,13 +53,13 @@ class UserService {
     }
 
     // If userType is EMP, get the employee signup list
-    const userDetails = await userDetailDao.getUsers(usersRecordListingFilterRequest);
+    const userDetails: PaginatedResultsWithMatchingConditionsResponse<DbUserDetailDto> = await userDetailDao.getUsers(usersRecordListingFilterRequest);
 
     // Destructure the fetched user details
     const { lastKey, count, timesQueried, queriedCount, ...remainingUserDetails } = userDetails;
     
     // Convert the remainingUserDetails object to an array
-    const userDetailsArray = Object.values(remainingUserDetails) as unknown as DbUserDetailDto[];
+    const userDetailsArray: DbUserDetailDto[] = Object.values(remainingUserDetails);
 
     /*
     Extract email from the PK and get all experiences by email and 

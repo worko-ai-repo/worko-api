@@ -172,3 +172,29 @@ export interface EntityDetailsPaginationData {
   timesQueried?: number | undefined;
   queriedCount?: number | undefined;
 }
+
+/**
+ * PaginatedResultsWithMatchingConditionsResponse
+ * 
+ * 1. `lastKey`: The `lastKey` property from Dynamoose: 
+ * lastKey Example: { 
+ *  SK: 'ID#swapnaJunnuAppala', PK: 'USR#EML#swapnaAppalaMrudula@gmail.com',
+ *  GSI1PK: 'USR#',
+ *  GSI1SK: 'ID#swapnaJunnuAppala' 
+ * } 
+ * 2. `count`: Represents the number of items in the DynamoDB table that match the filter criteria in the query. 
+ * This is the count of items after any filters are applied, 
+ * which means it’s the count of items that actually meet the conditions specified.
+ * 3. `timesQueried`: The `timesQueried` is the number of requests made to AWS DynamoDB to fulfill the query response.
+ * 
+ * @file { dynamoose.helper.ts } - This is one of the helper file, we are using this interface.
+ * @template DbEntityDto - The type of the entity to be returned in the response, 
+ *                         Ex: `DbUserDetailDto`, `DbUserReferralDto` etc.
+ */
+export interface PaginatedResultsWithMatchingConditionsResponse<DbEntityDto> {
+  [key: number]: DbEntityDto;
+  lastKey: ObjectType | undefined;
+  count: number;
+  timesQueried: number;
+  queriedCount: number;
+}

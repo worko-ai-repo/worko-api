@@ -20,6 +20,7 @@ import {
   UserReferralStatusChangeByCandDTO,
 } from "../dtos/UserReferral.dto";
 import { ReferralListingFilterOptions } from "../admin/dtos/UserReferral.dto";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 
 //Load the local enums
 import { ReferralStatus } from "../enums/UserReferral.enum";
@@ -52,7 +53,7 @@ class UserReferralDao implements BaseDao {
    */
   async getReferrals(
     referralRecordListingFilterRequest: ReferralListingFilterOptions
-  ) {
+  ):Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto>> {
     // Log the action of getting referral details in the dao
     global.logger.info("Get referral details [dao]");
 
@@ -135,7 +136,7 @@ class UserReferralDao implements BaseDao {
   async getReferralsForCand(
     email: string,
     userReferralStatusFilterOptions: ReferralStatusListingFilterOptions
-  ) {
+  ):Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto>> {
     global.logger.info("Get user Referral by status [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
@@ -374,7 +375,7 @@ class UserReferralDao implements BaseDao {
   async getCompanyReferralsByEmpEmailForAwaiting(
     empReferralListingFilterOptions: EmpReferralListingFilterOptions,
     referralIdsToBeExcluded: string[]
-  ) {
+  ):Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto>>  {
     global.logger.info("Get Company Referrals for Employee by Awaiting referral status [DAO]");
 
     // Construct the query based on the provided filter options

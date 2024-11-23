@@ -7,6 +7,7 @@ import { ReferralListingFilterOptions } from "../dtos/UserReferral.dto";
 // Load local daos
 import userReferralDao from "../../daos/UserReferral.dao";
 import userReferralResponseDao from "../../daos/UserReferralResponse.dao"
+import { PaginatedResultsWithMatchingConditionsResponse } from "../../dtos/Common.dto";
 
 // Load local models
 import { DbUserReferralDto } from "../../db/models/UserReferral.model";
@@ -46,7 +47,7 @@ class UserReferralService {
    */
   async getReferrals(
     referralRecordListingFilterRequest: ReferralListingFilterOptions
-  ) {
+  ):Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto>> {
     // Log the action of getting referral details in the service
     global.logger.info("Get all referrals [admin user referral service]");
 

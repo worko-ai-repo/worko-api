@@ -18,7 +18,7 @@ import {
   SubscriptionCreateDTO,
   SubscriptionUpdateDTO,
 } from "../dtos/Subscription.dto";
-import { RecordListingFilterOptions } from "../dtos/Common.dto";
+import { PaginatedResultsWithMatchingConditionsResponse, RecordListingFilterOptions } from "../dtos/Common.dto";
 import { SubscriptionListingFilterOptions } from "../admin/dtos/Subscription.dto";
 
 // Load the local enums
@@ -49,7 +49,7 @@ class UserSubscriptionDao implements BaseDao {
    */
   async getAllUsersSubscriptionsAdmin(
     subscriptionRecordListingFilterRequest: SubscriptionListingFilterOptions
-  ) {
+  ): Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserSubsDto>> {
     // Log the action of fetching user bought subscription list
     global.logger.info(
       "Fetching User's Bought Subscription List in [admin dao]"

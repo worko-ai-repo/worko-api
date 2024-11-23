@@ -1,9 +1,9 @@
 // Import dynamoose packages
 import { ObjectType } from "dynamoose/dist/General";
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import local dtos
-import { RecordListingFilterOptions } from "../dtos/Common.dto";
+import { PaginatedResultsWithMatchingConditionsResponse, RecordListingFilterOptions } from "../dtos/Common.dto";
 
 /**
  * lastKeyToBase64EncodeStr
@@ -99,28 +99,21 @@ export function base64EncodeStrToLastKey(str?: string): undefined | ObjectType {
  *
  * # Programming Amazon DynamoDB with JavaScript (Pagination)
  * @see https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/programming-with-javascript.html#programming-with-javascript-pagination
- *
- * 1. `count`: Represents the number of items in the DynamoDB table that match the filter criteria in the query. 
- * This is the count of items after any filters are applied, 
- * which means it’s the count of items that actually meet the conditions specified.
  * 
- * @param {any} query - The Dynamoose query object to execute.
+ * @param {Query<DbEntityDto>} query - The Dynamoose query object to execute.
  * @param {EntityListingFilterOptions} entityRecordListingFilterRequest - The filter options including pagination settings.
- * 
- * @returns {Promise<{ results: DbEntityDto[], lastKey: ObjectType | undefined, count: number, timesQueried: number, queriedCount: number }>} 
- * A promise that resolves to an object containing the results array, the last key for pagination,
- * the total count of items retrieved, the number of times the query was executed, and the count of items queried.
+ * @returns {Promise<PaginatedResultsWithMatchingConditionsResponse<DbEntityDto>>} - The paginated results with matching conditions.
  */
 export async function getPaginatedResultsWithMatchingConditions<
     DbEntityDto,
     EntityListingFilterOptions extends RecordListingFilterOptions
->(query: any, entityRecordListingFilterRequest: EntityListingFilterOptions) {
+>(query: Query<DbEntityDto>, entityRecordListingFilterRequest: EntityListingFilterOptions): Promise<PaginatedResultsWithMatchingConditionsResponse<DbEntityDto>> {
   /**
    * The `pageSize` will come from the request payload,
    * if no `pageSize` is provided from the request payload,
    * then default page size will be `25` which we are setting in backend internally(Refer `request.helper.ts` file)
    */
-  const requestedPageSize = entityRecordListingFilterRequest.pageSize;
+  const requestedPageSize: number = entityRecordListingFilterRequest.pageSize;
 
   // The `lastKeyInternal` is the `lastKey` that will be used for the next batch
   let lastKeyInternal: ObjectType | undefined = entityRecordListingFilterRequest.lastKey;
@@ -154,7 +147,7 @@ export async function getPaginatedResultsWithMatchingConditions<
 
     // Execute the query
     /*****
-      SAMPLE OUTPUT OF `entityResponse`
+      SAMPLE OUTPUT OF `entityResponse`, when you log `entityResponse` in the console using `console.log(entityResponse);`:
       [
         UserDetail {...},
         UserDetail {...},
@@ -175,7 +168,7 @@ export async function getPaginatedResultsWithMatchingConditions<
         toJSON: [Function: itemToJSON]
       ]
       *****/
-    const entityResponse: QueryResponse<DbEntityDto> =(await query.exec()) as QueryResponse<DbEntityDto>;
+    const entityResponse: QueryResponse<DbEntityDto> = await query.exec();
 
     /**
      * It updates timesQueriedInternal by adding entityResponse.timesQueried,
@@ -191,7 +184,7 @@ export async function getPaginatedResultsWithMatchingConditions<
 
     // Add the results to the `results` array
     /*****
-      SAMPLE OUTPUT OF `results`
+      SAMPLE OUTPUT OF `results`, when you log `results` in the console  using `console.log(results)`:
       [
         UserDetail {...},
         UserDetail {...},
@@ -227,7 +220,7 @@ export async function getPaginatedResultsWithMatchingConditions<
 
   // Create the final results of the paginated response
   /*****
-    SAMPLE OUTPUT OF `finalResults`
+    SAMPLE OUTPUT OF `finalResults` when you log `finalResults` in the console using `console.log(finalResults);`:
     {
         '0': UserDetail {...},
         '1': UserDetail {...},
@@ -245,13 +238,19 @@ export async function getPaginatedResultsWithMatchingConditions<
         queriedCount: 0
     }
     *****/
-  const finalResults = {
-    ...results,
-    lastKey: responseLastKey,
-    count: results.length,
-    timesQueried: timesQueriedInternal,
-    queriedCount: queriedCountInternal,
-  };
+  const finalResults: PaginatedResultsWithMatchingConditionsResponse<DbEntityDto> =
+    {
+      ...results,
+      lastKey: responseLastKey,
+      count: results.length,
+      timesQueried: timesQueriedInternal,
+      queriedCount: queriedCountInternal,
+    };
+  
+  global.logger.debug(`pagination details`, {
+    filePath: __filename,
+    methodName: getPaginatedResultsWithMatchingConditions.name
+  });
 
   // Return the final results of the paginated response
   return finalResults;

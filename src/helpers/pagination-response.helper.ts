@@ -31,7 +31,7 @@ class PaginationResponseHelper {
    * It generates the response structure for the entity listing end points.
    * Entity examples: Company, Subscription, User, Referral, SupportRequest etc.
    *
-   * @param {any} customizedData - The data which contains the records, expected to be an object with keys as string.
+   * @param {EntityDetails} customizedData - The data which contains the records.
    * @param {EntityListingFilterOptions} filterRequest - The filter options which contains the pageSize and sortOrder.
    * @param {number} customizedCount - The count of items returned in the response.
    * @param {number} customizedTimesQueried - The number of requests made to AWS DynamoDB to fulfill the query response.
@@ -40,15 +40,16 @@ class PaginationResponseHelper {
    * @returns {RecordListingResponseDTO<any>} The response structure which contains the data and pagination details.
    */
   customizedPaginationRecordListingResponse<
+    EntityDetails,
     EntityListingFilterOptions extends RecordListingFilterOptions
   >(
-    customizedData: any, 
+    customizedData: EntityDetails,
     filterRequest: EntityListingFilterOptions,
     customizedCount: number,
     customizedTimesQueried: number,
     customizedLastKey?: ObjectType | undefined,
     customizedQueriedCount?: number | undefined
-  ): RecordListingResponseDTO<any> {
+  ): RecordListingResponseDTO<EntityDetails> {
     return {
       data: customizedData,
       pagination: {
@@ -65,7 +66,7 @@ class PaginationResponseHelper {
   /**
    * paginationRecordListingResponse
    *
-   * NOTE: `paginationRecordListingResponse` is the old response structure for returning the pagination data, 
+   * NOTE: `paginationRecordListingResponse` is the old response structure for returning the pagination data,
    * we will be using `customizedPaginationRecordListingResponse` for all new pagination response apis.
    *
    * It generates the response structure for the entity listing end points.

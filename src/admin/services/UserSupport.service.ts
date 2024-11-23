@@ -5,8 +5,11 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import userSupportDao from "../../daos/UserSupport.dao";
 
 // Load DTO
-import { DbUserSupportDto } from "../../db/models/UserSupport.model";
 import { UserSupportListingFilterOptions } from "../dtos/UserSupport.dto";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../../dtos/Common.dto";
+
+// Load models
+import { DbUserSupportDto } from "../../db/models/UserSupport.model";
 
 /**
  * UserSupportService
@@ -23,7 +26,7 @@ class UserSupportService {
    */
   async getSupportRequests(
     supportFilterOptions: UserSupportListingFilterOptions
-  ) {
+  ): Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserSupportDto>> {
     global.logger.info("get User support list [admin user support service]");
 
     // return support list from dao
