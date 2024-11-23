@@ -298,19 +298,17 @@ class UserController {
       // Initialize the user's profile completion percentage
       let userProfilePercentageDTO: UserProfilePercentageDTO =
         UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
+      global.logger.debug("userProfilePercentageDTO: ",{
+        filePath: __filename,
+        methodName:this.createCandidate.name,
+        userProfilePercentageDTO
+      });
 
       // Update current percentage based on the validated data
       userProfilePercentageDTO =
         UserProfilePercentageOperationHelper.updateCurPerc(
           userProfilePercentageDTO,
           userSignUpDto
-        );
-
-      // Update field-specific percentages (in this case, for social profile)
-      userProfilePercentageDTO =
-        UserProfilePercentageOperationHelper.updateFieldCurPercByKeys(
-          userProfilePercentageDTO,
-          [profilePercentageField.socialProfile]
         );
 
       // Create a profile percentage record for the user
@@ -445,13 +443,6 @@ createEmployee = async (req: Request, res: Response, next: NextFunction) => {
       UserProfilePercentageOperationHelper.updateCurPerc(
         userProfilePercentageDTO,
         userExperienceDto
-      );
-
-    // Update field-specific percentages (in this case, for social profile)
-    userProfilePercentageDTO =
-      UserProfilePercentageOperationHelper.updateFieldCurPercByKeys(
-        userProfilePercentageDTO,
-        [profilePercentageField.socialProfile]
       );
 
     // Create a profile percentage record for the user

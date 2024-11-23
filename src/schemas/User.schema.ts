@@ -91,7 +91,9 @@ export const userEmployeeSignUpDTOValidation = Joi.object({
   linkedinUrl: Joi.string().regex(
     /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
     "LinkedIn URL is not valid"
-  ),
+  ).optional().allow("").messages({
+    "string.pattern.base": "Please Provide Valid URL",
+  }),
   YOE: Joi.number().options({ convert: false }).integer().required().messages({
     "any.required": "Years of Experience (YOE) is required.",
     "number.base": "YOE must be a valid number.",

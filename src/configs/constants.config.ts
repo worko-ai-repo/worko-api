@@ -131,6 +131,14 @@ const APP_CONSTANTS = {
       ? PROD_HOURS
       : DEV_HOURS;
   },
+
+  /**
+   * SOCIAL_PROFILE_KEYS
+   * 
+   * These are the keys for the social profiles, we are currently used for profile percentage logic, 
+   * we can add more in the future if those were updated in `UserSocialProfileDTO`(refer `UserSocialProfile.dto.ts` file).
+   */
+  SOCIAL_PROFILE_KEYS: ["twitter", "github", "linkedin"],
 };
 
 export default APP_CONSTANTS;

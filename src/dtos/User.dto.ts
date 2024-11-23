@@ -86,7 +86,7 @@ export interface UserEmployeeSignUpDTO {
   name: string;
   email: string;
   number: string;
-  linkedinUrl: string;
+  linkedinUrl?: string;
   YOE: number; // @todo: `YOE` is not being used in UI, while employee sign-up, need to be removed by discussing with team
   companyName: string;
   companySK: string;

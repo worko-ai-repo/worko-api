@@ -270,6 +270,21 @@ class UserExperienceController {
         otp,
       );
 
+      let userProfilePercentageDTO = await UserProfilePercentageService.get(
+        primaryEmail
+      );
+      userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
+
+      userProfilePercentageDTO =
+        UserProfilePercentageOperationHelper.updateCurPerc(
+          userProfilePercentageDTO,
+          {
+            isCompanyEmailVerified: isOtpVerified,
+          }
+        );
+
+      UserProfilePercentageService.update(primaryEmail, userProfilePercentageDTO);
+
       // Send OTP verification details in the response
       res
         .status(HttpStatusCode.OK_200)

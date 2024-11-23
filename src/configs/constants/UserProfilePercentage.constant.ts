@@ -163,7 +163,12 @@ export const UserProfilePercentage = {
         {
           field: "isEmailVerified",
           fieldText: "Official Mail - Verify",
-          expPerc: 10, // previously 12
+          expPerc: 0,
+        },
+        {
+          field: "isCompanyEmailVerified",
+          fieldText: "Official Company Mail - Verify",
+          expPerc: 10, // previously 12 
         },
         {
           field: "designation",

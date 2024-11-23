@@ -246,12 +246,23 @@ class UserDetailController {
         value
       );
 
+      const candidateExperienceObj = !value.isCandidateFresher && value.candidateExperience !== undefined 
+        ? value.candidateExperience
+        : {};
+      const updateUserDetailObj = {
+        ...value,
+        ...candidateExperienceObj
+      }
+      global.logger.debug("updateUserDetailObj",{
+        fileName: __filename,
+        methodName: this.update.name,
+        updateUserDetailObj
+      });
       userProfilePercentageDTO =
         UserProfilePercentageOperationHelper.updateCurPerc(
           userProfilePercentageDTO,
-          value
-        );
-      console.log("userProfilePercentageDTO in update of UserDetailController: ", userProfilePercentageDTO);  
+          updateUserDetailObj
+        );  
 
       UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
 

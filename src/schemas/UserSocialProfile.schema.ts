@@ -27,4 +27,15 @@ export const userSocialProfileDTOValidation = Joi.object({
       )
     )
     .required(),
+
+    PK: Joi
+      .string()
+      .optional()
+      .allow("",null),
+
+    SK: Joi
+      .string()
+      .optional()
+      .allow("",null),
+      
   }).options({ stripUnknown: true });
