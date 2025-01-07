@@ -10,10 +10,18 @@ const userAchievementController = new UserAchievementController();
 // Route to hold the routes (CRUD, etc) related to "UserAchievement" table
 const UserAchievementRouter = Router();
 
-// Get the user Achievement details based on the provided query parameter
+/**
+ * Get the user Achievement details based on the provided query parameter
+ * 
+ * @authorisedRoles ["admin"]
+ */
 UserAchievementRouter.get("/:id/achievement", userAchievementController.get);
 
-// create/update the user Achievement details based on the provided query parameter
+/**
+ * create/update the user Achievement details based on the provided query parameter
+ * 
+ * @authorisedRoles ["admin"]
+ */
 UserAchievementRouter.post( "/:id/achievement", userAchievementController.create);
 
 export default UserAchievementRouter;

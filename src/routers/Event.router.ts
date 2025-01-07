@@ -10,7 +10,11 @@ const eventController = new EventController();
 // Route to hold the routes (CRUD, etc) related to "Event" table
 const EventRouter = Router();
 
-// Create a new event
+/**
+ * Create a new event
+ * 
+ * @authorisedRoles ["admin"]
+ */
 EventRouter.post("/validate-referral-mscore/:id", eventController.processReferralForEvent);
 
 export default EventRouter;

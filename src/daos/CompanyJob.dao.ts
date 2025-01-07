@@ -1,6 +1,9 @@
 // Load BaseError from utils
 import { BaseError } from "../utils/errors.util";
 
+// Load dynamoose
+import dynamoose from 'dynamoose';
+
 //Load Dtos
 import { CompanyJobCreateDto, CompanyJobUpdateDto, JobListingFilterOptions } from "../admin/dtos/CompanyJob.dto";
 
@@ -14,10 +17,12 @@ import { DbCompanyJobDto, CompanyJobModel } from "../db/models/CompanyJob.model"
 // Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
 
+// Import Pagination Helper
+import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
+
 // Load QueryResponse from dynamoose
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-import dynamoose from 'dynamoose';
-
 class CompanyJobDao {
     // Define the model name, partitian key and sort keys for CompanyJob
     modelName: string = "CompanyJob";
@@ -105,11 +110,11 @@ class CompanyJobDao {
      * 
      * @param {JobListingFilterOptions} jobFilterOptions - The filter options to apply on the Jobs.
      * 
-     * @returns {Promise<QueryResponse<DbCompanyJobDto>>} - Returns the list of all Jobs.
+     * @returns {Promise<PaginatedResultsWithMatchingConditionsResponse<DbCompanyJobDto>>} - Returns the list of all Jobs.
      * 
      * @see {CompanyJobModel} - The model used to interact with the database
      */
-    async getAllJobs(jobFilterOptions: JobListingFilterOptions): Promise<QueryResponse<DbCompanyJobDto>> {
+    async getAllJobs(jobFilterOptions: JobListingFilterOptions): Promise<PaginatedResultsWithMatchingConditionsResponse<DbCompanyJobDto>> {
         // Logger message
         global.logger.info("Fetching All Jobs. [dao]", {
             filePath: __filename,
@@ -219,19 +224,12 @@ class CompanyJobDao {
             jobFilterOptions.sortOrder as SortOrderTypeEnum
         );
 
-        // Apply Pagination
-        if (jobFilterOptions.lastKey) {
-            query = query.startAt(jobFilterOptions.lastKey);
-        }
-
-        // Apply pageSize conditions
-        if (jobFilterOptions.pageSize) {
-            console.log("pageSize", jobFilterOptions.pageSize);
-            query = query.limit(jobFilterOptions.pageSize);
-        }
 
         // Execute the query and return the result
-        return query.exec();
+        return getPaginatedResultsWithMatchingConditions<
+            DbCompanyJobDto,
+            JobListingFilterOptions> 
+        (query, jobFilterOptions); // passed args
     }
 
     /**

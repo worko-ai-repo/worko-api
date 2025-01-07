@@ -1,5 +1,15 @@
+
+// Load attachCompanyDetails from companyDetailsInjector.helper
+import { attachCompanyDetails } from "../../helpers/companyDetailsInjector.helper";
+
 // Load Base Error from Utils
 import { BaseError } from "../../utils/errors.util";
+
+// Load CompanyJobStatusEnum from enums
+import { CompanyJobStatusEnum } from "../../enums/CompanyJob.enum";
+
+// Load DbCompanyDetailDto from CompanyDetail.model
+import { DbCompanyDetailDto } from "../../db/models/CompanyDetail.model";
 
 // Load Dao
 import { companyJobDaoObj } from "../../daos/CompanyJob.dao";
@@ -18,10 +28,9 @@ import { companyServiceObj } from "./Company.service";
 
 // Load QueryResponse from dynamoose
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-import CompanyService from "../../services/Company.service";
-import { DbCompanyDetailDto } from "../../db/models/CompanyDetail.model";
-import { CompanyJobStatusEnum } from "../../enums/CompanyJob.enum";
 
+// Load PaginatedResultsWithMatchingConditionsResponse from Common.dto
+import { PaginatedResultsWithMatchingConditionsResponse } from "../../dtos/Common.dto";
 class CompanyJobService {
     /**
     * createJob
@@ -58,9 +67,9 @@ class CompanyJobService {
      * 
      * @param {JobListingFilterOptions} jobFilterOptions - Tells about the kind of query applied to the params
      * 
-     * @returns {Promise<QueryResponse<DbCompanyJobDto>>}
+     * @returns {Promise<PaginatedResultsWithMatchingConditionsResponse<DbCompanyJobDto>>}
      */
-    async getAllJobs(jobFilterOptions: JobListingFilterOptions): Promise<QueryResponse<DbCompanyJobDto>> {
+    async getAllJobs(jobFilterOptions: JobListingFilterOptions): Promise<PaginatedResultsWithMatchingConditionsResponse<DbCompanyJobDto>> {
         // Global logger 
         global.logger.info(`Fetching All Jobs [service]`, {
             filePath: __filename,
@@ -87,15 +96,42 @@ class CompanyJobService {
         // Get all jobs
         const jobDetails = await this.getAllJobs(jobFilterOptions);
 
-        // Get jobs with company details
-        const jobsWithCompanyDetails = await this.prepareJobsWithCompanyDetails(jobDetails);
+        /**
+         * Extract the array of job details from jobsWithCompanyDetails.
+         * Since PaginatedResultsWithMatchingConditionsResponse is 
+         * an object with both metadata (like lastKey, count) and data,
+         * the data part is likely accessible through a known method 
+         * (like iterating over keys or accessing a specific property).
+         */
+        const { lastKey, count, timesQueried, queriedCount, ...jobDetailsData } = jobDetails;
 
+        // convert the object to an array
+        const jobsArray : DbCompanyJobDto[] = Object.values(jobDetailsData);
+
+        // Enrich the data with company details
+        const jobsWithCompanyDetails: (DbCompanyJobDto & {
+          companyDetails: DbCompanyDetailDto | undefined;
+        })[] = await attachCompanyDetails<DbCompanyJobDto>(jobsArray);
+
+        // Reconstruct the response and return
         return {
-            data: jobsWithCompanyDetails,
-            lastKeyVal: jobDetails.lastKey,
-            count: jobDetails.count,
-            queriedCount: jobDetails.queriedCount,
-        };
+            jobsWithCompanyDetails: jobsWithCompanyDetails,
+            lastKey: lastKey,
+            count: count,
+            timesQueried: timesQueried,
+            queriedCount: queriedCount
+        }
+      
+        // // Reconstruct the original response structure
+        // const allJobsWithCompanyDetails: PaginatedResultsWithMatchingConditionsResponse<
+        //     DbCompanyJobDto
+        //     &
+        //     { companyDetails: DbCompanyDetailDto }> = {
+        //     ...jobDetails, // Keep metadata
+        //     ...Object.fromEntries(enrichedJobs.map((job, index) => [index, job])), 
+        // };
+
+        // return allJobsWithCompanyDetails;
     }
 
     /**
@@ -130,9 +166,11 @@ class CompanyJobService {
      * 
      * @param {string} jobId - Job Id 
      * 
-     * @returns {Promise<JobsWithCompanyResDto[]>}
+     * @returns {Promise<(DbCompanyJobDto & { companyDetails: DbCompanyDetailDto | undefined })[]>}
      */
-    async getJobByIdWithCompanyDetails(jobId: string, userType: string): Promise<JobsWithCompanyResDto[]> {
+    async getJobByIdWithCompanyDetails(jobId: string): Promise<(DbCompanyJobDto & {
+        companyDetails: DbCompanyDetailDto | undefined;
+    })[]> {
         // Global Logger for the service
         global.logger.info(`Fetching Job by ID: ${jobId} [service]`, {
             filePath: __filename,
@@ -140,19 +178,10 @@ class CompanyJobService {
         });
     
         // Fetch Job by Id
-        const jobDetailById = await this.getJobById(jobId);
-        global.logger.debug(`Checking userType: ${userType}`);
-    
-        if (userType !== 'admin') {
-            const jobStatus = jobDetailById[0].status;
-            // Use includes for status check
-            if (![CompanyJobStatusEnum.PUBLISHED, CompanyJobStatusEnum.ARCHIVED].includes(jobStatus)) {
-                throw new BaseError(`No Job found with ID: ${jobId}`, 404);
-            }
-        }
+        const jobDetailById: QueryResponse<DbCompanyJobDto> = await this.getJobById(jobId);
     
         // Map the Job with Company
-        return this.prepareJobsWithCompanyDetails(jobDetailById);
+        return attachCompanyDetails<DbCompanyJobDto>(jobDetailById);
     }
     
     /**
@@ -210,57 +239,6 @@ class CompanyJobService {
 
         // Return type Promise<DbCompanyJobDto> for the method delete
         return companyJobDaoObj.softDeleteJobById(jobId, companyId);
-    }
-
-    /**
-     * prepareJobsWithCompanyDetails
-     * 
-     * Retrieves a list of jobs with their corresponding company details.
-     *
-     * This function takes a list of jobs as input and returns a new list of jobs with
-     * their company details added. The company details are retrieved from the
-     * companyServiceObj.getCompanyDetailById method.
-     *
-     * The method works by mapping over the input list of jobs and for each job, it
-     * fetches the company details using the getCompanyDetailById method. The job
-     * object is then extended with a new property called companyDetails, which
-     * contains the company details for that job.
-     *
-     * Finally, the method returns the new list of jobs with their company details
-     * added.
-     *
-     * @param {QueryResponse<DbCompanyJobDto>} jobsData - The list of jobs to retrieve company details for.
-     * 
-     * @return {Promise<JobsWithCompanyResDto[]>} A promise that resolves to a list of jobs with their company details.
-     * 
-     * @see companyServiceObj.getCompanyDetailById to retrieve company details for each job.
-     */
-    async prepareJobsWithCompanyDetails(jobsData: QueryResponse<DbCompanyJobDto>): Promise<JobsWithCompanyResDto[]> {
-        // Check if jobsData is empty and return an empty array if true
-        if (!jobsData || jobsData.length === 0) {
-            return [];
-        }
-
-        // Get unique company IDs from jobsData
-        const uniqueCompanyIds = Array.from(new Set(jobsData.map(job => job.companyId)));
-
-        // Fetch company details for all unique IDs using the batch method
-        const companiesDetails = await CompanyService.getCompanyDetailsByIds(uniqueCompanyIds);
-
-        // Convert array of company details to a map for quick access
-        const companiesMap = new Map(companiesDetails.map(company => [company.id, company]));
-
-        //  Map over the jobs and add company details
-        const jobsWithCompanyDetails = jobsData.map(job => {
-            const companyDetails = companiesMap.get(job.companyId) || null;
-
-            return {
-                ...job,
-                companyDetails
-            };
-        });
-
-        return jobsWithCompanyDetails;
     }
 }
 

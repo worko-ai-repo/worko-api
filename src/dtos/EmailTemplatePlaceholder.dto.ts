@@ -96,3 +96,111 @@ export interface EmailTemplatePlaceholderCAND_REF_AUTO_REJECT_AFTER_X_DAYS {
     companyName: string;
     rejectedReasons : string;
 }
+
+/**
+ * Represents the placeholders for the email template used when a worko employee wants to add new user as a company admin.
+ */
+
+export interface EmailTemplatePlaceholderCORP_ADMIN_ACCESS_INVITE {
+    role: string,
+    userName:string,
+    companyName:string,
+    signupUrl:string,
+    loginUrl:string
+}
+
+/**
+ * Represents the placeholders for the email template used when a worko user signs up as a corporate user.
+ */
+export interface EmailTemplatePlaceholderCORP_USER_SUCCESSFUL_SIGNUP {
+    userName:string,
+    companyName:string,
+    userRole:string,
+    loginUrl:string
+}
+
+/**
+ * EmailTemplatePlaceholderCORP_RECEIVED_JOB_APPLICATION_NOTIFICATION
+ * 
+ * Represents the placeholders for the email template used when a worko corporate user receives a job application notification.
+ */
+export interface EmailTemplatePlaceholderCORP_RECEIVED_JOB_APPLICATION_NOTIFICATION {
+  corporateUserFullName: string;
+  candidateName: string;
+  jobTitle: string;
+  matchingScore: number;
+  scoreDetails: string;
+}
+
+/**
+ * EmailTemplatePlaceholderCORP_REQUEST_FEEDBACK_NOTIFICATION
+ */
+export interface EmailTemplatePlaceholderCORP_REQUEST_FEEDBACK_NOTIFICATION {
+  jobPosterName: string;
+  candidateName: string;
+  jobTitle: string;
+  applicationDate: string;
+  status: string;
+}
+
+/**
+ * EmailTemplatePlaceholderCORP_RECEIVED_JOB_APPLICATION_STATUS_UPDATE_NOTIFICATION
+ */
+export interface EmailTemplatePlaceholderCORP_RECEIVED_JOB_APPLICATION_STATUS_UPDATE_NOTIFICATION {
+  jobPosterName: string;
+  jobTitle: string;
+  candidateName: string;
+  updatedStatus: string;
+}
+
+/**
+ * EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_NOTIFICATION
+ */
+export interface EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_NOTIFICATION {
+  candidateName: string;
+  jobTitle: string;
+  companyName: string;
+}
+
+/**
+ * EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_CV_DOWNLOADED_STATUS_UPDATE
+ */
+export interface EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_CV_DOWNLOADED_STATUS_UPDATE {
+  candName: string;
+  companyName: string;
+  jobTitle: string;
+  workoAppUrl: string;
+  guidanceEmail: string;
+}
+
+/**
+ * EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_UNDER_EVALUATION_STATUS_UPDATE
+ */
+export interface EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_UNDER_EVALUATION_STATUS_UPDATE {
+  candName: string;
+  companyName: string;
+  jobTitle: string;
+  workoAppUrl: string;
+  guidanceEmail: string;
+}
+
+/**
+ * EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_HIRED_STATUS_UPDATE
+ */
+export interface EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_HIRED_STATUS_UPDATE {
+  candName: string;
+  jobTitle: string;
+  companyName: string;
+  workoAppUrl: string;
+}
+
+/**
+ * EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_REJECTED_STATUS_UPDATE
+ */
+export interface EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_REJECTED_STATUS_UPDATE {
+  candName: string;
+  jobTitle: string;
+  companyName: string;
+  hrFeedback: string;
+  workoAppUrl: string;
+}

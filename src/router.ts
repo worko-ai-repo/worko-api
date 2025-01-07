@@ -7,7 +7,12 @@ import { Router } from "express";
 import CompanyRouter from "./routers/Company.router";
 
 // CompanyJob routers
-import CompanyJobRouter from "./routers/CompanyJob.router";
+import CompanyJobRouter from "./admin/routers/CompanyJob.router";
+// import CompanyJobRouter from "./routers/CompanyJob.router";
+
+// Corporate Routers
+import CorporateUserRouter from "./routers/CorporateUser.router";
+import CorporateUserInviteRouter from "./routers/CorporateUserInvite.router";
 
 // User routers
 import UserRouter from "./routers/User.router";
@@ -37,6 +42,9 @@ import FileRouter from "./routers/File.router";
 // Referral routers
 import EmpReferralRouter from "./routers/EmpReferral.router";
 
+// Job Application routers
+import UserJobApplicationRouter from "./routers/UserJobApplication.router";
+
 // Master routers
 import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
 import MasterServiceRouter from "./routers/MasterService.router";
@@ -57,118 +65,371 @@ import WebhookRouter from "./routers/Webhook.router";
 // Router that contains all the routes/endpoints in the application
 const router = Router();
 
-// Regitser the "Company" routers
-router.use("/company", CompanyRouter);
-
-// Regitser the "EventRouter CRUD" routers
-router.use("/event", EventRouter);
-
-// Regitser the "Company CRUD" routers
-router.use("/job", CompanyJobRouter);
-
-// Regitser the "User CRUD" routers
-router.use("/user", UserRouter);
-
-// Regitser the "UserDetail CRUD" routers
-router.use("/user", UserDetailRouter);
-
-// Regitser the "UserEmail CRUD" routers
-router.use("/user", UserEmailRouter);
-
-// Regitser the "UserExperience CRUD" routers
-router.use("/user", UserExperienceRouter);
-
-// Regitser the "UserSociapProfile CRUD" routers
-router.use("/user", UserSocialProfileRouter);
-
-// Regitser the "UserEducation CRUD" routers
-router.use("/user", UserEducationRouter);
-
-// Regitser the "UserSkill CRUD" routers
-router.use("/user", UserSkillRouter);
-
-// Regitser the "UserAchievement CRUD" routers
-router.use("/user", UserAchievementRouter);
-
-// Regitser the "User Referral" routers
-router.use("/user", UserReferralRouter);
-
-// Regitser the "User Service" routers
-router.use("/user", UserServiceRouter);
-
-// Regitser the "User Subscription" routers
-router.use("/user", UserSubscriptionRouter);
-
-// Regitser the "User ProfilePercentage" routers
-router.use("/user", UserProfilePercentageRouter);
-
-// Regitser the "User BankDetail" routers
-router.use("/user", UserBankDetailRouter);
-
-// Regitser the "User ProvidedService" routers
-router.use("/user", UserProvidedServiceRouter);
-
-// Regitser the "User AvailabilityRouter" routers
-router.use("/user", UserAvailabilityRouter);
-
-// Regitser the "User Review" routers
-router.use("/user", UserReviewRouter);
-
-// Register the "UserOrder" routers
-router.use("/user", UserOrderRouter);
-
-// Register the "Order" routers
-// router.use("/sample-order", OrderRouter);
-
-// Regitser the "File" router
-router.use("/file", FileRouter);
-
-// Regitser the "Referral" router
-router.use("/emp", EmpReferralRouter);
-
-// Regitser the "Master Subscription" routers
-router.use("/msubscription", MasterSubscriptionRouter);
-
-// Regitser the "Master Service" routers
-router.use("/mservice", MasterServiceRouter);
-
-// Register the "Email Template" routers.
-// Note: These actions are only for users with "admin" role. @todo add required authorizations.
-router.use("/email-template", EmailTemplateRouter);
-
-// Register the "Whatsapp Template" routers.
-// Note: These actions are only for users with "admin" role. @todo add required authorizations.
-router.use("/whatsapp-template", WhatsappTemplateRouter);
-
-// Register the "Whatsapp Template" routers.
-// Note: These actions are only for users with "admin" role. @todo add required authorizations.
-router.use("/webhook", WebhookRouter);
-
-// Just a test controller to perform some testing operations required to confirm the changes made in the application.
-router.use("/test", TestRouter);
-
-// TODO: After executing the ScriptRouter in DEV and PROD environments,
-// these route should be commented out to prevent unintended execution.
-// Register the "Script" routers
-router.use("/script", ScriptRouter);
-
-// Register the "User Support " routers
-router.use("/support", UserSupportRouter);
-
-// Register the "User Corporate " routers
-router.use("/corporate", UserCorporateRequestRouter);
-
-// Register the "User Career Request " routers
-router.use("/career", UserCareerRequestRouter);
+/**
+ * AUTHORISATION ROLES DESCRIPTION
+ * 
+ * Custom Roles
+ *    "public" - Any user can access these routes even if they are not logged in
+ *    "loggedInUser" - Only logged in users can access these routes
+ * 
+ * Cognito User Groups
+ *    "admin" - Only worko admin users can access these routes
+ *    "corporate-recruiter" - Only corporate recruiters can access these routes
+ *    "corporate-admin" - Only corporate admin users can access these routes
+ */
 
 /**
  * ADMIN ROUTERS
+ * 
  * Only admin users can access these routes
+ * 
+ * @authorisedRoles ["admin"]
  */
 router.use("/admin", AdminRouter);
 
-// Admin router @todo: discuss with shashikant to add below route in router.use("/admin", AdminRouter);
+// Admin router @todo: discuss with lead to add below route in router.use("/admin", AdminRouter);
 router.use("/admin-subs", AdminSubsRouter);
+
+/**
+ * COMPANY ROUTERS
+ * 
+ * Regitser the "Company" routers
+ * 
+ * @authorisedRoles ["admin","public"]
+ */
+router.use("/company", CompanyRouter);
+
+/**
+ * JOB ROUTERS
+ * 
+ * Regitser the "Company CRUD" routers
+ * 
+ * @authorisedRoles ["admin", "public","corporate-recruiter","corporate-admin"]
+ */
+router.use("/job", CompanyJobRouter);
+
+/**
+ * CORPORATE ROUTERS
+ * 
+ * Regitser the "CorporateUser" routers
+ * 
+ * @authorisedRoles ["admin","corporate-admin","public"]
+ */
+router.use("/corporate-user", CorporateUserRouter);
+
+/**
+ * CORPORATE INVITE ROUTERS
+ * 
+ * Register the "CorporateInvite" routers
+ * 
+ * @authorisedRoles ["admin","corporate-recruiter","corporate-admin"]
+ */
+router.use("/corporate-invite", CorporateUserInviteRouter);
+
+/**
+ * EMAIL TEMPLATE ROUTERS
+ * 
+ * Register the "Email Template" routers.
+ * 
+ * @authorisedRoles ["admin"]
+ */
+router.use("/email-template", EmailTemplateRouter);
+
+/**
+ * EMPLOYEE REFERRAL ROUTERS
+ * 
+ * Regitser the "Referral" router
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ * @todo: discuss with team lead to write a middleware to check whether the user is `Employee` or `Candidate` and
+ * allow only `Employee` to access this route
+ */
+router.use("/emp", EmpReferralRouter);
+
+/**
+ * EVENT ROUTERS
+ * 
+ * Regitser the "EventRouter CRUD" routers
+ * 
+ * @authorisedRoles ["admin"] 
+ * @todo: add required authorizations after discussing with team lead
+ */
+router.use("/event", EventRouter);
+
+/**
+ * FILE ROUTERS 
+ * 
+ * Regitser the "File" router
+ * @authorisedRoles ["admin"] 
+ * @todo: add required authorizations after discussing with team lead
+ */
+router.use("/file", FileRouter);
+
+/**
+ * MASTER SERVICE ROUTERS
+ * 
+ * Regitser the "Master Service" routers
+ * 
+ * @authorisedRoles ["admin"] 
+ * @todo: add required authorizations after discussing with team lead
+ */
+router.use("/mservice", MasterServiceRouter);
+
+/**
+ * MASTER SUBSCRIPTION ROUTERS
+ * 
+ * Regitser the "Master Subscription" routers
+ * 
+ * @authorisedRoles ["admin"] 
+ * @todo: add required authorizations after discussing with team lead
+ */
+router.use("/msubscription", MasterSubscriptionRouter);
+
+/**
+ * ORDER ROUTERS
+ * Register the "UserOrder" routers
+ * 
+ * @authorisedRoles ["admin"] 
+ * @todo: add required authorizations after discussing with team lead
+ */
+router.use("/user", UserOrderRouter);
+
+/**
+ * SCRIPT ROUTERS
+ * 
+ * @todo: After executing the ScriptRouter in DEV and PROD environments,
+ * these route should be commented out to prevent unintended execution.
+ * 
+ * Register the "Script" routers
+ * 
+ * @authorisedRoles ["admin"]
+ */
+router.use("/script", ScriptRouter);
+
+/**
+ * TEST ROUTERS
+ * 
+ * Just a test controller to perform some testing operations required to confirm the changes made in the application.
+ * 
+ * @authorisedRoles ["admin"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/test", TestRouter);
+
+/**
+ * USER ROUTERS
+ * 
+ * Regitser the "User CRUD" routers
+ * 
+ * @authorisedRoles ["admin", "public","loggedInUser"]
+ */
+router.use("/user", UserRouter);
+
+/**
+ * USER ACHIEVEMENT ROUTERS
+ * 
+ * Regitser the "UserAchievement CRUD" routers
+ * 
+ * @authorisedRoles ["admin"]
+ */
+router.use("/user", UserAchievementRouter);
+
+/**
+ * USER AVAILABILITY ROUTERS
+ * 
+ * Regitser the "User AvailabilityRouter" routers
+ * 
+ * @authorisedRoles ["admin"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/user", UserAvailabilityRouter);
+
+/**
+ * USER BANKDETAIL ROUTERS
+ * 
+ * Regitser the "User BankDetail" routers
+ * 
+ * @authorisedRoles ["admin"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/user", UserBankDetailRouter);
+
+/**
+ * USER CAREER REQUEST ROUTERS
+ * 
+ * Register the "User Career Request " routers
+ * 
+ * @authorisedRoles ["admin"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/career", UserCareerRequestRouter);
+
+/**
+ * USER CORPORATE REQUEST ROUTERS
+ * 
+ * Register the "User Corporate " routers
+ * 
+ * @authorisedRoles ["admin", "public"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/corporate", UserCorporateRequestRouter);
+
+/**
+ * USER DETAIL ROUTERS
+ * 
+ * Regitser the "UserDetail CRUD" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/user", UserDetailRouter);
+
+/**
+ * USER EDUCATION ROUTERS
+ * 
+ * Regitser the "UserEducation CRUD" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/user", UserEducationRouter);
+
+/**
+ * USER EMAIL ROUTERS
+ * 
+ * Regitser the "UserEmail CRUD" routers
+ * 
+ * @authorisedRoles ["admin"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/user", UserEmailRouter);
+
+/**
+ * USER EXPERIENCE ROUTERS
+ * 
+ * Regitser the "UserExperience CRUD" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/user", UserExperienceRouter);
+
+/**
+ * USER JOB APPLICATION ROUTERS
+ * 
+ * Regitser the "UserJobApplication CRUD" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser", "corporate-recruiter", "corporate-admin"]
+ */
+router.use("/job-application", UserJobApplicationRouter);
+
+/**
+ * USER SOCIAL PROFILE ROUTERS
+ * 
+ * Regitser the "UserSociapProfile CRUD" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/user", UserSocialProfileRouter);
+
+/**
+ * USER PROFILE PERCENTAGE ROUTERS
+ * 
+ * Regitser the "User ProfilePercentage" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
+router.use("/user", UserProfilePercentageRouter);
+
+/**
+ * USER PROVIDED SERVICE ROUTERS
+ * 
+ * Regitser the "User ProvidedService" routers
+ * 
+ * @authorisedRoles ["admin"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/user", UserProvidedServiceRouter);
+
+/**
+ * USER REFFERAL ROUTERS
+ * 
+ * Regitser the "User Referral" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
+router.use("/user", UserReferralRouter);
+
+/**
+ * USER REVIEW ROUTERS
+ * 
+ * Regitser the "User Review" routers
+ * 
+ * @authorisedRoles ["admin","loggedInUser"]
+ */
+router.use("/user", UserReviewRouter);
+
+/**
+ * USER SERVICE ROUTERS
+ * 
+ * Regitser the "User Service" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
+router.use("/user", UserServiceRouter);
+
+/**
+ * USER SKILL ROUTERS
+ * 
+ * Regitser the "UserSkill CRUD" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
+router.use("/user", UserSkillRouter);
+
+/**
+ * USER SUBSCRIPTION ROUTERS
+ * 
+ * Regitser the "User Subscription" routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
+router.use("/user", UserSubscriptionRouter);
+
+/**
+ * USER SUPPORT ROUTERS
+ * 
+ * Register the "User Support " routers
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
+router.use("/support", UserSupportRouter);
+
+/**
+ * WHATSAPP TEMPLATE ROUTERS
+ * 
+ * Register the "Whatsapp Template" routers.
+ * Note: These actions are only for users with "admin" role. 
+ * @todo add required authorizations.
+ * 
+ * @authorisedRoles ["admin"]
+ */
+router.use("/whatsapp-template", WhatsappTemplateRouter);
+
+/**
+ * WEBHOOK ROUTERS
+ * 
+ * Register the "Whatsapp Template" routers.
+ * Note: These actions are only for users with "admin" role. 
+ * @todo add required authorizations.
+ * 
+ * @authorisedRoles ["admin"]
+ */
+router.use("/webhook", WebhookRouter);
+
+// Register the "Order" routers
+// router.use("/sample-order", OrderRouter);
 
 // Export the router
 export default router;

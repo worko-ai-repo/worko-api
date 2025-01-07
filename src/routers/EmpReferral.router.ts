@@ -13,10 +13,18 @@ const EmpReferralRouter = Router();
 // Get the referral based on the provided query parameter
 // EmpReferralRouter.get("/:id", ReferralController.getByGSI1PKAndStatus);
 
-// Get the referral based on the provided query parameter
+/**
+ * Get the referral based on the provided query parameter
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
 EmpReferralRouter.get("/referral/:emailId", userReferralController.getReferralsForEmp);
 
-// Allow Employee to take apprpiate action on the referral and change the status accordingly 
+/**
+ * Allow Employee to take apprpiate action on the referral and change the status accordingly
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */ 
 EmpReferralRouter.put("/referral/:referralId/action", userReferralController.updateReferralStatusByEmp);
 
 export default EmpReferralRouter;

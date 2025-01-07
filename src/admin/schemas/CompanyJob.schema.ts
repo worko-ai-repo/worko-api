@@ -1,3 +1,6 @@
+// Import Joi
+import Joi from 'joi';
+
 // Import enums
 import { 
     CompanyJobEmploymentTypeEnum,
@@ -5,9 +8,7 @@ import {
     CompanyJobWorkModeEnum,
     UserCompanyJobListingStatusEnum
 } from '../../enums/CompanyJob.enum';
-
-// Import Joi
-import Joi from 'joi';
+import { InternalUserRoleEnum } from '../../enums/Common.enum';
 
 // Import common schema
 import { anyTypeToArray, commonSchema } from '../../schemas/Common.schema';
@@ -406,7 +407,7 @@ export const updateCompanyJobApiDtoValidation = Joi.object({
 });
 
 /**
- * jobsFilterDtoValidation
+ * CompanyJobFilterDtoValidation
  * 
  * Validation schema for filtering jobs.
  * 
@@ -420,9 +421,9 @@ export const updateCompanyJobApiDtoValidation = Joi.object({
  * @see {CompanyJobStatusEnum} - Enum defining the allowed job status values.
  * @see {UserCompanyJobListingStatusEnum} - Enum defining the allowed job status values for users.
  */
-export const jobsFilterDtoValidation = (userType: string) => {
+export const CompanyJobFilterDtoValidation = (userType: string) => {
     // Status validation rules based on the provided user type
-    const statusValidation = (userType === 'admin')
+    const statusValidation = (userType === InternalUserRoleEnum.ADMIN)
         ? Joi
             .string()
             .optional()

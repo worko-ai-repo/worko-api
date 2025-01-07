@@ -8,3 +8,32 @@ export enum SortOrderTypeEnum {
    */
   DESCENDING = "descending",
 }
+
+
+/**
+ * Admin Role
+ */
+export enum AdminRoleEnum {
+  ADMIN = "ADMIN",
+}
+
+/**
+ * MatchingScoreEntityEnum
+ * 
+ * This enum is used in the "triggerMatchingScoreCalculation" function present in "InvokeLambda.service.ts"
+ */
+export enum MatchingScoreEntityEnum {
+  REFERRAL = "REFERRAL", // Referral Request
+  JOB_APP = "JOB_APP" // Job Application
+}
+
+/**
+ * InternalUserRoleEnum
+ * 
+ * This enum is used validating the `cognitoUserGroups` of the user in the backend
+ * and some of the roles are  worko admin, corp-admin, corp-recruiter
+ */
+export enum InternalUserRoleEnum {
+  ADMIN = "admin",
+  USER = "user"
+}

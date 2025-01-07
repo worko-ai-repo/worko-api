@@ -10,13 +10,21 @@ const userSocialProfileController = new UserSocialProfileController();
 // Route to hold the routes (CRUD, etc) related to "UserSocialProfile" table
 const UserSocialProfileRouter = Router();
 
-// Get the user SocialProfile details based on the provided query parameter
+/**
+ * Get the user SocialProfile details based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserSocialProfileRouter.get(
   "/:id/socialprofile",
   userSocialProfileController.get
 );
 
-// create/update the user SocialProfile details based on the provided query parameter
+/**
+ * create/update the user SocialProfile details based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserSocialProfileRouter.post(
   "/:id/socialprofile",
   userSocialProfileController.create

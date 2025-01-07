@@ -151,6 +151,54 @@ class ScriptController {
   };
 
   /**
+   * scriptUpdateSkForCorporateUsers
+   *
+   * @param {Request} req - The Express request object.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   */
+  scriptUpdateSkForCorporateUsers = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await scriptServiceObj.scriptUpdateSkForCorporateUsers();
+
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json({ message: " 'SK' & 'GSI1PK' Updated Successfully" });
+    } catch (error) {
+      // Pass the error to the next middleware for error handling
+      next(error);
+    }
+  };
+
+  /**
+   * scriptUpdateSKForCorporateUserInvite
+   *
+   * @param {Request} req - The Express request object.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   */
+  scriptUpdateSKForCorporateUserInvite = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      await scriptServiceObj.scriptUpdateSKForCorporateUserInvite();
+
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json({ message: " 'SK' Updated Successfully" });
+    } catch (error) {
+      // Pass the error to the next middleware for error handling
+      next(error);
+    }
+  };
+
+  /**
    * scriptUpdateUsersToLowerCase
    *
    * To update all `jdExtracted` data type to `string` data type
@@ -166,12 +214,10 @@ class ScriptController {
   ) => {
     try {
       await scriptServiceObj.scriptUpdatejdExtractedToStringDataType();
-      return res
-        .status(HttpStatusCode.OK_200)
-        .json({
-          message:
-            "Data Type of `jdExtracted` Updated to `String` Data Type Successfully",
-        });
+      return res.status(HttpStatusCode.OK_200).json({
+        message:
+          "Data Type of `jdExtracted` Updated to `String` Data Type Successfully",
+      });
     } catch (error) {
       // Pass the error to the next middleware for error handling
       next(error);

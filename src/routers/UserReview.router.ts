@@ -10,13 +10,25 @@ const userReviewController = new UserReviewController();
 // Route to hold the routes (CRUD, etc) related to "UserReview" table
 const UserReviewRouter = Router();
 
-// Create review for the given/mentioned user in the ":userId"
+/**
+ * Create review for the given/mentioned user in the ":userId"
+ * 
+ * @authorisedRoles 
+ */
 UserReviewRouter.post("/:userId/review", userReviewController.createReview);
 
-// Get reviews received by the given/mentioned user in the ":emailId"
+/**
+ * Get reviews received by the given/mentioned user in the ":emailId"
+ * 
+ * @authorisedRoles 
+ */
 UserReviewRouter.get("/:userId/review/received", userReviewController.getUserReceivedReviews);
 
-// Get review's rating average received by mentioned user in the ":userId"
+/**
+ * Get review's rating average received by mentioned user in the ":userId"
+ * 
+ * @authorisedRoles 
+ */
 UserReviewRouter.get("/:userId/review/rating", userReviewController.getUserReviewRatingAverage);
 
 // Get reviews given by the given/mentioned user in the ":userId"

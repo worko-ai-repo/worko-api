@@ -256,7 +256,7 @@ class UserReferralService {
    * @param email Email of the user
    * @returns matchingScore
    */
-  async getReferralScoreForCand(referralId: string, email: string) {
+  async getReferralScoreForCand(email: string,referralId: string) {
     console.log("Get referral matching score [service]");
     return userReferralDao.getReferralScoreForCand(email, referralId);
   }

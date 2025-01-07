@@ -10,13 +10,25 @@ const whatsappTemplateController = new WhatsappTemplateController();
 // Create a new Router instance
 const WhatsappTemplateRouter = Router();
 
-// Define a POST router create a new WhatsApp template
+/**
+ * Define a POST router create a new WhatsApp template
+ * 
+ * @authorisedRoles 
+ */
 WhatsappTemplateRouter.post("/", whatsappTemplateController.createWhatsappTemplate);
 
-// Define a GET router to retrieve a WhatsApp template by its name
+/**
+ * Define a GET router to retrieve a WhatsApp template by its name
+ * 
+ * @authorisedRoles 
+ */
 WhatsappTemplateRouter.get("/:templateName", whatsappTemplateController.getWhatsappTemplateByName);
 
-// Define a GET router to retrive all Whatsapp templates in Local.
+/**
+ * Define a GET router to retrive all Whatsapp templates in Local.
+ * 
+ * @authorisedRoles 
+ */
 WhatsappTemplateRouter.get("/", whatsappTemplateController.getAllWhatsappTemplates);
 
 // Commented out routes for updating and deleting WhatsApp templates

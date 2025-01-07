@@ -30,6 +30,15 @@ export interface SqsMsgBaseReqDto {
  }
 
  /**
+  * Interface for SQS message request DTO related to job application validation and matching score.
+  */
+ export interface SqsMsgJobApplicationValidationMatchingScoreReqDto extends SqsMsgBaseReqDto {
+    context: {
+        jobApplicationRequestId: string;
+    };
+ } 
+
+ /**
  * Interface for SQS message request DTO related to reviewing referral acceptance status.
  * 
  * Extends the `SqsMsgBaseReqDto` interface.

@@ -10,16 +10,28 @@ const userAvailabilityController = new UserAvailabilityController();
 // Route to hold the routes (CRUD, etc) related to "UserAvailability" table
 const UserAvailabilityRouter = Router();
 
-// Get the user Availability details based on the provided query parameter
+/**
+ * Get the user Availability details based on the provided query parameter
+ * 
+ * @authorisedRoles ["admin"]
+ */
 UserAvailabilityRouter.get("/:id/availability", userAvailabilityController.get);
 
-// create the user Availability details based on the provided query paramete
+/**
+ * create the user Availability details based on the provided query paramete
+ * 
+ * @authorisedRoles ["admin"]
+ */
 UserAvailabilityRouter.post(
   "/:id/availability",
   userAvailabilityController.create
 );
 
-// update the user Availability details based on the provided query paramete
+/**
+ * update the user Availability details based on the provided query paramete
+ * 
+ * @authorisedRoles ["admin"]
+ */
 UserAvailabilityRouter.put(
   "/:id/availability",
   userAvailabilityController.update

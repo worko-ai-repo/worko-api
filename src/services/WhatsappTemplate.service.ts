@@ -8,6 +8,7 @@ import whatsappTemplateDao from "../daos/WhatsappTemplate.dao";
 import {
   WhatsappTemplateCreateDto,
   WhatsappTemplateCreateResponseDtoApi,
+  WhatsappTemplateGetResponseCloudApiDto,
   WhatsappTemplateUpdateDto,
 } from "../dtos/WhatsappTemplate.dto";
 
@@ -54,7 +55,7 @@ class WhatsappTemplateService {
       ==== TO CHECK THE EXISTENCE OF THE TEMPLATE =====
     /===============================================*/
     // whatsaCloudApiLibrary
-    const whatsappCloudApiTemplateDetails =
+    const whatsappCloudApiTemplateDetails: WhatsappTemplateGetResponseCloudApiDto =
       await whatsappCloudApiLibraryObj.getMessageTemplateByName(
         whatsappTemplateBody.whatsappTemplateName
       );

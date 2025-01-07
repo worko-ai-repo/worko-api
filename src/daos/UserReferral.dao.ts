@@ -99,7 +99,7 @@ class UserReferralDao implements BaseDao {
     if (referralRecordListingFilterRequest.searchText) {
       // remove trailing and leading spaces from the search text
       let searchTextValue =
-        referralRecordListingFilterRequest.searchText.trim();
+        referralRecordListingFilterRequest.searchText;
 
       /* 
       The and() method initiates a condition block where all conditions within it must be satisfied.
@@ -222,7 +222,7 @@ class UserReferralDao implements BaseDao {
    * @param referralId
    * @param email
    */
-  async getReferralScoreForCand(referralId: string, email: string) {
+  async getReferralScoreForCand(email: string, referralId: string) {
     global.logger.info("Get referral Matching score [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,

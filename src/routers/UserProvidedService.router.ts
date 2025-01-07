@@ -10,25 +10,41 @@ const userProvidedServiceController = new UserProvidedServiceController();
 // Route to hold the routes (CRUD, etc) related to "UserProvidedService" table
 const UserProvidedServiceRouter = Router();
 
-// Get the user ProvidedService details based on the provided query parameter
+/**
+ * Get the user ProvidedService details based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserProvidedServiceRouter.get(
   "/:id/pservice",
   userProvidedServiceController.get
 );
 
-// Get the user ProvidedService details based on the provided query parameter
+/**
+ * Get the user ProvidedService details based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserProvidedServiceRouter.get(
   "/:id/pservice/:pserviceId",
   userProvidedServiceController.getById
 );
 
-// create the user ProvidedService details based on the provided query paramete
+/**
+ * create the user ProvidedService details based on the provided query paramete
+ * 
+ * @authorisedRoles 
+ */
 UserProvidedServiceRouter.post(
   "/:id/pservice",
   userProvidedServiceController.create
 );
 
-// update the user ProvidedService details based on the provided query paramete
+/**
+ * update the user ProvidedService details based on the provided query paramete
+ * 
+ * @authorisedRoles 
+ */
 UserProvidedServiceRouter.put(
   "/:id/pservice",
   userProvidedServiceController.Update

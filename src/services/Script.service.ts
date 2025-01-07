@@ -1,27 +1,25 @@
+// Import configs
+import { awsDynamoDBClientLibrary } from "../configs/aws-sdk.config";
+
 // Import daos
 import userDetailDao from "../daos/UserDetail.dao";
 import userReferralDao from "../daos/UserReferral.dao";
+import { corporateUserDaoObj } from "../daos/CorporateUser.dao";
+import { corporateInviteDaoObj } from "../daos/CorporateUserInvite.dao";
 
-// Import DTOs
-import { AttributeValue } from "@aws-sdk/client-dynamodb";
-import { DbUserReferralDto } from "../db/models/UserReferral.model";
-
-// Import helpers
-import { base64EncodeStrToLastKey, lastKeyToBase64EncodeStr } from "../helpers/dynamoose.helper";
+// Import services
+import UserSubscriptionService from "./UserSubscription.service";
+import { corporateUserServiceObj } from "./CorporateUser.service";
+import UserReferralService from "./UserReferral.service";
+import { corporateUserInviteServiceObj } from "./CorporateUserInvite.service";
 
 // Import utilities
 import { BaseError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
 
-// Import services
-import UserExperienceService from "./UserExperience.service";
-import UserSubscriptionService from "./UserSubscription.service";
-import UserReferralService from "./UserReferral.service";
-
-// Import libraries
-import { AwsDynamoDBLibrary } from "../libraries/aws-dynamoDb-client.library";
-import { awsDynamoDBClientLibrary } from "../configs/aws-sdk.config";
+// Import models
 import { DbUserSubsDto } from "../db/models/UserSubscription.model";
+import { DbCorporateUserDto } from "../db/models/CorporateUser.model";
 
 /**
  * ScriptService
@@ -232,10 +230,36 @@ class ScriptService {
   }
 
   /**
+   * scriptUpdateSkForCorporateUsers
+   *
+   * @returns {Promise<boolean>} A promise that resolves to a boolean value indicating whether the update was successful or not.
+   */
+  async scriptUpdateSkForCorporateUsers(): Promise<boolean> {
+    const corporateUsers: DbCorporateUserDto[] =
+      await corporateUserServiceObj.getAllCorporateUsersWithoutPagination();
+
+    return corporateUserDaoObj.scriptUpdateSkForCorporateUsers(corporateUsers);
+  }
+
+  /**
+   * scriptUpdateSKForCorporateUserInvite
+   *
+   * @returns {Promise<boolean>} A promise that resolves to a boolean value indicating whether the update was successful or not.
+   */
+  async scriptUpdateSKForCorporateUserInvite(): Promise<boolean> {
+    const corporateUserInvites =
+      await corporateUserInviteServiceObj.getAllCorporateUserInvitesWithoutPagination();
+
+    return corporateInviteDaoObj.scriptUpdateSKForCorporateUserInvite(
+      corporateUserInvites
+    );
+  }
+
+  /**
    * scriptUpdatejdExtractedToStringDataType
    *
    * To update all `jdExtracted` data type to `string` data type
-   * 
+   *
    * @returns {Promise<boolean>} A promise that resolves to a boolean value indicating whether the script was successful or not.
    */
   scriptUpdatejdExtractedToStringDataType(): Promise<boolean> {

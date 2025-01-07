@@ -97,6 +97,37 @@ const APP_CONSTANTS = {
   FRONTEND_URLS: {
     SUBS_PREMIUM_RENEW: "https://worko.ai/", // Previously "https://app.worko.ai/",
     SUBS_PREMIUM_UPGRADE: "https://worko.ai/", // Previously "https://app.worko.ai/",
+    CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/login`,
+    CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/signup/{token}`,
+    WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
+  },
+
+  /**
+   * JOB_APPLICATION_READABLE_STATUS
+   * 
+   * This is the readable status of the job application
+   * which is used in the email body to be sent to the end user
+   */
+  JOB_APPLICATION_READABLE_STATUS: {
+    APPLIED: "Applied",
+    REJECTED: "Not Selected",
+    CV_DOWNLOADED: "CV Downloaded",
+    UNDER_EVALUATION: "Under Evaluation",
+    PROCESSING_INTERVIEW: "Processing Interview",
+    INTERVIEW_DONE: "Interview Done",
+    HIRED: "Hired",
+  },
+
+  /**
+   * COGNITO_READABLE_GROUPS
+   * 
+   * This is the readable groups of the cognito user
+   * which is used in the email body to be sent to the end user
+   */
+  COGNITO_READABLE_GROUPS: {
+    WORKO_ADMIN: "Admin",
+    CORPORATE_ADMIN: "Corporate Admin",
+    CORPORATE_RECRUITER: "Corporate Recruiter",
   },
 
   SCHEDULE_JOB: {
@@ -108,14 +139,20 @@ const APP_CONSTANTS = {
       "arn:aws:iam::787066054733:role/worko-schedule-invoke-lambda-role",
   },
 
-  WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
-
   /**
    * REFERRAL_MINIMUM_MATCHING_SCORE
    *
    * Required constants for Referral score as matching score
    */
   REFERRAL_MINIMUM_MATCHING_SCORE: 70,
+
+  /**
+   * JOB_APPLICATION_MINIMUM_MATCHING_SCORE
+   *
+   * Whenever a candidate applies a job from mini-job portal, this is the minimum matching score required for 
+   * the job to be applied.
+   */
+  JOB_APPLICATION_MINIMUM_MATCHING_SCORE: 70,
 
   /**
    * REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS
@@ -125,7 +162,7 @@ const APP_CONSTANTS = {
    */
   get REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS(): number {
     const PROD_HOURS = 7 * 24; // 7 days converted to hours
-    const DEV_HOURS = 10 / 60; // 10 minutes converted to hours
+    const DEV_HOURS = 45 / 60; // 45 minutes converted to hours
     // return the time based on the environment
     return process.env.APP_SLS_STAGE === this.STAGES.PROD
       ? PROD_HOURS
@@ -139,6 +176,44 @@ const APP_CONSTANTS = {
    * we can add more in the future if those were updated in `UserSocialProfileDTO`(refer `UserSocialProfile.dto.ts` file).
    */
   SOCIAL_PROFILE_KEYS: ["twitter", "github", "linkedin"],
+
+  /**
+   * CORPORATE_USER_INVITE_DATE_EXPIRATION
+   *
+   * This constant defines the duration in days for which a corporate user invite remains valid.
+   * The duration is determined based on the current environment:
+   * - Production (PROD): 15 days
+   * - Development/Testing: 1 day
+   *
+   * @returns {number} - The expiration duration in days.
+   */
+  get CORPORATE_USER_INVITE_DATE_EXPIRATION(): number {
+    const PROD_DAYS = 15; // 15 days
+    const DEV_DAYS = 1; // 1 day
+
+    // return the time based on the environment
+    return process.env.APP_SLS_STAGE === this.STAGES.PROD
+      ? PROD_DAYS
+      : DEV_DAYS;
+  },
+
+  /**
+   * Cognito Identity Pool Groups
+   * * ADMIN
+   * * CORPORATE-ADMIN
+   * * CORPORATE-RECRUITER
+   */
+  COGNITO_IDENTITY_POOL_GROUPS: {
+    ADMIN: "admin",
+    CORPORATE_ADMIN: "corporate-admin",
+    CORPORATE_RECRUITER:"corporate-recruiter",
+  },
+
+  // Worko App Domain
+  WORKO_APP_DOMAIN: "www.worko.ai.",
+
+  // Guidance Email
+  GUIDANCE_EMAIL: "guidance@worko.ai.",
 };
 
 export default APP_CONSTANTS;

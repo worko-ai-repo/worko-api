@@ -94,6 +94,10 @@ class RequestHelper {
       filterOptions.sortOrder = SortOrderTypeEnum.DESCENDING;
     }
 
+    if (filterOptions.searchText) {
+      filterOptions.searchText = filterOptions.searchText.trim();
+    }
+
     let newFilterOptions: EntityListingFilterOptions = filterOptions as any;
     newFilterOptions = {
       ...newFilterOptions,
@@ -102,6 +106,7 @@ class RequestHelper {
         lastKey: lastKey,
         fromDate: fromTimeStamp,
         toDate: toTimeStamp,
+        searchText: filterOptions.searchText,
       },
     };
     return newFilterOptions;

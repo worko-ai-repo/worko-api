@@ -10,16 +10,28 @@ const userSubscriptionController = new UserSubscriptionController();
 // Route to hold the routes (CRUD, etc) related to "userSubscription" table
 const UserSubscriptionRouter = Router();
 
-// Create subscription for user
+/**
+ * Create subscription for user
+ * 
+ * @authorisedRoles 
+ */
 UserSubscriptionRouter.post(
   "/:id/subscription",
   userSubscriptionController.create
 );
 
-// Get the user subscription details based on the provided query parameter
+/**
+ * Get the user subscription details based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserSubscriptionRouter.get("/:id/subscription", userSubscriptionController.get);
 
-// Get the user subscription Status based on the provided query parameter
+/**
+ * Get the user subscription Status based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserSubscriptionRouter.get(
   "/:id/subscription/status",
   userSubscriptionController.getStatus

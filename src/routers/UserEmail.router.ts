@@ -10,7 +10,11 @@ const userEmailController = new UserEmailController();
 // Route to hold the routes (CRUD, etc) related to "UserEmail" table
 const UserEmailRouter = Router();
 
-// Get the user detail based on the provided query parameter
+/**
+ * Get the user detail based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserEmailRouter.get("/:id/emails", userEmailController.getByEmail);
 
 export default UserEmailRouter;

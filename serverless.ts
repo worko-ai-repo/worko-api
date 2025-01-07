@@ -22,7 +22,8 @@ const serverlessConfiguration: AWS = {
       APP_AWS_VPC:  "${env:APP_AWS_VPC}",
       APP_AWS_SECURITY_GROUP: "${env:APP_AWS_SECURITY_GROUP}",
       APP_AWS_SUBNET1: "${env:APP_AWS_SUBNET1}",
-      APP_AWS_SUBNET2: "${env:APP_AWS_SUBNET2}"
+      APP_AWS_SUBNET2: "${env:APP_AWS_SUBNET2}",
+      APP_AWS_COGNITO_USER_POOL_ID: "${env:APP_AWS_COGNITO_USER_POOL_ID}"
     },
     awsLambdaFunctions: {
       APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN: "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-api-${self:custom.app.STAGE}-app-scheduler-handler",
@@ -54,6 +55,7 @@ const serverlessConfiguration: AWS = {
         Resource: [
           "arn:aws:dynamodb:ap-south-1:*:table/worko",
           "arn:aws:dynamodb:ap-south-1:*:table/worko/index/GSI1",
+          "arn:aws:dynamodb:ap-south-1:*:table/worko/index/GSI2",
         ]
       },
       {
@@ -122,6 +124,15 @@ const serverlessConfiguration: AWS = {
           "scheduler:CreateScheduleGroup"
         ],
         "Resource": "arn:aws:scheduler:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:schedule-group/*"
+      },
+      {
+        Effect : "Allow",
+        "Action": [
+          "cognito-idp:AdminAddUserToGroup",
+          "cognito-idp:AdminUpdateUserAttributes",
+          "cognito-idp:AdminConfirmSignUp"
+        ],
+        "Resource":"arn:aws:cognito-idp:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:userpool/${self:custom.aws.APP_AWS_COGNITO_USER_POOL_ID}"
       }
     ]
   },

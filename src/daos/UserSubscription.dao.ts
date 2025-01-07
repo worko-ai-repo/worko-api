@@ -96,7 +96,7 @@ class UserSubscriptionDao implements BaseDao {
     if (subscriptionRecordListingFilterRequest.searchText) {
       // remove trailing and leading spaces from the search text
       let searchTextValue =
-        subscriptionRecordListingFilterRequest.searchText.trim();
+        subscriptionRecordListingFilterRequest.searchText;
 
       /* 
       The and() method initiates a condition block where all conditions within it must be satisfied.

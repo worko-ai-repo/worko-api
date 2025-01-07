@@ -10,13 +10,21 @@ const fileController = new FileController();
 // Route to hold the routes (CRUD, etc) related to File operations
 const FileRouter = Router();
 
-// Generate pre-signed url to upload the file to aws s3
+/**
+ * Generate pre-signed url to upload the file to aws s3
+ * 
+ * @authorisedRoles ["admin"]
+ */
 FileRouter.post(
   "/gsu2u/:resourceKey",
   fileController.generatePreSignedUrlsToUpload
 );
 
-// Get the pre-signed URL to view the object/file
+/**
+ * Get the pre-signed URL to view the object/file
+ * 
+ * @authorisedRoles ["admin"]
+ */
 FileRouter.get(
   "/:userId/:cloudFileName/:resourceKey",
   fileController.generatePreSignedUrlsToView

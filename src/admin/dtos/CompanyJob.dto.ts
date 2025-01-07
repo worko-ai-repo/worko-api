@@ -51,7 +51,8 @@ export interface CompanyJobCreateApiDto {
  * @property {string} createdByUserId - The ID of the user who created the job.
  */
 export interface CompanyJobCreateDto extends CompanyJobCreateApiDto {
-    createdByUserId: string;
+    createdByUserId?: string;
+    createdByCorporateUserId?: string;
 }
 
 /**
@@ -89,16 +90,14 @@ export interface CompanyJobUpdateApiDto {
  * @property {string} updatedByUserId - The ID of the user who updated the job.
  */
 export interface CompanyJobUpdateDto extends CompanyJobUpdateApiDto {
-    updatedByUserId: string;
+    updatedByUserId?: string;
+    updatedByCorporateUserId?: string;
 }
 
 /**
  * JobListingFilterOptions
  * 
- * This is the Dto for Receving the Query Params for the Job Listing which extends the RecordListingFilterOptionsDTO 
- * 
- * RecordListingFilterOptions is the DTO that contains the common fields for the Query Params i.e Sort, Limit, Page, Search etc.
- * and JobListingFilterOptions contains the fields that are specific to the Job Listing.
+ * This is the DTO used by Backend to get the Query Params for the Job Listing.Listing.
  */
 export interface JobListingFilterOptions extends RecordListingFilterOptions {
     companyId?: string[];
@@ -118,7 +117,10 @@ export interface JobListingFilterOptions extends RecordListingFilterOptions {
 /**
  * JobListingFilterRequestDTO
  * 
- * This is the DTO used by Backend to get the Query Params for the Job Listing.
+ * This is the Dto for Receving the Query Params for the Job Listing which extends the RecordListingFilterOptionsDTO 
+ * 
+ * RecordListingFilterOptions is the DTO that contains the common fields for the Query Params i.e Sort, Limit, Page, Search etc.
+ * and JobListingFilterOptions contains the fields that are specific to the Job 
  */
 export interface JobListingFilterRequestDTO extends RecordListingFilterRequestDTO {
     companyId?: string[];

@@ -10,17 +10,34 @@ const userReferralController = new UserReferralController();
 // Route to hold the routes (CRUD, etc) related to "userReferral" table
 const UserReferralRouter = Router();
 
-// Create referral based on the provided query parameter
+/**
+ * Create referral based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserReferralRouter.post("/:userEmail/referral/request", userReferralController.createReferralByCand
 );
 
-// Get referral based on the provided query parameter
+/**
+ * Get referral based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserReferralRouter.get("/:userEmail/referral", userReferralController.getReferralsForCand);
 
-// Get matching Score
+/**
+ * Get matching Score
+ * 
+ * @authorisedRoles 
+ */
 UserReferralRouter.get("/:id/referral/:referralId/score", userReferralController.getReferralScoreForCand
 );
 
+/**
+ * Update referral status by candidate
+ * 
+ * @authorisedRoles 
+ */
 UserReferralRouter.put("/:candEmail/referral/:referralId/:newStatus", userReferralController.updateReferralStatusByCand
 );
 

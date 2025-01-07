@@ -1,13 +1,17 @@
-// import dynamoose types
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-
-//npm import
+// import the npm packages
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 import { UserReferralRequestCreateApiDTO ,UserReferralRequestCreateDTO } from "../dtos/User.dto";
 import { EmpReferralListingFilterOptions, EmpReferralListingFilterRequestDTO, ReferralStatusListingFilterOptions, ReferralStatusListingFilterRequestDTO, UserReferralStatusChangeByCandDTO } from "../dtos/UserReferral.dto";
 import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../dtos/Common.dto";
+
+// import daos
+import userReferralDao from "../daos/UserReferral.dao";
+
+// Load the Enums
+import { ReferralStatus } from "../enums/UserReferral.enum";
+import { MatchingScoreEntityEnum } from "../enums/Common.enum";
 
 // Load helpers
 import { RequestHelper } from "../helpers/request.helper";
@@ -38,9 +42,6 @@ import {userReferralEmpServiceObj} from "../services/UserReferralEmp.service";
 //Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
-
-// Load the Enums
-import { ReferralStatus } from "../enums/UserReferral.enum";
 
 /**
  * UserReferralController
@@ -449,11 +450,17 @@ class UserReferralController {
           emailId
         );
 
+        // Prepare `SK` for calculate matching scores for this job application
+        const userReferralSK = userReferralDao.sortKeys.SK_REFERRAL.strtr({
+          "{reqId}": referralRequestId.referralRequestId,
+        });
+
         // Invoke a lambda function to calculate matching scores for this referral
         // TODO: Add logic to check if it has been tested on local or not
         await InvokeLambdaService.triggerMatchingScoreCalculation(
           email,
-          referralRequestId.referralRequestId
+          MatchingScoreEntityEnum.REFERRAL,
+          userReferralSK
         );
 
         // Respond with the created referral request ID

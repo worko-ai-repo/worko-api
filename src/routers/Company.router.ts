@@ -10,24 +10,53 @@ const companyController = new CompanyController();
 // Route to hold the routes (CRUD, etc) related to "company" table
 const CompanyRouter = Router();
 
-// Get company details by id
+/**
+ * Get company details by id
+ * 
+ * @authorisedRoles ["public"]
+ */
 CompanyRouter.get("/:companyId", companyController.getCompanyDetailById);
 
-// Create company based on the provided query parameter by admin
+/**
+ * Create company based on the provided query parameter by admin
+ * 
+ * @authorisedRoles ["admin"]
+ */
 CompanyRouter.post("/", companyController.createCompany);
 
-// Update company based on the provided query parameter by admin
+/**
+ * Update company based on the provided query parameter by admin
+ * 
+ * @authorisedRoles ["admin"]
+ */
 CompanyRouter.put("/:id", companyController.updateCompany);
 
-// Create a company request based on the provided query parameter by user
+/**
+ * Create a company request based on the provided query parameter by user
+ * 
+ * @authorisedRoles ["admin"]
+ */
 CompanyRouter.post("/request", companyController.requestCompany);
 
-// Get the requested company list for admin
+/**
+ * Get the requested company list for admin
+ * 
+ * @authorisedRoles ["public"]
+ */
 CompanyRouter.get("/request/list", companyController.getRequestedCompanyList);
 
+/**
+ * Get all company names
+ * 
+ * @authorisedRoles ["public"]
+ */
 CompanyRouter.get("/all", companyController.getAllCompanyNames);
 
-// Get the company details list
+/**
+ * Get the company details list
+ * 
+ * @authorisedRoles ["public"]
+ */
 CompanyRouter.get("/", companyController.getCompanyList);
 
 // removed below route because we can use above CompanyRouter.get("/", companyController.getCompanyList); route for search filter by company name by hitting api:- http://localhost:3000/local/company/?companyName=go

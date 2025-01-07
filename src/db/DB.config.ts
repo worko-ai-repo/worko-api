@@ -12,6 +12,8 @@ import { CompanyJobModel } from "./models/CompanyJob.model";
 import { CompanyDetailModel } from "./models/CompanyDetail.model";
 import { CompanyRequestModel } from "./models/CompanyRequest.model";
 import { CompanyJobUrlModel } from "./models/CompanyJobUrl.model";
+import { CorporateUserInviteModel } from "./models/CorporateUserInvite.model";
+import { CorporateUserModel } from "./models/CorporateUser.model";
 import { UserModel } from "./models/User.model";
 import { UserDetailModel } from "./models/UserDetail.model";
 import { UserEmailModel } from "./models/UserEmail.model";
@@ -46,6 +48,7 @@ import { WhatsappMessageLogModel } from "./models/WhatsappMessageLog.model";
 import { GrowaasanMessageLogModel } from "./models/GrowaasanMessageLog.model";
 
 import { ScheduleJobModel } from "./models/ScheduleJob.model";
+import { UserJobApplicationModel } from "./models/UserJobApplication.model";
 
 /**
  * DBConfig
@@ -154,6 +157,9 @@ class DBConfig {
       ScheduleJobModel,
       CompanyJobModel,
       GrowaasanMessageLogModel,
+      CorporateUserInviteModel,
+      CorporateUserModel,
+      UserJobApplicationModel,
     ]);
   }
 }

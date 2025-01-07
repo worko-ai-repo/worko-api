@@ -23,7 +23,31 @@ class DbCompanyJobDto extends BaseDbDto {
     GSI1SK!: string;
     id!: string;
     companyId!: string;
-    createdByUserId!: string;
+
+    /**
+     * The `createdByCorporateUserId` attribute represents the ID of the corporate user who created the job,
+     * While creating a job, the `userId` recieved from the authorizer context will be the `cognito user id`,
+     * In the backend, the `userId` will be converted by using `uuidToULID()` method to access the details of the user
+     * who created the job from the `CorporateUser` model.
+     */
+    createdByCorporateUserId?: string;
+
+    /**
+     * The `updatedByCorporateUserId` attribute represents the ID of the corporate user who updated the job,
+     * While updating a job, the `userId` recieved from the authorizer context will be the `cognito user id`,
+     * In the backend, the `userId` will be converted by using `uuidToULID()` method to access the details of the user
+     * who updated the job from the `CorporateUser` model.
+     */
+    updatedByCorporateUserId?: string;
+
+    /**
+     * The `createdByUserId` attribute represents the ID of the worko admin user who created the job
+     */
+    createdByUserId?: string;
+
+    /**
+     * The `updatedByUserId` attribute represents the ID of the worko admin user who updated the job
+     */
     updatedByUserId?: string;
     
     coreSkills!: string[];
@@ -75,9 +99,17 @@ const CompanyJobSchema = new dynamoose.Schema(
             type: String,
             required: true,
         },
+        createdByCorporateUserId: {
+            type: String,
+            required: false,
+        },
+        updatedByCorporateUserId: {
+            type: String,
+            required: false,
+        },
         createdByUserId: {
             type: String,
-            required: true,
+            required: false,
         },
         updatedByUserId: {
             type: String,

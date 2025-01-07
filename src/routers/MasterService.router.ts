@@ -10,10 +10,18 @@ const masterServiceController = new MasterServiceController();
 // Route to hold the routes (CRUD, etc) related to "MasterService" table
 const MasterServiceRouter = Router();
 
-// create master Service plan [Admin]
+/**
+ * create master Service plan [Admin]
+ * 
+ * @authorisedRoles ["admin"]
+ */
 MasterServiceRouter.post("/", masterServiceController.create);
 
-// get master Service plan [ui]
+/**
+ * get master Service plan [ui]
+ * 
+ * @authorisedRoles ["admin"]
+ */
 MasterServiceRouter.get("/", masterServiceController.get);
 
 export default MasterServiceRouter;

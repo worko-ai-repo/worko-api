@@ -134,7 +134,7 @@ class UserSupportDao implements BaseDao {
     // search by searchText if provided
     if (supportFilterOptions.searchText) {
       // remove trailing and leading spaces from the search text
-      let searchTextValue = supportFilterOptions.searchText.trim();
+      let searchTextValue = supportFilterOptions.searchText;
 
       /* 
       The and() method initiates a condition block where all conditions within it must be satisfied.

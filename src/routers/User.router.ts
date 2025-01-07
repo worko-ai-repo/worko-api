@@ -10,26 +10,50 @@ const userController = new UserController();
 // Route to hold the routes (CRUD, etc) related to "user" table
 const UserRouter = Router();
 
-// Create Candidate based on the provided query parameter
+/**
+ * Create Candidate based on the provided query parameter
+ * 
+ * @authorisedRoles ["public"]
+ */
 UserRouter.post("/register/candidate", userController.createCandidate);
 
-// Create employee based on the provided query parameter
+/**
+ * Create employee based on the provided query parameter
+ * 
+ * @authorisedRoles ["public"]
+ */
 UserRouter.post("/register/employee", userController.createEmployee);
 
 // Get the user based on the provided query parameter
 // UserRouter.get("/:id", userController.getUserById);
 
-// Get the user profile detail based on the provided query parameter
+/**
+ * Get the user profile detail based on the provided query parameter
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
 UserRouter.get("/:id/profile", userController.getUserProfileDetailById);
 
-// API to update the User's Last Accessed Dashboard
+/**
+ * API to update the User's Last Accessed Dashboard
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
 UserRouter.put("/:id/updateLastAccessedDash", userController.updateLastAccessedDash);
 
-//Update the verification status of user email based on the provided query parameter
+/**
+ * Update the verification status of user email based on the provided query parameter
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
 UserRouter.patch("/:id/verify/email", userController.updateEmailVerifyStatus);
 
-//Update the cv of user based on the provided query parameter
-// @todo change this to "/:id" and it should update any UserDetail SK fields along with CV/resume.
+/**
+ * Update the cv of user based on the provided query parameter
+ * @todo change this to "/:id" and it should update any UserDetail SK fields along with CV/resume.
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
 UserRouter.patch("/:id/cv", userController.updateUserResume);
 
 export default UserRouter;

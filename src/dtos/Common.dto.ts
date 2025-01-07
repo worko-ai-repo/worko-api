@@ -190,6 +190,8 @@ export interface EntityDetailsPaginationData {
  * @file { dynamoose.helper.ts } - This is one of the helper file, we are using this interface.
  * @template DbEntityDto - The type of the entity to be returned in the response, 
  *                         Ex: `DbUserDetailDto`, `DbUserReferralDto` etc.
+ * 
+ * NOTE: Use this interface for only key value pairs of `DbEntityDto`.
  */
 export interface PaginatedResultsWithMatchingConditionsResponse<DbEntityDto> {
   [key: number]: DbEntityDto;
@@ -197,4 +199,30 @@ export interface PaginatedResultsWithMatchingConditionsResponse<DbEntityDto> {
   count: number;
   timesQueried: number;
   queriedCount: number;
+}
+
+/**
+ * PaginatedResultsWithMatchingConditionsInternalResponse
+ * 
+ * NOTE: Use this interface for the type which it's being returned internally.
+ */
+export interface PaginatedResultsWithMatchingConditionsInternalResponse<DbEntityDto> {
+  data: DbEntityDto;
+  lastKey: ObjectType | undefined;
+  count: number;
+  timesQueried: number;
+  queriedCount: number;
+}
+
+/**
+ * RequestLocalContextDto
+ * 
+ * This `RequestLocalContextDto` object  can be accessed globally in the application.
+ * This was set from the authorizer context i.e. from `authorizer-context.middleware.ts`,
+ * This would be used in the backend to perform api security.
+ */
+export interface RequestLocalContextDto {
+  userId: string;
+  userEmail: string;
+  cognitoUserGroups: string[];
 }

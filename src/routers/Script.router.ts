@@ -11,18 +11,53 @@ const scriptController = new ScriptController();
 // TODO: After executing the script/API in DEV and PROD environments,
 // these routes should be commented out to prevent unintended execution.
 
-// Endpoint to update all user subscriptions
+/**
+ * Endpoint to update all user subscriptions
+ * 
+ * @authorisedRoles ["admin"]
+ */
 ScriptRouter.post("/update-user-subscriptions", scriptController.updateUserSubscriptionsGSIs);
 
-// Endpoint to update the all user Referrals jd matching error code
+/**
+ * Endpoint to update the all user Referrals jd matching error code
+ * 
+ * @authorisedRoles ["admin"]
+ */
 ScriptRouter.post("/update-user-referrals", scriptController.updateUserReferralsJdMatchErrorCode);
 
-// Endpoint to update all users name and `email` present in the `PK` to lowercase
+/**
+ * Endpoint to update all users name and `email` present in the `PK` to lowercase
+ * 
+ * @authorisedRoles ["admin"]
+ */
 ScriptRouter.post("/update-users-to-lowercase",scriptController.scriptUpdateUsersToLowerCase);
 
-// Endpoint to update email present in the `PK` to lowercase
+/**
+ * Endpoint to update email present in the `PK` to lowercase
+ * 
+ * @authorisedRoles ["admin"]
+ */
 ScriptRouter.post("/update-emails-to-lowercase/:oldEmail/:newEmail", scriptController.scriptUpdatePkEmailToLowerCase );
 
+/**
+ * Endpoint to update SK for `CorporateUser` model 
+ * 
+ * @authorisedRoles ["admin"]
+ */
+ScriptRouter.post("/update-sks-Gsi1Pk-corporate-users", scriptController.scriptUpdateSkForCorporateUsers);
+
+/**
+ * Endpoint to update SK for `CorporateUserInvite` model 
+ * 
+ * @authorisedRoles ["admin"]
+ */
+ScriptRouter.post("/update-sks-corporate-user-invite", scriptController.scriptUpdateSKForCorporateUserInvite);
+
+/**
+ * Endpoint to update jd extracted to string data type
+ * 
+ * @authorisedRoles ["admin"]
+ */
 ScriptRouter.post("/update-jd-extracted-to-string-data-type",scriptController.scriptUpdatejdExtractedToStringDataType);
 
 // Endpoint to update all user experiences

@@ -23,6 +23,7 @@ if (process.env.APP_STAGE == APP_CONSTANTS.STAGES.LOCAL) {
     awsConfigOptions = {
         accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
+        sessionToken: process.env.APP_AWS_SESSION_TOKEN,
         region: process.env.APP_AWS_REGION,
     }
 }

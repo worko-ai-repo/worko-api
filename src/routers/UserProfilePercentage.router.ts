@@ -10,19 +10,31 @@ const userProfilePercentageController = new UserProfilePercentageController();
 // Route to hold the routes (CRUD, etc) related to "UserProfilePercentage" table
 const UserProfilePercentageRouter = Router();
 
-// Get the user ProfilePercentage details
+/**
+ * Get the user ProfilePercentage details
+ * 
+ * @authorisedRoles 
+ */
 UserProfilePercentageRouter.get(
   "/:id/profilePercentage",
   userProfilePercentageController.getByGroup
 );
 
-// Get the user ProfilePercentage details
+/**
+ * Get the user ProfilePercentage details
+ * 
+ * @authorisedRoles 
+ */
 UserProfilePercentageRouter.get(
   "/:id/profilePercentage/group",
   userProfilePercentageController.getByGroup
 );
 
-// create the user ProfilePercentage details based on the provided query parameter
+/**
+ * create the user ProfilePercentage details based on the provided query parameter
+ * 
+ * @authorisedRoles 
+ */
 UserProfilePercentageRouter.post(
   "/:id/profilePercentage",
   userProfilePercentageController.create
