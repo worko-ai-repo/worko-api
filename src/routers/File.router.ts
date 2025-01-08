@@ -13,7 +13,9 @@ const FileRouter = Router();
 /**
  * Generate pre-signed url to upload the file to aws s3
  * 
- * @authorisedRoles ["admin"]
+ * Sample request URL On `dev` server: https://api.dev.worko.work/file/gsu2u/USER_RESUME
+ * 
+ * @authorisedRoles ["public"]
  */
 FileRouter.post(
   "/gsu2u/:resourceKey",
@@ -23,10 +25,13 @@ FileRouter.post(
 /**
  * Get the pre-signed URL to view the object/file
  * 
- * @authorisedRoles ["admin"]
+ * @todo, update the route "/gsu2v/:resourceKey"; 
+ * and expect the other required information in the request query/body.
+ * 
+ * @authorisedRoles ["public"]
  */
 FileRouter.get(
-  "/:userId/:cloudFileName/:resourceKey",
+  "/:id/:cloudFileName/:resourceKey",
   fileController.generatePreSignedUrlsToView
 );
 

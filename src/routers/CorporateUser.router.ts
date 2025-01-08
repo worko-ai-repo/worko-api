@@ -1,3 +1,4 @@
+// import express types
 import { Router } from 'express';
 
 // Import controllers
@@ -22,14 +23,14 @@ CorporateUserRouter.post('/', corporateUserController.createCorpUser);
 /**
  * Update Corporate User Details
  * 
- * @authorisedRoles ["admin","corporate-admin"]
+ * @authorisedRoles ["admin","corporate-admin", "corporate-recruiter"]
  */
 CorporateUserRouter.put('/:id',validateCorporateUserRequest, corporateUserController.updateCorpUserById);
 
 /**
  * Soft Delete Corporate User
  * 
- * @authorisedRoles ["admin","corporate-admin"]
+ * @authorisedRoles ["admin","corporate-admin","corporate-recruiter"]
  */
 CorporateUserRouter.patch('/:id/delete',validateCorporateUserRequest, corporateUserController.deleteCorpUserById);
 

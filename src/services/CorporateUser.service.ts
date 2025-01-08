@@ -19,7 +19,7 @@ import { EmailTemplatePlaceholderCORP_USER_SUCCESSFUL_SIGNUP } from "../dtos/Ema
 import { PaginatedResultsWithMatchingConditionsInternalResponse, PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 
 // Import daos
-import { corporateUserDaoObj } from "../daos/CorporateUser.dao";
+import { CorporateUserDao, corporateUserDaoObj } from "../daos/CorporateUser.dao";
 
 // Import enums
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
@@ -428,6 +428,59 @@ class CorporateUserService {
       // Get a batch of corporate users by filter options
       const corporateUsersResponse: PaginatedResultsWithMatchingConditionsResponse<DbCorporateUserDto> =
         await corporateUserDaoObj.getAllCorpUsers(filterOptions);
+
+      const {
+        lastKey,
+        count,
+        timesQueried,
+        queriedCount,
+        ...corporateUserData
+      } = corporateUsersResponse;
+
+      // Convert the data to an array
+      const corporateUserArray: DbCorporateUserDto[] =
+        Object.values(corporateUserData);
+
+      // Add all the corporate users to the array
+      allCorporateUsersWithoutPagination =
+        allCorporateUsersWithoutPagination.concat(corporateUserArray);
+
+      lastKeyInternal = lastKey ?? undefined;
+    } while (lastKeyInternal);
+
+    return allCorporateUsersWithoutPagination;
+  }
+
+  /**
+   * scriptGetAllCorporateUsersWithoutPagination
+   *
+   * This method fetches all the corporate users without pagination. This method is used internally by the service.
+   * 
+   * @returns {Promise<DbCorporateUserDto[]>} - A Promise that resolves to an array of all the corporate users in the database.
+   */
+  static async scriptGetAllCorporateUsersWithoutPagination(): Promise<DbCorporateUserDto[]> {
+    global.logger.info(
+      `script of Processing request to get all Corporate Users Without Pagination. [SERVICE]`,
+      {
+        filePath: __filename,
+        methodName: this.scriptGetAllCorporateUsersWithoutPagination.name,
+      }
+    );
+
+    let lastKeyInternal: ObjectType | undefined = undefined;
+    let pageSizeInternal = 50;
+    let allCorporateUsersWithoutPagination: DbCorporateUserDto[] = [];
+
+    // Continue fetching the data until all the data is fetched
+    do {
+      const filterOptions: CorporateUserLisitngFilterOptions = {
+        lastKey: lastKeyInternal,
+        pageSize: pageSizeInternal,
+      };
+
+      // Get a batch of corporate users by filter options
+      const corporateUsersResponse: PaginatedResultsWithMatchingConditionsResponse<DbCorporateUserDto> =
+        await CorporateUserDao.scriptGetAllCorpUsers(filterOptions);
 
       const {
         lastKey,

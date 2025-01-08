@@ -485,3 +485,19 @@ export const CompanyJobFilterDtoValidation = (userType: string) => {
         })
     );
 };
+
+/**
+ * parsedJobDescriptionApiDtoValidation
+ * 
+ * validation schema for parsing job description
+ */
+export const parsedJobDescriptionApiDtoValidation = Joi.object({
+    jobDescription: Joi
+        .string()
+        .required()
+        .messages({
+            "any.required": `"jobDescription" is required.`,
+            "string.base": `"jobDescription" must be a string.`,
+            "string.empty": `"jobDescription" cannot be empty.`,
+        }),
+});

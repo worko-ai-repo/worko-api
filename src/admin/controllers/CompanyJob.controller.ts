@@ -8,7 +8,7 @@ import { uuidToULID } from "ulidx";
 import APP_CONSTANTS from "../../configs/constants.config";
 
 // Load dtos
-import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../../dtos/Common.dto"
+import { RecordListingResponseDTO } from "../../dtos/Common.dto"
 import {
     CompanyJobCreateApiDto,
     CompanyJobCreateDto,
@@ -17,6 +17,8 @@ import {
     JobListingFilterOptions,
     JobListingFilterRequestDTO,
     JobsWithCompanyResDto,
+    ParsedJobDescriptionApiDto,
+    ParsedJobDescriptionResponseDto,
 } from "../dtos/CompanyJob.dto";
 
 // Load Enums
@@ -34,6 +36,7 @@ import { DbCompanyJobDto } from "../../db/models/CompanyJob.model";
 import {
     companyJobCreateApiDtoValidation,
     CompanyJobFilterDtoValidation,
+    parsedJobDescriptionApiDtoValidation,
     updateCompanyJobApiDtoValidation
 } from "../schemas/CompanyJob.schema";
 
@@ -128,6 +131,44 @@ class CompanyJobController {
             // Create the job using the service.[Service Call]
             const createdcompanyJob = await companyJobServiceObj.createJob(companyJobCreateDto);
             return res.status(HttpStatusCode.CREATED_201).json(createdcompanyJob);
+        } catch (error) {
+            // Handle errors by passing the error message to the next middleware
+            next(error);
+        }
+    }
+
+    /**
+     * parseJobDescription
+     * 
+     * @param req - The request object
+     * @param res - The response object
+     * @param next - The next middleware function
+     */
+    parseJobDescription = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Global Logger for the Parse Job Description Controller
+            global.logger.info("Parsing Job Description. [controller]", {
+                filePath: __filename,
+                methodName: this.parseJobDescription.name,
+            });
+
+            // read the request body
+            const requestBody: ParsedJobDescriptionApiDto = req.body;
+
+            // Validate the user input and throw a validation error if it is not valid
+            const { error, value: parsedJobDescriptionApiDto } = parsedJobDescriptionApiDtoValidation.validate(
+                requestBody, 
+                { abortEarly: false }
+            );
+            if (error) {
+                // Throw the validation error with details
+                throw new RequestValidationError(error);
+            }
+
+            // Parse the job description using the service.[Service Call]
+            const parsedJobDescription: ParsedJobDescriptionResponseDto = await companyJobServiceObj.parseJobDescription(parsedJobDescriptionApiDto);
+
+            return res.status(HttpStatusCode.OK_200).json(parsedJobDescription);
         } catch (error) {
             // Handle errors by passing the error message to the next middleware
             next(error);

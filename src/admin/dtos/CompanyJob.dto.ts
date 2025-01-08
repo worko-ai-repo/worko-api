@@ -149,3 +149,38 @@ export interface JobsWithCompanyResDto extends CompanyJobCreateDto {
     GSI1SK:string;
     companyDetails: DbCompanyDetailDto | null;
 }
+
+/**
+ * ParsedJobDescriptionApiDto
+ */
+export interface ParsedJobDescriptionApiDto {
+    jobDescription: string;
+}
+
+/**
+ * ParsedJobDescriptionResponseDto
+ * 
+ * Whenever the job description is sent from the frontend it will be parsed by the lambda function(`worko-job-description-parser`) 
+ * and the parsed job description will be returned to the frontend
+ */
+export interface ParsedJobDescriptionResponseDto {
+  jobTitle: string;
+  salaryRange: {
+    min: string;
+    max: string;
+  };
+  experienceRange: {
+    min: string;
+    max: string;
+  };
+  numberOfOpenings: string;
+  workMode: string;
+  location: string;
+  noticePeriod: string;
+  typeOfEmployment: string;
+  department: string;
+  coreSkills: string[];
+  softSkills: string[];
+  technicalSkills: string[];
+  goodToHaveSkills: string[];
+}

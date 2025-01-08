@@ -42,6 +42,7 @@ const APP_CONSTANTS = {
     USER_RESUME: "users/{userId}/resumes", // To upload the individual user's resume
     USER_PROFILE_PIC: "users/{userId}/profilePics", // To upload the individual user's profile pics
     CAREER_RESUME: "career-resumes", // To upload the resumes uplaoded via career page
+    COMPANY_JOB_DESCRIPTION: "company/{companyId}/company-job-descriptions", // To upload the company job description uplaoded via `corporate dashboard` or `admin dashboard`
   },
 
   /**
@@ -56,11 +57,32 @@ const APP_CONSTANTS = {
   // If "pageSize" from the request does not match with one of the "PAGE_LENGTH_OPTIONS" value, then this value would be used.
   PAGE_LENGTH_DEFAULT: 25,
 
-  /**
-   * AWS Lambada Configurations related to triggering "Resume Extraction" and "Matching JS Score" Lambda functions.
-   */
-  RESUME_EXTRACTION_LAMBDA_NAME: "resume-parser",
-  MATCHING_SCORE_LAMBDA_NAME: "worko-jd-resume-matching",
+  LAMBDA_FUNCTION_NAMES: {
+    /**
+     * RESUME_EXTRACTION_LAMBDA_NAME
+     *
+     * Lambda function name for "Resume Extraction"
+     * AWS Lambada Configurations related to triggering "Resume Extraction"
+     */
+    RESUME_EXTRACTION_LAMBDA_NAME: "resume-parser",
+
+    /**
+     * MATCHING_SCORE_LAMBDA_NAME
+     *
+     * Lambda function name for "Matching Score"
+     * AWS Lambada Configurations related to triggering "Matching Score"
+     */
+    MATCHING_SCORE_LAMBDA_NAME: "worko-jd-resume-matching",
+
+    /**
+     * JOB_DESCRIPTION_PARSER_LAMBDA_NAME
+     *
+     * Lambda function name for "Job Description Parser"
+     * AWS Lambada Configurations related to triggering "Job Description Parser"
+     */
+    JOB_DESCRIPTION_PARSER_LAMBDA_NAME: "worko-job-description-parser",
+  },
+
   MATCHING_SCORE_PROMPT:
     "From above mentioned Resume and Job description, please match on following parameters and provide score(out of 10) and brief explanation for every parameters and also provide overall matching score.\n1. experience in year\n2. Role \n3.  skills(technical, soft and core)\n4. education\n5. industry experience\n6. responsibilities\n7. certifications\nAssistant:",
 
@@ -99,12 +121,13 @@ const APP_CONSTANTS = {
     SUBS_PREMIUM_UPGRADE: "https://worko.ai/", // Previously "https://app.worko.ai/",
     CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/login`,
     CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/signup/{token}`,
-    WORKO_LOGO_URL: "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
+    WORKO_LOGO_URL:
+      "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
   },
 
   /**
    * JOB_APPLICATION_READABLE_STATUS
-   * 
+   *
    * This is the readable status of the job application
    * which is used in the email body to be sent to the end user
    */
@@ -120,7 +143,7 @@ const APP_CONSTANTS = {
 
   /**
    * COGNITO_READABLE_GROUPS
-   * 
+   *
    * This is the readable groups of the cognito user
    * which is used in the email body to be sent to the end user
    */
@@ -149,7 +172,7 @@ const APP_CONSTANTS = {
   /**
    * JOB_APPLICATION_MINIMUM_MATCHING_SCORE
    *
-   * Whenever a candidate applies a job from mini-job portal, this is the minimum matching score required for 
+   * Whenever a candidate applies a job from mini-job portal, this is the minimum matching score required for
    * the job to be applied.
    */
   JOB_APPLICATION_MINIMUM_MATCHING_SCORE: 70,
@@ -171,8 +194,8 @@ const APP_CONSTANTS = {
 
   /**
    * SOCIAL_PROFILE_KEYS
-   * 
-   * These are the keys for the social profiles, we are currently used for profile percentage logic, 
+   *
+   * These are the keys for the social profiles, we are currently used for profile percentage logic,
    * we can add more in the future if those were updated in `UserSocialProfileDTO`(refer `UserSocialProfile.dto.ts` file).
    */
   SOCIAL_PROFILE_KEYS: ["twitter", "github", "linkedin"],
@@ -206,7 +229,7 @@ const APP_CONSTANTS = {
   COGNITO_IDENTITY_POOL_GROUPS: {
     ADMIN: "admin",
     CORPORATE_ADMIN: "corporate-admin",
-    CORPORATE_RECRUITER:"corporate-recruiter",
+    CORPORATE_RECRUITER: "corporate-recruiter",
   },
 
   // Worko App Domain

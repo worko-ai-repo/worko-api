@@ -51,16 +51,27 @@ export const FileGeneratePsuToUploadCareerResumeDTOValidation = Joi.object({
 });
 
 /**
- * FileGeneratePreSignedUrlsToViewDTOValidation
+ * FileGeneratePsuToUploadCompanyJobDescriptionDTOValidation
  *
- * Joi validation schema to validate the request data.
+ * Joi validation schema to validate the request data for uploading a company job description.
  */
-export const FileGeneratePreSignedUrlsToViewDTOValidation = Joi.object({
-  userId: Joi.string().required(),
-  cloudFileName: Joi.string()
-    .regex(/\.(jpng|pdf)$/i)
-    .required(),
-  resourceKey: Joi.string()
-    .valid(...Object.values(FileResourceKey))
-    .required(),
+export const FileGeneratePsuToUploadCompanyJobDescriptionDTOValidation = Joi.object({
+  companyId: Joi
+    .string()
+    .required()
+    .messages({
+      "any.required": "The 'Company Id' field is required.",
+    }),
+  companyJobDescriptionFileName: Joi
+    .string()
+    .required()
+    .messages({
+      "any.required": "The 'Job Description File Name' field is required.",
+    }),
+  companyJobDescriptionFileMimeType: Joi
+    .string()
+    .required()
+    .messages({
+      "any.required": "The 'Job Description File Mime Type' field is required.",
+    }),
 });

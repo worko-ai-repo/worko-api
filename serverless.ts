@@ -39,6 +39,17 @@ const serverlessConfiguration: AWS = {
       APP_AWS_SCHEDULER_HANDLER_ROLE_ARN: "${self:custom.awsLambdaFunctions.APP_AWS_SCHEDULER_HANDLER_ROLE_ARN}",
     },
     region: "ap-south-1", // Should be dynamically set
+
+    /**
+     * timeout
+     * 
+     * @see https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml#general-aws-lambda-settings
+     * 
+     * 1. Default timeout for functions. Optional. (default: 6 seconds).
+     * 2. Note: API Gateway has a maximum timeout of 30 seconds
+     */
+    timeout: 29, 
+    
     iamRoleStatements: [
       {
         Effect: "Allow",
@@ -100,7 +111,8 @@ const serverlessConfiguration: AWS = {
         ],
         Resource: [
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-jd-resume-matching",
-          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:resume-parser"
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:resume-parser",
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-job-description-parser"
         ]
       },{
         Effect: "Allow",

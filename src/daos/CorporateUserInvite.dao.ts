@@ -204,12 +204,14 @@ class CorporateInviteDao implements BaseDao {
 
     // Apply company id filter
     if (filterOptions.companyId) {
+      global.logger.info(`company id is given, so use PK & SK`)
       query = CorporateUserInviteModel.query("PK")
         .eq(
           this.partitianKey.strtr({
             "{companyId}": filterOptions.companyId,
           })
         )
+        .where("SK")
         .beginsWith("CORP#USR#INVT#");
     } else {
       // If no company id is provided, fetch all invites
@@ -404,8 +406,8 @@ class CorporateInviteDao implements BaseDao {
       countOfOldCorporateUserInvites: oldCorporateUserInvites.length,
     });
 
-    if (!oldCorporateUserInvites.length){
-        return true
+    if (!oldCorporateUserInvites.length) {
+      return true;
     }
 
     /**
@@ -433,7 +435,7 @@ class CorporateInviteDao implements BaseDao {
           }),
         };
 
-        // Create a new Corporate User invite with New SK 
+        // Create a new Corporate User invite with New SK
         const corporateUserWithNewCompositePrimaryKey =
           await CorporateUserInviteModel.create(
             corporateUserInviteWithNewCompositePrimaryKeyItem

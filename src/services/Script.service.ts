@@ -9,7 +9,7 @@ import { corporateInviteDaoObj } from "../daos/CorporateUserInvite.dao";
 
 // Import services
 import UserSubscriptionService from "./UserSubscription.service";
-import { corporateUserServiceObj } from "./CorporateUser.service";
+import { CorporateUserService } from "./CorporateUser.service";
 import UserReferralService from "./UserReferral.service";
 import { corporateUserInviteServiceObj } from "./CorporateUserInvite.service";
 
@@ -236,7 +236,7 @@ class ScriptService {
    */
   async scriptUpdateSkForCorporateUsers(): Promise<boolean> {
     const corporateUsers: DbCorporateUserDto[] =
-      await corporateUserServiceObj.getAllCorporateUsersWithoutPagination();
+      await CorporateUserService.scriptGetAllCorporateUsersWithoutPagination();
 
     return corporateUserDaoObj.scriptUpdateSkForCorporateUsers(corporateUsers);
   }

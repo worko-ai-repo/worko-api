@@ -9,7 +9,7 @@ import { DateTime } from 'luxon';
 import APP_CONSTANTS from '../configs/constants.config';
 
 // Import DTO
-import { CorporateUserInviteUpdateDto, CorporateUserInviteLisitngFilterOptions, CorporateUserInviteCreateDto, CorporateUserInviteUpdateApiDto } from '../dtos/CorporateUserInvite.dto';
+import { CorporateUserInviteUpdateDto, CorporateUserInviteLisitngFilterOptions, CorporateUserInviteCreateDto } from '../dtos/CorporateUserInvite.dto';
 import { EmailTemplatePlaceholderCORP_ADMIN_ACCESS_INVITE } from '../dtos/EmailTemplatePlaceholder.dto';
 import { PaginatedResultsWithMatchingConditionsInternalResponse, PaginatedResultsWithMatchingConditionsResponse } from '../dtos/Common.dto';
 
@@ -195,7 +195,7 @@ class CorporateIserInviteService {
       })[]
     >
   > {
-    global.logger.info("Fetching all corporate invites. [admin service]", {
+    global.logger.info("Fetching all corporate invites. [service]", {
       filePath: __filename,
       methodName: this.getAllInvitesWithCompanyDetails.name,
     });

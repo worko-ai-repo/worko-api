@@ -1,36 +1,31 @@
+// Load QueryResponse from dynamoose
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
-// Load attachCompanyDetails from companyDetailsInjector.helper
-import { attachCompanyDetails } from "../../helpers/companyDetailsInjector.helper";
-
-// Load Base Error from Utils
-import { BaseError } from "../../utils/errors.util";
-
-// Load CompanyJobStatusEnum from enums
-import { CompanyJobStatusEnum } from "../../enums/CompanyJob.enum";
-
-// Load DbCompanyDetailDto from CompanyDetail.model
-import { DbCompanyDetailDto } from "../../db/models/CompanyDetail.model";
+// Load the npm packages
+import { APIGatewayProxyResult } from "aws-lambda";
 
 // Load Dao
 import { companyJobDaoObj } from "../../daos/CompanyJob.dao";
 
-//Load Dto
-import { CompanyJobCreateDto, CompanyJobUpdateDto, JobListingFilterOptions, JobsWithCompanyResDto } from "../dtos/CompanyJob.dto";
+// Load Dto
+import { PaginatedResultsWithMatchingConditionsResponse } from "../../dtos/Common.dto";
+import { CompanyJobCreateDto, CompanyJobUpdateDto, JobListingFilterOptions, ParsedJobDescriptionApiDto, ParsedJobDescriptionResponseDto } from "../dtos/CompanyJob.dto";
 
-//Import HttpStatusCode from Utils
-import HttpStatusCode from "../../utils/http-codes.util";
+// import helpers
+import { attachCompanyDetails } from "../../helpers/companyDetailsInjector.helper";
 
-// Load Model 
+// import models
+import { DbCompanyDetailDto } from "../../db/models/CompanyDetail.model";
 import { DbCompanyJobDto } from "../../db/models/CompanyJob.model";
 
 // Load Services
 import { companyServiceObj } from "./Company.service";
+import InvokeLambdaService from "../../services/InvokeLambda.service";
 
-// Load QueryResponse from dynamoose
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+// import utils
+import { BaseError } from "../../utils/errors.util";
+import HttpStatusCode from "../../utils/http-codes.util";
 
-// Load PaginatedResultsWithMatchingConditionsResponse from Common.dto
-import { PaginatedResultsWithMatchingConditionsResponse } from "../../dtos/Common.dto";
 class CompanyJobService {
     /**
     * createJob
@@ -58,6 +53,34 @@ class CompanyJobService {
         }
 
         return companyJobDaoObj.createJob(JobDetailsData);
+    }
+
+    /**
+     * parseJobDescription
+     *
+     * Parses a given job description by invoking an AWS Lambda function.
+     *
+     * @param {ParsedJobDescriptionApiDto} parsedJobDescriptionApiDto - The DTO containing the job description to be parsed.
+     * @throws {BaseError} If the Lambda function response status code is not 200.
+     * @returns {Promise<ParsedJobDescriptionResponseDto>} The parsed job details as returned by the Lambda function.
+     */
+    async parseJobDescription(parsedJobDescriptionApiDto: ParsedJobDescriptionApiDto): Promise<ParsedJobDescriptionResponseDto> {
+      // Global Logger for the Parse Job Description Controller
+      global.logger.info("Parsing Job Description. [service]", {
+        filePath: __filename,
+        methodName: this.parseJobDescription.name,
+      });
+
+      // Invoke Lambda to parse job description
+      const parseJobDescriptionResponse: APIGatewayProxyResult = await InvokeLambdaService.triggerParseJobDescription(parsedJobDescriptionApiDto)
+
+      // If the response status code is not 200 then throw an error 
+      if (parseJobDescriptionResponse.statusCode !== HttpStatusCode.OK_200) {
+        throw new BaseError("Unable to parse job description, Please try again after some time.", HttpStatusCode.INTERNAL_SERVER_ERROR_500);
+      }
+
+      // Return the parsed response
+      return JSON.parse(parseJobDescriptionResponse["body"]);
     }
 
     /**

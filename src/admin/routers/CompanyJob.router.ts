@@ -22,6 +22,17 @@ const CompanyJobRouter = Router();
 CompanyJobRouter.post("/", companyJobController.createJob);
 
 /**
+ * Define a POST route for parsing job description
+ * 
+ * 1. This route is used to accept a job description from the frontend
+ * 2. It will call the lambda function to parse the job description 
+ * 3. And return the parsed job description to the frontend
+ * 
+ * @authorisedRoles ["admin", "corporate-admin", "corporate-recruiter"]
+ */
+CompanyJobRouter.post("/parsejd", companyJobController.parseJobDescription);
+
+/**
  * Fetch all Jobs
  * 
  * @authorisedRoles ["public"]

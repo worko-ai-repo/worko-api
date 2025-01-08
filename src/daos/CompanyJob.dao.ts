@@ -100,7 +100,7 @@ class CompanyJobDao {
         };
 
         // return the result of the created Job
-        return CompanyJobModel.create(companyJobDbDetails);;
+        return CompanyJobModel.create(companyJobDbDetails);
     }
 
     /**

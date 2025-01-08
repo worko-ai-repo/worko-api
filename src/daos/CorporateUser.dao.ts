@@ -290,6 +290,39 @@ class CorporateUserDao implements BaseDao {
   }
 
   /**
+   * scriptGetAllCorpUsers
+   *
+   * script to Get all old Corporate Users
+   *
+   * @param {CorporateUserLisitngFilterOptions} filterOptions - The filter options for the Corporate User
+   * @returns {Promise<PaginatedResultsWithMatchingConditionsResponse<DbCorporateUserDto>>} - The details of all Corporate Users
+   */
+  static async scriptGetAllCorpUsers(
+    filterOptions: CorporateUserLisitngFilterOptions
+  ): Promise<
+    PaginatedResultsWithMatchingConditionsResponse<DbCorporateUserDto>
+  > {
+    global.logger.info("script to Get all old Corporate Users [DAO]", {
+      filePath: __filename,
+      methodName: this.scriptGetAllCorpUsers.name,
+    });
+    // If the company ID is not provided, then get the list of corporate user from the database
+    let query = CorporateUserModel.query("GSI1PK")
+      .eq("CORP#USR#") // old GSI1SK
+      .where("GSI1SK")
+      .beginsWith("ID#");
+
+    // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.
+    query = query.sort(filterOptions.sortOrder as SortOrderTypeEnum);
+
+    // Execute the query and return the result
+    return getPaginatedResultsWithMatchingConditions<
+      DbCorporateUserDto,
+      CorporateUserLisitngFilterOptions
+    >(query, filterOptions); // passed args
+  }
+
+  /**
    * scriptUpdateSkForCorporateUsers
    *
    * This method updates the sort key and gsipk of all the Corporate Users in the database.
@@ -306,8 +339,8 @@ class CorporateUserDao implements BaseDao {
       countOfOldCorporateUsers: oldCorporateUsers.length,
     });
 
-    if(!oldCorporateUsers.length){
-      return true
+    if (!oldCorporateUsers.length) {
+      return true;
     }
 
     /**
