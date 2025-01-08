@@ -109,23 +109,13 @@ class CorporateInviteDao implements BaseDao {
       "{companyId}": companyId,
     });
 
-    // prepare Sort Key Array
-    const SKArray: string[] = this.sortKeys.SK_INIT.strtr({
-      "{email}": email,
-    }).split("#"); // [LOG]: ["CORP", "USR", "INVT", "example@gmail.com", "ID", "{id}"]
-
-    // prepare Sort Key begins with
-    // at `-1` position we are removing the 1(single) element from the array
-    const SK_BEGINS_WITH: string = SKArray.splice(-1, 1).join("#") + "#"; // [LOG]: "CORP#USR#INVT#example@gmail.com#ID#"
-
-    global.logger.debug(`partition and sort key`, {
-      filePath: __filename,
-      methodName: this.getInviteByUserEmailAndCompanyId.name,
-      PK: PK,
-      SKArray: SKArray,
-      SK_BEGINS_WITH: SK_BEGINS_WITH,
+    // Use sortKeys.SK_INIT with dynamic replacements
+    const SK_BEGINS_WITH: string = this.sortKeys.SK_INIT.strtr({
+      "{email}": email || "", // Replace with empty string if email is not provided
+      "{id}": "", // Replace with empty string or other default value if needed
     });
-
+    
+    global.logger.debug(`PK: ${PK}, SK_BEGINS_WITH: ${SK_BEGINS_WITH}`);
     // return the invite
     return CorporateUserInviteModel.query("PK")
       .eq(PK)

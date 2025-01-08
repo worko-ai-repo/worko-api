@@ -70,7 +70,7 @@ class CorporateIserInviteService {
       await corporateInviteDaoObj.getInviteByUserEmailAndCompanyId(
         corporateInviteUserCreateDto.companyId,
         corporateInviteUserCreateDto.email
-      );
+        );
     if (existingInvite.count) {
       // Throw an error if the user already has an Invite Request pending
       throw new BaseError(
