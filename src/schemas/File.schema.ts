@@ -1,4 +1,3 @@
-import { FileResourceKey } from "../enums/File.enum";
 // Import npm packages
 import Joi from "joi";
 
@@ -75,3 +74,17 @@ export const FileGeneratePsuToUploadCompanyJobDescriptionDTOValidation = Joi.obj
       "any.required": "The 'Job Description File Mime Type' field is required.",
     }),
 });
+
+/**
+ * FileGeneratePsuToViewBulkJdResumeDTOValidation
+ */
+export const FileGeneratePsuToViewBulkJdResumeDTOValidation = Joi.object({
+  corporateBulkJdId: Joi
+    .string()
+    .required()
+    .messages({
+      "any.required": "Corporate Bulk Jd Id is required.",
+      "string.empty": "Corporate Bulk Jd Id should not be empty.",
+      "string.base": "Corporate Bulk Jd Id should be a string.",
+    }),
+})

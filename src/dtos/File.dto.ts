@@ -71,3 +71,58 @@ export interface CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto {
      */
     companyJobDescriptionFileMimeType: string; 
 };
+
+/**
+ * CorporateBulkJdResumePreSignedUrlToUploadDto
+ */
+export interface CorporateBulkJdResumePreSignedUrlToUploadDto {
+    /**
+     * fileName
+     * 
+     * Sample file name: "TestCV.pdf"
+     */
+    fileName: string;
+
+    /**
+     * fileMimeType
+     * 
+     * Sample file mime type: "application/pdf"
+     */
+    fileMimeType: string
+}
+
+/**
+ * BulkCvsPreSignedUrlToUploadFileDto
+ * 
+ * This interface is just to define the representation for the request DTO from Frontend
+ * to generate the pre-signed urls for bulk cvs
+ */
+export interface BulkCvsPreSignedUrlToUploadFileDto {
+  /**
+   * companyId
+   *
+   * `companyId` is the ID of the company
+   */
+  companyId: string;
+
+  /**
+   * corporateBulkJdId
+   * 
+   * `corporateBulkJdId` is the ID of the corporate bulk job description (The `id` attribute of `CorporateBulkJd` Model)
+   */
+  corporateBulkJdId: string;
+
+  /**
+   * bulkCvs
+   */
+  bulkCvs: Array<CorporateBulkJdResumePreSignedUrlToUploadDto>;
+};
+
+/**
+ * BulkCvPreSignedUrlToViewApiDto
+ * 
+ * This interface is used to view the cv which was uploaded by corporate-recruiter/admin or worko-admin
+ */
+export interface BulkCvPreSignedUrlToViewApiDto {
+  corporateBulkJdId: string;
+}

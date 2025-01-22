@@ -49,6 +49,8 @@ import { GrowaasanMessageLogModel } from "./models/GrowaasanMessageLog.model";
 
 import { ScheduleJobModel } from "./models/ScheduleJob.model";
 import { UserJobApplicationModel } from "./models/UserJobApplication.model";
+import { CorporateBulkJdModel } from "./models/CorporateBulkJd.model";
+import { CorporateBulkJdResumeModel } from "./models/CorporateBulkJdResume.model";
 
 /**
  * DBConfig
@@ -160,6 +162,8 @@ class DBConfig {
       CorporateUserInviteModel,
       CorporateUserModel,
       UserJobApplicationModel,
+      CorporateBulkJdModel,
+      CorporateBulkJdResumeModel,
     ]);
   }
 }

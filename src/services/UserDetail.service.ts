@@ -176,12 +176,35 @@ class UserDetailService {
   /**
    * Retrieves user details by user id.
    *
-   * @param email - Email of the user
-   * @returns {Promise<any>} - Details of the user
+   * @param userId - ID of the user
+   * @returns {Promise<QueryResponse<DbUserDetailDto>>>} - Details of the user
    */
-  async getUserById(userId: string) {
-    console.log("Get user detail by email [service]");
+  async getUserById(userId: string): Promise<QueryResponse<DbUserDetailDto>> {
+    console.log("Get user detail by userId [service]");
     return userDetailDao.getUserById(userId);
+  }
+
+  /**
+   * getUserByIds
+   *
+   * Retrieves user details for a list of user IDs.
+   *
+   * @param {string[]} userIds - The list of user IDs.
+   * @returns {Promise<DbUserDetailDto[]>} - A promise that resolves to an array of user details.
+   */
+  async getUserByIds(userIds: string[]): Promise<DbUserDetailDto[]> {
+    // Log the action
+    global.logger.info("Get user details by ids [service]", {
+      filePath: __filename,
+      methodName: this.getUserByIds.name,
+    });
+
+    // return all user details by ids
+    return Promise.all(
+      userIds.map(async (userId: string): Promise<DbUserDetailDto> => {
+        return (await userDetailDao.getUserById(userId))[0];
+      })
+    ); 
   }
 
   /**

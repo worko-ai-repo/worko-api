@@ -226,3 +226,11 @@ export interface RequestLocalContextDto {
   userEmail: string;
   cognitoUserGroups: string[];
 }
+
+/**
+ * MinMaxRange
+ */
+export interface MinMaxRange {
+  min: number;
+  max: number;
+}

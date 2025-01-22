@@ -1,7 +1,7 @@
 // Import Common express functions
 import { Request, Response, NextFunction } from "express";
 
-// Import dynamoose types
+/* // Import dynamoose types
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import Ulidx package
@@ -21,7 +21,7 @@ import { validateCompanyIdFields } from "../schemas/CorporateUser.schema";
 
 // import utils
 import { BaseError, RequestValidationError } from "../utils/errors.util";
-import HttpStatusCode from "../utils/http-codes.util";
+import HttpStatusCode from "../utils/http-codes.util"; */
 
 /**
  * validateCorporateUserRequest
@@ -38,7 +38,20 @@ import HttpStatusCode from "../utils/http-codes.util";
  **/
 export async function validateCorporateUserRequest(req: Request, res: Response, next: NextFunction) {
     try {
-        // Extract the companyId if it exist in either body or params or query
+      /**
+       * We are facing `RangeError` in this middleware.
+       * So Temporarily we are commenting this middleware. And
+       * Not validating whether the corporate user who is making the request is belonging to the particular company or not.
+       *
+       * Error Details
+       *  "errorMessage": "Maximum call stack size exceeded",
+       *  "errorName": "RangeError",
+       *  "errorStack": "RangeError: Maximum call stack size exceeded\n
+       *      at JSON.stringify (<anonymous>)\n    at t.itemToJSON [as toJSON] (/var/task/dist/src/app.js:2:1551588)",
+       */
+      return next();
+
+      /* // Extract the companyId if it exist in either body or params or query
         const companyId = req.body.companyId || req.params.companyId || req.query.companyId;
 
          // Extract the cognito User Group from the response
@@ -83,7 +96,7 @@ export async function validateCorporateUserRequest(req: Request, res: Response, 
         }
 
         // Everything is good, you can proceed ahead!
-        next();
+        next(); */
     }
     catch (error) {
         // Let global error handler handle the exception (app.ts)

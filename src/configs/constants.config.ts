@@ -42,7 +42,8 @@ const APP_CONSTANTS = {
     USER_RESUME: "users/{userId}/resumes", // To upload the individual user's resume
     USER_PROFILE_PIC: "users/{userId}/profilePics", // To upload the individual user's profile pics
     CAREER_RESUME: "career-resumes", // To upload the resumes uplaoded via career page
-    COMPANY_JOB_DESCRIPTION: "company/{companyId}/company-job-descriptions", // To upload the company job description uplaoded via `corporate dashboard` or `admin dashboard`
+    COMPANY_JOB_DESCRIPTION: "companies/{companyId}/company-job-descriptions", // To upload the company job description uplaoded via `corporate dashboard` or `admin dashboard`
+    BULK_CVS: "companies/{companyId}/bulk-cvs/{corporateBulkJdId}", // To upload the bulk cvs uplaoded via `corporate dashboard` or `admin dashboard`
   },
 
   /**

@@ -6,7 +6,7 @@ import APP_CONSTANTS from "../configs/constants.config";
 import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
 
 // Import DTOs
-import { CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto, PreSignedUrlToUploadFileResponseDto } from "../dtos/File.dto";
+import { BulkCvPreSignedUrlToViewApiDto, CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto, PreSignedUrlToUploadFileResponseDto } from "../dtos/File.dto";
 
 // Import enums
 import { FileResourceKey } from "../enums/File.enum";
@@ -20,6 +20,7 @@ import {
   FileGeneratePsuToUploadCompanyJobDescriptionDTOValidation,
   FileGeneratePsuToUploadUserProfilePicDTOValidation,
   FileGeneratePsuToUploadUserResumeDTOValidation,
+  FileGeneratePsuToViewBulkJdResumeDTOValidation,
 } from "../schemas/File.schema";
 
 // Import utilities
@@ -120,10 +121,14 @@ class FileController {
       // Frontend wants to get the user's profilePic
       else if (resourceKey === FileResourceKey.CAREER_RESUME) {
         return this.getUserCareerResume(req, res, next);
-      } 
+      }
       // Frontend wants to get the company job description file
       else if (resourceKey === FileResourceKey.COMPANY_JOB_DESCRIPTION) {
         return this.generatePsuToViewCompanyJobDescription(req, res, next);
+      }
+      // Frontend wants to get the cv file from bulk cvs list
+      else if (resourceKey === FileResourceKey.BULK_CVS) {
+        return this.generatePsuToViewBulkCv(req, res, next);
       }
 
       // As resource keys are not matched above, let frontend know about the same.
@@ -172,10 +177,9 @@ class FileController {
       }
 
       // Get the base path where the user's resume file would be uploaded
-      const fileUploadPath =
-        APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_RESUME.strtr({
-          "{userId}": requestBodyObject.userId.toString(),
-        });
+      const fileUploadPath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_RESUME.strtr({
+        "{userId}": requestBodyObject.userId.toString(),
+      });
 
       // Get the user's resume file extension
       const resumeUserFileExtension = requestBodyObject.resumeUserFileName
@@ -374,9 +378,9 @@ class FileController {
    *
    * The file mime type and extension of the file is expected in the request to provide flexibility.
    *
-   * @param {Request} req 
-   * @param {Response} res 
-   * @param {NextFunction} next 
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
    */
   private generatePsuToUploadCompanyJobDescription = async (
     req: Request,
@@ -561,10 +565,11 @@ class FileController {
    *
    * Get the company job description from cloud storage.
    *
-   * @param req Request
-   * @param res Response
-   * @param next NextFunction
-   * @param companyId string
+   * @param {Request} req - The incoming request object.
+   * @param {Response} res - The outgoing response object.
+   * @param {NextFunction} next - The next function in the middleware chain.
+   * @param {string} companyId - The ID of the company.
+   * @param {string} cloudFileName - The name of the file in the cloud storage.
    */
   private generatePsuToViewCompanyJobDescription = async (
     req: Request,
@@ -576,9 +581,10 @@ class FileController {
       const cloudFileName = req.params["cloudFileName"];
 
       // Construct the file path in the cloud storage
-      const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.COMPANY_JOB_DESCRIPTION.strtr({
-        "{companyId}": companyId.toString(),
-      });
+      const filePath =
+        APP_CONSTANTS.AWS_S3_DIR_PATHS.COMPANY_JOB_DESCRIPTION.strtr({
+          "{companyId}": companyId.toString(),
+        });
 
       // Assume that you have a method to generate the object URL
       const objectUrl = await awsS3ClientLibrary.generateObjectUrl(
@@ -588,6 +594,55 @@ class FileController {
 
       // Return the object URL to the frontend
       return res.status(HttpStatusCode.OK_200).json({ objectUrl });
+    } catch (error) {
+      // Let global error handler handle the exception (app.ts)
+      next(error);
+    }
+  };
+
+  /**
+   * generatePsuToViewBulkCv
+   *
+   * Get the cv detail from bulk cv path from cloud storage.
+   *
+   * @param {Request} req - The incoming request object.
+   * @param {Response} res - The outgoing response object.
+   * @param {NextFunction} next - The next function in the middleware chain.
+   * 
+   * @param {string} cloudFileName - The name of the file in the cloud storage.
+   */
+  private generatePsuToViewBulkCv = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> => {
+    try {
+      const companyId: string = req.params["id"];
+      const cloudFileName: string = req.params["cloudFileName"];
+
+      // retrieve the request body and throw error if it is invalid
+      const reqQuery = req.query as unknown as BulkCvPreSignedUrlToViewApiDto; 
+      const { error } = FileGeneratePsuToViewBulkJdResumeDTOValidation.validate(reqQuery, {
+        abortEarly: false,
+      });
+      if(error){
+        throw new RequestValidationError(error)
+      }
+
+      // Construct the file path in the cloud storage
+      const filePath: string = APP_CONSTANTS.AWS_S3_DIR_PATHS.BULK_CVS.strtr({
+        "{companyId}": companyId.toString(),
+        "{corporateBulkJdId}": reqQuery.corporateBulkJdId,
+      });
+
+      // Assume that you have a method to generate the object URL
+      const objectUrl: string = await awsS3ClientLibrary.generateObjectUrl(
+        process.env.APP_AWS_S3_BUCKET_WORKO_CORPORATE as string,
+        filePath + "/" + cloudFileName
+      );
+
+      // Return the object URL to the frontend
+      return res.status(HttpStatusCode.OK_200).json({ objectUrl: objectUrl });
     } catch (error) {
       // Let global error handler handle the exception (app.ts)
       next(error);

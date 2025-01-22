@@ -56,11 +56,13 @@ import TestRouter from "./routers/Test.router";
 import ScriptRouter from "./routers/Script.router";
 // import OrderRouter from "./routers/Order.router";
 import UserOrderRouter from "./routers/UserOrder.router";
-import AdminSubsRouter from "./routers/Admin.router";
+import WebhookRouter from "./routers/Webhook.router";
+import CorporateBulkJdRouter from "./routers/CorporateBulkJd.router";
+import CorporateBulkJdResumeRouter from "./routers/CorporateBulkJdResume.router";
 
 // Admin Routers
+import AdminSubsRouter from "./routers/Admin.router";
 import AdminRouter from "./admin/router";
-import WebhookRouter from "./routers/Webhook.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -96,7 +98,7 @@ router.use("/admin-subs", AdminSubsRouter);
  * Regitser the "Company" routers
  * 
  * @authorisedRoles ["admin","public"]
- */
+*/
 router.use("/company", CompanyRouter);
 
 /**
@@ -105,8 +107,22 @@ router.use("/company", CompanyRouter);
  * Regitser the "Company CRUD" routers
  * 
  * @authorisedRoles ["admin", "public","corporate-recruiter","corporate-admin"]
- */
+*/
 router.use("/job", CompanyJobRouter);
+
+/**
+ * CORPORATE BULK JD ROUTERS
+ * 
+ * @authorisedRoles ["admin", "corporate-admin", "corporate-recruiter"]
+ */
+router.use("/corporate-bulk-jd", CorporateBulkJdRouter);
+
+/**
+ * CORPORATE BULK JD RESUME ROUTERS
+ * 
+ * @authorisedRoles ["admin", "corporate-admin", "corporate-recruiter"]
+ */
+router.use("/corporate-bulk-jd-resume", CorporateBulkJdResumeRouter);
 
 /**
  * CORPORATE ROUTERS

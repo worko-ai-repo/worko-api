@@ -530,6 +530,32 @@ class CorporateUserService {
   }
 
   /**
+   * getCorpUserByIds
+   *
+   * Retrieves the details of Corporate Users by their IDs.
+   *
+   * @param {string[]} ids - The IDs of the Corporate Users.
+   * @returns {Promise<DbCorporateUserDto[]>} - The details of the Corporate Users.
+   */
+  async getCorpUserByIds(ids: string[]): Promise<DbCorporateUserDto[]> {
+    // Logger
+    global.logger.info(
+      "Processing request to get Corporate User by IDs. [SERVICE]",
+      {
+        filePath: __filename,
+        methodName: this.getCorpUserByIds.name,
+      }
+    );
+    
+    // Get the Corporate User by the IDs
+    return Promise.all(
+      ids.map(async (userId: string): Promise<DbCorporateUserDto> => {
+        return (await corporateUserServiceObj.getCorpUserById(userId))[0];
+      })
+    );
+  }
+
+  /**
    * getCorpUserByIdWithParsing
    *
    * Retrieves the details of a Corporate User by their ID and parses the result.
