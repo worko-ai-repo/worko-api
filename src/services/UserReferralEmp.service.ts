@@ -23,23 +23,22 @@ import {
 import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
 import { EmpReferralListingFilterOptions, UserReferralDTO } from "../dtos/UserReferral.dto";
 import { ScheduleJobReferralReminderInputDto, ScheduleJobCreateDto } from "../dtos/ScheduleJob.dto";
-import { GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE, GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE, GrowaasanTemplatePlaceholderEMP_ACCEPTED_REQUEST_COUNT_EMPLOYEE, GrowaasanTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE, GrowaasanTemplatePlaceholderEMP_PENDING_REQUEST_COUNT_EMPLOYEE, GrowaasanTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE } from "../dtos/GrowaasanTemplatePlaceholder.dto";
-import { GrowaasanPhoneNumberDto } from "../dtos/Growaasan.dto";
 import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
+import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE } from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
 
 // Import Enums
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ScheduleJobType, ScheduleJobStatus } from "../enums/ScheduleJob.enum";
-import { GrowaasanTemplateNameEnum } from "../enums/GrowaasanTemplate.enum";
+import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
 
 // Import Helpers
 import { urlHelperObj } from "../helpers/Url.helper";
 
 // Import Libraries
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
-import { growaasanLibraryObj } from "../libraries/Growaasan.library";
+import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusinessPartner.library";
 
 // Import Models
 import { DbUserReferralResponseDto } from "../db/models/UserReferralResponse.model";
@@ -58,7 +57,7 @@ import ScheduleJobService from "./ScheduleJob.service";
 
 // import constants
 import { WHATSAPP_APP_CONSTANTS } from "../configs/constants/Whatsapp.constant";
-import { GROWAASAN_APP_CONSTANTS } from "../configs/constants/Growaasan.constant";
+import { WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS } from "../configs/constants/WhatsAppBusinessPartner.constant";
 
 /**
  *  UserReferralEmpService class responsible for managing employee-related referral operations.
@@ -329,9 +328,9 @@ class UserReferralEmpService {
   }
 
   /**
-   * sendGrowaasanWhatsappMsgtoEmployeesOnReferralCreation
+   * sendWhatsAppBusinessPartnerWhatsappMsgtoEmployeesOnReferralCreation
    *
-   * Sends a Growaasan WhatsApp message to all employees of a company when a referral was raised by a candidate on a paricular company.
+   * Sends WhatsApp message to all employees of a company when a referral was raised by a candidate on a paricular company.
    *
    * @param {string} candName - The name of the candidate.
    * @param {number} matchingScore - The matching score of the candidate.
@@ -339,7 +338,7 @@ class UserReferralEmpService {
    * @param {string} companyId - The ID of the company.
    * @returns {Promise<boolean>} - A promise that resolves to true if all messages are sent successfully.
    */
-  async sendGrowaasanWhatsappMsgtoEmployeesOnReferralCreation(
+  async sendWhatsAppBusinessPartnerWhatsappMsgtoEmployeesOnReferralCreation(
     candName: string,
     matchingScore: number,
     jobUrl: string,
@@ -409,34 +408,27 @@ class UserReferralEmpService {
          * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
         if (
-          GROWAASAN_APP_CONSTANTS.ENABLED &&
+          WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS.ENABLED &&
           empDetails[0].isWhatsappNotificationEnabled !== false
         ) {
           // Encode the job URL
           const encodedUrl: string = urlHelperObj.encodeQueryString(jobUrl);
 
-          // Prepare placeholders for the Growaasan message
-          const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE =
+          // Prepare placeholders for the WhatsApp message
+          const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE =
             {
               employeeName: refereeName.toTitleCase(),
               candidateName: candName.toTitleCase(),
               matchingScore: matchingScore.toString(),
               jobUrl: encodedUrl,
             };
-          console.log("employeeNumber: ", empDetails[0].number);
-          await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-            GrowaasanTemplateNameEnum.EMP_NEW_REFERRAL_REQUEST_EMPLOYEE,
-            refereeEmail,
-            {
-              countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-              phoneNumber: parseInt(
-                empDetails[0].number.replace(
-                  GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
-                  ""
-                )
-              ),
-            },
-            growaasanPlaceholders
+
+          // Send WhatsApp message to employee
+          await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+            WhatsAppBusinessPartnerTemplateNameEnum.EMP_NEW_REFERRAL_REQUEST_EMPLOYEE,
+            empDetails[0].number.strtr({ "+": "" }), // To Phone Number
+            whatsAppBusinessPartnerPlaceholders,
+            refereeEmail // reciever email
           );
         } else {
           // Log an info message if the employee's number is not verified
@@ -459,48 +451,9 @@ class UserReferralEmpService {
     global.logger.info(`WhatsApp Message Sent Successfully!`, {
       filePath: __filename,
       methodName:
-        this.sendGrowaasanWhatsappMsgtoEmployeesOnReferralCreation.name,
+        this.sendWhatsAppBusinessPartnerWhatsappMsgtoEmployeesOnReferralCreation
+          .name,
     });
-    return true;
-  }
-
-  /**
-   * sendGrowaasanWhatsappMsgToEmpAboutPendingAcceptedReferralRequestCount
-   *
-   * Sends a WhatsApp message to an employee about pending accepted referral requests.
-   *
-   * Sends a WhatsApp message to an employee about pending accepted referral requests.
-   * The message is sent using the Growaasan cloud API integration.
-   *
-   * @todo - need to trigger this function and make required changes accordingly
-   * @param {string} empEmail - Email address of the employee to send the message to.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - Phone number of the employee to send the message to.
-   * @param {GrowaasanTemplatePlaceholderEMP_ACCEPTED_REQUEST_COUNT_EMPLOYEE} growaasanPlaceholders - The placeholders for the message template.
-   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
-   */
-  async sendGrowaasanWhatsappMsgToEmpAboutPendingAcceptedReferralRequestCount(
-    empEmail: string,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_ACCEPTED_REQUEST_COUNT_EMPLOYEE
-  ): Promise<boolean> {
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.EMP_ACCEPTED_REQUEST_COUNT_EMPLOYEE,
-      empEmail,
-      toPhoneNumber,
-      growaasanPlaceholders
-    );
-
-    global.logger.info(
-      `WhatsApp Message for ${GrowaasanTemplateNameEnum.EMP_ACCEPTED_REQUEST_COUNT_EMPLOYEE} Sent Successfully!`,
-      {
-        filePath: __filename,
-        methodName:
-          this
-            .sendGrowaasanWhatsappMsgToEmpAboutPendingAcceptedReferralRequestCount
-            .name,
-        empEmail: empEmail,
-      }
-    );
     return true;
   }
 
@@ -562,9 +515,7 @@ class UserReferralEmpService {
    *
    * @returns {Promise<boolean>} - Returns a promise that resolves with a boolean indicating if the message was sent or not.
    */
-  async reviewReferralDoneStatusReminder(
-    referralId: string
-  ): Promise<boolean> {
+  async reviewReferralDoneStatusReminder(referralId: string): Promise<boolean> {
     global.logger.info(
       `Reviewing referral completion status for referral ID: ${referralId}`,
       {
@@ -599,27 +550,21 @@ class UserReferralEmpService {
        * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
        */
       if (
-        GROWAASAN_APP_CONSTANTS.ENABLED &&
+        WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS.ENABLED &&
         empDetails[0].isWhatsappNotificationEnabled !== false
       ) {
-        let growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE =
+        let whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE =
           {
             employeeName: refereeName.toTitleCase(),
             candidateName: candDetails[0].name.toTitleCase(),
           };
 
-        await this.sendGrowaasanWhatsappMsgToEmpAboutPendingAcceptedReferralRequest(
-          growaasanPlaceholders,
-          {
-            countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-            phoneNumber: parseInt(
-              empDetails[0].number.replace(
-                GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
-                ""
-              )
-            ),
-          },
-          refereeEmail
+        // Send WhatsApp message to employee
+        await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+          WhatsAppBusinessPartnerTemplateNameEnum.EMP_REFERRAL_REQUEST_PENDING_EMPLOYEE,
+          empDetails[0].number.strtr({ "+": "" }), // To Phone Number
+          whatsAppBusinessPartnerPlaceholders,
+          refereeEmail // reciever email
         );
 
         // Schedule the next reminder after the 36 hours on prod and 5 min on dev
@@ -647,41 +592,6 @@ class UserReferralEmpService {
       );
     }
 
-    return true;
-  }
-
-  /**
-   * sendGrowaasanWhatsappMsgToEmpAboutPendingAcceptedReferralRequest
-   *
-   * Sends a WhatsApp message to an employee about pending accepted referral requests.
-   *
-   * @param {GrowaasanTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE} growaasanPlaceholders - Placeholders for the WhatsApp message.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number to send the message to.
-   * @param {string} empEmail - The email address of the employee.
-   * @returns {Promise<boolean>} - A promise that resolves to true if the message is sent successfully.
-   */
-  async sendGrowaasanWhatsappMsgToEmpAboutPendingAcceptedReferralRequest(
-    growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    empEmail: string
-  ): Promise<boolean> {
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.EMP_REFERRAL_REQUEST_PENDING_EMPLOYEE,
-      empEmail,
-      toPhoneNumber,
-      growaasanPlaceholders
-    );
-
-    global.logger.info(
-      `WhatsApp Message for ${GrowaasanTemplateNameEnum.EMP_REFERRAL_REQUEST_PENDING_EMPLOYEE} Sent Successfully!`,
-      {
-        filePath: __filename,
-        methodName:
-          this.sendGrowaasanWhatsappMsgToEmpAboutPendingAcceptedReferralRequest
-            .name,
-        empEmail: empEmail,
-      }
-    );
     return true;
   }
 
@@ -794,13 +704,13 @@ class UserReferralEmpService {
          * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
         if (
-          GROWAASAN_APP_CONSTANTS.ENABLED &&
+          WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS.ENABLED &&
           candDetails[0].isWhatsappNotificationEnabled !== false
         ) {
           // Encode the job URL
           const encodedUrl: string = urlHelperObj.encodeQueryString(jobUrl);
 
-          let growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE =
+          let whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE =
             {
               candidateName: candName.toTitleCase(),
               companyName: companyName,
@@ -808,19 +718,14 @@ class UserReferralEmpService {
               employeeName: refereeName.toTitleCase(),
             };
 
-          await UserReferralService.sendGrowaasanWhatsappMsgToCandWhenReferralRequestAccepted(
-            growaasanPlaceholders,
-            {
-              countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-              phoneNumber: parseInt(
-                candDetails[0].number.replace(
-                  GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
-                  ""
-                )
-              ),
-            },
+          // Send WhatsApp message to employee
+          await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+            WhatsAppBusinessPartnerTemplateNameEnum.CAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE,
+            candDetails[0].number.strtr({ "+": "" }), // To Phone Number
+            whatsAppBusinessPartnerPlaceholders,
             candEmail
           );
+
           await this.scheduleReferralDoneStatusReminder(
             refereeEmail,
             refereeName,
@@ -886,13 +791,13 @@ class UserReferralEmpService {
          * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
         if (
-          GROWAASAN_APP_CONSTANTS.ENABLED &&
+          WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS.ENABLED &&
           candDetails[0].isWhatsappNotificationEnabled !== false
         ) {
           // Encode the job URL
           const encodedUrl: string = urlHelperObj.encodeQueryString(jobUrl);
 
-          let growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE =
+          let whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE =
             {
               candidateName: candName.toTitleCase(),
               companyName: companyName,
@@ -900,18 +805,12 @@ class UserReferralEmpService {
               employeeName: refereeName.toTitleCase(),
             };
 
-          await UserReferralService.sendGrowaasanWhatsappMsgToCandWhenReferralRequestCompleted(
-            growaasanPlaceholders,
-            {
-              countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-              phoneNumber: parseInt(
-                candDetails[0].number.replace(
-                  GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
-                  ""
-                )
-              ),
-            },
-            candEmail // user email
+          // Send WhatsApp message to employee
+          await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+            WhatsAppBusinessPartnerTemplateNameEnum.CAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE,
+            candDetails[0].number.strtr({ "+": "" }), // To Phone Number
+            whatsAppBusinessPartnerPlaceholders,
+            candEmail // reciever email
           );
         } else {
           global.logger.info(

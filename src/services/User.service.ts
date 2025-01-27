@@ -2,7 +2,6 @@
 import { DateTime } from 'luxon';
 
 // Load the local constants
-import { GROWAASAN_APP_CONSTANTS } from '../configs/constants/Growaasan.constant';
 import APP_CONSTANTS from "../configs/constants.config";
 
 // Load the local daos
@@ -18,8 +17,6 @@ import {
   EmailTemplatePlaceholderEMP_SWITCH_PROFILE_NOTIFICATION,
   EmailTemplatePlaceholderEMP_WELCOME_MSG
 } from "../dtos/EmailTemplatePlaceholder.dto";
-import { GrowaasanTemplatePlaceholderCAND_SIGNUP_CANDIDATE, GrowaasanTemplatePlaceholderEMP_SIGNUP_EMP } from "../dtos/GrowaasanTemplatePlaceholder.dto";
-import { GrowaasanPhoneNumberDto } from '../dtos/Growaasan.dto';
 
 // Load the local dtos
 import { SubscriptionCreateRequestDTO } from '../dtos/Subscription.dto';
@@ -30,7 +27,8 @@ import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.
 import { UserType } from "../enums/User.enum";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { UserSubscriptionStatus, UserSubscriptionType } from "../enums/UserSubscription.enum";
-import { GrowaasanTemplateNameEnum } from '../enums/GrowaasanTemplate.enum';
+import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP } from '../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto';
+import { WhatsAppBusinessPartnerTemplateNameEnum } from '../enums/WhatsAppBusinessPartnerTemplate.enum';
 
 // Load the local model
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
@@ -42,7 +40,7 @@ import UserSubscriptionService from "./UserSubscription.service";
 import UserProfilePercentageService from "./UserProfilePercentage.service";
 
 // Load the local libraries
-import { growaasanLibraryObj } from '../libraries/Growaasan.library';
+import { whatsAppBusinessPartnerLibraryObj } from '../libraries/WhatsAppBusinessPartner.library';
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
@@ -166,26 +164,19 @@ class UserService {
       // Send welcome email // todo : review it to remove from here and use SQS to send email
       await this.sendEmailToCandWelcomeMessage(emailPlaceholders, toAddress);
 
-      // Placeholders for the growaasan whatsapp message
-      const growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_SIGNUP_CANDIDATE =
+      // Placeholders for the whatsapp message
+      const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE =
         {
           candidateName: candName.toTitleCase(),
         };
 
-        // Function responsible for sending a whatsapp message to the candidate using the "GROWAASAN API INTEGRATION"
-        await this.sendGrowaasanWelcomeWhatsappMessageToCand(
-          growaasanPlaceholders,
-          {
-            countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-            phoneNumber: parseInt(
-              userSignUpDTO.number.replace(
-                GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
-                ""
-              )
-            ),
-          },
-          candEmail
-        );
+      // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
+      await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+        WhatsAppBusinessPartnerTemplateNameEnum.CAND_SIGNUP_CANDIDATE,
+        userSignUpDTO.number.strtr({ "+": "" }), // To Phone Number
+        whatsAppBusinessPartnerPlaceholders,
+        candEmail
+      );
     } else if (userType === UserType.EMP) {
       // Prepare details required for sending the Email
       const empName: string = userSignUpDTO.name;
@@ -204,82 +195,19 @@ class UserService {
       await this.sendEmailToEmpWelcomeMessage(emailPlaceholders, toAddress);
 
       // Send welcome WhatsApp message
-      const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_SIGNUP_EMP =
+      const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP =
         {
           employeeName: empName.toTitleCase(),
         };
 
-        // Function responsible for sending a whatsapp message to the candidate
-        await this.sendGrowaasanWelcomeWhatsappMessageToEmp(
-          growaasanPlaceholders,
-          {
-            countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-            phoneNumber: parseInt(
-                userSignUpDTO.number.replace(
-                GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN, ''
-              )
-            ),
-          },
-          empEmail
-        );
+      // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
+      await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+        WhatsAppBusinessPartnerTemplateNameEnum.EMP_SIGNUP_EMP,
+        userSignUpDTO.number.strtr({ "+": "" }), // To Phone Number
+        whatsAppBusinessPartnerPlaceholders,
+        empEmail
+      );
     }
-
-    return true;
-  }
-
-  /**
-   * sendGrowaasanWelcomeWhatsappMessageToCand
-   *
-   * Sends a welcome WhatsApp message to a candidate using the Growaasan cloud API integration.
-   *
-   * This method sends a WhatsApp message to a candidate using the specified template, placeholders, and phone number.
-   * The method also logs the details of the message sent.
-   *
-   * @param {GrowaasanTemplatePlaceholderCAND_SIGNUP_CANDIDATE} placeholders - Placeholders for the message template.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number of the candidate to send the message to.
-   * @param {string} userEmail - The email of the candidate.
-   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
-   */
-  async sendGrowaasanWelcomeWhatsappMessageToCand(
-    placeholders: GrowaasanTemplatePlaceholderCAND_SIGNUP_CANDIDATE,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    userEmail: string
-  ): Promise<boolean> {
-    // Send welcome whatsapp message to the candidate using the "GROWAASAN API INTEGRATION"
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.CAND_SIGNUP_CANDIDATE,
-      userEmail,
-      toPhoneNumber,
-      placeholders
-    );
-
-    return true;
-  }
-
-  /**
-   * sendGrowaasanWelcomeWhatsappMessageToEmp
-   *
-   * Sends a welcome WhatsApp message to an employee using the Growaasan cloud API integration.
-   *
-   * This method sends a WhatsApp message to an employee using the specified template, placeholders, and phone number.
-   * The method also logs the details of the message sent.
-   *
-   * @param {GrowaasanTemplatePlaceholderEMP_SIGNUP_EMP} placeholders - Placeholders for the message template.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number of the employee to send the message to.
-   * @param {string} userEmail - The email of the employee.
-   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
-   */
-  async sendGrowaasanWelcomeWhatsappMessageToEmp(
-    placeholders: GrowaasanTemplatePlaceholderEMP_SIGNUP_EMP,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    userEmail: string
-  ): Promise<boolean> {
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.EMP_SIGNUP_EMP,
-      userEmail,
-      toPhoneNumber,
-      placeholders
-    );
 
     return true;
   }
