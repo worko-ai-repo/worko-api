@@ -44,9 +44,8 @@ class WhatsappTemplateController {
     res: Response,
     next: NextFunction
   ) => {
-    try {
-      // Extract user ID from the request's locals
-      const tokenUserId = res.locals.userId;
+    try {      // Extract user ID from the request's locals
+      const tokenUserId = global.requestLocalContext.userId;
 
       // Extract the request body as WhatsappTemplateRequestDtoApi
       const requestBody: WhatsappTemplateRequestDtoApi = req.body;

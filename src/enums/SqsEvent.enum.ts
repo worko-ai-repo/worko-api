@@ -31,4 +31,15 @@ export enum SqsMsgEventEnum {
   * `JOB_APPLICATION_VALIDATE_MATCHING_SCORE` event will be triggered and perform required process accordingly.
   */
  JOB_APPLICATION_VALIDATE_MATCHING_SCORE = "JOB_APPLICATION_VALIDATE_MATCHING_SCORE",
+
+ /**
+  * CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS
+  * 
+  * Event type for sending email and whatsapp notification for corporate bulk JD resume upload.
+  * 
+  * When corporate admin/recruiter or worko-admin upload a bulk resumes for a particular job description, 
+  * And after the process of matching is done, then this event will be triggered to send email and whatsapp notification
+  * to the candidate(Who is not registered user on worko).
+  */
+ CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION = "CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION"
 }

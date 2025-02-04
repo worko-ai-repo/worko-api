@@ -204,3 +204,22 @@ export interface EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_REJECTED_
   hrFeedback: string;
   workoAppUrl: string;
 }
+
+/**
+ * EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE
+ */
+export interface EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE {
+  candidateName: string;
+  companyName: string;
+  jobTitle: string;
+  matchingScore: number;
+}
+
+/**
+ * EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE
+ */
+export interface EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE {
+  candidateName: string;
+  companyName: string;
+  jobTitle: string;
+}

@@ -69,6 +69,15 @@ export interface ScheduleJobRefReviewAcceptanceStatusInputDto {
 }
 
 /**
+ * ScheduleJobCorporateBulkJdResumeNotificationsInput
+ * 
+ * This interface defines the structure of the data that can be used to create a schedule job for sending email and whatsapp notifications to bulk resumes candidates by corporate bulk jd id.
+ */
+export interface ScheduleJobCorporateBulkJdResumeNotificationsInputDto {
+  corporateBulkJdId: string;
+}
+
+/**
  * ScheduleJobUpdateDto
  *
  * This interface defines the structure of the data that can be used to update an existing schedule job.

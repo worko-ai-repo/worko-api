@@ -6,19 +6,32 @@
  */
 export enum ScheduleJobType {
   /**
+   * REFERRAL_REVIEW_ACCEPTANCE_STATUS
+   * 
    * @description Scheduled job type for reviewing the acceptance status of a referral. This job triggers checks to ensure that the acceptance or rejection of referrals is properly recorded and updated.
-  */
+   */
   REFERRAL_REVIEW_ACCEPTANCE_STATUS = "REFERRAL_REVIEW_ACCEPTANCE_STATUS",
 
   /**
+   * REFERRAL_DONE_STATUS_REMINDER
+   * 
    * @description Scheduled job type for sending reminder emails to users, reminding them to done a referral. This ensures that pending referral requests are not overlooked in accepted state , it reminds employee to done the referral .
-  */
+   */
   REFERRAL_DONE_STATUS_REMINDER = "REFERRAL_DONE_STATUS_REMINDER",
 
   /**
+   * EMP_WORK_EMAIL_VERIFICATION_REMINDER
+   * 
    * @description Scheduled job type for sending WhatsApp reminders to employers to verify their work email. This job ensures that employers complete their email verification, which is crucial for maintaining account authenticity.
    */
-  EMP_WORK_EMAIL_VERIFICATION_REMINDER = "EMP_WORK_EMAIL_VERIFICATION_REMINDER"
+  EMP_WORK_EMAIL_VERIFICATION_REMINDER = "EMP_WORK_EMAIL_VERIFICATION_REMINDER",
+
+  /**
+   * CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS
+   * 
+   * @description Scheduled job type for sending email and WhatsApp notifications to bulk resumes candidates by corporate bulk jd id.
+   */
+  CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS = "CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS",
 }
 
 /**

@@ -52,7 +52,7 @@ class EventController {
       const userEmail = userReferralDetails[0].PK.split("#")[2];
 
       // Update the status of the referral based on low matching score
-      if (userReferralMatchingScore < APP_CONSTANTS.REFERRAL_MINIMUM_MATCHING_SCORE) {
+      if (userReferralMatchingScore <= APP_CONSTANTS.MATCHING_SCORES.REFERRAL_MINIMUM_MATCHING_SCORE) {
         await UserReferralService.updateStatus(
           referralId,
           userEmail,

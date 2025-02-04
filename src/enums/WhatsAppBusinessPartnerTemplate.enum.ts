@@ -151,4 +151,22 @@ export enum WhatsAppBusinessPartnerTemplateNameEnum {
    * It sends a WhatsApp notification to the candidate via the WhatsAppBusinessPartner platform.
    */
   CAND_MESSAGE_RECEIVED_CANDIDATE = "message_received_candidate",
+
+  /**
+   * cand_corporate_bulk_jd_resume_high_matching_scoring
+   *
+   * The template, named `cand_corporate_bulk_jd_resume_high_matching_score`, is used to notify the candidate
+   * whenever a corporate user screens a job description for bulk resumes of candidates for high matching scores.
+   * It sends a WhatsApp notification to the candidate via the WhatsAppBusinessPartner platform.
+   */
+  CAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE = "cand_corporate_bulk_jd_resume_high_matching_scoring",
+
+  /**
+   * cand_corporate_bulk_jd_resume_low_matching_score
+   *
+   * The template, named `cand_corporate_bulk_jd_resume_low_matching_score`, is used to notify the candidate
+   * whenever a corporate user screens a job description for bulk resumes of candidates for low matching scores.
+   * It sends a WhatsApp notification to the candidate via the WhatsAppBusinessPartner platform.
+   */
+  CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE = "cand_corporate_bulk_jd_resume_low_matching_score",
 }

@@ -271,3 +271,30 @@ export interface WhatsAppBusinessPartnerTemplatePlaceholderEMP_PENDING_WORK_EMAI
    */
   employeeName: string;
 }
+
+/**
+ * WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE
+ * 
+ * Placeholder for the candidate corporate bulk JD resume high matching score template.
+ * 
+ * ## NOTE: The placeholders should be in the same vertical order as they appear in the template
+ */
+export interface WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE {
+  candidateName: string;
+  jobTitle: string;
+  companyName: string;
+  matchingScore: string;
+}
+
+/**
+ * WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE
+ * 
+ * Placeholder for the candidate corporate bulk JD resume low matching score template.
+ * 
+ * ## NOTE: The placeholders should be in the same vertical order as they appear in the template
+ */
+export interface WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE {
+  candidateName: string;
+  companyName: string;
+  jobTitle: string;
+}

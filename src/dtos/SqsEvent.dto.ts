@@ -39,6 +39,20 @@ export interface SqsMsgBaseReqDto {
  } 
 
  /**
+  * Interface for SQS message request DTO related to corporate bulk JD resume send email and whatsapp notification.
+  * 
+  * NOTE: `userId` and `userEmail` attributes are recieved as empty strings.
+  * 
+  * @todo: Need to optimize `SqsMsgBaseReqDto` interface
+  * @see `CorporateBulkJdResume.dao.ts` - For PK and SK details
+  */
+ export interface SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto extends SqsMsgBaseReqDto {
+    context: {
+        corporateBulkJdResumeId: string; // Refer `CorporateBulkJdResume.model.ts`
+    };
+ }
+
+ /**
  * Interface for SQS message request DTO related to reviewing referral acceptance status.
  * 
  * Extends the `SqsMsgBaseReqDto` interface.

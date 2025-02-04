@@ -154,7 +154,9 @@ class CorporateBulkJdResumeController {
         );
 
       // Send the fetched result as JSON response
-      return res.status(HttpStatusCode.OK_200).json(corporateBulkJdResumeByIdDetails);
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json(corporateBulkJdResumeByIdDetails);
     } catch (error) {
       next(error);
     }
@@ -199,7 +201,8 @@ class CorporateBulkJdResumeController {
 
       // Extract the cognito User Id and cognito User Groups from the request context
       const cognitoUserId: string = global.requestLocalContext.userId;
-      const cognitoUserGroups: string[] = global.requestLocalContext.cognitoUserGroups;
+      const cognitoUserGroups: string[] =
+        global.requestLocalContext.cognitoUserGroups;
 
       let createdByUserId: string | undefined;
       let createdByCorporateUserId: string | undefined;
@@ -234,7 +237,7 @@ class CorporateBulkJdResumeController {
           corporateBulkJdId,
           requestBody,
           createdByUserId,
-          createdByCorporateUserId,
+          createdByCorporateUserId
         );
 
       // return the response

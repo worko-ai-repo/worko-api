@@ -8,6 +8,9 @@ const APP_CONSTANTS = {
   // Application default timezone
   APP_DEFAULT_TIMEZONE: process.env.TZ ?? "GMT",
 
+  // Application stage
+  APP_SLS_STAGE: process.env.APP_SLS_STAGE,
+
   // The stages/environments supported by the application.
   STAGES: {
     LOCAL: "local",
@@ -164,19 +167,32 @@ const APP_CONSTANTS = {
   },
 
   /**
-   * REFERRAL_MINIMUM_MATCHING_SCORE
-   *
-   * Required constants for Referral score as matching score
+   * MATCHING_SCORES
    */
-  REFERRAL_MINIMUM_MATCHING_SCORE: 70,
+  MATCHING_SCORES: {
+    /**
+     * REFERRAL_MINIMUM_MATCHING_SCORE
+     *
+     * Required constants for Referral score as matching score
+     */
+    REFERRAL_MINIMUM_MATCHING_SCORE: 70,
 
-  /**
-   * JOB_APPLICATION_MINIMUM_MATCHING_SCORE
-   *
-   * Whenever a candidate applies a job from mini-job portal, this is the minimum matching score required for
-   * the job to be applied.
-   */
-  JOB_APPLICATION_MINIMUM_MATCHING_SCORE: 70,
+    /**
+     * JOB_APPLICATION_MINIMUM_MATCHING_SCORE
+     *
+     * Whenever a candidate applies a job from mini-job portal, this is the minimum matching score required for
+     * the job to be applied.
+     */
+    JOB_APPLICATION_MINIMUM_MATCHING_SCORE: 70,
+
+    /**
+     * CORPORATE_BULK_JD_RESUME_MINIMUM_MATCHING_SCORE
+     * 
+     * Whenever the corporate admin/recruiter uploads resumes for a particular job description, this is the minimum matching score required for
+     * the candidate to be selected.
+     */
+    CORPORATE_BULK_JD_RESUME_MINIMUM_MATCHING_SCORE: 70,
+  },
 
   /**
    * REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS
@@ -188,9 +204,29 @@ const APP_CONSTANTS = {
     const PROD_HOURS = 7 * 24; // 7 days converted to hours
     const DEV_HOURS = 45 / 60; // 45 minutes converted to hours
     // return the time based on the environment
-    return process.env.APP_SLS_STAGE === this.STAGES.PROD
+    return this.APP_SLS_STAGE === this.STAGES.PROD
       ? PROD_HOURS
       : DEV_HOURS;
+  },
+
+  /**
+   * CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS_AFTER_X_MINUTES
+   *
+   * This is the number of minutes after which the email and whatsapp notifications will be sent
+   * to the candidates for bulk resumes upload by particular job description.
+   *
+   * The time is different in prod and dev environments.
+   * In prod, the time is 10 minutes.
+   * In dev, the time is 10 minutes.
+   */
+  get CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS_AFTER_X_MINUTES(): number {
+    const PROD_MINUTES = 10; // 10 minutes
+    const DEV_MINUTES = 5; // 5 minutes
+
+    // return the time based on the environment
+    return this.APP_SLS_STAGE === this.STAGES.PROD
+      ? PROD_MINUTES
+      : DEV_MINUTES;
   },
 
   /**
@@ -216,7 +252,7 @@ const APP_CONSTANTS = {
     const DEV_DAYS = 1; // 1 day
 
     // return the time based on the environment
-    return process.env.APP_SLS_STAGE === this.STAGES.PROD
+    return this.APP_SLS_STAGE === this.STAGES.PROD
       ? PROD_DAYS
       : DEV_DAYS;
   },

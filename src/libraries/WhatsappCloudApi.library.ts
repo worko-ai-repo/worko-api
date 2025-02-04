@@ -22,11 +22,11 @@ import { WhatsappMessagingApiTypeCloudApiEnum } from "../enums/WhatsappTemplate.
  * for managing message templates and sending template messages.
  */
 class WhatsappCloudApiLibrary {
-  private baseUrl: string;
-  private apiVersion: string;
-  private accessToken: string;
-  private fromPhoneNumberId: string;
-  private whatsappBusinesssAccountId: string;
+  private readonly baseUrl: string;
+  private readonly apiVersion: string;
+  private readonly accessToken: string;
+  private readonly fromPhoneNumberId: string;
+  private readonly whatsappBusinesssAccountId: string;
 
   /**
    * Initializes a new instance of the WhatsappCloudApiLibrary.

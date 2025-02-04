@@ -9,27 +9,24 @@
 ## WhatsAppBusinessPartner API Integration Details
 
 ### WhatsAppBusinessPartner API Docs link:
-
-https://workoai-my.sharepoint.com/:x:/g/personal/arup_worko_ai/EW7jsvVVndpGgaple3dJmkQBYGn-IUEydGZxWMtBjt5Afw?e=WvDuDE
+(https://workoai-my.sharepoint.com/:x:/g/personal/arup_worko_ai/EW7jsvVVndpGgaple3dJmkQBYGn-IUEydGZxWMtBjt5Afw?e=WvDuDE)
 
 ### WhatsAppBusinessPartner API file:
-
-- Location: `WhatsAppBusinessPartner.library.ts `
+- Location: `WhatsAppBusinessPartner.library.ts`
 
 ### WhatsAppBusinessPartner Template Names file:
-
 - Location: `WhatsAppBusinessPartnerTemplate.enum.ts`
 
-### Meta Dashboard Sync:
-
-1. Create templates in the Meta dashboard. (https://developers.facebook.com/)
-2. Go to the WhatsAppBusinessPartner platform and click the **Sync Template** button.
-   - This will automatically sync the templates from Meta to the WhatsAppBusinessPartner platform.
-
 ## Meta Login Credentials:
-
 - **Username**: `jeetesh87@gmail.com`
 - **Password**: `Syzyge@1961`
+
+```sh
+(https://business.facebook.com/latest/settings/whatsapp_account?business_id=771967581410913&selected_asset_id=497617343443104&selected_asset_type=whatsapp-business-account)
+Worko
+ID: 497617343443104
+Owned by: Worko
+```
 
 ```sh
 # Account Setup Details

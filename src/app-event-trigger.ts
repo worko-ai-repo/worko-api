@@ -14,6 +14,7 @@ import DBConfig from "./db/DB.config";
 // Import local DTOs
 import {
   SqsMsgBaseReqDto,
+  SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto,
   SqsMsgJobApplicationValidationMatchingScoreReqDto,
   SqsMsgReferralValidationMatchingScoreReqDto,
   SqsMsgReviewReferralAcceptanceStatusReqDto,
@@ -26,6 +27,7 @@ import { SqsMsgEventEnum } from "./enums/SqsEvent.enum";
 import UserReferralService from "./services/UserReferral.service";
 import UserDetailService from "./services/UserDetail.service";
 import { userJobApplicationServiceObj } from "./services/UserJobApplication.service";
+import { corporateBulkJdResumeServiceObj } from "./services/CorporateBulkJdResume.service";
 
 // Import utils
 import { BaseError } from "./utils/errors.util";
@@ -274,6 +276,87 @@ const validateUserJobApplicationMatchingScore = async (
 };
 
 /**
+ * corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate
+ *
+ * Sends email and WhatsApp notification to candidate based on their resume matching score
+ * for a specific corporate bulk job description.
+ * 
+ * When corporate admin/recruiter or worko-admin upload a bulk resumes for a particular job description, 
+ * And after the process of matching is done, then this event will be triggered to send email and whatsapp notification
+ * to the candidate(Who is not regeistered user on worko).
+ *
+ * @param {SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto} message - The SQS message payload containing the corporate bulk job description resume ID and user details
+ * @param {SQSEvent} event - The SQS event object
+ * @param {Context} context - The AWS Lambda context object
+ * @returns {Promise<object>} The response object
+ */
+const corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate = async (
+  message: SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto,
+  event: SQSEvent,
+  context: Context
+): Promise<object> => {
+  try {
+    global.logger.debug(
+      `Details of sqs event for send email and whatsapp message to candidate(Who is not registered user) [SQS Handler]: `,
+      {
+        filePath: __filename,
+        methodName: "corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate",
+        message: message,
+        event: event,
+        context: context,
+      }
+    );
+
+    // Retrieve the necessary information from the message
+    const { corporateBulkJdResumeId } = message.context;
+
+    // Send email and whatsapp message to candidate
+    const isEmailAndWhatsappSentToBulkCvCandidate: boolean =
+      await corporateBulkJdResumeServiceObj.corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate(
+        corporateBulkJdResumeId
+      );
+
+    global.logger.debug(
+      `Details of send email and whatsapp message to candidate after triggering send email and whatsapp libraries: `,
+      {
+        filePath: __filename,
+        methodName:
+          "corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate",
+        isEmailAndWhatsappSentToBulkCvCandidate:
+          isEmailAndWhatsappSentToBulkCvCandidate,
+      }
+    );
+
+    // Return success response if message was successful
+    if (isEmailAndWhatsappSentToBulkCvCandidate) {
+      global.logger.info(
+        `Email and whatsapp message to candidate sent successfully.`,
+        {
+          filePath: __filename,
+          methodName:
+            "corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate",
+          corporateBulkJdResumeId,
+        }
+      );
+
+      return sendSuccessResponse(
+        HttpStatusCode.OK_200,
+        "Email and whatsapp message to candidate sent successfully."
+      );
+    } else {
+      // Throw custom error if validation failed
+      throw new BaseError(
+        `Unable to send email and whatsapp message to candidate".`,
+        HttpStatusCode.BAD_REQUEST_400
+      );
+    }
+  } catch (error: any) {
+    // Return error response if validation failed
+    return sendErrResponse(error, error?.errorMsg ?? error?.message);
+  }
+}
+
+/**
  * Reviews the referral acceptance status after 5 days and rejects it if still in "awaiting" status.
  *
  * @param {SqsMsgReviewReferralAcceptanceStatusReqDto} message - The SQS message payload containing the referral ID and user email
@@ -367,6 +450,7 @@ export const handler = async (
     global.logger.info("App event trigger: parsedMessage and messageEvent: ", {
       filePath: __filename,
       methodName: "handler",
+      parsedMessageBody: parsedMessageBody,
       parsedMessage: parsedMessage,
       messageEvent: messageEvent,
     });
@@ -393,8 +477,14 @@ export const handler = async (
         event,
         context
       );
+    } else if (messageEvent === SqsMsgEventEnum.CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION) {
+      return corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate(
+        parsedMessage as SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto,
+        event,
+        context
+      );
     }
-
+      
     // Throw error if event type is invalid
     throw new Error(
       `The provided event ${messageEvent} is invalid, therefore it cannot be processed.`

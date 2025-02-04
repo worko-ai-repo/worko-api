@@ -168,6 +168,27 @@ class CorporateBulkJdService {
 
     return corporateBulkJdDetails[0];
   }
+    
+  /**
+   * getCorporateBulkJdByIdQueryResponse
+   *
+   * Retrieves a corporate bulk job description by its unique identifier and returns the raw query response.
+   *
+   * @param {string} corporateBulkJdId - The unique identifier of the corporate bulk job description.
+   * @returns {Promise<QueryResponse<DbCorporateBulkJdDto>>} - A promise that resolves to the query response containing the job description details.
+   */
+  async getCorporateBulkJdByIdQueryResponse(
+    corporateBulkJdId: string
+  ): Promise<QueryResponse<DbCorporateBulkJdDto>> {
+    // logger
+    global.logger.info("Get Corporate Bulk Job Description by id Query Response [Service]", {
+      filePath: __filename,
+      methodName: this.getCorporateBulkJdById.name,
+      corporateBulkJdId: corporateBulkJdId,
+    });
+
+    return corporateBulkJdDaoObj.getCorporateBulkJdById(corporateBulkJdId);
+  }
 
   /**
    * updateCorporateBulkJdByPkAndSk

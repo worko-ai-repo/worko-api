@@ -885,7 +885,7 @@ class UserJobApplicationService {
     const matchingScore: number = jobApplicationDetails.matchingScore;
 
     // Update job application status to `REJECTED` if matching score is less than the specified value in `APP_CONSTANTS`
-    if (matchingScore < APP_CONSTANTS.JOB_APPLICATION_MINIMUM_MATCHING_SCORE) {
+    if (matchingScore <= APP_CONSTANTS.MATCHING_SCORES.JOB_APPLICATION_MINIMUM_MATCHING_SCORE) {
       await userJobApplicationDao.updateJobApplicationStatus(
         jobApplicationDetails.PK,
         jobApplicationDetails.SK,
