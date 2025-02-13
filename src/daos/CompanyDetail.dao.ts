@@ -1,5 +1,4 @@
 // Import necessary types from dynamoose library
-import { AnyItem } from "dynamoose/dist/Item";
 import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 //Load the base dao
@@ -12,7 +11,11 @@ import { SortOrderTypeEnum } from "../enums/Common.enum";
 import { CompanyDetailModel, DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
 
 //Load the local dtos
-import { CompanyDTO, CompanyListingFilterOptions } from "../dtos/Company.dto";
+import { CompanyDTO, CompanyListingFilterOptions, CompanyUpdateDto } from "../dtos/Company.dto";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
+
+// Load the local helpers
+import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
 
 //Load UlidService for generating ULID IDs
 import UlidService from "../services/Ulid.service";
@@ -57,43 +60,43 @@ class CompanyDetailDao implements BaseDao {
   }
 
   /**
-   * Retrieve a list of companies based on filter options, with pagination support.
-   * @param filterOptions Filter options for querying companies.
-   * @returns A list of companies based on the provided filter options.
+   * getCompanyList
+   *
+   * Retrieves a list of companies based on the provided filter options.
+   *
+   * @param {CompanyListingFilterOptions} filterOptions - The filter options to apply to the query.
+   * @returns {Promise<PaginatedResultsWithMatchingConditionsResponse<DbCompanyDetailDto>>} A promise that resolves with the paginated results containing the company details that match the filter options.
    */
-  async companyList(filterOptions: CompanyListingFilterOptions):Promise<QueryResponse<AnyItem>> {
-    console.log(filterOptions); // Log the filter options for debugging
+  async companyList(
+    filterOptions: CompanyListingFilterOptions
+  ): Promise<
+    PaginatedResultsWithMatchingConditionsResponse<DbCompanyDetailDto>
+  > {
+    // Log the action of fetching company details in the dao
+    global.logger.info("Get all company details [dao]", {
+      filePath: __filename,
+      methodName: this.companyList.name,
+    });
 
-    // Define attributes to include in the query result
-    const attributesToInclude = [
-      "GSI1PK",
-      "GSI1SK",
-      "name",
-      "teamSize",
-      "SK",
-      "industry",
-      "linkedIn",
-      "logoUrl",
-      "carrierPage",
-      "logo",
-      "isVerified",
-    ];
-
-    let query: Query<AnyItem>;
+    let query: Query<DbCompanyDetailDto>;
     query = CompanyDetailModel.query("PK")
-    .eq(this.partitianKey)
-    .sort(filterOptions.sortOrder 
-      ?? SortOrderTypeEnum.DESCENDING);
+      .eq(this.partitianKey)
+      .where("SK")
+      .beginsWith(
+        this.sortKeys.SK_INIT.strtr({
+          "{companyId}": "",
+        })
+      )
+      .where("isDeleted")
+      .not()
+      .eq(true) // Note: In near future, the value may be dynamic
+      .sort(filterOptions.sortOrder ?? SortOrderTypeEnum.DESCENDING);
 
     // Construct the query based on filter options
     if (filterOptions.companyName) {
       // If company name filter is provided, construct a query to search for companies by name
-      let companyName = filterOptions.companyName.toUpperCase();
+      let companyName: string = filterOptions.companyName.toUpperCase();
       query = query.where("name").contains(companyName);
-      query = query.attributes(attributesToInclude);
-
-      // Execute the query without pagination and return all the results for companyName
-      return query.exec();
     }
 
     // search for industry name if provided.
@@ -113,7 +116,7 @@ class CompanyDetailDao implements BaseDao {
       query = query.and().parenthesis((condition) => {
         let subCondition = condition;
 
-        // Iterate through each industry term 
+        // Iterate through each industry term
         industryTerms.forEach((term, index) => {
           if (index === 0) {
             // For the first term, start the condition chain
@@ -146,7 +149,10 @@ class CompanyDetailDao implements BaseDao {
     }
 
     // Add isVerified filter if provided
-    if (filterOptions.isVerified !== undefined && filterOptions.isVerified !== null) {
+    if (
+      filterOptions.isVerified !== undefined &&
+      filterOptions.isVerified !== null
+    ) {
       if (filterOptions.isVerified === 1) {
         query = query.where("isVerified").eq(true);
       } else if (filterOptions.isVerified === 0) {
@@ -154,31 +160,87 @@ class CompanyDetailDao implements BaseDao {
       }
     }
 
-    // Include specified attributes in the query result
-    query = query.attributes(attributesToInclude);
-
-    // If any filter is applied, execute the query without pagination
-    if (
-      filterOptions.companyName ||
-      filterOptions.industryName ||
-      filterOptions.teamSize
-    ) {
-      return query.exec();
+    // Apply date range filter if provided
+    if (filterOptions.fromDate || filterOptions.toDate) {
+      query = query.and().parenthesis((condition) => {
+        if (filterOptions.fromDate) {
+          condition.where("createdAt").ge(filterOptions.fromDate);
+        }
+        if (filterOptions.toDate) {
+          condition.where("createdAt").le(filterOptions.toDate);
+        }
+        return condition;
+      });
     }
 
-    // If no filter is applied, apply pagination
-    if (filterOptions.lastKey) {
-      // Start the query from the lastKey to retrieve subsequent pages
-      query = query.startAt(filterOptions.lastKey);
-    }
-    // If no filter is applied, apply pagination
-    if (filterOptions.pageSize) {
-      query = query.limit(filterOptions.pageSize);
+    // search by searchText if provided
+    if (filterOptions.searchText) {
+      // remove trailing and leading spaces from the search text
+      let searchTextValue = filterOptions.searchText;
+
+      /* 
+      The and() method initiates a condition block where all conditions within it must be satisfied.
+      The parenthesis() method allows grouping of conditions for complex queries.
+      */
+      query = query.and().parenthesis((condition) => {
+        condition
+        .where("name")
+        .contains(searchTextValue.toUpperCase())
+        .or()
+        .where("industry")
+        .contains(searchTextValue.toLowerCase())
+
+        // Return the built condition
+        return condition;
+      });
     }
 
-    // Execute the query by applying sort order 
-    // return query.sort(filterOptions.sortOrder ?? SortOrderTypeEnum.DESCENDING).exec();
-    return query.exec();
+    // Execute the query by applying the paginateQuery helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbCompanyDetailDto,
+      CompanyListingFilterOptions
+    >(query, filterOptions);
+  }
+
+  /**
+   * deleteCompany
+   * 
+   * Deletes a company from the database.
+   *
+   * @param {DbCompanyDetailDto} companyDetails - The company details to be deleted.
+   * @returns {Promise<void>} A promise that resolves when the company is deleted.
+   */
+  async deleteCompany(companyDetails: DbCompanyDetailDto): Promise<void> {
+    global.logger.info(`Delete Company Details [DAO]`, {
+      filePath: __filename,
+      methodName: this.deleteCompany.name,
+      PK: companyDetails.PK,
+      SK: companyDetails.SK,
+    });
+
+    // delete company details
+    return companyDetails.delete();
+  }
+
+  /**
+   * softDeleteCompanyByPkAndSk
+   *
+   * Soft deletes a company by updating the `isDeleted` field to true based on 
+   * the provided primary key and sort key.
+   *
+   * @param {string} PK - The primary key of the company to be soft deleted.
+   * @param {string} SK - The sort key of the company to be soft deleted.
+   * @returns {Promise<DbCompanyDetailDto>} A promise that resolves with the updated company details.
+   */
+  async softDeleteCompanyByPkAndSk(PK: string, SK: string): Promise<DbCompanyDetailDto> {
+    global.logger.info(`Soft Delete Company Details [DAO]`, {
+      filePath: __filename,
+      methodName: this.softDeleteCompanyByPkAndSk.name,
+      PK: PK,
+      SK: SK,
+    });
+
+    return CompanyDetailModel.update({ PK: PK, SK: SK }, { isDeleted: true });
   }
 
   /**
@@ -199,12 +261,14 @@ class CompanyDetailDao implements BaseDao {
   }
 
   /**
+   * getByBeginsith
    *
-   * Get a list of specific company name and SK
+   * Retrieves a list of existing companies that have names starting with the given string.
    *
-   * @param beginsWith
+   * @param {string} beginsWith - The prefix of the company name to search.
+   * @returns {Promise<QueryResponse<DbCompanyDetailDto>>} A promise that resolves with the query response containing the company details that match the prefix.
    */
-  async getByBeginsith(beginsWith: string) {
+  async getByBeginsith(beginsWith: string): Promise<QueryResponse<DbCompanyDetailDto>> {
     return CompanyDetailModel.query("PK")
       .eq(this.partitianKey)
       .where("name")
@@ -221,12 +285,16 @@ class CompanyDetailDao implements BaseDao {
   }
 
   /**
+   * add
    *
-   * Add a company based on provided DTO
+   * Creates a new company with the provided details.
    *
-   * @param companyDto
+   * @param companyDto - Data for the Company to be created.
+   * @returns {Promise<DbCompanyDetailDto>} - Return the type of DbCompanyDetailDto Response.
+   *
+   * @see {CompanyDetailModel} - The model used to interact with the database
    */
-  async add(companyDto: CompanyDTO) {
+  async add(companyDto: CompanyDTO): Promise<DbCompanyDetailDto> {
     // Generate ULID id for company
     let id = UlidService.getUlidId();
 
@@ -255,14 +323,32 @@ class CompanyDetailDao implements BaseDao {
     return CompanyDetailModel.create(newCompanyDto);
   }
 
-  async update(companyDto: CompanyDTO, companyId: string) {
+  /**
+   * update
+   *
+   * Updates an existing company in the database using the provided company update DTO and company ID.
+   *
+   * @param {string} companyId - The ID of the company to be updated.
+   * @param {CompanyUpdateDto} companyUpdateDto - The data transfer object containing the updated details of the company.
+   * @returns {Promise<DbCompanyDetailDto>} A promise that resolves with the updated company details.
+   */
+  async update( companyId: string, companyUpdateDto: CompanyUpdateDto,): Promise<DbCompanyDetailDto> {
+    global.logger.info("Update company [dao]", {
+      filePath: __filename,
+      methodName: this.update.name,
+      companyId: companyId,
+      isVerified: companyUpdateDto.isVerified,
+    });
+
+    // Prepare the data required to update a company
     const updateCompanyDto = {
-      ...companyDto,
+      ...companyUpdateDto,
       id: companyId, // adding id if its not present
       GSI1PK: this.GSI1PK.strtr({
-        "{industryName}": companyDto.industry,
+        "{industryName}": companyUpdateDto.industry,
       }),
     };
+
     // Update the company with the above data
     return CompanyDetailModel.update(
       {

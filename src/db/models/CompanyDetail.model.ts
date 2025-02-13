@@ -7,9 +7,11 @@ import { BaseDbDto } from "./Base.model";
 
 // Declaring a class 'CompanyDetailsDbDto' that extends 'BaseDbDto' with specific properties for company details
 class DbCompanyDetailDto extends BaseDbDto {
+  // Ids
   id!: string;
   GSI1PK!: string;
   GSI1SK!: string;
+
   name!: string;
   industry!: string;
   teamSize!: number;
@@ -17,7 +19,10 @@ class DbCompanyDetailDto extends BaseDbDto {
   linkedIn!: string;
   logoUrl!: string;
   logo!:string;
+  aboutCompany?: string;
+  website?: string;
   isVerified!: boolean;
+  isDeleted?: boolean
 }
 
 // Creating a DynamoDB schema for the 'Company' model with specified attributes and their types
@@ -72,9 +77,22 @@ const CompanySchema = new dynamoose.Schema(
       type: String,
       required: false,
     },
+    aboutCompany: {
+      type: String,
+      required: false,
+    },
+    website: {
+      type: String,
+      required: false,
+    },
     isVerified: {
       type: Boolean,
       required: true
+    },
+    isDeleted: {
+      type: Boolean,
+      required: false,
+      default: false
     }
   },
   {
