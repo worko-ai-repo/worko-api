@@ -145,3 +145,10 @@ export interface UserSubscriptionDetailsUpdateDto {
   referralCount: number;
   expiryDate?: Date;
 }
+
+/**
+ * UserDetailSettingsCreateApiDTO
+ */
+export interface UserDetailSettingCreateApiDTO {
+  subscribedEmailId?: string;
+}

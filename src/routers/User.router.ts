@@ -24,6 +24,11 @@ UserRouter.post("/register/candidate", userController.createCandidate);
  */
 UserRouter.post("/register/employee", userController.createEmployee);
 
+/**
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserRouter.post("/settings", userController.createUserDetailSetting);
+
 // Get the user based on the provided query parameter
 // UserRouter.get("/:id", userController.getUserById);
 
@@ -33,6 +38,13 @@ UserRouter.post("/register/employee", userController.createEmployee);
  * @authorisedRoles ["admin", "loggedInUser"]
  */
 UserRouter.get("/:id/profile", userController.getUserProfileDetailById);
+
+/**
+ * Get the user basic details
+ * 
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserRouter.get("/basic-details", userController.getUserBasicDetails);
 
 /**
  * API to update the User's Last Accessed Dashboard

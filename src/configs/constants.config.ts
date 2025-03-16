@@ -123,8 +123,8 @@ const APP_CONSTANTS = {
   FRONTEND_URLS: {
     SUBS_PREMIUM_RENEW: "https://worko.ai/", // Previously "https://app.worko.ai/",
     SUBS_PREMIUM_UPGRADE: "https://worko.ai/", // Previously "https://app.worko.ai/",
-    CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/login`,
-    CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/signup/{token}`,
+    CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/auth/corporate/login`,
+    CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/auth/corporate/signup/{token}`,
     WORKO_LOGO_URL:
       "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
   },

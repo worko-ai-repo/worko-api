@@ -6,6 +6,7 @@ import { Request, Response, NextFunction } from "express";
 import {
   NewUserCandSignUpDTO,
   NewUserEmpSignUpDTO,
+  UserDetailSettingCreateApiDTO,
   UserEmployeeSignUpDTO,
   UserProfileResponse,
   UserSignUpDTO,
@@ -18,6 +19,7 @@ import { UserProfilePercentageDTO } from "../dtos/UserProfilePercentage.dto";
 // Load the local schema
 import {
   UserSignUpDTOValidation,
+  userDetailSettingsDTOValidation,
   userEmployeeSignUpDTOValidation,
   userlastAccessedDashDTOValidation,
   validateEmailField,
@@ -36,12 +38,15 @@ import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
-import { GroupingHelper } from "../helpers/grouping.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+
+// Import models
+import { DbUserDetailSettingDto } from "../db/models/UserDetailSetting.model";
+import { DbUserDetailDto } from "../db/models/UserDetail.model";
+import { DbUserSkillDto } from "../db/models/UserSkill.model";
+
 import { profilePercentageField } from "../configs/constants/UserProfilePercentage.constant";
 import InvokeLambdaService from "../services/InvokeLambda.service";
-import { EmailSourceDestinationAddress } from "../libraries/email.library";
-import { EmailTemplatePlaceholderCAND_WELCOME_MSG } from "../dtos/EmailTemplatePlaceholder.dto";
 
 /**
  * UserController
@@ -167,6 +172,40 @@ class UserController {
   };
 
   /**
+   * getUserBasicDetails
+   *
+   * Get the user basic details
+   *
+   * @param {Request} req
+   * @param {Response} res
+   * @param {NextFunction} next
+   */
+  getUserBasicDetails = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      global.logger.info("Get user basic details [controller]");
+
+      // Extract the userId from the response locals
+      const cognitoUserId: string = global.requestLocalContext.userId;
+
+      // Call the UserService to get user basic details
+      const userBasicDetails: Partial<DbUserDetailDto> &
+        Partial<DbUserSkillDto> = await UserService.getUserBasicDetails(
+        cognitoUserId
+      );
+
+      // Send successful response
+      return res.status(HttpStatusCode.OK_200).json(userBasicDetails);
+    } catch (error: any) {
+      // If it's another type of error, pass it to the next error handler
+      next(error);
+    }
+  };
+
+  /**
    * updateLastAccessedDash
    *
    * Update user's lastAccessedDash based on the provided query parameters
@@ -221,23 +260,23 @@ class UserController {
   }
 
   /**
- * createCandidate
- *
- * Creates a new candidate user based on the provided input data. This function performs the following steps:
- * 1. Validates the input data using the UserSignUpDTOValidation schema.
- * 2. Checks if a user with the given email already exists.
- * 3. Prepares additional user data (social profile, user type, email list, etc.).
- * 4. Creates a new user in the database.
- * 5. Creates a social profile for the user.
- * 6. Initializes and updates the user's profile completion percentage.
- * 7. Triggers resume extraction if a CV is provided.
- *
- * @param {Request} req - Express request object containing user sign-up data in the body.
- * @param {Response} res - Express response object used to send back the API response.
- * @param {NextFunction} next - Express next function for error handling.
- * @throws {RequestValidationError} If the input data fails validation.
- * @throws {Error} Any other errors that occur during the process.
- */
+   * createCandidate
+   *
+   * Creates a new candidate user based on the provided input data. This function performs the following steps:
+   * 1. Validates the input data using the UserSignUpDTOValidation schema.
+   * 2. Checks if a user with the given email already exists.
+   * 3. Prepares additional user data (social profile, user type, email list, etc.).
+   * 4. Creates a new user in the database.
+   * 5. Creates a social profile for the user.
+   * 6. Initializes and updates the user's profile completion percentage.
+   * 7. Triggers resume extraction if a CV is provided.
+   *
+   * @param {Request} req - Express request object containing user sign-up data in the body.
+   * @param {Response} res - Express response object used to send back the API response.
+   * @param {NextFunction} next - Express next function for error handling.
+   * @throws {RequestValidationError} If the input data fails validation.
+   * @throws {Error} Any other errors that occur during the process.
+   */
   createCandidate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       global.logger.info("Create candidate [controller]");
@@ -451,13 +490,63 @@ createEmployee = async (req: Request, res: Response, next: NextFunction) => {
       userProfilePercentageDTO
     );
 
-    // Respond with the newly created user data
-    res.status(HttpStatusCode.CREATED_201).json(newUser);
-  } catch (error) {
-    // Any errors that occur (validation, database, etc.) are passed to the global error handler
-    next(error);
-  }
-};
+      // Respond with the newly created user data
+      res.status(HttpStatusCode.CREATED_201).json(newUser);
+    } catch (error) {
+      // Any errors that occur (validation, database, etc.) are passed to the global error handler
+      next(error);
+    }
+  };
+
+  /**
+   * createUserDetailSetting
+   *
+   * @param {Request} req - Express request object.
+   * @param {Response} res - Express response object.
+   * @param {NextFunction} next - Express next function for error handling.
+   * @throws {RequestValidationError} If the input data fails validation.
+   * @throws {BaseError} Any other errors that occur during the process.
+   */
+  createUserDetailSetting = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      // logger
+      global.logger.info(`Create User Detail Settings [controller]`, {
+        filePath: __filename,
+        methodName: this.createUserDetailSetting.name,
+      });
+
+      // Extract the userId from the response locals
+      const cognitoUserId: string = global.requestLocalContext.userId;
+
+      // Parse the user details
+      const userDetails: DbUserDetailDto = await UserService.getUserDetailsById(
+        cognitoUserId
+      );
+
+      // Extract and validate the job application data from request body and throw error if not valid
+      const reqBody: UserDetailSettingCreateApiDTO = req.body;
+      const { error: reqBodyError, value: validatedRequestBody } =
+        userDetailSettingsDTOValidation.validate(reqBody, {
+          abortEarly: false,
+        });
+      if (reqBodyError) {
+        throw new RequestValidationError(reqBodyError);
+      }
+
+      const userDetailSettings: DbUserDetailSettingDto = await UserService.createUserDetailSetting(
+        userDetails.PK.split("#")[2],
+        validatedRequestBody
+      );
+
+      return res.status(HttpStatusCode.CREATED_201).json(userDetailSettings);
+    } catch (error) {
+      next(error);
+    }
+  };
 
   /**
    *

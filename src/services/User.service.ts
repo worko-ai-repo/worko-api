@@ -1,6 +1,9 @@
 // Load the defaults
 import { DateTime } from 'luxon';
 
+// Import query response
+import { QueryResponse } from 'dynamoose/dist/ItemRetriever';
+
 // Load the local constants
 import APP_CONSTANTS from "../configs/constants.config";
 
@@ -20,7 +23,7 @@ import {
 
 // Load the local dtos
 import { SubscriptionCreateRequestDTO } from '../dtos/Subscription.dto';
-import { NewUserCandSignUpDTO, NewUserEmpSignUpDTO, UserSubscriptionDetailsUpdateDto } from "../dtos/User.dto";
+import { NewUserCandSignUpDTO, NewUserEmpSignUpDTO, UserDetailSettingCreateApiDTO, UserSubscriptionDetailsUpdateDto } from "../dtos/User.dto";
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 
 // Load the local enum
@@ -31,13 +34,17 @@ import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE, WhatsA
 import { WhatsAppBusinessPartnerTemplateNameEnum } from '../enums/WhatsAppBusinessPartnerTemplate.enum';
 
 // Load the local model
+import { DbUserDetailSettingDto } from '../db/models/UserDetailSetting.model';
+import { DbUserSkillDto } from '../db/models/UserSkill.model';
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
 
 // Load the local services
+import UserSkillService from './UserSkill.service';
 import UserDetailService from "./UserDetail.service";
 import MasterSubscriptionService from "./MasterSubscription.service";
 import UserSubscriptionService from "./UserSubscription.service";
 import UserProfilePercentageService from "./UserProfilePercentage.service";
+import { userDetailSettingServiceObj } from './UserDetailSetting.service';
 
 // Load the local libraries
 import { whatsAppBusinessPartnerLibraryObj } from '../libraries/WhatsAppBusinessPartner.library';
@@ -101,6 +108,28 @@ class UserService {
 
     // Create a new user in db
     return createdUser;
+  }
+
+  /**
+   * createUserDetailSetting
+   *
+   * @param {string} email
+   * @param {UserDetailSettingCreateApiDTO} validatedRequestBody
+   * @returns {Promise<DbUserDetailSettingDto>}
+   */
+  async createUserDetailSetting(
+    email: string,
+    validatedRequestBody: UserDetailSettingCreateApiDTO
+  ): Promise<DbUserDetailSettingDto> {
+    // logger
+    global.logger.info("Create user detail settings [service]", {
+      methodName: this.createUserDetailSetting.name,
+    });
+
+    return userDetailSettingServiceObj.createUserDetailSetting(
+      email,
+      validatedRequestBody
+    );
   }
 
   /**
@@ -901,6 +930,70 @@ class UserService {
       toAddress,
       emailPlaceholders
     );
+  }
+
+  /**
+   * getUserBasicDetails
+   *
+   * Retrieves the basic user details including skills. If the user is not found
+   * or the skills are not found, it logs an error.
+   *
+   * @param {string} userId - The ID of the user.
+   * @returns {Promise<Partial<DbUserDetailDto> & Partial<DbUserSkillDto>>} - A promise that resolves to the basic user details and skills.
+   */
+  async getUserBasicDetails(
+    userId: string
+  ): Promise<Partial<DbUserDetailDto> & Partial<DbUserSkillDto>> {
+    // logger
+    global.logger.debug(`Get user basic details [service]`, {
+      userId,
+    });
+
+    // Fetch user details and log error if not found
+    const userDetailsQueryResponse: QueryResponse<DbUserDetailDto> =
+      await UserDetailService.getUserBasicDetailsByUserId(userId);
+    if (!userDetailsQueryResponse.count) {
+      global.logger.error(`User not found [service]`, {
+        userId,
+      });
+    }
+
+    // Destructure the fetched user details
+    const userDetails: DbUserDetailDto = userDetailsQueryResponse[0];
+
+    // Fetch the skills of the user and log error if not found
+    const userSkillsQueryResponse: QueryResponse<Partial<DbUserSkillDto>> =
+      await UserSkillService.getUserSkillsByEmail(userDetails.PK.split("#")[2]);
+    if (!userSkillsQueryResponse.count) {
+      global.logger.error(`User skills not found [service]`, {
+        userId,
+      });
+    }
+
+    // Destructure the fetched user skills
+    const userSkills: Partial<DbUserSkillDto> = userSkillsQueryResponse[0];
+
+    const finalUserDetailsResponse: Partial<DbUserDetailDto> &
+      Partial<DbUserSkillDto> = {
+      ...userDetails,
+      ...userSkills,
+    };
+
+    return finalUserDetailsResponse;
+  }
+/**
+   * getUserDetailsById
+   *
+   * @param {string} userId
+   * @returns {Promise<DbUserDetailDto>}
+   */
+  async getUserDetailsById(userId: string): Promise<DbUserDetailDto> {
+    // logger
+    global.logger.info("Get user details by id [service]", {
+      userId,
+    });
+
+    return UserDetailService.getUserByIdOne(userId);
   }
 }
 

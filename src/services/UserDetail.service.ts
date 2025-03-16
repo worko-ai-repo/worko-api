@@ -185,6 +185,24 @@ class UserDetailService {
   }
 
   /**
+   * getUserBasicDetailsByUserId
+   *
+   * Retrieves basic user details by the user ID.
+   *
+   * @param {string} userId - The ID of the user.
+   * @returns {Promise<QueryResponse<DbUserDetailDto>>} A promise that resolves to the basic user details.
+   */
+  async getUserBasicDetailsByUserId(userId: string): Promise<QueryResponse<DbUserDetailDto>> {
+    global.logger.info("Get user basic details by userId [service]", {
+      filePath: __filename,
+      methodName: this.getUserBasicDetailsByUserId.name,
+      userId
+    });
+    
+    return userDetailDao.getUserBasicDetailsByUserId(userId);
+  }
+
+  /**
    * getUserByIds
    *
    * Retrieves user details for a list of user IDs.

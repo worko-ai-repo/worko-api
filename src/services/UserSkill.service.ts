@@ -1,8 +1,14 @@
 // Load the local daos
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
+// Import daos
 import userSkillDao from "../daos/UserSkill.dao";
 
 //Load the local dto
 import { UserSkillDTO } from "../dtos/UserSkill.dto";
+
+// Import models
+import { DbUserSkillDto } from "../db/models/UserSkill.model";
 
 /**
  * UserSkillService class is responsible for managing user Skill-related operations.
@@ -45,6 +51,27 @@ class UserSkillService {
     logger.info("Updating user Skill [UserSkillService]");
 
     return userSkillDao.update(email, userSkillDTO);
+  }
+
+  /**
+   * getUserSkillsByEmail
+   * 
+   * Retrieves user skills by email.
+   *
+   * @param {string} email - The email address of the user.
+   * @returns {Promise<QueryResponse<Partial<DbUserSkillDto>>> } - A promise that resolves to the query response containing the user's skills data.
+   */
+  async getUserSkillsByEmail(
+    email: string
+  ): Promise<QueryResponse<Partial<DbUserSkillDto>>>  {
+    // logger
+    global.logger.info("Fetching user Skill by email [UserSkillService]", {
+      filePath: __filename,
+      methodName: this.getUserSkillsByEmail.name,
+      email,
+    });
+
+    return userSkillDao.getUserSkillsByEmail(email);
   }
 }
 

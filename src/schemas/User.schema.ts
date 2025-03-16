@@ -158,3 +158,17 @@ export const userlastAccessedDashDTOValidation = Joi
           "any.required": "lastAccessedDash is required.", // Custom message for missing field
           "any.only": `lastAccessedDash must be one of the allowed values: CAND, EMP`, // Custom message for invalid values
       });
+
+/**
+ * userDetailSettingsDTOValidation
+ */
+export const userDetailSettingsDTOValidation = Joi.object({
+  subscribedEmailId: Joi
+  .string()
+  .email()
+  .optional()
+  .lowercase()
+  .messages({
+    "string.email": "Please provide a valid email address.",
+  }),
+});

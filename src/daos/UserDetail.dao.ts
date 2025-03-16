@@ -185,6 +185,50 @@ class UserDetailDao implements BaseDao {
   }
 
   /**
+   * getUserBasicDetailsByUserId
+   *
+   * Retrieves user details by user id, only the basic details will be returned.
+   *
+   * @param {string} userId - ID of the user
+   * @returns {Promise<QueryResponse<DbUserDetailDto>>} - Details of the user
+   */
+  async getUserBasicDetailsByUserId(
+    userId: string
+  ): Promise<QueryResponse<DbUserDetailDto>> {
+    global.logger.info("Get user basic details by userId [DAO]", {
+      filePath: __filename,
+      methodName: this.getUserBasicDetailsByUserId.name,
+      userId,
+    });
+
+    // Prepare the GSI1PK and GSI1SK values
+    const GSI1PK = this.GSI1PK;
+    const GSI1SK = this.GSI1SK.strtr({
+      "{userId}": userId,
+    });
+
+    // return user details
+    return UserDetailModel.query("GSI1PK")
+      .eq(GSI1PK)
+      .where("GSI1SK")
+      .eq(GSI1SK)
+      .attributes([
+        "PK",
+        "candidateExperience",
+        "isCandidateFresher",
+        "department",
+        "country",
+        "YOE",
+        "noticePeriod",
+        "ECTC",
+        "CTC",
+        "location",
+        "userType",
+      ])
+      .exec();
+  }
+
+  /**
    * Fetches user details based on the provided email.
    * @param email - Email address of the user
    * @returns User details corresponding to the email
