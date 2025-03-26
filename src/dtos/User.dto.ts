@@ -1,4 +1,4 @@
-import { UserType } from "../enums/User.enum";
+import { UserGuidanceRequestTypeEnum } from "../enums/User.enum";
 
 /**
  * Data required for user sign-up. Includes basic personal information,
@@ -151,4 +151,41 @@ export interface UserSubscriptionDetailsUpdateDto {
  */
 export interface UserDetailSettingCreateApiDTO {
   subscribedEmailId?: string;
+}
+
+/**
+ * UserGuidanceRequestCreateApiDTO
+ */
+export interface UserGuidanceRequestCreateApiDTO {
+  /**
+   * guidanceRequestType
+   */
+  guidanceRequestType: UserGuidanceRequestTypeEnum;
+
+  /**
+   * guidanceDeadlineDate
+   *
+   * @description By when you need the guidance
+   * @example `2025-01-27T11:26:06.458Z` 
+   */
+  guidanceRequestDeadline: string;
+
+  /**
+   * companyName
+   *
+   * @description Any company name is allowed
+   */
+  companyName: string;
+
+  /**
+   * jobUrl
+   *
+   * @description Any job url allowed
+   */
+  jobUrl: string;
+
+  /**
+   * guidanceRequestDescription
+   */
+  guidanceRequestDescription: string;
 }

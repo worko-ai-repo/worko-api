@@ -23,7 +23,7 @@ import {
 
 // Load the local dtos
 import { SubscriptionCreateRequestDTO } from '../dtos/Subscription.dto';
-import { NewUserCandSignUpDTO, NewUserEmpSignUpDTO, UserDetailSettingCreateApiDTO, UserSubscriptionDetailsUpdateDto } from "../dtos/User.dto";
+import { NewUserCandSignUpDTO, NewUserEmpSignUpDTO, UserDetailSettingCreateApiDTO, UserGuidanceRequestCreateApiDTO, UserSubscriptionDetailsUpdateDto } from "../dtos/User.dto";
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 
 // Load the local enum
@@ -33,10 +33,14 @@ import { UserSubscriptionStatus, UserSubscriptionType } from "../enums/UserSubsc
 import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP } from '../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto';
 import { WhatsAppBusinessPartnerTemplateNameEnum } from '../enums/WhatsAppBusinessPartnerTemplate.enum';
 
+// Load the local libraries
+import { whatsAppBusinessPartnerLibraryObj } from '../libraries/WhatsAppBusinessPartner.library';
+
 // Load the local model
 import { DbUserDetailSettingDto } from '../db/models/UserDetailSetting.model';
 import { DbUserSkillDto } from '../db/models/UserSkill.model';
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
+import { DbUserGuidanceRequestDto } from '../db/models/UserGuidanceRequest.model';
 
 // Load the local services
 import UserSkillService from './UserSkill.service';
@@ -45,9 +49,7 @@ import MasterSubscriptionService from "./MasterSubscription.service";
 import UserSubscriptionService from "./UserSubscription.service";
 import UserProfilePercentageService from "./UserProfilePercentage.service";
 import { userDetailSettingServiceObj } from './UserDetailSetting.service';
-
-// Load the local libraries
-import { whatsAppBusinessPartnerLibraryObj } from '../libraries/WhatsAppBusinessPartner.library';
+import { userGuidanceRequestServiceObj } from './UserGuidanceRequest.service';
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
@@ -128,6 +130,38 @@ class UserService {
 
     return userDetailSettingServiceObj.createUserDetailSetting(
       email,
+      validatedRequestBody
+    );
+  }
+
+  /**
+   * createUserGuidanceRequest
+   * 
+   * Creates a new user guidance request in the database
+   * 
+   * @param {string} cognitoUserId - the id of the user who is creating the request
+   * @param {string} email - the email of the user who is creating the request
+   * @param {string} userName - the name of the user who is creating the request
+   * @param {UserGuidanceRequestCreateApiDTO} validatedRequestBody - the data required to create the user guidance request
+   * @returns {Promise<DbUserGuidanceRequestDto>} - a promise that resolves to the newly created user guidance request
+   */
+  async createUserGuidanceRequest(
+    cognitoUserId: string,
+    email: string,
+    userName: string,
+    userPhoneNumber: string,
+    validatedRequestBody: UserGuidanceRequestCreateApiDTO
+  ): Promise<DbUserGuidanceRequestDto> {
+    // logger
+    global.logger.info("Create User Guidance Request [service]", {
+      methodName: this.createUserGuidanceRequest.name,
+    });
+
+    return userGuidanceRequestServiceObj.createUserGuidanceRequest(
+      cognitoUserId,
+      email,
+      userName,
+      userPhoneNumber,
       validatedRequestBody
     );
   }
@@ -981,7 +1015,7 @@ class UserService {
 
     return finalUserDetailsResponse;
   }
-/**
+  /**
    * getUserDetailsById
    *
    * @param {string} userId

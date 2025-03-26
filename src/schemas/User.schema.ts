@@ -1,4 +1,11 @@
+// Import joi 
 import Joi from "joi";
+
+// Import luxon
+import { DateTime } from "luxon";
+
+// Import enums
+import { UserGuidanceRequestTypeEnum } from "../enums/User.enum";
 
 export const UserSignUpDTOValidation = Joi.object({
   name: Joi.string()
@@ -170,5 +177,72 @@ export const userDetailSettingsDTOValidation = Joi.object({
   .lowercase()
   .messages({
     "string.email": "Please provide a valid email address.",
+  }),
+});
+
+/**
+ * userGuidanceRequestCreateApiDTOValidation
+ */
+export const userGuidanceRequestCreateApiDTOValidation = Joi.object({
+  guidanceRequestType: Joi.string()
+    .valid(...Object.values(UserGuidanceRequestTypeEnum)) // Ensure it matches the enum values
+    .required()
+    .messages({
+      "any.required": "The Guidance request type field is required.",
+      "string.valid": `The Guidance request type field must be one of: ${Object.values(
+        UserGuidanceRequestTypeEnum
+      ).join(", ")}.`,
+    }),
+
+  guidanceRequestDeadline: Joi.string()
+    .isoDate() // Ensures the string is in ISO 8601 date format
+    .required()
+    .custom((value, helpers) => {
+      /**
+       * @todo: We are anticipating that the `zone` parameter is auto set to `utc`, Please review whether
+       * it is auto set to `utc` or not, and if it is auto set to `utc`, then
+       * remove the `zone` parameter
+       */
+      const inputDate = DateTime.fromISO(value, { zone: "utc" });
+      const today = DateTime.utc().startOf("day"); // Get today's date (00:00:00 UTC)
+
+      if (!inputDate.isValid) {
+        return helpers.error("string.isoDate");
+      }
+
+      if (inputDate < today) {
+        return helpers.error("date.min", { min: today.toISO() });
+      }
+
+      return value;
+    })
+    .messages({
+      "string.isoDate":
+        "Please provide a valid ISO 8601 date (e.g., 2025-01-27T11:26:06.458Z).",
+      "any.required": "The Guidance request deadline field is required.",
+      "date.min":
+        "The guidance request deadline field must be today or a future date.",
+    }),
+
+  companyName: Joi.string().trim().uppercase().required().messages({
+    "any.required": "The Company name field is required.",
+    "string.empty": "The Company name field is required.",
+    "any.type": "The Company name field must be a string.",
+  }),
+
+  jobUrl: Joi.string()
+    .uri() // Ensures it is a valid URL
+    .required()
+    .messages({
+      "string.uri": "Please provide a valid job URL.",
+      "any.required": "The Job URL field is required.",
+      "string.empty": "The Job URL field cannot be empty.",
+      "any.type": "The Job URL field must be a string.",
+    }),
+
+  guidanceRequestDescription: Joi.string().trim().required().messages({
+    "any.required": "The Guidance request description field is required.",
+    "string.empty": "The Guidance request description field is required.",
+    "any.type": "The Guidance request description field must be a string.",
   }),
 });

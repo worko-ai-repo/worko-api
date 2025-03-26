@@ -223,3 +223,30 @@ export interface EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCH
   companyName: string;
   jobTitle: string;
 }
+
+/**
+ * EmailTemplatePlaceholder_USER_GUIDANCE_REQUEST
+ * 
+ * @emailTemplateName "USER_GUIDANCE_REQUEST"
+ */
+export interface EmailTemplatePlaceholder_USER_GUIDANCE_REQUEST {
+  /**
+   * @reference `userName` and `userPhoneNumber` are from `UserDetail.model.ts`
+   */
+  userName: string;
+  userPhoneNumber: string;
+
+  /**
+   * dateOfGuidanceRequest
+   *
+   * @description By when you need the guidance
+   * @format "d'th' MMMM yyyy"
+   */
+  dateOfGuidanceRequest: string;
+
+  companyName: string;
+
+  guidanceRequestType: string;
+  
+  jobUrl: string;
+}

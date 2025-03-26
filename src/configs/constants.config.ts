@@ -106,6 +106,10 @@ const APP_CONSTANTS = {
       email: "no-reply@worko.ai",
       fullName: "Worko.ai",
     },
+    GUIDANCE_EMAIL: {
+      email: "guidance@worko.ai",
+      fullName: "Worko.ai",
+    },
   },
 
   /**
@@ -271,9 +275,6 @@ const APP_CONSTANTS = {
 
   // Worko App Domain
   WORKO_APP_DOMAIN: "www.worko.ai.",
-
-  // Guidance Email
-  GUIDANCE_EMAIL: "guidance@worko.ai.",
 };
 
 export default APP_CONSTANTS;

@@ -356,7 +356,7 @@ class UserJobApplicationService {
             companyName: updatedJobApplication.companyName.toTitleCase(),
             jobTitle: updatedJobApplication.jobTitle.toTitleCase(),
             workoAppUrl: APP_CONSTANTS.WORKO_APP_DOMAIN,
-            guidanceEmail: APP_CONSTANTS.GUIDANCE_EMAIL,
+            guidanceEmail: APP_CONSTANTS.SOURCE_EMAIL_ADDRESS.GUIDANCE_EMAIL.email,
           };
 
         // Send email to the corporate user
@@ -374,7 +374,7 @@ class UserJobApplicationService {
             companyName: updatedJobApplication.companyName.toTitleCase(),
             jobTitle: updatedJobApplication.jobTitle.toTitleCase(),
             workoAppUrl: APP_CONSTANTS.WORKO_APP_DOMAIN,
-            guidanceEmail: APP_CONSTANTS.GUIDANCE_EMAIL,
+            guidanceEmail: APP_CONSTANTS.SOURCE_EMAIL_ADDRESS.GUIDANCE_EMAIL.email,
           };
 
         // Send email to the corporate user

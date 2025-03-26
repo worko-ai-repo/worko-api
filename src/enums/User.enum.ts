@@ -111,3 +111,46 @@ export enum UserCareerRequestStatusEnum {
   UNDER_CONSIDERATION = "UNDER_CONSIDERATION",
   HIRED = "HIRED",
 }
+
+
+/**
+ * UserGuidanceRequestTypeEnum
+ * 
+ * @reference `guidanceRequestType` attribute from `UserGuidanceRequest.model.ts`
+ */
+export enum UserGuidanceRequestTypeEnum {
+  /**
+   * WHAT_YOU_NEED_GUIDANCE_FOR
+   */
+  WHAT_YOU_NEED_GUIDANCE_FOR = "WHAT_YOU_NEED_GUIDANCE_FOR",
+
+  /**
+   * INTERVIEW_HAND_HOLDING
+   */
+  INTERVIEW_HAND_HOLDING = "INTERVIEW_HAND_HOLDING", // if this is selected the company name and jobUrl is mandatory
+
+  /**
+   * MOCK_INTERVIEW_PREPARATION
+   */
+  MOCK_INTERVIEW_PREPARATION = "MOCK_INTERVIEW_PREPARATION",
+
+  /**
+   * HELP_WITH_ASSIGNMENT
+   */
+  HELP_WITH_ASSIGNMENT = "HELP_WITH_ASSIGNMENT", // if this is selected the company name and jobUrl is mandatory
+
+  /**
+   * CAREER_GUIDANCE
+   */
+  CAREER_GUIDANCE = "CAREER_GUIDANCE",
+
+  /**
+   * RESUME_REVIEW
+   */
+  RESUME_REVIEW = "RESUME_REVIEW",
+
+  /**
+   * OTHER
+   */
+  OTHER = "OTHER",
+}

@@ -102,4 +102,11 @@ export enum EmailTemplateEnum {
      * The template name used whenever a corporate user screens a job description for bulk resumes of candidates for low matching scores.
      */
     CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE = "CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE",
+
+    /**
+     * USER_GUIDANCE_REQUEST
+     * 
+     * The template name used to send an email to "worko admin" and "candidate" when a candicate sends guidance request.
+     */
+    USER_GUIDANCE_REQUEST = "USER_GUIDANCE_REQUEST"
 }
