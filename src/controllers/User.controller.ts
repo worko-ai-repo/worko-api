@@ -2,6 +2,9 @@
 import { DateTime } from "luxon";
 import { Request, Response, NextFunction } from "express";
 
+// Import dynamoose types
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 // Load the local dtos
 import {
   NewUserCandSignUpDTO,
@@ -372,7 +375,7 @@ class UserController {
 
       // If a CV is provided, trigger asynchronous resume extraction
       if (userSignUpDto.CV) {
-        InvokeLambdaService.triggerResumeExtraction(userSignUpDto.email);
+        await InvokeLambdaService.triggerResumeExtraction(userSignUpDto.email);
       }
 
       // Respond with the newly created user data
@@ -696,8 +699,10 @@ class UserController {
         throw new RequestValidationError(error);
       }
 
-      const userCount = await UserService.getCount(email);
-      if (!userCount.count) {
+      // Check if user exists or not and throw error if not
+      const userDetails: QueryResponse<DbUserDetailDto> =
+        await UserDetailService.get(email);
+      if (!userDetails.count) {
         return res
           .status(HttpStatusCode.CONFLICT_409)
           .json({ error: "User Does Not Exist." });
@@ -717,10 +722,11 @@ class UserController {
         );
 
       UserProfilePercentageService.update(value, userProfilePercentageDTO);
-      // Trigger for Resume extraction
-      InvokeLambdaService.triggerResumeExtraction(email);
 
-      res.status(HttpStatusCode.OK_200).json(update);
+      // Trigger for Resume extraction
+      await InvokeLambdaService.triggerResumeExtraction(email);
+
+      return res.status(HttpStatusCode.OK_200).json(update);
     } catch (error) {
       // Handle errors
       // Pass the error to the next error handler

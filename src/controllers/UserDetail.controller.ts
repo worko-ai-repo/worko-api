@@ -306,9 +306,6 @@ class UserDetailController {
           filePath + "/" + userDetails[0].profileImage
         );
       }
-      if (userDetails[0].CV)
-        // trigger the resume extraction if cv is extracted
-        InvokeLambdaService.triggerResumeExtraction(email);
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json({
