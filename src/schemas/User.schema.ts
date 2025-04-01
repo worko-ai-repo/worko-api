@@ -230,6 +230,14 @@ export const userGuidanceRequestCreateApiDTOValidation = Joi.object({
     "any.type": "The Company name field must be a string.",
   }),
 
+  companyId: Joi
+    .string()
+    .trim()
+    .optional()
+    .messages({
+      "any.type": "The Company ID field must be a string.",
+    }),
+
   jobUrl: Joi.string()
     .uri() // Ensures it is a valid URL
     .required()

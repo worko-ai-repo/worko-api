@@ -18,6 +18,7 @@ import {
   SqsMsgJobApplicationValidationMatchingScoreReqDto,
   SqsMsgReferralValidationMatchingScoreReqDto,
   SqsMsgReviewReferralAcceptanceStatusReqDto,
+  SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto,
 } from "./dtos/SqsEvent.dto";
 
 // Import local Enums
@@ -355,6 +356,75 @@ const corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate = async (
     return sendErrResponse(error, error?.errorMsg ?? error?.message);
   }
 }
+/**
+ * sendWelcomeEmailAndWhatsappNotificationToUser
+ *
+ * This function is responsible for sending email and whatsapp message to user after verifying the user email.
+ *
+ * @param {SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto} message - The SQS message payload containing the user email.
+ * @param {SQSEvent} event - The SQS event object.
+ * @param {Context} context - The AWS Lambda context object.
+ * @returns {Promise<object>} The response object.
+ * @throws {BaseError} - Throws an error if the user details are not valid.
+ */
+const sendWelcomeEmailAndWhatsappNotificationToUser = async (
+  message: SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto,
+  event: SQSEvent,
+  context: Context
+): Promise<object> => {
+  try {
+    global.logger.debug(
+      `Details of sqs event for send welcome email and whatsapp message to user [SQS Handler]: `,
+      {
+        filePath: __filename,
+        methodName: "sendWelcomeEmailAndWhatsappNotificationToUser",
+        message: message,
+        event: event,
+        context: context,
+      }
+    );
+
+    const { userEmail } = message;
+
+    // Send welcome email and whatsapp message to candidate
+    const isEmailAndWhatsappSent: boolean = await UserDetailService.sendWelcomeEmailAndWhatsappNotificationToUser(userEmail);
+
+    global.logger.debug(
+      `Details of send email and whatsapp message to user after triggering send email and whatsapp libraries: `,
+      {
+        filePath: __filename,
+        methodName: "sendWelcomeEmailAndWhatsappNotificationToUser",
+        isEmailAndWhatsappSent: isEmailAndWhatsappSent,
+      }
+    );
+
+    // Return success response if message was successful
+    if (isEmailAndWhatsappSent) {
+      global.logger.info(
+        `Welcome Email and whatsapp message to user sent successfully.`,
+        {
+          filePath: __filename,
+          methodName: "sendWelcomeEmailAndWhatsappNotificationToUser",
+          userEmail,
+        }
+      );
+
+      return sendSuccessResponse(
+        HttpStatusCode.OK_200,
+        "Welcome Email and whatsapp message to user sent successfully."
+      );
+    } else {
+      // Throw custom error if validation failed
+      throw new BaseError(
+        `Unable to send welcome email and whatsapp message to user".`,
+        HttpStatusCode.BAD_REQUEST_400
+      );
+    }
+  } catch (error: any) {
+    // Return error response if validation failed
+    return sendErrResponse(error, error?.errorMsg ?? error?.message);
+  }
+};
 
 /**
  * Reviews the referral acceptance status after 5 days and rejects it if still in "awaiting" status.
@@ -483,7 +553,13 @@ export const handler = async (
         event,
         context
       );
-    }
+    } else if (messageEvent === SqsMsgEventEnum.USER_SEND_WELCOME_EMAIL_AND_WHATSAPP_NOTIFICATION) {
+      return sendWelcomeEmailAndWhatsappNotificationToUser(
+        parsedMessage as SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto,
+        event,
+        context
+      );
+    } 
       
     // Throw error if event type is invalid
     throw new Error(

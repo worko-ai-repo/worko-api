@@ -13,15 +13,15 @@
  */
 export enum WhatsAppBusinessPartnerTemplateNameEnum {
   /**
-   * signup_candidate
+   * CAND_SIGNUP_CANDIDATE
    *
    * Represents the template used for welcoming new candidates.
    *
-   * This template, named `signup_candidate`, is utilized when a user registers
+   * This template is utilized when a user registers
    * as a candidate on the Worko website. It sends a welcome message to the
    * candidate via WhatsAppBusinessPartner platform.
    */
-  CAND_SIGNUP_CANDIDATE = "signup_candidate",
+  CAND_SIGNUP_CANDIDATE = "signup_candidate_latest_one", // previously "signup_candidate",
 
   /**
    * signup_emp

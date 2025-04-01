@@ -67,3 +67,12 @@ export interface SqsMsgReviewReferralAcceptanceStatusReqDto extends SqsMsgBaseRe
         referralId: string;
     };
 }
+
+/**
+ * SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto
+ */
+export interface SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto extends SqsMsgBaseReqDto {
+    /**
+     * NOTE: As of now this interface is empty, we can add more attributes later
+     */
+}

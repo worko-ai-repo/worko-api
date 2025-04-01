@@ -42,6 +42,13 @@ class DbUserGuidanceRequestDto extends BaseDbDto {
   updatedByUsedId?: string;
 
   /**
+   * companyId
+   * 
+   * @reference `id` attribute from `CompanyDetail.model.ts`
+   */
+  companyId?: string;
+
+  /**
    * companyName
    */
   companyName!: string;
@@ -98,6 +105,10 @@ const UserGuidanceRequestSchema: Schema = new dynamoose.Schema(
       required: true,
     },
     updatedByUsedId: {
+      type: String,
+      required: false,
+    },
+    companyId: {
       type: String,
       required: false,
     },

@@ -555,3 +555,29 @@ Unknown application error occurred
   "timeStamp": "2025-03-19T06:42:33.045Z"
 }
 ```
+
+23. 
+```json
+// ERROR	Invoke Error 	
+{
+    "errorType": "Error",
+    "errorMessage": "getaddrinfo ENOTFOUND sqs.\"ap-south-1\".amazonaws.com",
+    "code": "ENOTFOUND",
+    "errno": -3008,
+    "syscall": "getaddrinfo",
+    "hostname": "sqs.\"ap-south-1\".amazonaws.com",
+    "$metadata": {
+        "attempts": 1,
+        "totalRetryDelay": 0
+    },
+    "stack": [
+        "Error: getaddrinfo ENOTFOUND sqs.\"ap-south-1\".amazonaws.com",
+        "    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26)"
+    ]
+}
+```
+
+24. 
+```sh
+PostConfirmation failed with error User: arn:aws:sts::211125353899:assumed-role/worko-api-cognito-post-confirmation-trigger-role-wcv1wa97/worko-api-cognito-post-confirmation-trigger is not authorized to perform: sqs:sendmessage on resource: arn:aws:sqs:ap-south-1:211125353899:worko-app-event-queue because no identity-based policy allows the sqs:sendmessage action.
+```

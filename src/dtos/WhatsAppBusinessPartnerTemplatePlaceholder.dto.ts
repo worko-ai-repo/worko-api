@@ -58,6 +58,12 @@ export interface WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE
    * The body placeholder in the template containing the candidate's name.
    */
   candidateName: string;
+
+  pointOne: string;
+
+  pointTwo: string;
+
+  pointThree: string;
 }
 
 /**

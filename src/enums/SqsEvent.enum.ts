@@ -41,5 +41,13 @@ export enum SqsMsgEventEnum {
   * And after the process of matching is done, then this event will be triggered to send email and whatsapp notification
   * to the candidate(Who is not registered user on worko).
   */
- CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION = "CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION"
+ CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION = "CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION",
+
+ /**
+  * USER_SEND_WELCOME_EMAIL_AND_WHATSAPP_NOTIFICATION
+  * 
+  * Whenever a user signs up and verifies his email using one time password (OTP), 
+  * then In `worko-api-cognito-post-confirmation-trigger` lambda function will trigger this SQS event to send email and whatsapp welcome notification to the user.
+  */
+ USER_SEND_WELCOME_EMAIL_AND_WHATSAPP_NOTIFICATION = "USER_SEND_WELCOME_EMAIL_AND_WHATSAPP_NOTIFICATION"
 }

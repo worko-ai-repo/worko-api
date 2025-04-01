@@ -178,6 +178,13 @@ export interface UserGuidanceRequestCreateApiDTO {
   companyName: string;
 
   /**
+   * companyId
+   * 
+   * @description If user selects Internal Company, then this field is required
+   */
+  companyId?: string;
+
+  /**
    * jobUrl
    *
    * @description Any job url allowed

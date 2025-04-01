@@ -37,6 +37,7 @@ import { WhatsAppBusinessPartnerTemplateNameEnum } from '../enums/WhatsAppBusine
 import { whatsAppBusinessPartnerLibraryObj } from '../libraries/WhatsAppBusinessPartner.library';
 
 // Load the local model
+import { DbCompanyDetailDto } from '../db/models/CompanyDetail.model';
 import { DbUserDetailSettingDto } from '../db/models/UserDetailSetting.model';
 import { DbUserSkillDto } from '../db/models/UserSkill.model';
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
@@ -50,6 +51,11 @@ import UserSubscriptionService from "./UserSubscription.service";
 import UserProfilePercentageService from "./UserProfilePercentage.service";
 import { userDetailSettingServiceObj } from './UserDetailSetting.service';
 import { userGuidanceRequestServiceObj } from './UserGuidanceRequest.service';
+import { companyServiceObj } from '../admin/services/Company.service';
+
+// Import utils
+import HttpStatusCode from '../utils/http-codes.util';
+import { BaseError } from '../utils/errors.util';
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
@@ -157,6 +163,27 @@ class UserService {
       methodName: this.createUserGuidanceRequest.name,
     });
 
+    /**
+     * If company id is provided, get company details
+     * 
+     * NOTE: Here, this condition is not much required, we can remove this condition later
+     */
+    if(validatedRequestBody.companyId) {
+      // Get company details
+      const companyDetails: QueryResponse<DbCompanyDetailDto> =
+        await companyServiceObj.getCompanyDetailById(
+          validatedRequestBody.companyId
+        );
+      
+      // Throw error if company details not found
+      if(!companyDetails.count) {
+        throw new BaseError(
+          `The Company Details not found.`,
+          HttpStatusCode.NOT_FOUND_404
+        );
+      }
+    }
+
     return userGuidanceRequestServiceObj.createUserGuidanceRequest(
       cognitoUserId,
       email,
@@ -207,71 +234,7 @@ class UserService {
         }
       );
     }
-
-    // send welcome email based on the userType .
-    // @todo Need to review this as this is moved to SQS and should be removed from here as there is no use of the below welcome email code
-    if (userType === UserType.CAND) {
-      // Prepare details required for sending the Email
-      const candName: string = userSignUpDTO.name;
-      const candEmail: string = userSignUpDTO.emailList.primary;
-
-      // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
-      const toAddress: EmailSourceDestinationAddress = {
-        email: candEmail,
-        fullName: candName,
-      };
-      const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
-        candName: candName.toTitleCase(),
-      };
-
-      // Send welcome email // todo : review it to remove from here and use SQS to send email
-      await this.sendEmailToCandWelcomeMessage(emailPlaceholders, toAddress);
-
-      // Placeholders for the whatsapp message
-      const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE =
-        {
-          candidateName: candName.toTitleCase(),
-        };
-
-      // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
-      await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
-        WhatsAppBusinessPartnerTemplateNameEnum.CAND_SIGNUP_CANDIDATE,
-        userSignUpDTO.number.strtr({ "+": "" }), // To Phone Number
-        whatsAppBusinessPartnerPlaceholders,
-        candEmail
-      );
-    } else if (userType === UserType.EMP) {
-      // Prepare details required for sending the Email
-      const empName: string = userSignUpDTO.name;
-      const empEmail: string = userSignUpDTO.emailList.primary;
-
-      // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
-      const toAddress: EmailSourceDestinationAddress = {
-        email: empEmail,
-        fullName: empName,
-      };
-      const emailPlaceholders: EmailTemplatePlaceholderEMP_WELCOME_MSG = {
-        empName: empName.toTitleCase(),
-      };
-
-      // Send welcome email // todo : review it to remove from here and use SQS to send email
-      await this.sendEmailToEmpWelcomeMessage(emailPlaceholders, toAddress);
-
-      // Send welcome WhatsApp message
-      const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP =
-        {
-          employeeName: empName.toTitleCase(),
-        };
-
-      // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
-      await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
-        WhatsAppBusinessPartnerTemplateNameEnum.EMP_SIGNUP_EMP,
-        userSignUpDTO.number.strtr({ "+": "" }), // To Phone Number
-        whatsAppBusinessPartnerPlaceholders,
-        empEmail
-      );
-    }
-
+    
     return true;
   }
 
