@@ -309,12 +309,9 @@ class UserController {
       }
 
       // Check if a user with this email already exists
-      const count = await UserService.getCount(userSignUpDto.email);
-      if (count.count > 0) {
-        res
-          .status(HttpStatusCode.CONFLICT_409)
-          .json({ error: "User Already Exists!." });
-        return; // Important to return here to prevent further execution
+      const existingUserDetails: QueryResponse<DbUserDetailDto> = await UserDetailService.get(userSignUpDto.email);
+      if (existingUserDetails.count > 0) {
+        return res.status(HttpStatusCode.CONFLICT_409).json({ error: "The user with this provided email already exists." });
       }
 
       // Extract LinkedIn URL for social profile
@@ -424,12 +421,12 @@ class UserController {
       }
 
       // Check if a user with this email already exists
-      const count = await UserService.getCount(userSignUpDto.email);
-      if (count.count > 0) {
-        res
+      const existingUserDetails: QueryResponse<DbUserDetailDto> =
+        await UserDetailService.get(userSignUpDto.email);
+      if (existingUserDetails.count > 0) {
+        return res
           .status(HttpStatusCode.CONFLICT_409)
-          .json({ error: "User Already Exists!." });
-        return; // Important to return here to prevent further execution
+          .json({ error: "The user with this provided email already exists." });
       }
 
       // Extract core user information

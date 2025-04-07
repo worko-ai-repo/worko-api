@@ -12,6 +12,7 @@ import "./libraries/logger.library";
 
 // Import configs
 import DBConfig from "./db/DB.config";
+import APP_CONSTANTS from "./configs/constants.config";
 
 // Import middlewares
 import { getAuthorizerContext } from "./middlewares/authorizer-context.middleware";
@@ -89,7 +90,14 @@ class App {
    * This method registers the application routes exposed outside by the application, to allow the users/clients to access the routes/resources.
    */
   registerAppRoutes() {
-    this.app.use("/", getAuthorizerContext(), routes);
+    /**
+     * @todo: We need to implement authorization without errors for local environment also
+     */
+    if(process.env.APP_STAGE === APP_CONSTANTS.STAGES.LOCAL) {
+      this.app.use("/", routes);
+    } else {
+      this.app.use("/", getAuthorizerContext(), routes);
+    }
   }
 
   /**
