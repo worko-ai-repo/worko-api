@@ -7,6 +7,7 @@ import { BaseDbDto } from "./Base.model";
 
 // import Enums
 import { UserCorporateRequestStatusEnum } from "../../enums/User.enum";
+import { UserCorporateRequestPricingPlanEnum } from "../../enums/UserCorporateRequest.enum";
 
 // Define the structure for User Corporate Request Database Data Transfer Object (DTO)
 class DbUserCorporateRequestDto extends BaseDbDto {
@@ -23,6 +24,7 @@ class DbUserCorporateRequestDto extends BaseDbDto {
     userMessage!: string;
     adminMessage?: string;
     updatedByUserId?: string;
+    pricingPlan!: UserCorporateRequestPricingPlanEnum;
 }
 
 // Define the schema for the corporate request model using DynamoDB
@@ -89,6 +91,10 @@ const UserCorporateRequestSchema = new dynamoose.Schema(
         updatedByUserId: {
             type: String,
             required: false
+        },
+        pricingPlan: {
+            type: String,
+            required: true
         }
     },
     {
