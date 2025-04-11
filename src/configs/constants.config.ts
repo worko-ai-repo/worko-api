@@ -253,7 +253,7 @@ const APP_CONSTANTS = {
    */
   get CORPORATE_USER_INVITE_DATE_EXPIRATION(): number {
     const PROD_DAYS = 15; // 15 days
-    const DEV_DAYS = 1; // 1 day
+    const DEV_DAYS = 15 / 1440; // 15 minutes
 
     // return the time based on the environment
     return this.APP_SLS_STAGE === this.STAGES.PROD
