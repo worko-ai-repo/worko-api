@@ -287,8 +287,8 @@ export interface WhatsAppBusinessPartnerTemplatePlaceholderEMP_PENDING_WORK_EMAI
  */
 export interface WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE {
   candidateName: string;
-  jobTitle: string;
   companyName: string;
+  jobTitle: string;
   matchingScore: string;
 }
 

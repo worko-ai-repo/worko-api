@@ -159,7 +159,7 @@ export enum WhatsAppBusinessPartnerTemplateNameEnum {
    * whenever a corporate user screens a job description for bulk resumes of candidates for high matching scores.
    * It sends a WhatsApp notification to the candidate via the WhatsAppBusinessPartner platform.
    */
-  CAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE = "cand_corporate_bulk_jd_resume_high_matching_scoring",
+  CAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE = "cand_corporate_bulk_jd_resume_high_matching_scoring_latest_three", // Previous: ["cand_corporate_bulk_jd_resume_high_matching_scoring"]
 
   /**
    * cand_corporate_bulk_jd_resume_low_matching_score
@@ -168,5 +168,5 @@ export enum WhatsAppBusinessPartnerTemplateNameEnum {
    * whenever a corporate user screens a job description for bulk resumes of candidates for low matching scores.
    * It sends a WhatsApp notification to the candidate via the WhatsAppBusinessPartner platform.
    */
-  CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE = "cand_corporate_bulk_jd_resume_low_matching_score",
+  CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE = "cand_corporate_bulk_jd_resume_low_matching_score_latest_one" // Previous: ["cand_corporate_bulk_jd_resume_low_matching_score"]
 }

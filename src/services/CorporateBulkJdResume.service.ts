@@ -591,8 +591,8 @@ class CorporateBulkJdResumeService {
       const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE =
         {
           candidateName: cvExtractedParsed.candidateName.toTitleCase(),
-          jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
           companyName: companyDetails.name.toTitleCase(),
+          jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
           matchingScore: corporateBulkJdResumeDetails.matchingScore.toString(),
         };
 
