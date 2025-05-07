@@ -156,6 +156,12 @@ export const CompanyUpdateApiDtoValidation = Joi.object({
 });
 
 export const CompanyRequestDTOValidation = Joi.object({
+  userName: Joi.string().required().messages({
+    "any.required": "User name is required",
+    "any.type": "User name must be a string",
+    "string.empty": "User name cannot be empty",
+  }),
+
   userType: Joi.string().valid("EMP", "CAND").required().messages({
     "any.only": "User type must be either EMP or CAND",
     "any.required": "User type is required",
@@ -194,7 +200,14 @@ export const CompanyRequestDTOValidation = Joi.object({
     
     logo: Joi.string().allow("").optional(),
   }),
-  userEmail: Joi.string().allow("").optional().lowercase(),
+  userEmail: Joi.string().email().required().messages({
+    "any.required": "User email is required",
+    "string.email": "User email must be a valid email address",
+  }),
+  referralRequestUrl: Joi.string().uri().allow("").optional().messages({
+    "string.uri": "Referral request URL must be a valid URI",
+  }),
+  
   userContactNumber : Joi.string().allow("").optional(),
 });
 

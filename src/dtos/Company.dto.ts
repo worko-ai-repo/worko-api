@@ -47,6 +47,7 @@ export interface CompanyDTO {
   isVerified: boolean;
   aboutCompany?: string;
   website?: string;
+  requestedBy?: string; // User who requested the company
 }
 
 /**
@@ -141,6 +142,8 @@ export interface AddCompanyDTO {
   companyDetail: CompanyObject; // Details of the company to be added
   status: Status; // Status of the company request
   userEmail: string;
+  userName: string; // Name of the user adding the company
+  referralRequestUrl?: string; // Referral request URL
   userContactNumber : string;
 }
 

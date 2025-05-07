@@ -9,12 +9,13 @@ import { BaseDbDto } from "./Base.model";
 class DbCompanyRequestDto extends BaseDbDto {
   // Ids
   companyId!: string; // Refer `id` attribute in `CompanyDetail.model.ts`
-
+  userName!: string; // Refer `userName` attribute in `User.model.ts`
   userType!: string;
   companyDetail!: Record<string, any>; // Utilizing Record<string, any> for a map-like structure
   status!: string;
-  userEmail?: string;
+  userEmail!: string;
   userContactNumber?: string;
+  referralRequestUrl?: string; // Referral request that user want to apply for in this company
   isDeleted?: boolean;
 }
 
@@ -23,6 +24,10 @@ const CompanySchema = new dynamoose.Schema(
   {
     ...DB_CONSTANTS.WORKO_PK_SK,
     companyId: {
+      type: String,
+      required: true,
+    },
+    userName:{
       type: String,
       required: true,
     },
@@ -40,9 +45,13 @@ const CompanySchema = new dynamoose.Schema(
     },
     userEmail: {
       type: String,
-      required: false,
+      required: true,
     },
     userContactNumber: {
+      type: String,
+      required: false,
+    },
+    referralRequestUrl: {
       type: String,
       required: false,
     },
