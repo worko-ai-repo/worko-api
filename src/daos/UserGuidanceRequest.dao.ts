@@ -1,12 +1,27 @@
+//Import dynamoose
+import { Query } from "dynamoose/dist/ItemRetriever";
 
 // Import daos
 import BaseDao from "./Base.dao";
 
 // Import dtos
-import { UserGuidanceRequestCreateApiDTO } from "../dtos/User.dto";
+import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
+import {
+  UserGuidanceRequestCreateApiDTO,
+  UserGuidanceRequestFilterOptions,
+} from "../dtos/User.dto";
 
 // Import db models
-import { DbUserGuidanceRequestDto, UserGuidanceRequestModel } from "../db/models/UserGuidanceRequest.model";
+import {
+  DbUserGuidanceRequestDto,
+  UserGuidanceRequestModel,
+} from "../db/models/UserGuidanceRequest.model";
+
+// Import enums
+import { SortOrderTypeEnum } from "../enums/Common.enum";
+
+// Import helpers
+import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
 
 // Import services
 import UlidService from "../services/Ulid.service";
@@ -23,7 +38,7 @@ class UserGuidanceRequestDao implements BaseDao {
 
   /**
    * createUserGuidanceRequest
-   * 
+   *
    * Creates a new user guidance request in the database
    *
    * @param {string} cognitoUserId - the id of the user who is creating the request
@@ -65,10 +80,79 @@ class UserGuidanceRequestDao implements BaseDao {
 
     return UserGuidanceRequestModel.create(userGuidanceRequestData);
   }
+
+  /**
+   * getAllUserGuidanceRequestByFilterOptions
+   *
+   * Retrieves all user guidance requests based on the provided filter options.
+   *
+   * @param {UserGuidanceRequestFilterOptions} userGuidanceRequestBody - The filter options for querying user guidance requests.
+   * @returns {Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserGuidanceRequestDto>>} A promise that resolves to a paginated response containing the matching user guidance requests.
+   *
+   */
+  async getAllUserGuidanceRequestByFilterOptions(
+    userGuidanceRequestBody: UserGuidanceRequestFilterOptions
+  ): Promise<
+    PaginatedResultsWithMatchingConditionsResponse<DbUserGuidanceRequestDto>
+  > {
+    // logger
+    global.logger.info("Get User Guidance Request by Filter Options [dao]", {
+      methodName: this.getAllUserGuidanceRequestByFilterOptions.name,
+      userGuidanceRequestBody,
+    });
+
+    let query: Query<DbUserGuidanceRequestDto>;
+    if (userGuidanceRequestBody.email) {
+      query = UserGuidanceRequestModel.query("PK")
+        .eq(
+          this.partitianKey.strtr({
+            "{primaryEmail}": userGuidanceRequestBody.email,
+          })
+        )
+        .where("SK")
+        .beginsWith(this.sortKeys.SK_INIT.strtr({ "{id}": "" }));
+    } else {
+      query = UserGuidanceRequestModel.query("GSI1PK")
+        .eq(this.GSI1PK)
+        .where("GSI1SK")
+        .beginsWith(this.GSI1SK.strtr({ "{id}": "" }));
+    }
+
+    // Sort the results based on the provided sort order
+    query = query.sort(
+      userGuidanceRequestBody.sortOrder ?? SortOrderTypeEnum.DESCENDING
+    );
+
+    // Apply status filter if provided
+    if (userGuidanceRequestBody.guidanceRequestType) {
+      query = query
+        .where("guidanceRequestType")
+        .eq(userGuidanceRequestBody.guidanceRequestType);
+    }
+
+    // Apply date range filter if provided
+    if (userGuidanceRequestBody.fromDate || userGuidanceRequestBody.toDate) {
+      query = query.and().parenthesis((condition) => {
+        if (userGuidanceRequestBody.fromDate) {
+          condition = condition
+            .where("createdAt")
+            .ge(userGuidanceRequestBody.fromDate);
+        }
+        if (userGuidanceRequestBody.toDate) {
+          condition = condition
+            .where("createdAt")
+            .le(userGuidanceRequestBody.toDate);
+        }
+        return condition;
+      });
+    }
+    // Execute the query by applying the pagination helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbUserGuidanceRequestDto,
+      UserGuidanceRequestFilterOptions
+    >(query, userGuidanceRequestBody);
+  }
 }
 
 const userGuidanceRequestDaoObj = new UserGuidanceRequestDao();
-export {
-   userGuidanceRequestDaoObj,
-   UserGuidanceRequestDao
-}
+export { userGuidanceRequestDaoObj, UserGuidanceRequestDao };

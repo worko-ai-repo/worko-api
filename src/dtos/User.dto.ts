@@ -1,4 +1,5 @@
 import { UserGuidanceRequestTypeEnum } from "../enums/User.enum";
+import { RecordListingFilterOptions, RecordListingFilterRequestDTO } from "./Common.dto";
 
 /**
  * Data required for user sign-up. Includes basic personal information,
@@ -195,4 +196,15 @@ export interface UserGuidanceRequestCreateApiDTO {
    * guidanceRequestDescription
    */
   guidanceRequestDescription: string;
+}
+
+export interface UserGuidanceRequestFilterOptions extends RecordListingFilterOptions {
+  email?: string;
+  guidanceRequestType?: UserGuidanceRequestTypeEnum;
+  companyName?: string;
+}
+export interface UserGuidanceRequestFilterRequestDTO extends RecordListingFilterRequestDTO {
+  email?: string;
+  guidanceRequestType?: UserGuidanceRequestTypeEnum;
+  companyName?: string;
 }

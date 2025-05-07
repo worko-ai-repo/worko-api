@@ -2,6 +2,9 @@
 import { DateTime } from "luxon";
 import { Request, Response, NextFunction } from "express";
 
+// Load local configs
+import { profilePercentageField } from "../configs/constants/UserProfilePercentage.constant";
+
 // Import dynamoose types
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
@@ -12,9 +15,15 @@ import {
   UserDetailSettingCreateApiDTO,
   UserEmployeeSignUpDTO,
   UserGuidanceRequestCreateApiDTO,
+  UserGuidanceRequestFilterOptions,
+  UserGuidanceRequestFilterRequestDTO,
   UserProfileResponse,
   UserSignUpDTO,
 } from "../dtos/User.dto";
+import {
+  PaginatedResultsWithMatchingConditionsInternalResponse,
+  RecordListingResponseDTO,
+} from "../dtos/Common.dto";
 import { UserType } from "../dtos/Company.dto";
 import { UserExperienceDTO } from "../dtos/UserExperience.dto";
 import { UserSocialProfileDTO } from "../dtos/UserSocialProfile.dto";
@@ -26,6 +35,7 @@ import {
   userDetailSettingsDTOValidation,
   userEmployeeSignUpDTOValidation,
   userGuidanceRequestCreateApiDTOValidation,
+  userGuidanceRequestFilterDtoValidation,
   userlastAccessedDashDTOValidation,
   validateEmailField,
 } from "../schemas/User.schema";
@@ -38,11 +48,9 @@ import UserDetailService from "../services/UserDetail.service";
 import UserSocialProfileService from "../services/UserSocialProfile.service";
 import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
-// Load local utils
-import HttpStatusCode from "../utils/http-codes.util";
-import { RequestValidationError } from "../utils/errors.util";
-
 // Load local helper
+import { paginationResponseHelperObj } from "../helpers/pagination-response.helper";
+import { RequestHelper } from "../helpers/request.helper";
 import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 
 // Import models
@@ -51,8 +59,14 @@ import { DbUserDetailDto } from "../db/models/UserDetail.model";
 import { DbUserSkillDto } from "../db/models/UserSkill.model";
 import { DbUserGuidanceRequestDto } from "../db/models/UserGuidanceRequest.model";
 
-import { profilePercentageField } from "../configs/constants/UserProfilePercentage.constant";
+// Load local service
 import InvokeLambdaService from "../services/InvokeLambda.service";
+
+// Load local utils
+import HttpStatusCode from "../utils/http-codes.util";
+import { RequestValidationError } from "../utils/errors.util";
+
+
 
 /**
  * UserController
@@ -102,8 +116,6 @@ class UserController {
           value === "true" ? results[index] : undefined,
         ])
       );
-
-      console.log("responseFormat: ", responseFormat);
 
       // Send successful response with user data
       res.status(HttpStatusCode.OK_200).json(responseFormat);
@@ -309,9 +321,12 @@ class UserController {
       }
 
       // Check if a user with this email already exists
-      const existingUserDetails: QueryResponse<DbUserDetailDto> = await UserDetailService.get(userSignUpDto.email);
+      const existingUserDetails: QueryResponse<DbUserDetailDto> =
+        await UserDetailService.get(userSignUpDto.email);
       if (existingUserDetails.count > 0) {
-        return res.status(HttpStatusCode.CONFLICT_409).json({ error: "The user with this provided email already exists." });
+        return res
+          .status(HttpStatusCode.CONFLICT_409)
+          .json({ error: "The user with this provided email already exists." });
       }
 
       // Extract LinkedIn URL for social profile
@@ -615,8 +630,80 @@ class UserController {
           validatedRequestBody
         );
 
-      return res.status(HttpStatusCode.CREATED_201).json(userGuidanceRequestDetails);
+      return res
+        .status(HttpStatusCode.CREATED_201)
+        .json(userGuidanceRequestDetails);
     } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Handles the retrieval of user guidance requests based on filter options provided in the request query parameters.
+   *
+   * @param {Request} req - The HTTP request object containing query parameters for filtering user guidance requests.
+   * @param {Response} res - The HTTP response object used to send the response back to the client.
+   * @param {NextFunction} next - The next middleware function in the Express.js request-response cycle.
+   *
+   * @throws {RequestValidationError} If the provided filter options fail validation.
+   *
+   * The response includes:
+   * - `data`: The list of user guidance requests matching the filter criteria.
+   * - `count`: The total number of matching records.
+   * - `timesQueried`: The number of times the query has been executed.
+   * - `lastKey`: The key for the last record in the current page (used for pagination).
+   * - `queriedCount`: The total number of records queried.
+   */
+  getAllUserGuidanceRequestByFilterOptions = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      global.logger.info("Get user guidance request [controller]", {
+        filePath: __filename,
+        methodName: this.getAllUserGuidanceRequestByFilterOptions.name,
+      });
+
+      // Parse filter options from the request query parameters
+      const userGuidanceRequest: UserGuidanceRequestFilterOptions =
+        RequestHelper.parseFilterOptions<
+          UserGuidanceRequestFilterRequestDTO,
+          UserGuidanceRequestFilterOptions
+        >(req.query as unknown as UserGuidanceRequestFilterRequestDTO);
+
+      // Validate the request using the Joi schema
+      const { error, value: userGuidanceRequestBody } =
+        userGuidanceRequestFilterDtoValidation.validate(userGuidanceRequest, {
+          abortEarly: false,
+        });
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Get guidance requests using the service
+      const guidanceRequestDetails: PaginatedResultsWithMatchingConditionsInternalResponse<
+        DbUserGuidanceRequestDto[]
+      > = await UserService.getAllUserGuidanceRequestByFilterOptions(
+        userGuidanceRequestBody
+      );
+
+      // Extract the response data
+      const { lastKey, count, timesQueried, queriedCount, data } =
+        guidanceRequestDetails;
+
+      // Generate the pagination response
+      const guidanceRequestResponse: RecordListingResponseDTO<
+        DbUserGuidanceRequestDto[]
+      > = paginationResponseHelperObj.customizedPaginationRecordListingResponse<
+        DbUserGuidanceRequestDto[],
+        UserGuidanceRequestFilterOptions
+      >(data, userGuidanceRequest, count, timesQueried, lastKey, queriedCount);
+
+      res.status(HttpStatusCode.OK_200).json(guidanceRequestResponse);
+    } catch (error) {
+      // Pass the error to the next error handler
       next(error);
     }
   };
