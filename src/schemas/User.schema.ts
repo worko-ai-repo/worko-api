@@ -7,6 +7,10 @@ import { DateTime } from "luxon";
 // Import enums
 import { UserGuidanceRequestTypeEnum } from "../enums/User.enum";
 
+//Import schemas
+import { commonSchema } from "./Common.schema";
+
+
 export const UserSignUpDTOValidation = Joi.object({
   name: Joi.string()
     .regex(/^[a-zA-Z\u00C0-\u01FF\s.'-]+$/)
@@ -254,3 +258,27 @@ export const userGuidanceRequestCreateApiDTOValidation = Joi.object({
     "any.type": "The Guidance request description field must be a string.",
   }),
 });
+
+export const userGuidanceRequestFilterDtoValidation = commonSchema.concat(
+  Joi.object({
+      email: Joi.string()
+      .optional()
+      .email()
+      .messages({
+        "string.email": "Please provide a valid email address.",
+      }),
+      companyName: Joi.string()
+      .optional()
+      .email()
+      .messages({
+        "any.type": "The Company name field must be a string.",
+      }),
+      guidanceRequestType: Joi.string()
+      .optional()
+      .valid(...Object.values(UserGuidanceRequestTypeEnum))
+      .messages({
+        "any.only": `Invalid guidance request type. Please provide a valid value from
+      ${Object.values(UserGuidanceRequestTypeEnum).join(", ")}.`,
+      }),
+  })
+);

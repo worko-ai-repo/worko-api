@@ -1,12 +1,14 @@
-
 // Import luxon
 import { DateTime } from "luxon";
 
-// Import constants 
+// Import constants
 import APP_CONSTANTS from "../configs/constants.config";
 
 // Import dtos
-import { UserGuidanceRequestCreateApiDTO } from "../dtos/User.dto";
+import {
+  UserGuidanceRequestCreateApiDTO,
+  UserGuidanceRequestFilterOptions,
+} from "../dtos/User.dto";
 import { EmailTemplatePlaceholder_USER_GUIDANCE_REQUEST } from "../dtos/EmailTemplatePlaceholder.dto";
 
 // Import daos
@@ -16,7 +18,10 @@ import { userGuidanceRequestDaoObj } from "../daos/UserGuidanceRequest.dao";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 
 // Import libraries
-import { emailLibrary, EmailSourceDestinationAddress } from "../libraries/email.library";
+import {
+  emailLibrary,
+  EmailSourceDestinationAddress,
+} from "../libraries/email.library";
 
 // Import models
 import { DbUserGuidanceRequestDto } from "../db/models/UserGuidanceRequest.model";
@@ -24,6 +29,10 @@ import { DbUserGuidanceRequestDto } from "../db/models/UserGuidanceRequest.model
 // Import utils
 import { BaseError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
+import {
+  PaginatedResultsWithMatchingConditionsInternalResponse,
+  PaginatedResultsWithMatchingConditionsResponse,
+} from "../dtos/Common.dto";
 
 /**
  * UserGuidanceRequestService
@@ -31,17 +40,17 @@ import HttpStatusCode from "../utils/http-codes.util";
 class UserGuidanceRequestService {
   /**
    * Creates a new user guidance request and sends email notifications.
-   * 
-   * This function logs the creation of a user guidance request and sends emails 
-   * to both the corporate user and the requesting user. It constructs email 
+   *
+   * This function logs the creation of a user guidance request and sends emails
+   * to both the corporate user and the requesting user. It constructs email
    * placeholders and utilizes the email library to send notifications.
    *
    * @param {string} cognitoUserId - The ID of the user initiating the request.
    * @param {string} userEmail - The email of the user making the request.
    * @param {string} userName - The name of the user making the request.
-   * @param {UserGuidanceRequestCreateApiDTO} validatedRequestBody - The validated data 
+   * @param {UserGuidanceRequestCreateApiDTO} validatedRequestBody - The validated data
    *        required to create the guidance request.
-   * @returns {Promise<DbUserGuidanceRequestDto>} - A promise resolving to the newly 
+   * @returns {Promise<DbUserGuidanceRequestDto>} - A promise resolving to the newly
    *          created user guidance request.
    * @throws {BaseError} - Throws an error if email sending fails.
    */
@@ -63,7 +72,7 @@ class UserGuidanceRequestService {
         userEmail,
         validatedRequestBody
       );
-    if(!userGuidanceRequestDetails) {
+    if (!userGuidanceRequestDetails) {
       throw new BaseError(
         "Failed to Create Guidance Request, Please try again after some time.",
         HttpStatusCode.BAD_REQUEST_400
@@ -112,7 +121,7 @@ class UserGuidanceRequestService {
       global.logger.error("Failed to send an email to worko admin", {
         email: APP_CONSTANTS.SOURCE_EMAIL_ADDRESS.GUIDANCE_EMAIL.email,
         methodName: this.createUserGuidanceRequest.name,
-      })
+      });
     }
 
     // =================================================
@@ -145,6 +154,66 @@ class UserGuidanceRequestService {
 
     // Return the newly created user guidance request
     return userGuidanceRequestDetails;
+  }
+
+  /**
+   * getAllUserGuidanceRequestByFilterOptions
+   *
+   * Retrieves all user guidance requests based on the provided filter options.
+   *
+   * @param {UserGuidanceRequestFilterOptions} userGuidanceRequestBody - The filter options for retrieving user guidance requests.
+   * @returns {Promise<PaginatedResultsWithMatchingConditionsInternalResponse<DbUserGuidanceRequestDto[]>>} A promise that resolves to a paginated response containing an array of
+   *          user guidance request DTOs and matching conditions.
+   */
+  async getAllUserGuidanceRequestByFilterOptions(
+    userGuidanceRequestBody: UserGuidanceRequestFilterOptions
+  ): Promise<
+    PaginatedResultsWithMatchingConditionsInternalResponse<
+      DbUserGuidanceRequestDto[]
+    >
+  > {
+    global.logger.info("Get user guidance request [service]", {
+      methodName: this.getAllUserGuidanceRequestByFilterOptions.name,
+    });
+
+    // Fetch guidance requests
+    const guidanceRequestDetails: PaginatedResultsWithMatchingConditionsResponse<DbUserGuidanceRequestDto> =
+      await userGuidanceRequestDaoObj.getAllUserGuidanceRequestByFilterOptions(
+        userGuidanceRequestBody
+      );
+
+    // Extract guidance request data
+    const {
+      lastKey,
+      count,
+      timesQueried,
+      queriedCount,
+      ...guidanceRequestData
+    } = guidanceRequestDetails;
+
+    // Convert to array
+    const guidanceRequestDataArray: DbUserGuidanceRequestDto[] =
+      Object.values(guidanceRequestData);
+
+    // If no guidance requests found, return empty results
+    if (guidanceRequestDataArray.length === 0) {
+      return {
+        data: [],
+        lastKey,
+        count,
+        timesQueried,
+        queriedCount,
+      };
+    }
+
+    // Build paginated response
+    return {
+      data: guidanceRequestDataArray,
+      lastKey,
+      count,
+      timesQueried,
+      queriedCount,
+    };
   }
 }
 

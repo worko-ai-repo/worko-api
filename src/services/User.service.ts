@@ -1,8 +1,8 @@
 // Load the defaults
-import { DateTime } from 'luxon';
+import { DateTime } from "luxon";
 
 // Import query response
-import { QueryResponse } from 'dynamoose/dist/ItemRetriever';
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load the local constants
 import APP_CONSTANTS from "../configs/constants.config";
@@ -10,52 +10,73 @@ import APP_CONSTANTS from "../configs/constants.config";
 // Load the local daos
 import userDao from "../daos/User.dao";
 import userDetailDao from "../daos/UserDetail.dao";
-import { 
+import { userGuidanceRequestDaoObj } from "../daos/UserGuidanceRequest.dao";
+import {
   EmailTemplatePlaceholderCAND_PREMIUM_EXPIRED_NOTIFICATION,
   EmailTemplatePlaceholderCAND_PREMIUM_UPGRADE_NOTIFICATION,
-  EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER, 
-  EmailTemplatePlaceholderCAND_PROFILE_SWITCH_NOTIFICATION, 
+  EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER,
+  EmailTemplatePlaceholderCAND_PROFILE_SWITCH_NOTIFICATION,
   EmailTemplatePlaceholderCAND_WELCOME_MSG,
   EmailTemplatePlaceholderEMP_PROFILE_COMPLETION_REMINDER,
   EmailTemplatePlaceholderEMP_SWITCH_PROFILE_NOTIFICATION,
-  EmailTemplatePlaceholderEMP_WELCOME_MSG
+  EmailTemplatePlaceholderEMP_WELCOME_MSG,
 } from "../dtos/EmailTemplatePlaceholder.dto";
 
 // Load the local dtos
-import { SubscriptionCreateRequestDTO } from '../dtos/Subscription.dto';
-import { NewUserCandSignUpDTO, NewUserEmpSignUpDTO, UserDetailSettingCreateApiDTO, UserGuidanceRequestCreateApiDTO, UserSubscriptionDetailsUpdateDto } from "../dtos/User.dto";
-import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
+import { SubscriptionCreateRequestDTO } from "../dtos/Subscription.dto";
+import {
+  PaginatedResultsWithMatchingConditionsInternalResponse,
+  PaginatedResultsWithMatchingConditionsResponse,
+} from "../dtos/Common.dto";
+import {
+  NewUserCandSignUpDTO,
+  NewUserEmpSignUpDTO,
+  UserDetailSettingCreateApiDTO,
+  UserGuidanceRequestCreateApiDTO,
+  UserGuidanceRequestFilterOptions,
+  UserSubscriptionDetailsUpdateDto,
+} from "../dtos/User.dto";
+import {
+  EmailSourceDestinationAddress,
+  emailLibrary,
+} from "../libraries/email.library";
 
 // Load the local enum
 import { UserType } from "../enums/User.enum";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
-import { UserSubscriptionStatus, UserSubscriptionType } from "../enums/UserSubscription.enum";
-import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP } from '../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto';
-import { WhatsAppBusinessPartnerTemplateNameEnum } from '../enums/WhatsAppBusinessPartnerTemplate.enum';
+import {
+  UserSubscriptionStatus,
+  UserSubscriptionType,
+} from "../enums/UserSubscription.enum";
+import {
+  WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE,
+  WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP,
+} from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
+import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
 
 // Load the local libraries
-import { whatsAppBusinessPartnerLibraryObj } from '../libraries/WhatsAppBusinessPartner.library';
+import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusinessPartner.library";
 
 // Load the local model
-import { DbCompanyDetailDto } from '../db/models/CompanyDetail.model';
-import { DbUserDetailSettingDto } from '../db/models/UserDetailSetting.model';
-import { DbUserSkillDto } from '../db/models/UserSkill.model';
+import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
+import { DbUserDetailSettingDto } from "../db/models/UserDetailSetting.model";
+import { DbUserSkillDto } from "../db/models/UserSkill.model";
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
-import { DbUserGuidanceRequestDto } from '../db/models/UserGuidanceRequest.model';
+import { DbUserGuidanceRequestDto } from "../db/models/UserGuidanceRequest.model";
 
 // Load the local services
-import UserSkillService from './UserSkill.service';
+import UserSkillService from "./UserSkill.service";
 import UserDetailService from "./UserDetail.service";
 import MasterSubscriptionService from "./MasterSubscription.service";
 import UserSubscriptionService from "./UserSubscription.service";
 import UserProfilePercentageService from "./UserProfilePercentage.service";
-import { userDetailSettingServiceObj } from './UserDetailSetting.service';
-import { userGuidanceRequestServiceObj } from './UserGuidanceRequest.service';
-import { companyServiceObj } from '../admin/services/Company.service';
+import { userDetailSettingServiceObj } from "./UserDetailSetting.service";
+import { userGuidanceRequestServiceObj } from "./UserGuidanceRequest.service";
+import { companyServiceObj } from "../admin/services/Company.service";
 
 // Import utils
-import HttpStatusCode from '../utils/http-codes.util';
-import { BaseError } from '../utils/errors.util';
+import HttpStatusCode from "../utils/http-codes.util";
+import { BaseError } from "../utils/errors.util";
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
@@ -142,9 +163,9 @@ class UserService {
 
   /**
    * createUserGuidanceRequest
-   * 
+   *
    * Creates a new user guidance request in the database
-   * 
+   *
    * @param {string} cognitoUserId - the id of the user who is creating the request
    * @param {string} email - the email of the user who is creating the request
    * @param {string} userName - the name of the user who is creating the request
@@ -165,18 +186,18 @@ class UserService {
 
     /**
      * If company id is provided, get company details
-     * 
+     *
      * NOTE: Here, this condition is not much required, we can remove this condition later
      */
-    if(validatedRequestBody.companyId) {
+    if (validatedRequestBody.companyId) {
       // Get company details
       const companyDetails: QueryResponse<DbCompanyDetailDto> =
         await companyServiceObj.getCompanyDetailById(
           validatedRequestBody.companyId
         );
-      
+
       // Throw error if company details not found
-      if(!companyDetails.count) {
+      if (!companyDetails.count) {
         throw new BaseError(
           `The Company Details not found.`,
           HttpStatusCode.NOT_FOUND_404
@@ -190,6 +211,31 @@ class UserService {
       userName,
       userPhoneNumber,
       validatedRequestBody
+    );
+  }
+
+  /**
+   * getAllUserGuidanceRequestByFilterOptions
+   *
+   * Retrieves all user guidance requests based on the provided filter options.
+   *
+   * @param {UserGuidanceRequestFilterOptions} userGuidanceRequestBody - The filter options for retrieving user guidance requests.
+   * @returns {Promise<PaginatedResultsWithMatchingConditionsInternalResponse<DbUserGuidanceRequestDto[]>>} A promise that resolves to a paginated response containing an array of
+   *          user guidance request DTOs and matching conditions.
+   */
+  async getAllUserGuidanceRequestByFilterOptions(
+    userGuidanceRequestBody: UserGuidanceRequestFilterOptions
+  ): Promise<
+    PaginatedResultsWithMatchingConditionsInternalResponse<
+      DbUserGuidanceRequestDto[]
+    >
+  > {
+    global.logger.info("Get user guidance request [service]", {
+      methodName: this.getAllUserGuidanceRequestByFilterOptions.name,
+    });
+
+    return userGuidanceRequestServiceObj.getAllUserGuidanceRequestByFilterOptions(
+      userGuidanceRequestBody
     );
   }
 
@@ -234,7 +280,7 @@ class UserService {
         }
       );
     }
-    
+
     return true;
   }
 
