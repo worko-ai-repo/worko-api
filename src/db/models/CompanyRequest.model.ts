@@ -15,7 +15,7 @@ class DbCompanyRequestDto extends BaseDbDto {
   status!: string;
   userEmail!: string;
   userContactNumber?: string;
-  referralRequestUrl?: string; // Referral request that user want to apply for in this company
+  jobUrl?: string; // Referral request that user want to apply for in this company
   isDeleted?: boolean;
 }
 
@@ -27,7 +27,7 @@ const CompanySchema = new dynamoose.Schema(
       type: String,
       required: true,
     },
-    userName:{
+    userName: {
       type: String,
       required: true,
     },
@@ -51,7 +51,7 @@ const CompanySchema = new dynamoose.Schema(
       type: String,
       required: false,
     },
-    referralRequestUrl: {
+    jobUrl: {
       type: String,
       required: false,
     },
@@ -59,7 +59,7 @@ const CompanySchema = new dynamoose.Schema(
       type: Boolean,
       required: false,
       default: false,
-    }
+    },
   },
   {
     ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,
@@ -67,10 +67,7 @@ const CompanySchema = new dynamoose.Schema(
 );
 
 // Create the Company Model using the defined Schema
-const CompanyRequestModel = dynamoose.model<DbCompanyRequestDto>(
-  "CompanyRequest",
-  CompanySchema
-);
+const CompanyRequestModel = dynamoose.model<DbCompanyRequestDto>("CompanyRequest", CompanySchema);
 
 // Export the Company Request Model for external use
 export { CompanyRequestModel, DbCompanyRequestDto };

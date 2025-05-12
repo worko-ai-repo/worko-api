@@ -2,14 +2,11 @@
 // @todo make sure to add appropriate comment for every DTO,
 // mentioning the purpose and where it should be used and for which action.
 
-import {
-  RecordListingFilterOptions,
-  RecordListingFilterRequestDTO,
-} from "./Common.dto";
+import { RecordListingFilterOptions, RecordListingFilterRequestDTO } from "./Common.dto";
 
 /**
  * CompanyRequestPageFlagApiDto
- * 
+ *
  * This interface defines the structure for the request flag for company requests.
  */
 export interface CompanyRequestPageFlagApiDto {
@@ -20,13 +17,13 @@ export interface CompanyRequestPageFlagApiDto {
  * CompanyRequestDTO
  */
 export interface CompanyRequestDTO {
-  name: string; 
-  industry: string; 
-  teamSize: number; 
-  carrierPage: string; 
-  linkedIn: string; 
-  logoUrl?: string; 
-  logo:  string;  
+  name: string;
+  industry: string;
+  teamSize: number;
+  carrierPage: string;
+  linkedIn: string;
+  logoUrl?: string;
+  logo: string;
   aboutCompany?: string;
   website?: string;
 }
@@ -43,22 +40,21 @@ export interface CompanyDTO {
   carrierPage: string; // Carrier page URL
   linkedIn: string; // LinkedIn page URL
   logoUrl?: string; // URL of the company's logo
-  logo:  string;  // logo name
+  logo: string; // logo name
   isVerified: boolean;
   aboutCompany?: string;
   website?: string;
-  requestedBy?: string; // User who requested the company
 }
 
 /**
  * CompanyUpdateApiDto
- * 
+ *
  * This interface is reused for updating
  * both company details(`CompanyDetail.model.ts`) and company requests(`CompanyRequest.model.ts`).
- * 
+ *
  * if `isCompanyRequestPageFlag` is set to `false`, then the details are updated in `CompanyDetail.model.ts`.
  * If `isCompanyRequestPageFlag` is set to `true`, then the details are updated in `CompanyRequest.model.ts`
- * 
+ *
  * NOTE: We should not use same interface for both different models, As this `Company` related
  * interfaces are old code, so that's why it followed old conventions, For now, we will keep it as it is,
  * but we should follow new conventions for new features.
@@ -75,11 +71,11 @@ export interface CompanyUpdateApiDto {
   website?: string;
 
   /**
-   * In `Worko Admin` Dashboard, 
-   * 
+   * In `Worko Admin` Dashboard,
+   *
    * if the `worko admin` is updating the company details from the `Company Listing` page,
    * then `isCompanyRequestPageFlag` will be set to `false`.
-   * 
+   *
    * If the `worko admin` is updating the company details from the `Company Request` page,
    * then `isCompanyRequestPageFlag` will be set to `true`.
    */
@@ -143,8 +139,8 @@ export interface AddCompanyDTO {
   status: Status; // Status of the company request
   userEmail: string;
   userName: string; // Name of the user adding the company
-  referralRequestUrl?: string; // Referral request URL
-  userContactNumber : string;
+  jobUrl?: string; // Referral request URL
+  userContactNumber: string;
 }
 
 interface Company {
