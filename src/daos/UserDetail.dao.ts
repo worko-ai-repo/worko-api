@@ -228,6 +228,7 @@ class UserDetailDao implements BaseDao {
         "location",
         "userType",
         "cvExtract",
+        "cvExtractParsed",
       ])
       .exec();
   }
