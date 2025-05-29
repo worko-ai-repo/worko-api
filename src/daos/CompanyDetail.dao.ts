@@ -11,7 +11,7 @@ import { SortOrderTypeEnum } from "../enums/Common.enum";
 import { CompanyDetailModel, DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
 
 //Load the local dtos
-import { CompanyDTO, CompanyListingFilterOptions, CompanyUpdateDto } from "../dtos/Company.dto";
+import { CompanyCommonUpdateDto, CompanyDTO, CompanyListingFilterOptions, CompanyUpdateDto } from "../dtos/Company.dto";
 import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 
 // Load the local helpers
@@ -31,6 +31,27 @@ class CompanyDetailDao implements BaseDao {
   // attaching indutsry to GSI1PK will not work we need to update teh GSI1PK value appropiately
   GSI1PK = "COMP#INDS#{industryName}";
   GSI1SK = "ID#{companyId}";
+
+  /**
+   * preparePKAndSKForQuery
+   *
+   * Prepares the partition key and sort key for a query.
+   *
+   * @param {string} id - The id of the refer and earn.
+   *
+   * @returns {{PK: string, SK: string}} - An object containing the partition key and sort key.
+   */
+  preparePKAndSKForQuery(id: string): {
+    PK: string;
+    SK: string;
+  } {
+    return {
+      PK: this.partitianKey,
+      SK: this.sortKeys.SK_INIT.strtr({
+        "{companyId}": id,
+      }),
+    };
+  }
 
   /**
    * getCompanyDetailById
@@ -358,6 +379,31 @@ class CompanyDetailDao implements BaseDao {
         }),
       },
       updateCompanyDto
+    );
+  }
+
+  /**
+   * updateCompanyDetailsById
+   *
+   * Updates the company details for the specified company ID.
+   *
+   * @param {string} companyId - The ID of the company to update.
+   * @param {Partial<CompanyCommonUpdateDto>} updateLogoDto - The partial DTO containing the company details to be updated.
+   * @returns {Promise<DbCompanyDetailDto>} A promise that resolves with the updated company details.
+   */
+  async updateCompanyDetailsById(
+    companyId: string,
+    updateLogoDto: Partial<CompanyCommonUpdateDto>
+  ): Promise<DbCompanyDetailDto> {
+    global.logger.info(`Update company details by id [service]`, {
+      filePath: __filename,
+      methodName: this.updateCompanyDetailsById.name,
+      companyId: companyId,
+    });
+
+    return CompanyDetailModel.update(
+      this.preparePKAndSKForQuery(companyId),
+      updateLogoDto
     );
   }
 }

@@ -6,11 +6,6 @@ import BaseDao from "./Base.dao";
 //Load the local models
 import { CompanyJobUrlModel } from "../db/models/CompanyJobUrl.model";
 
-//Load the local dtos
-
-//Load UlidService for generating ULID IDs
-import UlidService from "../services/Ulid.service";
-
 // DAO class for handling Company Jobs
 class CompanyJobUrlDao implements BaseDao {
   modelName = "Company"; // Model name for Company

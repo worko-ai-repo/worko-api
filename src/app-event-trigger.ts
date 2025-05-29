@@ -15,7 +15,6 @@ import DBConfig from "./db/DB.config";
 import {
   SqsMsgBaseReqDto,
   SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto,
-  SqsMsgJobApplicationValidationMatchingScoreReqDto,
   SqsMsgReferralValidationMatchingScoreReqDto,
   SqsMsgReviewReferralAcceptanceStatusReqDto,
   SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto,
@@ -27,7 +26,6 @@ import { SqsMsgEventEnum } from "./enums/SqsEvent.enum";
 // Import local Services
 import UserReferralService from "./services/UserReferral.service";
 import UserDetailService from "./services/UserDetail.service";
-import { userJobApplicationServiceObj } from "./services/UserJobApplication.service";
 import { corporateBulkJdResumeServiceObj } from "./services/CorporateBulkJdResume.service";
 
 // Import utils
@@ -203,76 +201,6 @@ const validateReferralMatchingScore = async (
       error,
       error?.errorMsg ?? error?.message
     );
-  }
-};
-
-/**
- * validateUserJobApplicationMatchingScore
- * 
- * Validates the job application matching score and updates the job application status if necessary.
- *
- * @param {SqsMsgJobApplicationValidationMatchingScoreReqDto} message - The SQS message payload containing the job application request ID and user details
- * @param {SQSEvent} event - The SQS event object
- * @param {Context} context - The AWS Lambda context object
- * @returns {Promise<object>} The response object
- */
-const validateUserJobApplicationMatchingScore = async (
-  message: SqsMsgJobApplicationValidationMatchingScoreReqDto,
-  event: SQSEvent,
-  context: Context
-): Promise<object> => {
-  try {
-    global.logger.debug(`Details of sqs event for job application matching score validation: `, {
-      filePath: __filename,
-      methodName: "validateUserJobApplicationMatchingScore",
-      message: message,
-      event: event,
-      context: context
-    });
-
-    // Retrieve the necessary information from the message
-    const { jobApplicationRequestId } = message.context;
-    const { userEmail, userId } = message;
-
-    // Validate the job application matching score
-    const isjobApplicationMatchingScoreValid: boolean =
-      await userJobApplicationServiceObj.validateUserJobApplicationMatchingScore(
-        jobApplicationRequestId,
-        userEmail,
-        userId
-      );
-
-    global.logger.debug(`Details of job application after matching score validation: `,{
-      filePath: __filename,
-      methodName: "validateUserJobApplicationMatchingScore",
-      isjobApplicationMatchingScoreValid: isjobApplicationMatchingScoreValid,
-      jobApplicationRequestId: jobApplicationRequestId,
-      userEmail: userEmail,
-      userId: userId
-    })
-
-    // Return success response if validation was successful
-    if (isjobApplicationMatchingScoreValid) {
-      global.logger.info(`Job application matching score validated successfully.`,{
-        filePath: __filename,
-        methodName: "validateUserJobApplicationMatchingScore",
-        jobApplicationRequestId: jobApplicationRequestId
-      });
-
-      return sendSuccessResponse(
-        HttpStatusCode.OK_200,
-        "Job application matching score validated successfully."
-      );
-    } else {
-      // Throw custom error if validation failed
-      throw new BaseError(
-        `Unable to validate job application matching score for job application".`,
-        HttpStatusCode.BAD_REQUEST_400
-      );
-    }
-  } catch (error: any) {
-    // Return error response if validation failed
-    return sendErrResponse(error, error?.errorMsg ?? error?.message);
   }
 };
 
@@ -541,12 +469,6 @@ export const handler = async (
       );
     } else if (messageEvent === SqsMsgEventEnum.USER_SEND_WELCOME_EMAIL) {
       return sendWelcomeEmailToUser(parsedMessage, event, context);
-    } else if (messageEvent === SqsMsgEventEnum.JOB_APPLICATION_VALIDATE_MATCHING_SCORE) {
-      return validateUserJobApplicationMatchingScore(
-        parsedMessage as SqsMsgJobApplicationValidationMatchingScoreReqDto,
-        event,
-        context
-      );
     } else if (messageEvent === SqsMsgEventEnum.CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION) {
       return corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate(
         parsedMessage as SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto,

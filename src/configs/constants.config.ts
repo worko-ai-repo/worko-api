@@ -47,6 +47,19 @@ const APP_CONSTANTS = {
     CAREER_RESUME: "career-resumes", // To upload the resumes uplaoded via career page
     COMPANY_JOB_DESCRIPTION: "companies/{companyId}/company-job-descriptions", // To upload the company job description uplaoded via `corporate dashboard` or `admin dashboard`
     BULK_CVS: "companies/{companyId}/bulk-cvs/{corporateBulkJdId}", // To upload the bulk cvs uplaoded via `corporate dashboard` or `admin dashboard`
+
+    /**
+     * @NOTE:
+     *  1. Currently, company logos are being stored in the following S3 path:
+     *     "worko-ui-comp-logo-{dev|prod}/images/"
+     *     This is not an ideal structure for storing company logos. However, since this path is already in use
+     *     and contains existing logos, we are continuing to use it to maintain backward compatibility.
+     *
+     *  2. The ideal S3 path structure should be:
+     *     worko-ui-comp-logo-{dev|prod}/companies/{companyId}/{companyLogoFileName}
+     *     This structure ensures better organization and scalability but don't update the existing structure.
+     */
+    COMPANY_LOGO: "images",
   },
 
   /**
@@ -134,22 +147,6 @@ const APP_CONSTANTS = {
   },
 
   /**
-   * JOB_APPLICATION_READABLE_STATUS
-   *
-   * This is the readable status of the job application
-   * which is used in the email body to be sent to the end user
-   */
-  JOB_APPLICATION_READABLE_STATUS: {
-    APPLIED: "Applied",
-    REJECTED: "Not Selected",
-    CV_DOWNLOADED: "CV Downloaded",
-    UNDER_EVALUATION: "Under Evaluation",
-    PROCESSING_INTERVIEW: "Processing Interview",
-    INTERVIEW_DONE: "Interview Done",
-    HIRED: "Hired",
-  },
-
-  /**
    * COGNITO_READABLE_GROUPS
    *
    * This is the readable groups of the cognito user
@@ -180,14 +177,6 @@ const APP_CONSTANTS = {
      * Required constants for Referral score as matching score
      */
     REFERRAL_MINIMUM_MATCHING_SCORE: 70,
-
-    /**
-     * JOB_APPLICATION_MINIMUM_MATCHING_SCORE
-     *
-     * Whenever a candidate applies a job from mini-job portal, this is the minimum matching score required for
-     * the job to be applied.
-     */
-    JOB_APPLICATION_MINIMUM_MATCHING_SCORE: 70,
 
     /**
      * CORPORATE_BULK_JD_RESUME_MINIMUM_MATCHING_SCORE

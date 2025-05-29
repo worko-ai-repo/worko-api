@@ -208,3 +208,19 @@ export const CompanyListingFilterRequestDTOValidation = commonSchema.concat(
       }),
   })
 );
+
+
+/**
+ * companyUpdateLogoApiDtoValidation
+ */
+export const companyUpdateLogoApiDtoValidation = Joi.object({
+  companyLogoCloudFileName: Joi.string()
+    .pattern(/^[^\/\\]+?\.[a-zA-Z0-9]+$/)
+    .required()
+    .messages({
+      "any.required": "The Company logo cloud file name field is required.",
+      "any.type": "The Company logo cloud file name field must be a string.",
+      "string.empty": "The Company logo cloud file name field cannot be empty.",
+      "string.pattern.base": "The Company logo cloud file name must be a valid filename (e.g., logo.jpg).",
+    }),
+});

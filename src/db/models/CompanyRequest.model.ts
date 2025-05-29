@@ -9,7 +9,7 @@ import { BaseDbDto } from "./Base.model";
 class DbCompanyRequestDto extends BaseDbDto {
   // Ids
   companyId!: string; // Refer `id` attribute in `CompanyDetail.model.ts`
-  userName!: string; // Refer `userName` attribute in `User.model.ts`
+  userName!: string; 
   userType!: string;
   companyDetail!: Record<string, any>; // Utilizing Record<string, any> for a map-like structure
   status!: string;

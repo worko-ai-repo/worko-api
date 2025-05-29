@@ -13,6 +13,7 @@ import {
   CompanyRequestDTO,
   CompanyUpdateApiDto,
   CompanyUpdateDto,
+  CompanyUpdateLogoApiDto,
 } from "../dtos/Company.dto";
 import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../dtos/Common.dto";
 import { CompanyRequestListingFilterOptions, CompanyRequestListingFilterRequestDTO } from "../dtos/CompanyRequest.dto";
@@ -34,6 +35,7 @@ import {
   CompanyListingFilterRequestDTOValidation,
   CompanyRequestDTOValidation,
   CompanyUpdateApiDtoValidation,
+  companyUpdateLogoApiDtoValidation,
 } from "../schemas/Company.schema";
 import { companyRequestFilterDtoValidation } from "../schemas/CompanyRequest.schema";
 
@@ -133,6 +135,53 @@ class CompanyController {
   };
 
   /**
+   * updateCompanyLogo
+   *
+   * update the company logo based on the provided companyId.
+   *
+   * @param {Request} req - The request object
+   * @param {Response} res - The response object
+   * @param {NextFunction} next - The next function
+   */
+  updateCompanyLogo = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      global.logger.info("update Company Logo [controller]", {
+        filePath: __filename,
+        methodName: this.updateCompanyLogo.name,
+      });
+
+      // Extract company id from the request query parameter
+      const companyId: string = req.params.id;
+
+      // Extract company data from the request body
+      const companyDto: CompanyUpdateLogoApiDto = req.body;
+      // Validate the incoming company data using the defined joi validation schema 
+      const { error, value: validatedCompanyRequestBody } =
+        companyUpdateLogoApiDtoValidation.validate(companyDto, {
+          abortEarly: false,
+        });
+
+      // Check if validation resulted in errors
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Call the CompanyService to update a company
+      const updateCompany: DbCompanyDetailDto =
+        await CompanyService.updateCompanyLogo(
+          companyId,
+          validatedCompanyRequestBody
+        );
+
+      // Send successful response with the created company data
+      return res.status(HttpStatusCode.OK_200).json(updateCompany);
+    } catch (error) {
+      // Pass the error to the next error handler
+      next(error);
+    }
+  };
+
+  /**
    * createCompany
    *
    * create a new company based on the provided input data. Validates the input data
@@ -146,25 +195,6 @@ class CompanyController {
     try {
       // Extract company data from the request body
       const companyDto: CompanyRequestDTO = req.body;
-      // Check if company name already exist
-      // Call the CompanyService to get company by name
-      const company: QueryResponse<DbCompanyDetailDto> = await CompanyService.getCompanyByName(companyDto.name);
-      if (company.count) {
-        throw new BaseError(
-          "The Company name already exists. Please enter a different name to ensure uniqueness.",
-          HttpStatusCode.FORBIDDEN_403
-        );
-      }
-
-      // const companyList = await CompanyService.getCompanyList({
-      //    companyName: companyDto.name,
-      //    industryName: "",
-      //    pageSize: 25
-      //  });
-      // // check array companyList size is more than 0
-      // if (companyList.length > 0) {
-      //   throw new Error("Company name already exist");
-      // }
 
       // Validate the incoming company data using the defined validation schema in CompanyDTOValidation
       const { error, value: validatedCompanyRequestBody } =
@@ -175,6 +205,16 @@ class CompanyController {
       // Check if validation resulted in errors
       if (error) {
         throw new RequestValidationError(error);
+      }
+
+      // Check if company name already exist
+      // Call the CompanyService to get company by name
+      const company: QueryResponse<DbCompanyDetailDto> = await CompanyService.getCompanyByName(companyDto.name);
+      if (company.count) {
+        throw new BaseError(
+          "The Company name already exists. Please enter a different name to ensure uniqueness.",
+          HttpStatusCode.FORBIDDEN_403
+        );
       }
 
       // Prepare the data required to add a new company

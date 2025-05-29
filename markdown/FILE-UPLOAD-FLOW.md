@@ -42,12 +42,3 @@ X-Amz-Security-Token: IQoJb3JpZ2luX2VjEK7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCmFwLX
 X-Amz-Signature: 2f7a2b78ecb0daa6408910582b102db8558463deb1589deb6c92f78b58aa4d6b
 X-Amz-SignedHeaders: host
 ```
-
-3. Update the cv of user
-Request URL: `https://api.dev.worko.work/user/rohithappala777+profiledecreasepercentage1@gmail.com/cv`
-Request Method: `PATCH`
-Status Code: `200 OK`
-Request Payload:
-```json
-{"resume":"01JGB2ABC12A9EFNBQ1H9430ER.pdf"}
-```

@@ -32,6 +32,13 @@ CompanyRouter.post("/", companyController.createCompany);
 CompanyRouter.put("/:id", companyController.updateCompany);
 
 /**
+ * Update company logo
+ * 
+ * @authorisedRoles ["admin"]
+ */
+CompanyRouter.patch("/:id/company-logo", companyController.updateCompanyLogo);
+
+/**
  * Create a company request based on the provided query parameter by user
  * 
  * @authorisedRoles ["loggedInUser"]

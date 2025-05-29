@@ -23,7 +23,7 @@ export interface CompanyRequestDTO {
   carrierPage: string;
   linkedIn: string;
   logoUrl?: string;
-  logo: string;
+  logo?: string;
   aboutCompany?: string;
   website?: string;
 }
@@ -66,7 +66,7 @@ export interface CompanyUpdateApiDto {
   carrierPage: string;
   linkedIn: string;
   logoUrl?: string;
-  logo: string;
+  logo?: string;
   aboutCompany?: string;
   website?: string;
 
@@ -92,7 +92,7 @@ export interface CompanyUpdateDto {
   carrierPage: string;
   linkedIn: string;
   logoUrl?: string;
-  logo: string;
+  logo?: string;
   aboutCompany?: string;
   website?: string;
 
@@ -186,4 +186,18 @@ export interface CompanyListingFilterRequestDTO extends RecordListingFilterReque
   industryName: string; // Filter by industry name
   teamSize?: string; // Filter by team size
   isVerified?: number | null; // Filter by verification status
+}
+
+/**
+ * CompanyUpdateLogoApiDto
+ */
+export interface CompanyUpdateLogoApiDto {
+  companyLogoCloudFileName: string;
+}
+
+/**
+ * CompanyCommonUpdateDto
+ */
+export interface CompanyCommonUpdateDto {
+  logo: string
 }

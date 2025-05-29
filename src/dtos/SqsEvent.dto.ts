@@ -30,15 +30,6 @@ export interface SqsMsgBaseReqDto {
  }
 
  /**
-  * Interface for SQS message request DTO related to job application validation and matching score.
-  */
- export interface SqsMsgJobApplicationValidationMatchingScoreReqDto extends SqsMsgBaseReqDto {
-    context: {
-        jobApplicationRequestId: string;
-    };
- } 
-
- /**
   * Interface for SQS message request DTO related to corporate bulk JD resume send email and whatsapp notification.
   * 
   * NOTE: `userId` and `userEmail` attributes are recieved as empty strings.

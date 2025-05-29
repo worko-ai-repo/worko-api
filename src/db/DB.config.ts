@@ -8,7 +8,6 @@ import { DB_CONSTANTS } from "./DB.constants";
 
 // Import all models
 import { CompanyModel } from "./models/Company.model";
-import { CompanyJobModel } from "./models/CompanyJob.model";
 import { CompanyDetailModel } from "./models/CompanyDetail.model";
 import { CompanyRequestModel } from "./models/CompanyRequest.model";
 import { CompanyJobUrlModel } from "./models/CompanyJobUrl.model";
@@ -48,7 +47,6 @@ import { WhatsappMessageLogModel } from "./models/WhatsappMessageLog.model";
 import { GrowaasanMessageLogModel } from "./models/GrowaasanMessageLog.model";
 
 import { ScheduleJobModel } from "./models/ScheduleJob.model";
-import { UserJobApplicationModel } from "./models/UserJobApplication.model";
 import { CorporateBulkJdModel } from "./models/CorporateBulkJd.model";
 import { CorporateBulkJdResumeModel } from "./models/CorporateBulkJdResume.model";
 import { WhatsAppBusinessPartnerMessageLogModel } from "./models/WhatsAppBusinessPartnerMessageLog.model";
@@ -160,11 +158,9 @@ class DBConfig {
       WhatsappTemplateModel,
       WhatsappMessageLogModel,
       ScheduleJobModel,
-      CompanyJobModel,
       GrowaasanMessageLogModel,
       CorporateUserInviteModel,
       CorporateUserModel,
-      UserJobApplicationModel,
       CorporateBulkJdModel,
       CorporateBulkJdResumeModel,
       WhatsAppBusinessPartnerMessageLogModel,

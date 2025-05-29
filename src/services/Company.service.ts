@@ -1,11 +1,7 @@
 // import dynamoose libraries
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
-// import configs
-import APP_CONSTANTS from "../configs/constants.config";
-
 // Load the local daos
-import companyDao from "../daos/Company.dao";
 import companyDetailDao from "../daos/CompanyDetail.dao";
 import companyRequestDao from "../daos/CompanyRequest.dao";
 
@@ -16,6 +12,8 @@ import {
   CompanyListingFilterOptions,
   Status,
   CompanyUpdateDto,
+  CompanyUpdateLogoApiDto,
+  CompanyCommonUpdateDto,
 } from "../dtos/Company.dto";
 import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 import { CompanyRequestListingFilterOptions, UpdateCompanyRequestDto } from "../dtos/CompanyRequest.dto";
@@ -314,6 +312,37 @@ class CompanyService {
 
     // Return the updated company details
     return companyDetails;
+  }
+
+  /**
+   * updateCompanyLogo
+   *
+   * Updates the logo for a company using the provided company id and update logo dto.
+   *
+   * @param {string} companyId - The ID of the company to be updated.
+   * @param {CompanyUpdateLogoApiDto} updateLogoDto - The DTO containing the company logo cloud file name to be updated.
+   *
+   * @returns {Promise<DbCompanyDetailDto>} A promise that resolves with the updated company details.
+   */
+  async updateCompanyLogo(companyId: string, updateLogoDto: CompanyUpdateLogoApiDto): Promise<DbCompanyDetailDto> {
+    global.logger.info(`Update company logo [service]`, {
+      filePath: __filename,
+      methodName: this.updateCompanyLogo.name,
+      companyId: companyId,
+    });
+
+    // Check whether the company exists or not
+    const companyDetail: QueryResponse<DbCompanyDetailDto> = await companyDetailDao.getCompanyDetailById(companyId);
+    if (!companyDetail.count) {
+      throw new BaseError("The Company Details not found.", HttpStatusCode.NOT_FOUND_404);
+    }
+
+    // Prepare update company dto
+    const updateData: Partial<CompanyCommonUpdateDto> = {
+      logo: updateLogoDto.companyLogoCloudFileName,
+    };
+
+    return companyDetailDao.updateCompanyDetailsById(companyId, updateData);
   }
 
   async getRequestedCompanyByName(name: string) {

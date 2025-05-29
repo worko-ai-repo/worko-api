@@ -17,12 +17,17 @@ class DbCompanyDetailDto extends BaseDbDto {
   teamSize!: number;
   carrierPage!: string;
   linkedIn!: string;
-  logoUrl!: string;
-  logo!:string;
+  logoUrl?: string;
+
+  /**
+   * @example "01JVY6yVD9TXR67C69E872RAF6.jpg"
+   */
+  logo?: string;
+
   aboutCompany?: string;
   website?: string;
   isVerified!: boolean;
-  isDeleted?: boolean
+  isDeleted?: boolean;
 }
 
 // Creating a DynamoDB schema for the 'Company' model with specified attributes and their types
@@ -34,7 +39,6 @@ const CompanySchema = new dynamoose.Schema(
       required: true,
     },
     GSI1PK: {
-      //@todo Add required true to GSI1
       type: String,
       index: {
         name: "GSI1",
@@ -71,7 +75,7 @@ const CompanySchema = new dynamoose.Schema(
     },
     logoUrl: {
       type: String,
-      required: true,
+      required: false,
     },
     logo: {
       type: String,
