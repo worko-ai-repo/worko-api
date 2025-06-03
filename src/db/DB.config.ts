@@ -52,6 +52,7 @@ import { CorporateBulkJdResumeModel } from "./models/CorporateBulkJdResume.model
 import { WhatsAppBusinessPartnerMessageLogModel } from "./models/WhatsAppBusinessPartnerMessageLog.model";
 import { UserDetailSettingModel } from "./models/UserDetailSetting.model";
 import { UserGuidanceRequestModel } from "./models/UserGuidanceRequest.model";
+import { BlogModel } from "./models/Blog.model";
 
 /**
  * DBConfig
@@ -166,6 +167,7 @@ class DBConfig {
       WhatsAppBusinessPartnerMessageLogModel,
       UserDetailSettingModel,
       UserGuidanceRequestModel,
+      BlogModel,
     ]);
   }
 }

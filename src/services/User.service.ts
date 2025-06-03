@@ -10,7 +10,6 @@ import APP_CONSTANTS from "../configs/constants.config";
 // Load the local daos
 import userDao from "../daos/User.dao";
 import userDetailDao from "../daos/UserDetail.dao";
-import { userGuidanceRequestDaoObj } from "../daos/UserGuidanceRequest.dao";
 import {
   EmailTemplatePlaceholderCAND_PREMIUM_EXPIRED_NOTIFICATION,
   EmailTemplatePlaceholderCAND_PREMIUM_UPGRADE_NOTIFICATION,
@@ -26,7 +25,6 @@ import {
 import { SubscriptionCreateRequestDTO } from "../dtos/Subscription.dto";
 import {
   PaginatedResultsWithMatchingConditionsInternalResponse,
-  PaginatedResultsWithMatchingConditionsResponse,
 } from "../dtos/Common.dto";
 import {
   NewUserCandSignUpDTO,
@@ -48,14 +46,6 @@ import {
   UserSubscriptionStatus,
   UserSubscriptionType,
 } from "../enums/UserSubscription.enum";
-import {
-  WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE,
-  WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP,
-} from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
-import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
-
-// Load the local libraries
-import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusinessPartner.library";
 
 // Load the local model
 import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";

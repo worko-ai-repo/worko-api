@@ -16,7 +16,7 @@
          "POST"
       ],
       "AllowedOrigins": [
-         "https://worko.ai/"
+         "https://worko.ai"
       ],
       "ExposeHeaders": []
    }
@@ -37,7 +37,7 @@
       ],
       "AllowedOrigins": [
          "http://localhost:4200",
-         "https://dev-ui.worko.work/"
+         "https://dev-ui.worko.work"
       ],
       "ExposeHeaders": []
    }

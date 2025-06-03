@@ -60,6 +60,13 @@ const APP_CONSTANTS = {
      *     This structure ensures better organization and scalability but don't update the existing structure.
      */
     COMPANY_LOGO: "images",
+
+    /**
+     * BLOG_COVER_IMAGE
+     * 
+     * To store the blog cover images
+     */
+    BLOG_COVER_IMAGE: "blog-cover-images",
   },
 
   /**
@@ -242,7 +249,7 @@ const APP_CONSTANTS = {
    */
   get CORPORATE_USER_INVITE_DATE_EXPIRATION(): number {
     const PROD_DAYS = 15; // 15 days
-    const DEV_DAYS = 15 / 1440; // 15 minutes
+    const DEV_DAYS = 15; // 15 days
 
     // return the time based on the environment
     return this.APP_SLS_STAGE === this.STAGES.PROD

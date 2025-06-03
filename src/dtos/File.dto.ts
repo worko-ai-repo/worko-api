@@ -150,3 +150,24 @@ export interface CompanyLogoPreSignedUrlToUploadFileRequestApiDto {
    */
   companyLogoFileMimeType: string;
 };
+
+/**
+ * BlogCoverImagePreSignedUrlToUploadFileRequestApiDto
+ */
+export interface BlogCoverImagePreSignedUrlToUploadFileRequestApiDto {
+  /**
+   * blogCoverImageFileName
+   *
+   * Sample file names:
+   *  1. "blog1.jpg"
+   *  2. "blog2.png"
+   */
+  blogCoverImageFileName: string;
+
+  /**
+   * blogCoverImageFileMimeType
+   *
+   * Sample file mime type: "image/jpeg"
+   */
+  blogCoverImageFileMimeType: string;
+};

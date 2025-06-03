@@ -54,6 +54,7 @@ import CorporateBulkJdResumeRouter from "./routers/CorporateBulkJdResume.router"
 // Admin Routers
 import AdminSubsRouter from "./routers/Admin.router";
 import AdminRouter from "./admin/router";
+import BlogRouter from "./routers/Blog.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -82,6 +83,13 @@ router.use("/admin", AdminRouter);
 
 // Admin router @todo: discuss with lead to add below route in router.use("/admin", AdminRouter);
 router.use("/admin-subs", AdminSubsRouter);
+
+/**
+ * BLOG ROUTERS
+ * 
+ * @authorisedRoles ["admin", "public", "loggedInUser"]
+ */
+router.use("/blog", BlogRouter);
 
 /**
  * COMPANY ROUTERS

@@ -6,7 +6,7 @@ import APP_CONSTANTS from "../configs/constants.config";
 import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
 
 // Import DTOs
-import { BulkCvPreSignedUrlToViewApiDto, CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto, CompanyLogoPreSignedUrlToUploadFileRequestApiDto, PreSignedUrlToUploadFileResponseDto } from "../dtos/File.dto";
+import { BlogCoverImagePreSignedUrlToUploadFileRequestApiDto, BulkCvPreSignedUrlToViewApiDto, CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto, CompanyLogoPreSignedUrlToUploadFileRequestApiDto, PreSignedUrlToUploadFileResponseDto } from "../dtos/File.dto";
 
 // Import enums
 import { FileResourceKey } from "../enums/File.enum";
@@ -16,6 +16,7 @@ import UlidService from "../services/Ulid.service";
 
 // Import Schemas
 import {
+  FileGeneratePsuToUploadBlogCoverImageDTOValidation,
   FileGeneratePsuToUploadCareerResumeDTOValidation,
   FileGeneratePsuToUploadCompanyJobDescriptionDTOValidation,
   FileGeneratePsuToUploadCompanyLogoDTOValidation,
@@ -76,6 +77,9 @@ class FileController {
         // Frontend wants to generate the pre-signed url to upload the company logo
         case FileResourceKey.COMPANY_LOGO:
           return this.generatePsuToUploadCompanyLogo(req, res, next);
+
+        case FileResourceKey.BLOG_COVER_IMAGE:
+          return this.generatePsuToUploadBlogCoverImage(req, res, next);
 
         // Frontend wants to generate the pre-signed URL to upload the user's career CV
         case FileResourceKey.CAREER_RESUME:
@@ -374,6 +378,87 @@ class FileController {
         cloudFileName: companyLogoCloudFileName,
         fileMimeType: requestBodyObject.companyLogoFileMimeType,
         fileExtension: companyLogoFileExtension,
+        awsS3SignedUrl: fileSignedUrl,
+      };
+
+      // Return the response
+      return res.status(HttpStatusCode.OK_200).json(resObject);
+    } catch (error) {
+      // Let global error handler handle the exception (app.ts)
+      next(error);
+    }
+  };
+
+  /**
+   * generatePsuToUploadBlogCoverImage
+   *
+   * @param {Request} req - The incoming request object.
+   * @param {Response} res - The outgoing response object.
+   * @param {NextFunction} next - The next function in the middleware chain.
+   */
+  private generatePsuToUploadBlogCoverImage = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      // Get the request body
+      let requestBodyObject: BlogCoverImagePreSignedUrlToUploadFileRequestApiDto =
+        req.body;
+
+      // Validate the request data
+      const { error } =
+        FileGeneratePsuToUploadBlogCoverImageDTOValidation.validate(
+          requestBodyObject,
+          {
+            abortEarly: false,
+          }
+        );
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Get the base path where the blog cover image file would be uploaded.
+      const fileUploadPath: string = APP_CONSTANTS.AWS_S3_DIR_PATHS.BLOG_COVER_IMAGE;
+
+      /**
+       * Get the blog cover image file extension
+       *
+       * @example:
+       *  1. "jpg"
+       *  2. "png"
+       */
+      const blogCoverImageFileExtension = requestBodyObject.blogCoverImageFileName
+        .split(".")
+        .pop() as string;
+
+      /**
+       * Prepare the company logo file name
+       *
+       * @example:
+       *  1. "2vhd2uidvkqh3kv2rf6697.jpg"
+       *  2. "2vhd2uiugdqwidvkqh3kv2.png"
+       */
+      const blogCoverImageCloudName: string = `${UlidService.getUlidId()}.${blogCoverImageFileExtension}`;
+
+      // Generate the AWS S3 Signed Url
+      const fileSignedUrl: string =
+        await awsS3ClientLibrary.getSignedUrlForUploadingObject(
+          process.env.APP_AWS_S3_BUCKET_WORKO_UI_BLOG as string,
+          `${fileUploadPath}/${blogCoverImageCloudName}`,
+          APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
+          {
+            ContentType: requestBodyObject.blogCoverImageFileMimeType,
+          }
+        );
+
+      // Prepare the response object
+      const resObject: PreSignedUrlToUploadFileResponseDto = {
+        userFileName: requestBodyObject.blogCoverImageFileName,
+        cloudFileName: blogCoverImageCloudName,
+        fileMimeType: requestBodyObject.blogCoverImageFileMimeType,
+        fileExtension: blogCoverImageFileExtension,
         awsS3SignedUrl: fileSignedUrl,
       };
 

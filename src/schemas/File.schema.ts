@@ -59,6 +59,29 @@ export const FileGeneratePsuToUploadCompanyLogoDTOValidation = Joi.object({
 });
 
 /**
+ * FileGeneratePsuToUploadBlogCoverImageDTOValidation
+ *
+ * Joi validation schema to validate the request data.
+ */
+export const FileGeneratePsuToUploadBlogCoverImageDTOValidation = Joi.object({
+  blogCoverImageFileName: Joi.string()
+    .pattern(/^[^\/\\]+?\.[a-zA-Z0-9]+$/)
+    .required()
+    .messages({
+      "any.required": "The 'blogCoverImageFileName' field is required.",
+      "string.empty": "The 'blogCoverImageFileName' field should not be empty.",
+      "string.base": "The 'blogCoverImageFileName' field should be a string.",
+      "string.pattern.base": "The 'blogCoverImageFileName' must include a file extension (e.g., 'logo.png').",
+    }),
+
+  blogCoverImageFileMimeType: Joi.string().required().messages({
+    "any.required": "The 'blogCoverImageFileMimeType' field is required.",
+    "string.empty": "The 'blogCoverImageFileMimeType' field should not be empty.",
+    "string.base": "The 'blogCoverImageFileMimeType' field should be a string.",
+  }),
+});
+
+/**
  * FileGeneratePsuToUploadCareerResumeDTOValidation
  *
  * Joi validation schema to validate the request data.
