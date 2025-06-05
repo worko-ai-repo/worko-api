@@ -420,7 +420,7 @@ class FileController {
       }
 
       // Get the base path where the blog cover image file would be uploaded.
-      const fileUploadPath: string = APP_CONSTANTS.AWS_S3_DIR_PATHS.BLOG_COVER_IMAGE;
+      const fileUploadPath: string = APP_CONSTANTS.AWS_S3_DIR_PATHS.BLOG_IMAGE;
 
       /**
        * Get the blog cover image file extension
@@ -445,7 +445,7 @@ class FileController {
       // Generate the AWS S3 Signed Url
       const fileSignedUrl: string =
         await awsS3ClientLibrary.getSignedUrlForUploadingObject(
-          process.env.APP_AWS_S3_BUCKET_WORKO_UI_BLOG as string,
+          process.env.APP_AWS_S3_BUCKET_WORKO_UI_COMP_LOGO as string,
           `${fileUploadPath}/${blogCoverImageCloudName}`,
           APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
           {

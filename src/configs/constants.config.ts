@@ -62,11 +62,11 @@ const APP_CONSTANTS = {
     COMPANY_LOGO: "images",
 
     /**
-     * BLOG_COVER_IMAGE
+     * BLOG_IMAGE
      * 
      * To store the blog cover images
      */
-    BLOG_COVER_IMAGE: "blog-cover-images",
+    BLOG_IMAGE: "blog-images",
   },
 
   /**
