@@ -62,7 +62,7 @@ class CompanyService {
    * @returns {Promise<QueryResponse<DbCompanyDetailDto>>} A promise that resolves with the query response containing the company details that match the prefix.
    */
   async getCompanyByName(name: string) {
-    return companyDetailDao.getByBeginsith(name);
+    return companyDetailDao.getByCompanyName(name);
   }
 
   /**

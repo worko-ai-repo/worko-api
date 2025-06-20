@@ -298,6 +298,23 @@ class CompanyDetailDao implements BaseDao {
       .exec();
   }
 
+  /**
+   * getByCompanyName
+   * 
+   * Retrieves a list of existing companies that have names matching the given string.
+   *
+   * @param {string} companyName - The name of the company to search.
+   * @returns {Promise<QueryResponse<DbCompanyDetailDto>>} A promise that resolves with the query response containing the company details that match the name.
+   */
+  async getByCompanyName(companyName: string): Promise<QueryResponse<DbCompanyDetailDto>> {
+    return CompanyDetailModel.query("PK")
+      .eq(this.partitianKey)
+      .where("name")
+      .eq(companyName.toUpperCase())
+      .attributes(["name", "SK"])
+      .exec();
+  }
+
   async getAllCompanyNames() {
     return CompanyDetailModel.query("PK")
       .eq(this.partitianKey)
