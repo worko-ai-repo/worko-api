@@ -96,6 +96,11 @@ class UserController {
       // Send the response with the fetched user details
       return res.status(HttpStatusCode.OK_200).json(userDetailsResponse);
     } catch (error) {
+      // Log the error
+      global.logger.error(`Error at catch block while getting user details by CAND/EMP`,{
+        methodName: this.getUsers.name,
+        error
+      });
       // Pass the error to the next middleware
       next(error);
     }

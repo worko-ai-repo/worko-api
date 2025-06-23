@@ -48,7 +48,7 @@ const serverlessConfiguration: AWS = {
      * 1. Default timeout for functions. Optional. (default: 6 seconds).
      * 2. Note: API Gateway has a maximum timeout of 30 seconds
      */
-    timeout: 29, 
+    timeout: 900, 
     
     iamRoleStatements: [
       {

@@ -1,5 +1,5 @@
 // Import dynamoose library
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 //Load the base dao
 import BaseDao from "./Base.dao";
@@ -26,20 +26,40 @@ import { UserType } from "../enums/User.enum";
 
 // Load helpers
 import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
+import { dateHelperObj } from "../helpers/date.helper";
 
 // import lib dynamodb library
 import { awsLibDynamodbLibraryObj } from "../libraries/aws-lib-dynamodb.library";
 
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
-  modelName = "UserDetail";
-  partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
+  modelName: string = "UserDetail";
+  partitianKey: string = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
   sortKeys = {
     SK_ID: "ID#{userId}", // where userId is cognito provided userId for registered user
   };
   GSI1PK: string = "USR#";
-  GSI1SK = "ID#{userId}"; // where userId is cognito provided userId for registered user
+  GSI1SK: string = "ID#{userId}"; // where userId is cognito provided userId for registered user
+  GSI2PK: string = "USR#";
 
+  /**
+   * GSI2SK
+   * const isoString = new Date().toISOString(); //[LOG]: "2025-06-11T16:15:36.0678Z"
+   */
+  GSI2SK: string = "{createdAt}";
+
+  /**
+   * formatGSI2SKWithDate
+   *
+   * Formats the GSI2SK string with the provided createdAt date string.
+   *
+   * @param {string} createdAt - The date string to replace the {createdAt} placeholder in the GSI2SK string.
+   * @return {string} The formatted GSI2SK string.
+   */
+  private formatGSI2SKWithDate(createdAt: string): string {
+    return this.GSI2SK.strtr({ "{createdAt}": createdAt });
+  }
+  
   /**
    * getUsers
    *
@@ -55,17 +75,7 @@ class UserDetailDao implements BaseDao {
     global.logger.info("Get user details [DAO]");
 
     // Get all the user details including candidates and employees
-    let query = UserDetailModel.query("GSI1PK")
-      .eq(this.GSI1PK)
-      .where("GSI1SK")
-      .beginsWith("ID#");
-
-    // if userType is provided then get only users of that type
-    if (usersRecordListingFilterRequest.userType) {
-      query = query
-        .where("userType")
-        .contains(usersRecordListingFilterRequest.userType);
-    }
+    let query: Query<DbUserDetailDto> = UserDetailModel.query("GSI2PK").eq(this.GSI2PK);
 
     /**
      * query.sort(order) sorts the items you receive back by the rangeKey. By default, if not provided, it will sort in ascending order.
@@ -76,30 +86,36 @@ class UserDetailDao implements BaseDao {
      *
      * When you use the sort() method in Dynamoose,
      * it sorts the items based on the sort key of the index you're querying.
-     *
      */
     query = query.sort(
-      usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum
+      usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum // by default sets to descending order(refer "request.helper.ts")
     );
 
+    // if userType is provided then get only users of that type
+    if (usersRecordListingFilterRequest.userType) {
+      query = query
+        .where("userType")
+        .contains(usersRecordListingFilterRequest.userType);
+    }
+
     // Apply date range filter if provided
-    if (
-      usersRecordListingFilterRequest.fromDate ||
-      usersRecordListingFilterRequest.toDate
-    ) {
-      query = query.and().parenthesis((condition) => {
-        if (usersRecordListingFilterRequest.fromDate) {
-          condition
-            .where("createdAt")
-            .ge(usersRecordListingFilterRequest.fromDate);
-        }
-        if (usersRecordListingFilterRequest.toDate) {
-          condition
-            .where("createdAt")
-            .le(usersRecordListingFilterRequest.toDate);
-        }
-        return condition;
-      });
+    const {fromDate, toDate} = usersRecordListingFilterRequest;
+
+    // If both fromDate and toDate are provided
+    if(fromDate && toDate) {
+      const fromDateIsoString: string = dateHelperObj.getISODateFromTimestamp(fromDate);
+      const toDateIsoString: string = dateHelperObj.getISODateFromTimestamp(toDate);
+      query = query.where("GSI2SK").between(this.formatGSI2SKWithDate(fromDateIsoString), this.formatGSI2SKWithDate(toDateIsoString));
+    } 
+    // If only fromDate is provided
+    else if(fromDate) {
+      const fromDateIsoString: string = dateHelperObj.getISODateFromTimestamp(fromDate);
+      query = query.where("GSI2SK").ge(this.formatGSI2SKWithDate(fromDateIsoString));
+    } 
+    // If only toDate is provided
+    else if(toDate) {
+      const toDateIsoString: string = dateHelperObj.getISODateFromTimestamp(toDate);
+      query = query.where("GSI2SK").le(this.formatGSI2SKWithDate(toDateIsoString));
     }
 
     // search by searchText if provided
@@ -308,6 +324,8 @@ class UserDetailDao implements BaseDao {
       GSI1SK: this.GSI1SK.strtr({
         "{userId}": userSignUpDTO.id,
       }),
+      GSI2PK: this.GSI2PK,
+      GSI2SK: new Date().toISOString(), // Sample value: "2025-06-11T16:15:36.0678Z"
     };
     return UserDetailModel.create(newUserSignUpDTO);
   }

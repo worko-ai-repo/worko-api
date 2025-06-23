@@ -63,4 +63,10 @@ ScriptRouter.post("/update-jd-extracted-to-string-data-type",scriptController.sc
 // Endpoint to update all user experiences
 // ScriptRouter.post("/update-user-experiences", scriptController.updateUserExperiencesGSIs);
 
+// Endpoint to update registered user gsi two
+ScriptRouter.post("/update-registered-user-gsi-two", scriptController.scripToUpdateRegisteredUserGsiTwo);
+
+// Endpoint to retry update registered user gsi two
+ScriptRouter.post("/retry-update-registered-user-gsi-two", scriptController.scripToRetryUpdateRegisteredUserGsiTwo);
+
 export default ScriptRouter;
