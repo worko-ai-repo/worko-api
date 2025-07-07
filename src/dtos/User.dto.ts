@@ -11,6 +11,7 @@ export interface UserSignUpDTO {
   number: string;
   linkedinUrl?: string;
   ECTC?: number;
+  CTC?: number;
   YOE?: number;
   CV?: string;
   userId: string;

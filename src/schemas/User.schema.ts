@@ -53,6 +53,10 @@ export const UserSignUpDTOValidation = Joi.object({
     "number.base": "ECTC should be a valid number",
     "number.min": "Number must be greater than or equal to 0",
   }),
+  CTC: Joi.number().min(0).options({ convert: false }).optional().messages({
+    "number.base": "CTC should be a valid number",
+    "number.min": "Number must be greater than or equal to 0",
+  }),
   YOE: Joi.number().min(0).options({ convert: false }).optional().messages({
     "number.base": "YOE should be a valid number",
     "number.min": "Number must be greater than or equal to 0",
