@@ -581,3 +581,8 @@ Unknown application error occurred
 ```sh
 PostConfirmation failed with error User: arn:aws:sts::211125353899:assumed-role/worko-api-cognito-post-confirmation-trigger-role-wcv1wa97/worko-api-cognito-post-confirmation-trigger is not authorized to perform: sqs:sendmessage on resource: arn:aws:sqs:ap-south-1:211125353899:worko-app-event-queue because no identity-based policy allows the sqs:sendmessage action.
 ```
+
+25. 
+```sh
+[Container] 2025/07/31 08:04:22.581249 Command failed with exit status 232
+```

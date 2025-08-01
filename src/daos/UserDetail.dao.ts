@@ -59,6 +59,33 @@ class UserDetailDao implements BaseDao {
   private formatGSI2SKWithDate(createdAt: string): string {
     return this.GSI2SK.strtr({ "{createdAt}": createdAt });
   }
+
+  /**
+   * preparePKAndSKForQuery
+   *
+   * Prepares the partition key and sort key for a query.
+   *
+   * @param {string} primaryEmail - The primary email of the user.
+   * @param {string} id - The id of the user.
+   *
+   * @returns {{PK: string, SK: string}} - An object containing the partition key and sort key.
+   */
+  preparePKAndSKForQuery(
+    primaryEmail: string,
+    id: string
+  ): {
+    PK: string;
+    SK: string;
+  } {
+    return {
+      PK: this.partitianKey.strtr({
+        "{primaryEmail}": primaryEmail,
+      }),
+      SK: this.sortKeys.SK_ID.strtr({
+        "{userId}": id,
+      }),
+    };
+  }
   
   /**
    * getUsers
@@ -75,7 +102,33 @@ class UserDetailDao implements BaseDao {
     global.logger.info("Get user details [DAO]");
 
     // Get all the user details including candidates and employees
-    let query: Query<DbUserDetailDto> = UserDetailModel.query("GSI2PK").eq(this.GSI2PK);
+    let query: Query<DbUserDetailDto>;
+
+    if(usersRecordListingFilterRequest?.searchText?.includes('@')) {
+      global.logger.info("Search by email [DAO]", {
+        searchText: usersRecordListingFilterRequest.searchText,
+      });
+
+      const {PK, SK} = this.preparePKAndSKForQuery(
+        usersRecordListingFilterRequest.searchText,
+        ""
+      )
+      query = UserDetailModel.query("PK")
+        .eq(PK)
+        .where("SK")
+        .beginsWith(SK)
+        .sort(
+          usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum // by default sets to descending order(refer "request.helper.ts")
+        );
+
+      // Execute the query by applying the paginateQuery helper and return the results
+      return getPaginatedResultsWithMatchingConditions<
+        DbUserDetailDto,
+        UsersListingFilterOptions
+      >(query, usersRecordListingFilterRequest);
+    } else {
+      query = UserDetailModel.query("GSI2PK").eq(this.GSI2PK);
+    }
 
     /**
      * query.sort(order) sorts the items you receive back by the rangeKey. By default, if not provided, it will sort in ascending order.
@@ -136,18 +189,6 @@ class UserDetailDao implements BaseDao {
           .or()
           .where("PK")
           .contains(`USR#EML#${searchTextValue}`);
-
-        // If user type is not provided or if user type is candidate,
-        // search by candidate experience company name
-        if (
-          !usersRecordListingFilterRequest.userType ||
-          usersRecordListingFilterRequest.userType === UserType.CAND
-        ) {
-          condition
-            .or()
-            .where("candidateExperience.companyName")
-            .contains(searchTextValue.toUpperCase());
-        }
 
         // Return the built condition
         return condition;

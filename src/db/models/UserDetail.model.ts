@@ -16,8 +16,8 @@ class DbUserDetailDto extends BaseDbDto {
   id!: string; // Cognito Provided UserId for registered user
   GSI1PK!: string;
   GSI1SK!: string;
-  GSI2PK?: string; // @todo: make this required after updating
-  GSI2SK?: string; // @todo: make this required after updating
+  GSI2PK!: string; 
+  GSI2SK!: string; 
   name!: string;
   emailList!: { [key: string]: string }; // @todo we should consider removing this. And make the fields are always upto date. Instead use the "UserEmail" SK.
   number!: string;
@@ -128,7 +128,7 @@ const UserDetailSchema = new dynamoose.Schema(
         type: "global",
         rangeKey: "GSI2SK",
       },
-      required: false, // @todo Add required true to GSI2 after updating
+      required: true, 
     },
     GSI2SK: {
       type: String,
@@ -136,7 +136,7 @@ const UserDetailSchema = new dynamoose.Schema(
         name: "GSI2",
         type: "global",
       },
-      required: false, // @todo Add required true to GSI2 after updating
+      required: true, 
     },
     name: {
       type: String,
