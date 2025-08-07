@@ -250,3 +250,17 @@ export interface EmailTemplatePlaceholder_USER_GUIDANCE_REQUEST {
   
   jobUrl: string;
 }
+
+/**
+ * EmailTemplatePlaceholderWORKO_ADMIN_CORPORATE_REQUEST
+ */
+export interface EmailTemplatePlaceholderWORKO_ADMIN_CORPORATE_REQUEST {
+  corporateFullName: string;
+  corporateCompanyName: string;
+  corporateDesignation: string;
+  corporateEmail: string;
+  corporatePhoneNumber: string;
+  requestedPricingPlan: string;
+  corporateMessage: string;
+  submittedAt: string;
+}

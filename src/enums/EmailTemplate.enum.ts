@@ -108,5 +108,14 @@ export enum EmailTemplateEnum {
      * 
      * The template name used to send an email to "worko admin" and "candidate" when a candicate sends guidance request.
      */
-    USER_GUIDANCE_REQUEST = "USER_GUIDANCE_REQUEST"
+    USER_GUIDANCE_REQUEST = "USER_GUIDANCE_REQUEST",
+
+    /**
+     * WORKO_ADMIN_CORPORATE_REQUEST
+     * 
+     * The template name used to send an email to "worko admin" when a corporate user sends a request.
+     * 
+     * @reference https://worko.ai/corporate
+     */
+    WORKO_ADMIN_CORPORATE_REQUEST = "WORKO_ADMIN_CORPORATE_REQUEST",
 }

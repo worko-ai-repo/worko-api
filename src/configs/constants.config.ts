@@ -130,6 +130,12 @@ const APP_CONSTANTS = {
       email: "guidance@worko.ai",
       fullName: "Worko.ai",
     },
+    WORKO_PRODUCT_MANAGERS: {
+      Jeetesh: {
+        email: "jeetesh@worko.ai",
+        fullName: "Worko.ai",
+      },
+    },
   },
 
   /**
