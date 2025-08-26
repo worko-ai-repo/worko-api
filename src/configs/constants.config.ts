@@ -159,6 +159,20 @@ const APP_CONSTANTS = {
       "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
   },
 
+  FRONTEND_ORIGINS: {
+    PROD: [
+      "https://worko.ai",
+    ],
+    DEV: [
+      "https://dev-ui.worko.work", 
+      "https://dev.worko.work",    
+      "http://localhost:4200",
+      "http://localhost:8080",
+      "http://localhost:3001", 
+      "http://localhost:3002",  
+    ],
+  },
+
   /**
    * COGNITO_READABLE_GROUPS
    *

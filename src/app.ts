@@ -79,8 +79,8 @@ class App {
    * This method registers the required middlewares to handle/customise the requests, responses, etc.
    */
   registerMiddleWares() {
-    // @todo: we should not allow apis to be called by any origin, we must specify known/trusted origins
-    this.app.use(cors({ origin: '*' })); // {origin: ['localhost:4200', 'api.worko.ai']}
+    const origins: string[] = process.env.APP_STAGE === APP_CONSTANTS.STAGES.PROD ? APP_CONSTANTS.FRONTEND_ORIGINS.PROD : APP_CONSTANTS.FRONTEND_ORIGINS.DEV;
+    this.app.use(cors({ origin: origins })); 
     this.app.use(express.json());
   }
 
