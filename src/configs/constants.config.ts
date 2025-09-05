@@ -81,6 +81,8 @@ const APP_CONSTANTS = {
   // If "pageSize" from the request does not match with one of the "PAGE_LENGTH_OPTIONS" value, then this value would be used.
   PAGE_LENGTH_DEFAULT: 25,
 
+  OTP_LENGTH: 6,
+
   LAMBDA_FUNCTION_NAMES: {
     /**
      * RESUME_EXTRACTION_LAMBDA_NAME

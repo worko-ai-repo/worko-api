@@ -61,15 +61,13 @@ const WHATSAPP_APP_CONSTANTS = {
    * This property returns the interval between subsequent reminders after the first one
    * has been sent for validating an employee's work email. The interval is calculated
    * differently based on the environment:
-   * - Production (PROD): 36 hours (in milliseconds)
-   * - Development/Testing: 20 minutes (in milliseconds)
    *
    * @returns {number} - The interval between reminders in milliseconds.
    */
   get EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INTERVAL(): number {
     return process.env.APP_SLS_STAGE === APP_CONSTANTS.STAGES.PROD
-      ? 36 * 60 * 60 * 1000 // 36 hours in milliseconds
-      : 5 * 60 * 1000; // 5 minutes in milliseconds
+      ? 3 * 24 * 60 * 60 * 1000 // 3 days in milliseconds
+      : 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
   },
 };
 
