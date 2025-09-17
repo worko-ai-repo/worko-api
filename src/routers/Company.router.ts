@@ -32,16 +32,23 @@ CompanyRouter.post("/", companyController.createCompany);
 CompanyRouter.put("/:id", companyController.updateCompany);
 
 /**
- * Create a company request based on the provided query parameter by user
+ * Update company logo
  * 
  * @authorisedRoles ["admin"]
+ */
+CompanyRouter.patch("/:id/company-logo", companyController.updateCompanyLogo);
+
+/**
+ * Create a company request based on the provided query parameter by user
+ * 
+ * @authorisedRoles ["loggedInUser"]
  */
 CompanyRouter.post("/request", companyController.requestCompany);
 
 /**
  * Get the requested company list for admin
  * 
- * @authorisedRoles ["public"]
+ * @authorisedRoles ["admin"]
  */
 CompanyRouter.get("/request/list", companyController.getRequestedCompanyList);
 
@@ -61,6 +68,28 @@ CompanyRouter.get("/", companyController.getCompanyList);
 
 // removed below route because we can use above CompanyRouter.get("/", companyController.getCompanyList); route for search filter by company name by hitting api:- http://localhost:3000/local/company/?companyName=go
 // CompanyRouter.get("/:beginsWith", companyController.getByBeginsWith);
+
+/**
+ * Delete company by id by 
+ * 
+ * NOTE: In this API, we are not deleting the data from the
+ * datbase, we are only updating the `isDeleted` field to true,
+ * because some data are used as a reference in other tables.
+ * 
+ * @authorisedRoles ["admin"]
+ */
+CompanyRouter.delete("/:id", companyController.softDeleteCompanyById);
+
+/**
+ * Delete a company request by company id
+ * 
+ * NOTE: In this API, we are not deleting the data from the
+ * datbase, we are only updating the `isDeleted` field to true,
+ * because some data are used as a reference in other tables.
+ * 
+ * @authorisedRoles ["admin"]
+ */
+CompanyRouter.delete("/:id/request", companyController.softDeleteCompanyRequestByCompanyId);
 
 // Export the "CompanyRouter"
 export default CompanyRouter;

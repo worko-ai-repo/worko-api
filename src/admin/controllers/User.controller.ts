@@ -1,9 +1,6 @@
 // Import the necessary npm packages
 import { Request, Response, NextFunction } from "express";
 
-// Import the dynamoose types
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-
 // Import the DTO
 import {
   UsersListingFilterOptions,
@@ -11,12 +8,8 @@ import {
 } from "../dtos/User.dto";
 import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../../dtos/Common.dto";
 
-// Import the enums
-import { SortOrderTypeEnum } from "../../enums/Common.enum";
-
 // Import the helpers
 import { RequestHelper } from "../../helpers/request.helper";
-import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
 import { paginationResponseHelperObj } from "../../helpers/pagination-response.helper";
 
 // Import the models
@@ -96,6 +89,11 @@ class UserController {
       // Send the response with the fetched user details
       return res.status(HttpStatusCode.OK_200).json(userDetailsResponse);
     } catch (error) {
+      // Log the error
+      global.logger.error(`Error at catch block while getting user details by CAND/EMP`,{
+        methodName: this.getUsers.name,
+        error
+      });
       // Pass the error to the next middleware
       next(error);
     }

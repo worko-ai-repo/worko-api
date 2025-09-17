@@ -10,7 +10,8 @@ import userOtpService from "./UserOTP.service";
 import ScheduleJobService from "./ScheduleJob.service";
 
 // import Constants
-import { GROWAASAN_APP_CONSTANTS } from "../configs/constants/Growaasan.constant";
+import { WHATSAPP_APP_CONSTANTS } from "../configs/constants/Whatsapp.constant";
+import { WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS } from "../configs/constants/WhatsAppBusinessPartner.constant";
 
 // Import DAOs
 import userExperienceDao from "../daos/UserExperience.dao";
@@ -20,8 +21,7 @@ import { UserExperienceDTO } from "../dtos/UserExperience.dto";
 import { ScheduleJobCreateDto, ScheduleJobWhatsAppReminderInputDto } from "../dtos/ScheduleJob.dto";
 import { RecordListingFilterOptions } from "../dtos/Common.dto";
 import { EmailTemplatePlaceholderUSER_WORK_EMAIL_VERIFICATION_OTP } from "../dtos/EmailTemplatePlaceholder.dto";
-import { GrowaasanTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION } from "../dtos/GrowaasanTemplatePlaceholder.dto";
-import { GrowaasanPhoneNumberDto } from "../dtos/Growaasan.dto";
+import { WhatsAppBusinessPartnerTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION } from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
 
 // Import Models
 import { DbUserExperienceDto } from "../db/models/UserExperience.model";
@@ -29,19 +29,16 @@ import { DbUserOtpDto } from "../db/models/UserOTP.model";
 
 // Import Libraries
 import { EmailSourceDestinationAddress } from "../libraries/email.library";
+import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusinessPartner.library";
 
 // Import Enums
+import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { ScheduleJobStatus, ScheduleJobType } from "../enums/ScheduleJob.enum";
 
 // Import Utilities
 import { BaseError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
-
-// import constants
-import { WHATSAPP_APP_CONSTANTS } from "../configs/constants/Whatsapp.constant";
-import { GrowaasanTemplateNameEnum } from "../enums/GrowaasanTemplate.enum";
-import { growaasanLibraryObj } from "../libraries/Growaasan.library";
 
 /**
  *  UserExperienceService class responsible for managing user Experience-related operations.
@@ -223,27 +220,22 @@ class UserExperienceService {
      * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
      */
     if (
-      GROWAASAN_APP_CONSTANTS.ENABLED &&
+      WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS.ENABLED &&
       userDetails[0].isWhatsappNotificationEnabled !== false
     ) {
-      const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION =
+      const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION =
         {
           employeeName: inputDetails["empName"].toTitleCase(),
         };
 
-      await this.sendGrowaasanWhatsappMsgToEmpAboutPendingWorkEmailVerification(
-        growaasanPlaceholders,
-        {
-          countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-          phoneNumber: parseInt(
-            userDetails[0].number.replace(
-              GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
-              ""
-            )
-          ),
-        },
+      // Send WhatsApp message to employee
+      await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+        WhatsAppBusinessPartnerTemplateNameEnum.EMP_PENDING_WORK_EMAIL_VERIFICATION,
+        userDetails[0].number.strtr({ "+": "" }), // To Phone Number
+        whatsAppBusinessPartnerPlaceholders,
         inputDetails["email"]
       );
+
       global.logger.info(
         `Sent WhatsApp reminder ${inputDetails["reminderCount"]} for work email verification`
       );
@@ -269,46 +261,6 @@ class UserExperienceService {
       );
     }
 
-    return true;
-  }
-
-
-/**
- * sendGrowaasanWhatsappMsgToEmpAboutPendingWorkEmailVerification
- * 
- * Sends a WhatsApp message to an employee about pending work email verification using Growaasan library.
- *
- * This method sends a WhatsApp message to an employee regarding pending work email verification.
- *
- * @param {GrowaasanTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION} growaasanPlaceholders - The placeholders for the WhatsApp message template.
- * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number to send the message to.
- * @param {string} empEmail - The email address of the employee.
- * @returns {Promise<boolean>} - A promise that resolves when the message is successfully sent.
- */
-  async sendGrowaasanWhatsappMsgToEmpAboutPendingWorkEmailVerification(
-    growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    empEmail: string
-  ): Promise<boolean> {
-
-    // Send WhatsApp message to employee about pending work email verification using Growaasan library
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.EMP_PENDING_WORK_EMAIL_VERIFICATION,
-      empEmail,
-      toPhoneNumber,
-      growaasanPlaceholders
-    );
-
-    global.logger.info(
-      "WhatsApp message for pending work email verification sent successfully",
-      {
-        filePath: __filename,
-        methodName:
-          this.sendGrowaasanWhatsappMsgToEmpAboutPendingWorkEmailVerification
-            .name,
-        empEmail: empEmail,
-      }
-    );
     return true;
   }
 

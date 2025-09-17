@@ -13,12 +13,13 @@ import {
 
 // Import Models
 import { DbUserCorporateRequestDto } from "../db/models/UserCorporateRequest.model";
-import { EmailSourceDestinationAddress } from "../libraries/email.library";
-import { EmailTemplatePlaceholderUSER_CORPORATE_REQUEST_EMAIL_OTP } from "../dtos/EmailTemplatePlaceholder.dto";
+import { emailLibrary, EmailSourceDestinationAddress } from "../libraries/email.library";
+import { EmailTemplatePlaceholderUSER_CORPORATE_REQUEST_EMAIL_OTP, EmailTemplatePlaceholderWORKO_ADMIN_CORPORATE_REQUEST } from "../dtos/EmailTemplatePlaceholder.dto";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import userOtpService from "./UserOTP.service";
 import APP_CONSTANTS from "../configs/constants.config";
 import { DbUserOtpDto } from "../db/models/UserOTP.model";
+import { dateHelperObj } from "../helpers/date.helper";
 
 /**
  * UserCorporateRequestService
@@ -48,10 +49,72 @@ class UserCorporateRequestService {
         });
 
         // Return the created corporate request details
-        return userCorporateRequestDao.createCorporateRequest(
+        const userCorporateRequest =
+            await userCorporateRequestDao.createCorporateRequest(
             emailAddress,
             userCorporateRequestCreateDto
         );
+
+        const { WORKO_PRODUCT_MANAGERS, WORKO_DEFAULT } = APP_CONSTANTS.SOURCE_EMAIL_ADDRESS;
+
+        /**
+         * @todo: Need to create `utils/email.library` to send emails in a common way in near future
+         */
+
+        const toAddresses: EmailSourceDestinationAddress[] = [
+          {
+            email: WORKO_PRODUCT_MANAGERS.Jeetesh.email,
+            fullName: WORKO_PRODUCT_MANAGERS.Jeetesh.fullName,
+          },
+          {
+            email: WORKO_DEFAULT.email,
+            fullName: WORKO_DEFAULT.fullName,
+          }
+        ];
+
+        const {
+            userFullName,
+            companyName,
+            userDesignation,
+            userEmail,
+            contactNumber,
+            pricingPlan,
+            userMessage
+        } = userCorporateRequest;    
+
+        const emailPlaceholders: EmailTemplatePlaceholderWORKO_ADMIN_CORPORATE_REQUEST =
+          {
+            corporateFullName: userFullName,
+            corporateCompanyName: companyName,
+            corporateDesignation: userDesignation,
+            corporateEmail: userEmail,
+            corporatePhoneNumber: contactNumber,
+            requestedPricingPlan: pricingPlan,
+            corporateMessage: userMessage,
+            submittedAt: dateHelperObj.formatDateToDayMonthYear(
+              dateHelperObj.getISODate()
+            ),
+          };
+
+        const sendEmails: {
+          awsMessageId: string | null;
+          systemLogId: string | null;
+        }[] = await Promise.all(
+          toAddresses.map((toAddress: EmailSourceDestinationAddress) => {
+            return emailLibrary.sendEmail(
+              EmailTemplateEnum.WORKO_ADMIN_CORPORATE_REQUEST,
+              toAddress,
+              emailPlaceholders
+            );
+          })
+        );
+
+        global.logger.info("Email sent for corporate request", {
+          methodName: this.createCorporateRequest.name,
+          sendEmails: sendEmails,
+        });
+
+        return userCorporateRequest;
     }
 
     /**

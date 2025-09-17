@@ -2,6 +2,9 @@
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import { ObjectType } from "dynamoose/dist/General";
 
+// import constants
+import APP_CONSTANTS from "../configs/constants.config";
+
 // import daos
 import { corporateBulkJdResumeDaoObj } from "../daos/CorporateBulkJdResume.dao";
 
@@ -11,20 +14,44 @@ import {
   CorporateBulkJdResumeCreateResponseDto,
   CorporateBulkJdResumeCreateApiDto,
   CorporateBulkJdResumesCreateDto,
+  CorporateBulkJdResumeCvExtractedParsedPartialDto,
 } from "../dtos/CorporateBulkJdResume.dto";
 import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
-import { BulkCvsPreSignedUrlToUploadFileDto, PreSignedUrlToUploadFileResponseDto } from "../dtos/File.dto";
+import {
+  BulkCvsPreSignedUrlToUploadFileDto,
+  PreSignedUrlToUploadFileResponseDto,
+} from "../dtos/File.dto";
+import {
+  EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE,
+  EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE,
+} from "../dtos/EmailTemplatePlaceholder.dto";
+import {
+  WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE,
+  WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE,
+} from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
 
 // import enums
 import { CorporateBulkJdResumeProcessingStatusEnum } from "../enums/CorporateBulkJdResume.enum";
+import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
+import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
+import { UserContextTypeEnum } from "../enums/User.enum";
+
+// Import libraries
+import {
+  emailLibrary,
+  EmailSourceDestinationAddress,
+} from "../libraries/email.library";
+import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusinessPartner.library";
 
 // import models
 import { DbCorporateBulkJdResumeDto } from "../db/models/CorporateBulkJdResume.model";
 import { DbCorporateBulkJdDto } from "../db/models/CorporateBulkJd.model";
+import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
 
 // import services
 import { corporateBulkJdServiceObj } from "./CorporateBulkJd.service";
 import { fileServiceObj } from "./File.service";
+import { companyServiceObj } from "../admin/services/Company.service";
 
 // import utils
 import { BaseError } from "../utils/errors.util";
@@ -98,15 +125,16 @@ class CorporateBulkJdResumeService {
         ): CorporateBulkJdResumesCreateDto => {
           /**
            * Extract the `id` from the cloud File Name which will be used in the keys of model
-           * 
-           * @todo: Extracting the `id` from the cloud File Name is not a appropriate way, 
+           *
+           * @todo: Extracting the `id` from the cloud File Name is not a appropriate way,
            * we should have a better way to get the `id`
            */
-          const resumeId: string = eachPsuToUploadBulkCvDetail.cloudFileName.split(".")[0];
+          const resumeId: string =
+            eachPsuToUploadBulkCvDetail.cloudFileName.split(".")[0];
 
           /**
            * Prepare Argument For Storing the Cvs in Database
-           * 
+           *
            * NOTE: Preparing the dynamodb keys for the model in service folder should be done in dao folder only
            */
           const corporateBulkJdResumeArgument: CorporateBulkJdResumesCreateDto =
@@ -211,6 +239,502 @@ class CorporateBulkJdResumeService {
 
     // return the response
     return corporateBulkJdCvsResponseDto;
+  }
+
+  /**
+   * sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdId
+   *
+   * Sends email and WhatsApp notifications to candidates based on their resumes and matching scores
+   * for a specific corporate bulk job description.
+   *
+   * NOTE: `sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdId` function
+   * is not being used currently, but it may be used in the future.
+   *
+   * @param {string} corporateBulkJdId - The unique identifier of the corporate bulk job description.
+   * @returns {Promise<boolean>} - A promise that resolves to true if notifications are sent successfully,
+   *                               false if no resumes are available for processing.
+   */
+  async sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdId(
+    corporateBulkJdId: string
+  ): Promise<boolean> {
+    global.logger.info(
+      `Send Email And Whatsapp Notifications To Bulk Resume Candidates For Particular Corporate Bulk Job Description [Service]`,
+      {
+        filePath: __filename,
+        methodName:
+          this
+            .sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdId
+            .name,
+        corporateBulkJdId: corporateBulkJdId,
+      }
+    );
+
+    // Get Corporate Bulk Jd Details By Id
+    const corporateBulkJdDetails: DbCorporateBulkJdDto =
+      await corporateBulkJdServiceObj.getCorporateBulkJdById(corporateBulkJdId);
+
+    // Get Company Details By company Id and if not found return false
+    const companyDetailsResponse: QueryResponse<DbCompanyDetailDto> =
+      await companyServiceObj.getCompanyDetailById(
+        corporateBulkJdDetails.companyId
+      );
+    if (!companyDetailsResponse.count) {
+      global.logger.debug(
+        `No company details found, so email and whatsapp notifications not sent [service]`,
+        {
+          filePath: __filename,
+          methodName:
+            this
+              .sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdId
+              .name,
+          companyId: corporateBulkJdDetails.companyId,
+        }
+      );
+
+      return false;
+    }
+
+    // Retrieve Company Details
+    const companyDetails: DbCompanyDetailDto = companyDetailsResponse[0];
+
+    // Get all Corporate Bulk Jd Resumes Without Pagination By Filter Options
+    const corporateBulkJdResumesData: DbCorporateBulkJdResumeDto[] =
+      await this.getAllCorporateBulkJdResumesWithoutPagination(
+        corporateBulkJdId
+      );
+
+    // Check if there are any corporate bulk job description resumes and if not return false
+    if (corporateBulkJdResumesData.length === 0) {
+      return false;
+    }
+
+    // Send email and whatsapp notifications to each candidate from bulk resumes
+    const corporateBulkJdResumeEmailAndWhatsappPromises: Promise<
+      [
+        {
+          awsMessageId: string | null;
+          systemLogId: string | null;
+        },
+        {
+          systemLogId: string | null;
+          whatsAppBusinessPartnerSendMessageResponseId:
+            | string
+            | null
+            | undefined;
+        }
+      ]
+    >[] = corporateBulkJdResumesData.map(
+      (eachCorporateBulkJdResume: DbCorporateBulkJdResumeDto) => {
+        // Get Cv Extracted Parsed
+        const cvExtractedParsed =
+          eachCorporateBulkJdResume.cvExtractedParsed as CorporateBulkJdResumeCvExtractedParsedPartialDto;
+
+        // Construct the email address object
+        const toAddress: EmailSourceDestinationAddress = {
+          email: cvExtractedParsed.candidateEmail,
+          fullName: cvExtractedParsed.candidateName,
+        };
+
+        let emailPromises: Promise<{
+          awsMessageId: string | null;
+          systemLogId: string | null;
+        }>;
+
+        let whatsAppPromises: Promise<{
+          systemLogId: string | null;
+          whatsAppBusinessPartnerSendMessageResponseId:
+            | string
+            | null
+            | undefined;
+        }>;
+
+        // Check if the matching score is greater than given threshold
+        if (
+          eachCorporateBulkJdResume.matchingScore >=
+          APP_CONSTANTS.MATCHING_SCORES
+            .CORPORATE_BULK_JD_RESUME_MINIMUM_MATCHING_SCORE
+        ) {
+          const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE =
+            {
+              candidateName: cvExtractedParsed.candidateName.toTitleCase(),
+              companyName: companyDetails.name.toTitleCase(),
+              jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+              matchingScore: eachCorporateBulkJdResume.matchingScore.toString(),
+            };
+
+          // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
+          whatsAppPromises =
+            whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+              WhatsAppBusinessPartnerTemplateNameEnum.CAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE,
+              cvExtractedParsed.candidatePhoneNumber.strtr({ "+": "" }), // To Phone Number
+              whatsAppBusinessPartnerPlaceholders,
+              cvExtractedParsed.candidateEmail
+            );
+
+          // Construct the email placeholders object
+          const emailPlaceholders: EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE =
+            {
+              candidateName: cvExtractedParsed.candidateName.toTitleCase(),
+              companyName: companyDetails.name.toTitleCase(),
+              jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+              matchingScore: eachCorporateBulkJdResume.matchingScore,
+            };
+
+          // Send email to the candidate
+          emailPromises = emailLibrary.sendEmail(
+            EmailTemplateEnum.CAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE,
+            toAddress,
+            emailPlaceholders
+          );
+        } else {
+          const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE =
+            {
+              candidateName: cvExtractedParsed.candidateName.toTitleCase(),
+              companyName: companyDetails.name.toTitleCase(),
+              jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+            };
+
+          // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
+          whatsAppPromises =
+            whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+              WhatsAppBusinessPartnerTemplateNameEnum.CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE,
+              cvExtractedParsed.candidatePhoneNumber.strtr({ "+": "" }), // To Phone Number
+              whatsAppBusinessPartnerPlaceholders,
+              cvExtractedParsed.candidateEmail
+            );
+
+          // Construct the email placeholders object
+          const emailPlaceholders: EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE =
+            {
+              candidateName: cvExtractedParsed.candidateName.toTitleCase(),
+              companyName: companyDetails.name.toTitleCase(),
+              jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+            };
+
+          // Send email to the candidate
+          emailPromises = emailLibrary.sendEmail(
+            EmailTemplateEnum.CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE,
+            toAddress,
+            emailPlaceholders
+          );
+        }
+
+        return Promise.all([emailPromises, whatsAppPromises]);
+      }
+    );
+
+    // Wait for all promises to resolve
+    const emailAndWhatsappResponses: [
+      {
+        awsMessageId: string | null;
+        systemLogId: string | null;
+      },
+      {
+        systemLogId: string | null;
+        whatsAppBusinessPartnerSendMessageResponseId: string | null | undefined;
+      }
+    ][] = await Promise.all(corporateBulkJdResumeEmailAndWhatsappPromises);
+    global.logger.info(
+      "Email and Whatsapp responses length:",
+      emailAndWhatsappResponses.length
+    );
+
+    return true;
+  }
+
+  /**
+   * corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate
+   *
+   * Sends email and WhatsApp notification to candidate(Who is not registered user on worko) based on their resume and matching score
+   * for a specific corporate bulk job description.
+   *
+   * @param {string} corporateBulkJdResumeId - The unique identifier of the corporate bulk job description resume.
+   * @returns {Promise<boolean>} - A promise that resolves to true if email and whatsapp notifications are sent successfully.
+   * @throws {BaseError} If the corporate bulk job description resume is not found.
+   */
+  async corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate(
+    corporateBulkJdResumeId: string
+  ): Promise<boolean> {
+    // Logging the action
+    global.logger.info(
+      `Processing request to send email and whatsapp notification to candidate(Who is not registered user on worko). [SERVICE]`,
+      {
+        filePath: __filename,
+        methodName:
+          this.corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate
+            .name,
+        corporateBulkJdResumeId: corporateBulkJdResumeId,
+      }
+    );
+
+    // Get Corporate Bulk Jd Resume Details and return false if not found
+    const corporateBulkJdResumeResponse: QueryResponse<DbCorporateBulkJdResumeDto> =
+      await corporateBulkJdResumeDaoObj.getCorporateBulkJdResumeById(
+        corporateBulkJdResumeId
+      );
+    if (!corporateBulkJdResumeResponse.count) {
+      global.logger.info(
+        `Corporate Bulk Jd Resume Details Not found, So Email and Whatsapp notification not sent. [SERVICE]`,
+        {
+          filePath: __filename,
+          methodName:
+            this
+              .corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate
+              .name,
+          corporateBulkJdResumeId: corporateBulkJdResumeId,
+        }
+      );
+
+      // Return false if not found
+      return false;
+    }
+
+    // Get Corporate Bulk Jd Details
+    const corporateBulkJdResumeDetails: DbCorporateBulkJdResumeDto =
+      corporateBulkJdResumeResponse[0];
+
+    // Get CV Extracted Parsed details
+    const cvExtractedParsed =
+      corporateBulkJdResumeDetails.cvExtractedParsed as CorporateBulkJdResumeCvExtractedParsedPartialDto;
+
+    if(!cvExtractedParsed.candidateEmail) {
+      global.logger.info(
+        `Candidate Email Not found, So Email and Whatsapp notification not sent. [SERVICE]`,
+        {
+          filePath: __filename,
+          methodName:
+            this
+              .corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate
+              .name,
+          corporateBulkJdResumeId: corporateBulkJdResumeId,
+        }
+      )
+
+      return false;
+    }
+
+    // Get Company Details By company Id
+    const companyDetailResponse: QueryResponse<DbCompanyDetailDto> =
+      await companyServiceObj.getCompanyDetailById(
+        corporateBulkJdResumeDetails.companyId
+      );
+    if (!companyDetailResponse.count) {
+      global.logger.info(
+        `Company Details Not found, So Email and Whatsapp notification not sent. [SERVICE]`,
+        {
+          filePath: __filename,
+          methodName:
+            this
+              .corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate
+              .name,
+          corporateBulkJdResumeId: corporateBulkJdResumeId,
+        }
+      );
+
+      // Return false if not found
+      return false;
+    }
+
+    // Get Compny Details
+    const companyDetails: DbCompanyDetailDto = companyDetailResponse[0];
+
+    // Get Corporate Bulk Jd Details
+    const corporateBulkJdResponse: QueryResponse<DbCorporateBulkJdDto> =
+      await corporateBulkJdServiceObj.getCorporateBulkJdByIdQueryResponse(
+        corporateBulkJdResumeDetails.corporateBulkJdId
+      );
+    if (!corporateBulkJdResponse.count) {
+      global.logger.info(
+        `Corporate Bulk Jd Details Not found, So Email and Whatsapp notification not sent. [SERVICE]`,
+        {
+          filePath: __filename,
+          methodName:
+            this
+              .corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate
+              .name,
+          corporateBulkJdResumeId: corporateBulkJdResumeId,
+        }
+      );
+
+      // Return false if not found
+      return false;
+    }
+
+    // Get Corporate Bulk Jd Details
+    const corporateBulkJdDetails: DbCorporateBulkJdDto =
+      corporateBulkJdResponse[0];
+
+    // Construct the email address object
+    const toAddress: EmailSourceDestinationAddress = {
+      email: cvExtractedParsed.candidateEmail,
+      fullName: cvExtractedParsed.candidateName,
+    };
+
+    // Initialize email promise
+    let emailPromises: Promise<{
+      awsMessageId: string | null;
+      systemLogId: string | null;
+    }>;
+
+    // Initialize whatsapp promise
+    let whatsAppPromises: Promise<{
+      systemLogId: string | null;
+      whatsAppBusinessPartnerSendMessageResponseId: string | null | undefined;
+    }>;
+
+    // Check if the matching score is greater than given threshold
+    if (
+      corporateBulkJdResumeDetails.matchingScore >=
+      APP_CONSTANTS.MATCHING_SCORES
+        .CORPORATE_BULK_JD_RESUME_MINIMUM_MATCHING_SCORE
+    ) {
+      const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE =
+        {
+          candidateName: cvExtractedParsed.candidateName.toTitleCase(),
+          companyName: companyDetails.name.toTitleCase(),
+          jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+          matchingScore: corporateBulkJdResumeDetails.matchingScore.toString(),
+        };
+
+      // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
+      whatsAppPromises =
+        whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+          WhatsAppBusinessPartnerTemplateNameEnum.CAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE,
+          cvExtractedParsed.candidatePhoneNumber.strtr({ "+": "" }), // To Phone Number
+          whatsAppBusinessPartnerPlaceholders,
+          cvExtractedParsed.candidateEmail,
+          corporateBulkJdResumeId, // `contextId` is the `id` attribute in `CorporateBulkJdResume.model.ts`
+          UserContextTypeEnum.CORPORATE_BULK_JD_RESUME // contextType
+        );
+
+      // Construct the email placeholders object
+      const emailPlaceholders: EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE =
+        {
+          candidateName: cvExtractedParsed.candidateName.toTitleCase(),
+          companyName: companyDetails.name.toTitleCase(),
+          jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+          matchingScore: corporateBulkJdResumeDetails.matchingScore,
+        };
+
+      // Send email to the candidate
+      emailPromises = emailLibrary.sendEmail(
+        EmailTemplateEnum.CAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE,
+        toAddress,
+        emailPlaceholders
+      );
+    } else {
+      const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE =
+        {
+          candidateName: cvExtractedParsed.candidateName.toTitleCase(),
+          companyName: companyDetails.name.toTitleCase(),
+          jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+        };
+
+      // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
+      whatsAppPromises =
+        whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+          WhatsAppBusinessPartnerTemplateNameEnum.CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE,
+          cvExtractedParsed.candidatePhoneNumber.strtr({ "+": "" }), // To Phone Number
+          whatsAppBusinessPartnerPlaceholders,
+          cvExtractedParsed.candidateEmail,
+          corporateBulkJdResumeId, // `contextId` is the `id` attribute in `CorporateBulkJdResume.model.ts`
+          UserContextTypeEnum.CORPORATE_BULK_JD_RESUME // contextType
+        );
+
+      // Construct the email placeholders object
+      const emailPlaceholders: EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE =
+        {
+          candidateName: cvExtractedParsed.candidateName.toTitleCase(),
+          companyName: companyDetails.name.toTitleCase(),
+          jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+        };
+
+      // Send email to the candidate
+      emailPromises = emailLibrary.sendEmail(
+        EmailTemplateEnum.CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE,
+        toAddress,
+        emailPlaceholders
+      );
+    }
+
+    // Wait for both email and whatsapp promises to resolve
+    await Promise.all([emailPromises, whatsAppPromises]);
+
+    return true;
+  }
+
+  /**
+   * getAllCorporateBulkJdResumesWithoutPagination
+   *
+   * Retrieves all corporate bulk job description resumes without pagination.
+   *
+   * @param {string | undefined} [corporateBulkJdId] - The optional corporate bulk job description ID.
+   * If provided, resumes related to this ID will be fetched.
+   *
+   * @returns {Promise<DbCorporateBulkJdResumeDto[]>} - A promise that resolves to an array
+   * of corporate bulk job description resume data.
+   */
+  async getAllCorporateBulkJdResumesWithoutPagination(
+    corporateBulkJdId?: string
+  ): Promise<DbCorporateBulkJdResumeDto[]> {
+    // Logging the action
+    global.logger.info(
+      `Processing request to get all Corporate Bulk Jd Resumes Without Pagination. [SERVICE]`,
+      {
+        filePath: __filename,
+        methodName: this.getAllCorporateBulkJdResumesWithoutPagination.name,
+        corporateBulkJdId: corporateBulkJdId,
+      }
+    );
+
+    // Initialize internal variables
+    let lastKeyInternal: ObjectType | undefined = undefined;
+    let pageSizeInternal = 50;
+
+    // Initialize the response
+    let allCorporateBulkJdResumesWithoutPagination: DbCorporateBulkJdResumeDto[] =
+      [];
+
+    // Continue fetching the data until all the data is fetched
+    do {
+      // Construct the filter options
+      const filterOptions: CorporateBulkJdResumeFilterOptions = {
+        corporateBulkJdId: corporateBulkJdId,
+        lastKey: lastKeyInternal,
+        pageSize: pageSizeInternal,
+      };
+
+      // Get a batch of corporate bulk job description resumes by filter options
+      const corporateBulkJdResumesResponse: PaginatedResultsWithMatchingConditionsResponse<DbCorporateBulkJdResumeDto> =
+        await corporateBulkJdResumeDaoObj.getCorporateBulkJdResumesByFilterOptions(
+          filterOptions
+        );
+
+      // Destructure the response
+      const {
+        lastKey,
+        count,
+        timesQueried,
+        queriedCount,
+        ...corporateBulkJdResumesData
+      } = corporateBulkJdResumesResponse;
+
+      // Convert the data to an array
+      const corporateBulkJdResumesArray: DbCorporateBulkJdResumeDto[] =
+        Object.values(corporateBulkJdResumesData);
+
+      // Add all the corporate bulk job description resumes to the array
+      allCorporateBulkJdResumesWithoutPagination =
+        allCorporateBulkJdResumesWithoutPagination.concat(
+          corporateBulkJdResumesArray
+        );
+
+      // Set the last key
+      lastKeyInternal = lastKey ?? undefined;
+    } while (lastKeyInternal);
+
+    // return the data array
+    return allCorporateBulkJdResumesWithoutPagination;
   }
 
   /**

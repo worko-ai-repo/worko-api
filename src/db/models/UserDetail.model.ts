@@ -4,9 +4,6 @@ import * as dynamoose from "dynamoose";
 // Load the constants
 import { DB_CONSTANTS } from "../DB.constants";
 
-// Load the enums
-import { UserType } from "../../enums/User.enum";
-
 // Load the local base model functionalities
 import { BaseDbDto } from "./Base.model";
 
@@ -19,6 +16,8 @@ class DbUserDetailDto extends BaseDbDto {
   id!: string; // Cognito Provided UserId for registered user
   GSI1PK!: string;
   GSI1SK!: string;
+  GSI2PK!: string; 
+  GSI2SK!: string; 
   name!: string;
   emailList!: { [key: string]: string }; // @todo we should consider removing this. And make the fields are always upto date. Instead use the "UserEmail" SK.
   number!: string;
@@ -34,7 +33,51 @@ class DbUserDetailDto extends BaseDbDto {
   ECTC?: number;
   noticePeriod?: number;
   YOE?: number;
-  CV?: string;
+  CV?: string; // The uploaded cv file name.
+  cvExtract?: string; // The extracted plain texts.
+
+  /* 
+  Sample Value for "cvExtractParsed" field:-
+  "cvExtractParsed": {
+    "educations": [
+        {
+            "degree": "B.Tech",
+            "institution": "CMR Technical Campus",
+            "year": "2024"
+        }
+    ],
+    "responsibilities": [
+        "Built backend for website: https://worko.ai/",
+        "MERN Website Built By Me: https://www.neobrim.com/"
+    ],
+    "achievements": [],
+    "personalDetails": {
+        "name": "Rohith Appala",
+        "phone": "+91 9666308100",
+        "email": "rohithpatelappala888placement@gmail.com"
+    },
+    "industryExperiences": [
+        {
+            "industryType": "B2B",
+            "industryDomain": "Technology"
+        }
+    ],
+    "teamHandlingExperiences": [],
+    "certifications": [
+        {
+            "name": "Full Stack Web Development",
+            "year": "2023",
+            "issuer": "NxtWave"
+        },
+        {
+            "name": "MERN stack development",
+            "year": "2023",
+            "issuer": "NxtWave"
+        }
+    ]
+  }, */
+  cvExtractParsed?: object;
+
   coverLetter?: string;
   lastAccessedDash!: string;
   profileImage?: string;
@@ -77,6 +120,23 @@ const UserDetailSchema = new dynamoose.Schema(
         type: "global",
       },
       required: true,
+    },
+    GSI2PK: {
+      type: String,
+      index: {
+        name: "GSI2",
+        type: "global",
+        rangeKey: "GSI2SK",
+      },
+      required: true, 
+    },
+    GSI2SK: {
+      type: String,
+      index: {
+        name: "GSI2",
+        type: "global",
+      },
+      required: true, 
     },
     name: {
       type: String,
@@ -141,6 +201,14 @@ const UserDetailSchema = new dynamoose.Schema(
     },
     CV: {
       type: String,
+      required: false,
+    },
+    cvExtract: {
+      type: String,
+      required: false
+    },
+    cvExtractParsed: {
+      type: Object,
       required: false,
     },
     coverLetter: {

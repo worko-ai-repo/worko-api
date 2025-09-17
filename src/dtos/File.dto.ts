@@ -126,3 +126,48 @@ export interface BulkCvsPreSignedUrlToUploadFileDto {
 export interface BulkCvPreSignedUrlToViewApiDto {
   corporateBulkJdId: string;
 }
+
+/**
+ * CompanyLogoPreSignedUrlToUploadFileRequestApiDto
+ *
+ * This interface is just to define the representation for the request DTO from Frontend
+ * to generate the pre-signed url for company logo
+ */
+export interface CompanyLogoPreSignedUrlToUploadFileRequestApiDto {
+  /**
+   * companyLogoFileName
+   *
+   * Sample file names:
+   *  1. "Worko.jpg"
+   *  2. "Amazon.png"
+   */
+  companyLogoFileName: string;
+
+  /**
+   * companyLogoFileMimeType
+   *
+   * Sample file mime type: "image/jpeg"
+   */
+  companyLogoFileMimeType: string;
+};
+
+/**
+ * BlogCoverImagePreSignedUrlToUploadFileRequestApiDto
+ */
+export interface BlogCoverImagePreSignedUrlToUploadFileRequestApiDto {
+  /**
+   * blogCoverImageFileName
+   *
+   * Sample file names:
+   *  1. "blog1.jpg"
+   *  2. "blog2.png"
+   */
+  blogCoverImageFileName: string;
+
+  /**
+   * blogCoverImageFileMimeType
+   *
+   * Sample file mime type: "image/jpeg"
+   */
+  blogCoverImageFileMimeType: string;
+};

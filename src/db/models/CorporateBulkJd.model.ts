@@ -34,7 +34,7 @@ class DbCorporateBulkJdDto extends BaseDbDto {
   resumesCount?: number;
 }
 
-// Define the schema for the User Job Application
+// Define the schema for the Corporate Bulk JD
 const CorporateBulkJdSchema: Schema = new dynamoose.Schema(
   {
     ...DB_CONSTANTS.WORKO_PK_SK,

@@ -1,14 +1,8 @@
 // Load the npm packages
 import { Router } from "express";
 
-// Load local packages
-
 // Company routers
 import CompanyRouter from "./routers/Company.router";
-
-// CompanyJob routers
-import CompanyJobRouter from "./admin/routers/CompanyJob.router";
-// import CompanyJobRouter from "./routers/CompanyJob.router";
 
 // Corporate Routers
 import CorporateUserRouter from "./routers/CorporateUser.router";
@@ -42,9 +36,6 @@ import FileRouter from "./routers/File.router";
 // Referral routers
 import EmpReferralRouter from "./routers/EmpReferral.router";
 
-// Job Application routers
-import UserJobApplicationRouter from "./routers/UserJobApplication.router";
-
 // Master routers
 import MasterSubscriptionRouter from "./routers/MasterSubscription.router";
 import MasterServiceRouter from "./routers/MasterService.router";
@@ -63,6 +54,7 @@ import CorporateBulkJdResumeRouter from "./routers/CorporateBulkJdResume.router"
 // Admin Routers
 import AdminSubsRouter from "./routers/Admin.router";
 import AdminRouter from "./admin/router";
+import BlogRouter from "./routers/Blog.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -93,6 +85,13 @@ router.use("/admin", AdminRouter);
 router.use("/admin-subs", AdminSubsRouter);
 
 /**
+ * BLOG ROUTERS
+ * 
+ * @authorisedRoles ["admin", "public", "loggedInUser"]
+ */
+router.use("/blog", BlogRouter);
+
+/**
  * COMPANY ROUTERS
  * 
  * Regitser the "Company" routers
@@ -100,15 +99,6 @@ router.use("/admin-subs", AdminSubsRouter);
  * @authorisedRoles ["admin","public"]
 */
 router.use("/company", CompanyRouter);
-
-/**
- * JOB ROUTERS
- * 
- * Regitser the "Company CRUD" routers
- * 
- * @authorisedRoles ["admin", "public","corporate-recruiter","corporate-admin"]
-*/
-router.use("/job", CompanyJobRouter);
 
 /**
  * CORPORATE BULK JD ROUTERS
@@ -329,15 +319,6 @@ router.use("/user", UserEmailRouter);
  * @todo add required authorizations after discussing with team lead
  */
 router.use("/user", UserExperienceRouter);
-
-/**
- * USER JOB APPLICATION ROUTERS
- * 
- * Regitser the "UserJobApplication CRUD" routers
- * 
- * @authorisedRoles ["admin", "loggedInUser", "corporate-recruiter", "corporate-admin"]
- */
-router.use("/job-application", UserJobApplicationRouter);
 
 /**
  * USER SOCIAL PROFILE ROUTERS

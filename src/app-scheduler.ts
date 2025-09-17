@@ -12,6 +12,7 @@ import scheduleJobService from './services/ScheduleJob.service';
 import userReferralService from './services/UserReferral.service';
 import UserExperienceService from './services/UserExperience.service';
 import { userReferralEmpServiceObj } from './services/UserReferralEmp.service';
+import { corporateBulkJdResumeServiceObj } from './services/CorporateBulkJdResume.service';
 
 // Import enums
 import { ScheduleJobType } from './enums/ScheduleJob.enum';
@@ -24,7 +25,7 @@ import HttpStatusCode from './utils/http-codes.util';
 import DBConfig from './db/DB.config';
 
 // Import Dtos
-import { ScheduleJobRefReviewAcceptanceStatusInputDto, ScheduleJobWhatsAppReminderInputDto } from './dtos/ScheduleJob.dto';
+import { ScheduleJobCorporateBulkJdResumeNotificationsInputDto, ScheduleJobRefReviewAcceptanceStatusInputDto, ScheduleJobWhatsAppReminderInputDto } from './dtos/ScheduleJob.dto';
 
 /**
  * Initializes the database configuration.
@@ -134,13 +135,9 @@ export const handler = async (event: any, context: Context): Promise<object> => 
             throw new BaseError(`The schedule job with the provided ID "${scheduleJobId}" was not found.`);
         }
 
-        // Extract input details from the scheduled job
-        let inputDetails: ScheduleJobRefReviewAcceptanceStatusInputDto = scheduleJob.input as ScheduleJobRefReviewAcceptanceStatusInputDto;
-
         global.logger.info('App scheduler handler: scheduleJob input details: ', {
             filePath: __filename,
             methodName: 'handler',
-            inputDetails: inputDetails,
             scheduledJob: scheduleJob,
         });
 
@@ -151,23 +148,26 @@ export const handler = async (event: any, context: Context): Promise<object> => 
            *
            * Processes the Referral Review Acceptance Status schedule job.
            */
-          case ScheduleJobType.REFERRAL_REVIEW_ACCEPTANCE_STATUS:
+          case ScheduleJobType.REFERRAL_REVIEW_ACCEPTANCE_STATUS: {
+            const referralReviewAcceptanceStatusInputDetails = scheduleJob.input as ScheduleJobRefReviewAcceptanceStatusInputDto;
+
             global.logger.info(
               "App scheduler handler: referralId and userEmail: ",
               {
                 filePath: __filename,
                 methodName: "handler",
-                referralId: inputDetails["referralId"],
-                userEmail: inputDetails["userEmail"],
+                referralId: referralReviewAcceptanceStatusInputDetails["referralId"],
+                userEmail: referralReviewAcceptanceStatusInputDetails["userEmail"],
               }
             );
 
             // Call the user referral service to review the referral acceptance status
             await userReferralService.reviewReferralAcceptanceStatus(
-              inputDetails["referralId"],
-              inputDetails["userEmail"]
+              referralReviewAcceptanceStatusInputDetails["referralId"],
+              referralReviewAcceptanceStatusInputDetails["userEmail"]
             );
             break;
+          }
 
           /**
            * EMP_WORK_EMAIL_VERIFICATION_REMINDER
@@ -177,7 +177,7 @@ export const handler = async (event: any, context: Context): Promise<object> => 
            * @description Sends a WhatsApp reminder to employees about pending work email (corporate email) verification,
            *              triggered if the work email is not verified within 24 hours after creation.
            */
-          case ScheduleJobType.EMP_WORK_EMAIL_VERIFICATION_REMINDER:
+          case ScheduleJobType.EMP_WORK_EMAIL_VERIFICATION_REMINDER:{
             const input =
               scheduleJob.input as ScheduleJobWhatsAppReminderInputDto;
             global.logger.info(
@@ -185,7 +185,6 @@ export const handler = async (event: any, context: Context): Promise<object> => 
               {
                 filePath: __filename,
                 methodName: "handler",
-                referralId: inputDetails["referralId"],
               }
             );
 
@@ -194,6 +193,7 @@ export const handler = async (event: any, context: Context): Promise<object> => 
               input
             );
             break;
+          }
 
           /**
            * REFERRAL_DONE_STATUS_REMINDER
@@ -203,58 +203,112 @@ export const handler = async (event: any, context: Context): Promise<object> => 
            * @description Sends a WhatsApp reminder to the employee if a referral has been accepted for a long time
            *              (typically 24 hours) but has not been completed yet.
            *
-           * We decided to use `Bracket Notation` to retrieve the `referralId` and `userEmail` from the `inputDetails` object.
+           * We decided to use `Bracket Notation` to retrieve the `referralId` and `userEmail` from the `referralDoneStatusReminderInputDetails` object.
            *
            * @example
-           * const inputDetails = {
+           * const referralDoneStatusReminderInputDetails = {
            *     "userId": "e1134dca-6071-70ff-2941-54fcce656f38",
            *     "referralId": "01JAW61V473GMTWMQHGXXEHZB8",
            *     "userEmail": "divy.raushan26@gmail.com"
            * }
            *
            * // Attempt to retrieve userEmail using dot notation
-           * const userEmailRetrievingUsingDotNotation = inputDetails.userEmail;
+           * const userEmailRetrievingUsingDotNotation = referralDoneStatusReminderInputDetails.userEmail;
            * console.log(userEmail); // [ERR]: userEmail is not defined
            *
            * // Correctly retrieving userEmail using bracket notation
-           * const userEmailRetrievingUsingBracketNotation = inputDetails["userEmail"];
+           * const userEmailRetrievingUsingBracketNotation = referralDoneStatusReminderInputDetails["userEmail"];
            * console.log(userEmailRetrievingUsingBracketNotation); // [LOG]: "divy.raushan26@gmail.com"
            *
-           * const inputDetailsSecond = {
+           * const referralDoneStatusReminderInputDetailsSecond = {
            *     userId: "second.e1134dca-6071-70ff-2941-54fcce656f38",
            *     referralId: "second.01JAW61V473GMTWMQHGXXEHZB8",
            *     userEmail: "second.divy.raushan26@gmail.com"
            * }
            *
-           * // Retrieving userEmail using bracket notation in inputDetailsSecond
-           * const userEmailRetrievingUsingBracketNotationSecond = inputDetailsSecond["userEmail"];
+           * // Retrieving userEmail using bracket notation in referralDoneStatusReminderInputDetailsSecond
+           * const userEmailRetrievingUsingBracketNotationSecond = referralDoneStatusReminderInputDetailsSecond["userEmail"];
            * console.log(userEmailRetrievingUsingBracketNotationSecond); // [LOG]: "second.divy.raushan26@gmail.com"
            *
-           * // Retrieving userEmail using dot notation in inputDetailsSecond
-           * const userEmailRetrievingUsingDotNotationSecond = inputDetailsSecond.userEmail;
+           * // Retrieving userEmail using dot notation in referralDoneStatusReminderInputDetailsSecond
+           * const userEmailRetrievingUsingDotNotationSecond = referralDoneStatusReminderInputDetailsSecond.userEmail;
            * console.log(userEmailRetrievingUsingDotNotationSecond); // [LOG]: "second.divy.raushan26@gmail.com"
            */
-          case ScheduleJobType.REFERRAL_DONE_STATUS_REMINDER:
+          case ScheduleJobType.REFERRAL_DONE_STATUS_REMINDER: {
+            const referralDoneStatusReminderInputDetails = scheduleJob.input as ScheduleJobRefReviewAcceptanceStatusInputDto;
+
             global.logger.info(
               "App scheduler handler [REFERRAL_DONE_STATUS_REMINDER]: referralId and userEmail: ",
               {
                 filePath: __filename,
                 methodName: "handler",
-                referralId: inputDetails["referralId"],
+                referralId: referralDoneStatusReminderInputDetails["referralId"],
               }
             );
 
             // Send the reminder for referral completion
             await userReferralEmpServiceObj.reviewReferralDoneStatusReminder(
-              inputDetails["referralId"],
+              referralDoneStatusReminderInputDetails["referralId"],
             );
             break;
+          }
+
+          /**
+           * CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS
+           *
+           * Handles the Corporate Bulk JD Resume Send Email and WhatsApp Notifications schedule job.
+           */
+          case ScheduleJobType.CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS: {
+            global.logger.info(
+              "App scheduler handler [CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS]: ",
+              {
+                filePath: __filename,
+                methodName: "handler",
+              }
+            );
+
+            // Extract input details from the scheduled job for bulk resumes notifications
+            const scheduleJobCorporateBulkJdResumeNotificationsInput =
+              scheduleJob.input as ScheduleJobCorporateBulkJdResumeNotificationsInputDto;
+
+            // Extract the corporate bulk jd id from the input
+            const corporateBulkJdId: string =
+              scheduleJobCorporateBulkJdResumeNotificationsInput[
+                "corporateBulkJdId"
+              ];
+            global.logger.debug(
+              `Corporate Bulk Jd Id`, {
+                corporateBulkJdId: corporateBulkJdId,
+              }
+            )
+
+            // Send email and WhatsApp notifications to bulk resumes candidates by corporate bulk jd id
+            const sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdIdResponse: boolean =
+              await corporateBulkJdResumeServiceObj.sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdId(
+                corporateBulkJdId
+              );
+
+            // Log the input details for bulk resumes notifications
+            global.logger.info(
+              `App scheduler handler [CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS]: corporateBulkJdId: `,
+              {
+                filePath: __filename,
+                methodName: "handler",
+                corporateBulkJdId: corporateBulkJdId, // Refer `id` attribute in `CorporateBulkJd.model.ts` for more details
+                sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdIdResponse:
+                  sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdIdResponse,
+              }
+            );
+
+            break;
+          }
 
           // Handle unknown or unsupported schedule job types
-          default:
+          default: {
             throw new BaseError(
               `No schedule found for job type: ${scheduleJob.type}`
             );
+          }
         }
 
         // Mark the scheduled job as completed

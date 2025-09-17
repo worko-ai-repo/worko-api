@@ -186,7 +186,7 @@ class UserExperienceDao implements BaseDao {
     let query = UserExperienceModel.query("GSI1PK")
       .eq(this.GSI1PK)
       .where("GSI1SK")
-      .beginsWith(`COMP#ID#${companyId}`)
+      .beginsWith(`COMP#ID#${companyId}#ID#`)
       .where("isCurrent")
       .eq(true);
 

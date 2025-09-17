@@ -24,6 +24,32 @@ UserRouter.post("/register/candidate", userController.createCandidate);
  */
 UserRouter.post("/register/employee", userController.createEmployee);
 
+/**
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserRouter.post("/settings", userController.createUserDetailSetting);
+
+/**
+ * createUserGuidanceRequest
+ * 
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserRouter.post("/guidance-request", userController.createUserGuidanceRequest);
+
+/**
+ * Get the user guidance request based on the provided query parameter
+ * 
+ * @authorisedRoles ["admin", "loggedInUser"]
+ */
+UserRouter.get('/guidance-request',userController.getAllUserGuidanceRequestByFilterOptions);
+
+/**
+ * Get the user basic details
+ * 
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserRouter.get("/basic-details", userController.getUserBasicDetails);
+
 // Get the user based on the provided query parameter
 // UserRouter.get("/:id", userController.getUserById);
 

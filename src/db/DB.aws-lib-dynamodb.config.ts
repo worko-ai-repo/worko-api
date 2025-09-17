@@ -63,8 +63,8 @@ export class DbAwsLibDynamodbConfig {
           accessKeyId: process.env.APP_AWS_DYNAMODB_ACCESS_KEY_ID as string,
           secretAccessKey: process.env.APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
         },
-        region: "local",
-        endpoint: "http://localhost:8000",
+        region: process.env.APP_SLS_REGION,
+        endpoint: process.env.APP_AWS_DYNAMODB_NOSQL_WORKBENCH_ENDPOINT,
       };
     }
     // For other stages, use the region provided in the environment variables

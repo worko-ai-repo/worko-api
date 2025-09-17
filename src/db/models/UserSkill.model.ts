@@ -63,4 +63,4 @@ const UserSkillModel = dynamoose.model<DbUserSkillDto>(
 );
 
 // Export the UserSkillModel
-export { UserSkillModel };
+export { UserSkillModel, DbUserSkillDto };

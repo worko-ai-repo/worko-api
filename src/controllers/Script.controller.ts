@@ -223,6 +223,57 @@ class ScriptController {
       next(error);
     }
   };
+
+  /**
+   * scripToUpdateRegisteredUserGsiTwo
+   *
+   * script to Update registered Users To LowerCase
+   *
+   * @param {Request} req - The Express request object.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   */
+  scripToUpdateRegisteredUserGsiTwo = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      global.logger.info("ScriptController:: scripToUpdateRegisteredUserGsiTwo");
+
+      const response = await scriptServiceObj.scripToUpdateRegisteredUserGsiTwo();
+      global.logger.info(`Script to Updated Users`, { response });
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * scripToRetryUpdateRegisteredUserGsiTwo
+   *
+   * script to Update registered Users To LowerCase
+   *
+   * @param {Request} req - The Express request object.
+   * @param {Response} res - The Express response object.
+   * @param {NextFunction} next - The Express next middleware function.
+   */
+  scripToRetryUpdateRegisteredUserGsiTwo = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const response = await scriptServiceObj.scripToRetryUpdateRegisteredUserGsiTwo(req.body);
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default ScriptController;

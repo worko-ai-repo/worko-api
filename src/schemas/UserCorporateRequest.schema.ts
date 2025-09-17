@@ -1,6 +1,7 @@
 // Import necessary packages
 import Joi from "joi"; // Joi package for validation
 import { UserCorporateRequestStatusEnum } from "../enums/User.enum";
+import { UserCorporateRequestPricingPlanEnum } from "../enums/UserCorporateRequest.enum";
 
 // Define validation schema for user corporate request creation API DTO
 export const userCorporateRequestCreateApiDtoValidation = Joi.object({
@@ -46,7 +47,20 @@ export const userCorporateRequestCreateApiDtoValidation = Joi.object({
         "any.required": "User message is required.",
         "string.empty": "User message should not be empty.",
     }),
+    
+    // Validate pricingPlan field
+    pricingPlan: Joi.string()
+    .valid(...Object.values(UserCorporateRequestPricingPlanEnum))
+    .required()
+    .messages({
+        "any.required": "The Pricing plan field is required.",
+        "string.empty": "The Pricing plan field should not be empty.",
+        "string.valid": `The Pricing plan field must be one of: ${Object.values(
+            UserCorporateRequestPricingPlanEnum
+        ).join(", ")}.`,
+    }),
 });
+
 
 export const userCorporateRequestUpdateApiDtoValidation = Joi.object({
     // Validate status field

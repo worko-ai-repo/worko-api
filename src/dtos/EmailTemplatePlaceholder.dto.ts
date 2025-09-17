@@ -204,3 +204,63 @@ export interface EmailTemplatePlaceholderCAND_RECEIVED_JOB_APPLICATION_REJECTED_
   hrFeedback: string;
   workoAppUrl: string;
 }
+
+/**
+ * EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE
+ */
+export interface EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE {
+  candidateName: string;
+  companyName: string;
+  jobTitle: string;
+  matchingScore: number;
+}
+
+/**
+ * EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE
+ */
+export interface EmailTemplatePlaceholderCAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE {
+  candidateName: string;
+  companyName: string;
+  jobTitle: string;
+}
+
+/**
+ * EmailTemplatePlaceholder_USER_GUIDANCE_REQUEST
+ * 
+ * @emailTemplateName "USER_GUIDANCE_REQUEST"
+ */
+export interface EmailTemplatePlaceholder_USER_GUIDANCE_REQUEST {
+  /**
+   * @reference `userName` and `userPhoneNumber` are from `UserDetail.model.ts`
+   */
+  userName: string;
+  userPhoneNumber: string;
+
+  /**
+   * dateOfGuidanceRequest
+   *
+   * @description By when you need the guidance
+   * @format "d'th' MMMM yyyy"
+   */
+  dateOfGuidanceRequest: string;
+
+  companyName: string;
+
+  guidanceRequestType: string;
+  
+  jobUrl: string;
+}
+
+/**
+ * EmailTemplatePlaceholderWORKO_ADMIN_CORPORATE_REQUEST
+ */
+export interface EmailTemplatePlaceholderWORKO_ADMIN_CORPORATE_REQUEST {
+  corporateFullName: string;
+  corporateCompanyName: string;
+  corporateDesignation: string;
+  corporateEmail: string;
+  corporatePhoneNumber: string;
+  requestedPricingPlan: string;
+  corporateMessage: string;
+  submittedAt: string;
+}

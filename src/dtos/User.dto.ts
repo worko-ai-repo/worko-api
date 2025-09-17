@@ -1,4 +1,5 @@
-import { UserType } from "../enums/User.enum";
+import { UserGuidanceRequestTypeEnum } from "../enums/User.enum";
+import { RecordListingFilterOptions, RecordListingFilterRequestDTO } from "./Common.dto";
 
 /**
  * Data required for user sign-up. Includes basic personal information,
@@ -10,6 +11,7 @@ export interface UserSignUpDTO {
   number: string;
   linkedinUrl?: string;
   ECTC?: number;
+  CTC?: number;
   YOE?: number;
   CV?: string;
   userId: string;
@@ -144,4 +146,66 @@ export interface UserSubscriptionDetailsUpdateDto {
   isSubscribed: boolean;
   referralCount: number;
   expiryDate?: Date;
+}
+
+/**
+ * UserDetailSettingsCreateApiDTO
+ */
+export interface UserDetailSettingCreateApiDTO {
+  subscribedEmailId?: string;
+}
+
+/**
+ * UserGuidanceRequestCreateApiDTO
+ */
+export interface UserGuidanceRequestCreateApiDTO {
+  /**
+   * guidanceRequestType
+   */
+  guidanceRequestType: UserGuidanceRequestTypeEnum;
+
+  /**
+   * guidanceDeadlineDate
+   *
+   * @description By when you need the guidance
+   * @example `2025-01-27T11:26:06.458Z` 
+   */
+  guidanceRequestDeadline: string;
+
+  /**
+   * companyName
+   *
+   * @description Any company name is allowed
+   */
+  companyName: string;
+
+  /**
+   * companyId
+   * 
+   * @description If user selects Internal Company, then this field is required
+   */
+  companyId?: string;
+
+  /**
+   * jobUrl
+   *
+   * @description Any job url allowed
+   */
+  jobUrl: string;
+
+  /**
+   * guidanceRequestDescription
+   */
+  guidanceRequestDescription: string;
+}
+
+export interface UserGuidanceRequestFilterOptions extends RecordListingFilterOptions {
+  email?: string;
+  guidanceRequestType?: UserGuidanceRequestTypeEnum;
+  companyName?: string;
+}
+export interface UserGuidanceRequestFilterRequestDTO extends RecordListingFilterRequestDTO {
+  email?: string;
+  guidanceRequestType?: UserGuidanceRequestTypeEnum;
+  companyName?: string;
 }

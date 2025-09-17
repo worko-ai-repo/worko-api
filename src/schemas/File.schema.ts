@@ -36,6 +36,52 @@ export const FileGeneratePsuToUploadUserProfilePicDTOValidation = Joi.object({
 });
 
 /**
+ * FileGeneratePsuToUploadCompanyLogoDTOValidation
+ *
+ * Joi validation schema to validate the request data.
+ */
+export const FileGeneratePsuToUploadCompanyLogoDTOValidation = Joi.object({
+  companyLogoFileName: Joi.string()
+    .pattern(/^[^\/\\]+?\.[a-zA-Z0-9]+$/)
+    .required()
+    .messages({
+      "any.required": "The 'companyLogoFileName' field is required.",
+      "string.empty": "The 'companyLogoFileName' field should not be empty.",
+      "string.base": "The 'companyLogoFileName' field should be a string.",
+      "string.pattern.base": "The 'companyLogoFileName' must include a file extension (e.g., 'logo.png').",
+    }),
+
+  companyLogoFileMimeType: Joi.string().required().messages({
+    "any.required": "The 'companyLogoFileMimeType' field is required.",
+    "string.empty": "The 'companyLogoFileMimeType' field should not be empty.",
+    "string.base": "The 'companyLogoFileMimeType' field should be a string.",
+  }),
+});
+
+/**
+ * FileGeneratePsuToUploadBlogCoverImageDTOValidation
+ *
+ * Joi validation schema to validate the request data.
+ */
+export const FileGeneratePsuToUploadBlogCoverImageDTOValidation = Joi.object({
+  blogCoverImageFileName: Joi.string()
+    .pattern(/^[^\/\\]+?\.[a-zA-Z0-9]+$/)
+    .required()
+    .messages({
+      "any.required": "The 'blogCoverImageFileName' field is required.",
+      "string.empty": "The 'blogCoverImageFileName' field should not be empty.",
+      "string.base": "The 'blogCoverImageFileName' field should be a string.",
+      "string.pattern.base": "The 'blogCoverImageFileName' must include a file extension (e.g., 'logo.png').",
+    }),
+
+  blogCoverImageFileMimeType: Joi.string().required().messages({
+    "any.required": "The 'blogCoverImageFileMimeType' field is required.",
+    "string.empty": "The 'blogCoverImageFileMimeType' field should not be empty.",
+    "string.base": "The 'blogCoverImageFileMimeType' field should be a string.",
+  }),
+});
+
+/**
  * FileGeneratePsuToUploadCareerResumeDTOValidation
  *
  * Joi validation schema to validate the request data.

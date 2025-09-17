@@ -1,5 +1,6 @@
 // Import necessary enums
-import { UserType, UserCorporateRequestStatusEnum } from "../enums/User.enum";
+import { UserCorporateRequestStatusEnum } from "../enums/User.enum";
+import { UserCorporateRequestPricingPlanEnum } from "../enums/UserCorporateRequest.enum";
 
 /**
  * UserCorporateRequestCreateApiDto
@@ -14,6 +15,7 @@ export interface UserCorporateRequestCreateApiDto {
     companyName: string;
     userDesignation: string;
     userMessage: string;
+    pricingPlan: UserCorporateRequestPricingPlanEnum;
 }
 
 /**
@@ -31,6 +33,7 @@ export interface UserCorporateRequestCreateDto {
     companyName: string;
     userDesignation: string;
     userMessage: string;
+    pricingPlan: UserCorporateRequestPricingPlanEnum;
 }
 
 /**
@@ -38,7 +41,7 @@ export interface UserCorporateRequestCreateDto {
  * 
  * Structure for User Corporate Request Database Data Transfer Object (DTO).
  * 
-*/
+ */
 export interface UserCorporateRequestUpdateApiDto {
     status: UserCorporateRequestStatusEnum;
     adminComment?: string;

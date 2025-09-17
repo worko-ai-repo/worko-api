@@ -29,4 +29,9 @@ export enum FileResourceKey {
    * Bulk CVs related resource keys
    */
   BULK_CVS = "BULK_CVS",
+
+  /**
+   * Blog related resource keys
+   */
+  BLOG_COVER_IMAGE = "BLOG_COVER_IMAGE",
 }

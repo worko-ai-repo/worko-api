@@ -14,9 +14,10 @@ import DBConfig from "./db/DB.config";
 // Import local DTOs
 import {
   SqsMsgBaseReqDto,
-  SqsMsgJobApplicationValidationMatchingScoreReqDto,
+  SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto,
   SqsMsgReferralValidationMatchingScoreReqDto,
   SqsMsgReviewReferralAcceptanceStatusReqDto,
+  SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto,
 } from "./dtos/SqsEvent.dto";
 
 // Import local Enums
@@ -25,7 +26,7 @@ import { SqsMsgEventEnum } from "./enums/SqsEvent.enum";
 // Import local Services
 import UserReferralService from "./services/UserReferral.service";
 import UserDetailService from "./services/UserDetail.service";
-import { userJobApplicationServiceObj } from "./services/UserJobApplication.service";
+import { corporateBulkJdResumeServiceObj } from "./services/CorporateBulkJdResume.service";
 
 // Import utils
 import { BaseError } from "./utils/errors.util";
@@ -204,66 +205,146 @@ const validateReferralMatchingScore = async (
 };
 
 /**
- * validateUserJobApplicationMatchingScore
- * 
- * Validates the job application matching score and updates the job application status if necessary.
+ * corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate
  *
- * @param {SqsMsgJobApplicationValidationMatchingScoreReqDto} message - The SQS message payload containing the job application request ID and user details
+ * Sends email and WhatsApp notification to candidate based on their resume matching score
+ * for a specific corporate bulk job description.
+ * 
+ * When corporate admin/recruiter or worko-admin upload a bulk resumes for a particular job description, 
+ * And after the process of matching is done, then this event will be triggered to send email and whatsapp notification
+ * to the candidate(Who is not regeistered user on worko).
+ *
+ * @param {SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto} message - The SQS message payload containing the corporate bulk job description resume ID and user details
  * @param {SQSEvent} event - The SQS event object
  * @param {Context} context - The AWS Lambda context object
  * @returns {Promise<object>} The response object
  */
-const validateUserJobApplicationMatchingScore = async (
-  message: SqsMsgJobApplicationValidationMatchingScoreReqDto,
+const corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate = async (
+  message: SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto,
   event: SQSEvent,
   context: Context
 ): Promise<object> => {
   try {
-    global.logger.debug(`Details of sqs event for job application matching score validation: `, {
-      filePath: __filename,
-      methodName: "validateUserJobApplicationMatchingScore",
-      message: message,
-      event: event,
-      context: context
-    });
+    global.logger.debug(
+      `Details of sqs event for send email and whatsapp message to candidate(Who is not registered user) [SQS Handler]: `,
+      {
+        filePath: __filename,
+        methodName: "corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate",
+        message: message,
+        event: event,
+        context: context,
+      }
+    );
 
     // Retrieve the necessary information from the message
-    const { jobApplicationRequestId } = message.context;
-    const { userEmail, userId } = message;
+    const { corporateBulkJdResumeId } = message.context;
 
-    // Validate the job application matching score
-    const isjobApplicationMatchingScoreValid: boolean =
-      await userJobApplicationServiceObj.validateUserJobApplicationMatchingScore(
-        jobApplicationRequestId,
-        userEmail,
-        userId
+    // Send email and whatsapp message to candidate
+    const isEmailAndWhatsappSentToBulkCvCandidate: boolean =
+      await corporateBulkJdResumeServiceObj.corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate(
+        corporateBulkJdResumeId
       );
 
-    global.logger.debug(`Details of job application after matching score validation: `,{
-      filePath: __filename,
-      methodName: "validateUserJobApplicationMatchingScore",
-      isjobApplicationMatchingScoreValid: isjobApplicationMatchingScoreValid,
-      jobApplicationRequestId: jobApplicationRequestId,
-      userEmail: userEmail,
-      userId: userId
-    })
-
-    // Return success response if validation was successful
-    if (isjobApplicationMatchingScoreValid) {
-      global.logger.info(`Job application matching score validated successfully.`,{
+    global.logger.debug(
+      `Details of send email and whatsapp message to candidate after triggering send email and whatsapp libraries: `,
+      {
         filePath: __filename,
-        methodName: "validateUserJobApplicationMatchingScore",
-        jobApplicationRequestId: jobApplicationRequestId
-      });
+        methodName:
+          "corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate",
+        isEmailAndWhatsappSentToBulkCvCandidate:
+          isEmailAndWhatsappSentToBulkCvCandidate,
+      }
+    );
+
+    // Return success response if message was successful
+    if (isEmailAndWhatsappSentToBulkCvCandidate) {
+      global.logger.info(
+        `Email and whatsapp message to candidate sent successfully.`,
+        {
+          filePath: __filename,
+          methodName:
+            "corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate",
+          corporateBulkJdResumeId,
+        }
+      );
 
       return sendSuccessResponse(
         HttpStatusCode.OK_200,
-        "Job application matching score validated successfully."
+        "Email and whatsapp message to candidate sent successfully."
       );
     } else {
       // Throw custom error if validation failed
       throw new BaseError(
-        `Unable to validate job application matching score for job application".`,
+        `Unable to send email and whatsapp message to candidate".`,
+        HttpStatusCode.BAD_REQUEST_400
+      );
+    }
+  } catch (error: any) {
+    // Return error response if validation failed
+    return sendErrResponse(error, error?.errorMsg ?? error?.message);
+  }
+}
+/**
+ * sendWelcomeEmailAndWhatsappNotificationToUser
+ *
+ * This function is responsible for sending email and whatsapp message to user after verifying the user email.
+ *
+ * @param {SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto} message - The SQS message payload containing the user email.
+ * @param {SQSEvent} event - The SQS event object.
+ * @param {Context} context - The AWS Lambda context object.
+ * @returns {Promise<object>} The response object.
+ * @throws {BaseError} - Throws an error if the user details are not valid.
+ */
+const sendWelcomeEmailAndWhatsappNotificationToUser = async (
+  message: SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto,
+  event: SQSEvent,
+  context: Context
+): Promise<object> => {
+  try {
+    global.logger.debug(
+      `Details of sqs event for send welcome email and whatsapp message to user [SQS Handler]: `,
+      {
+        filePath: __filename,
+        methodName: "sendWelcomeEmailAndWhatsappNotificationToUser",
+        message: message,
+        event: event,
+        context: context,
+      }
+    );
+
+    const { userEmail } = message;
+
+    // Send welcome email and whatsapp message to candidate
+    const isEmailAndWhatsappSent: boolean = await UserDetailService.sendWelcomeEmailAndWhatsappNotificationToUser(userEmail);
+
+    global.logger.debug(
+      `Details of send email and whatsapp message to user after triggering send email and whatsapp libraries: `,
+      {
+        filePath: __filename,
+        methodName: "sendWelcomeEmailAndWhatsappNotificationToUser",
+        isEmailAndWhatsappSent: isEmailAndWhatsappSent,
+      }
+    );
+
+    // Return success response if message was successful
+    if (isEmailAndWhatsappSent) {
+      global.logger.info(
+        `Welcome Email and whatsapp message to user sent successfully.`,
+        {
+          filePath: __filename,
+          methodName: "sendWelcomeEmailAndWhatsappNotificationToUser",
+          userEmail,
+        }
+      );
+
+      return sendSuccessResponse(
+        HttpStatusCode.OK_200,
+        "Welcome Email and whatsapp message to user sent successfully."
+      );
+    } else {
+      // Throw custom error if validation failed
+      throw new BaseError(
+        `Unable to send welcome email and whatsapp message to user".`,
         HttpStatusCode.BAD_REQUEST_400
       );
     }
@@ -367,6 +448,7 @@ export const handler = async (
     global.logger.info("App event trigger: parsedMessage and messageEvent: ", {
       filePath: __filename,
       methodName: "handler",
+      parsedMessageBody: parsedMessageBody,
       parsedMessage: parsedMessage,
       messageEvent: messageEvent,
     });
@@ -387,14 +469,20 @@ export const handler = async (
       );
     } else if (messageEvent === SqsMsgEventEnum.USER_SEND_WELCOME_EMAIL) {
       return sendWelcomeEmailToUser(parsedMessage, event, context);
-    } else if (messageEvent === SqsMsgEventEnum.JOB_APPLICATION_VALIDATE_MATCHING_SCORE) {
-      return validateUserJobApplicationMatchingScore(
-        parsedMessage as SqsMsgJobApplicationValidationMatchingScoreReqDto,
+    } else if (messageEvent === SqsMsgEventEnum.CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION) {
+      return corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate(
+        parsedMessage as SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto,
         event,
         context
       );
-    }
-
+    } else if (messageEvent === SqsMsgEventEnum.USER_SEND_WELCOME_EMAIL_AND_WHATSAPP_NOTIFICATION) {
+      return sendWelcomeEmailAndWhatsappNotificationToUser(
+        parsedMessage as SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto,
+        event,
+        context
+      );
+    } 
+      
     // Throw error if event type is invalid
     throw new Error(
       `The provided event ${messageEvent} is invalid, therefore it cannot be processed.`

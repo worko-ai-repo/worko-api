@@ -91,5 +91,31 @@ export enum EmailTemplateEnum {
     /**
      * The template name used whenever a candidate receives a job application rejected status update notification.
      */
-    CAND_RECEIVED_JOB_APPLICATION_REJECTED_STATUS_UPDATE = "CAND_RECEIVED_JOB_APPLICATION_REJECTED_STATUS_UPDATE"
+    CAND_RECEIVED_JOB_APPLICATION_REJECTED_STATUS_UPDATE = "CAND_RECEIVED_JOB_APPLICATION_REJECTED_STATUS_UPDATE",
+
+    /**
+     * The template name used whenever a corporate user screens a job description for bulk resumes of candidates for high matching scores.
+     */
+    CAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE = "CAND_CORPORATE_BULK_JD_RESUME_HIGH_MATCHING_SCORE",
+
+    /**
+     * The template name used whenever a corporate user screens a job description for bulk resumes of candidates for low matching scores.
+     */
+    CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE = "CAND_CORPORATE_BULK_JD_RESUME_LOW_MATCHING_SCORE",
+
+    /**
+     * USER_GUIDANCE_REQUEST
+     * 
+     * The template name used to send an email to "worko admin" and "candidate" when a candicate sends guidance request.
+     */
+    USER_GUIDANCE_REQUEST = "USER_GUIDANCE_REQUEST",
+
+    /**
+     * WORKO_ADMIN_CORPORATE_REQUEST
+     * 
+     * The template name used to send an email to "worko admin" when a corporate user sends a request.
+     * 
+     * @reference https://worko.ai/corporate
+     */
+    WORKO_ADMIN_CORPORATE_REQUEST = "WORKO_ADMIN_CORPORATE_REQUEST",
 }

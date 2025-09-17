@@ -1,5 +1,5 @@
 // Import dynamoose library
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 //Load the base dao
 import BaseDao from "./Base.dao";
@@ -26,20 +26,67 @@ import { UserType } from "../enums/User.enum";
 
 // Load helpers
 import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
+import { dateHelperObj } from "../helpers/date.helper";
 
 // import lib dynamodb library
 import { awsLibDynamodbLibraryObj } from "../libraries/aws-lib-dynamodb.library";
 
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
-  modelName = "UserDetail";
-  partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
+  modelName: string = "UserDetail";
+  partitianKey: string = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
   sortKeys = {
     SK_ID: "ID#{userId}", // where userId is cognito provided userId for registered user
   };
   GSI1PK: string = "USR#";
-  GSI1SK = "ID#{userId}"; // where userId is cognito provided userId for registered user
+  GSI1SK: string = "ID#{userId}"; // where userId is cognito provided userId for registered user
+  GSI2PK: string = "USR#";
 
+  /**
+   * GSI2SK
+   * const isoString = new Date().toISOString(); //[LOG]: "2025-06-11T16:15:36.0678Z"
+   */
+  GSI2SK: string = "{createdAt}";
+
+  /**
+   * formatGSI2SKWithDate
+   *
+   * Formats the GSI2SK string with the provided createdAt date string.
+   *
+   * @param {string} createdAt - The date string to replace the {createdAt} placeholder in the GSI2SK string.
+   * @return {string} The formatted GSI2SK string.
+   */
+  private formatGSI2SKWithDate(createdAt: string): string {
+    return this.GSI2SK.strtr({ "{createdAt}": createdAt });
+  }
+
+  /**
+   * preparePKAndSKForQuery
+   *
+   * Prepares the partition key and sort key for a query.
+   *
+   * @param {string} primaryEmail - The primary email of the user.
+   * @param {string} id - The id of the user.
+   *
+   * @returns {{PK: string, SK: string}} - An object containing the partition key and sort key.
+   */
+  preparePKAndSKForQuery(
+    primaryEmail: string,
+    id: string
+  ): {
+    PK: string;
+    SK: string;
+  } {
+    return {
+      PK: this.partitianKey.strtr({
+        "{primaryEmail}": primaryEmail,
+      }),
+      SK: this.sortKeys.SK_ID.strtr({
+        "{userId}": id,
+      }),
+    };
+  }
+  
   /**
    * getUsers
    *
@@ -55,16 +102,32 @@ class UserDetailDao implements BaseDao {
     global.logger.info("Get user details [DAO]");
 
     // Get all the user details including candidates and employees
-    let query = UserDetailModel.query("GSI1PK")
-      .eq(this.GSI1PK)
-      .where("GSI1SK")
-      .beginsWith("ID#");
+    let query: Query<DbUserDetailDto>;
 
-    // if userType is provided then get only users of that type
-    if (usersRecordListingFilterRequest.userType) {
-      query = query
-        .where("userType")
-        .contains(usersRecordListingFilterRequest.userType);
+    if(usersRecordListingFilterRequest?.searchText?.includes('@')) {
+      global.logger.info("Search by email [DAO]", {
+        searchText: usersRecordListingFilterRequest.searchText,
+      });
+
+      const {PK, SK} = this.preparePKAndSKForQuery(
+        usersRecordListingFilterRequest.searchText,
+        ""
+      )
+      query = UserDetailModel.query("PK")
+        .eq(PK)
+        .where("SK")
+        .beginsWith(SK)
+        .sort(
+          usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum // by default sets to descending order(refer "request.helper.ts")
+        );
+
+      // Execute the query by applying the paginateQuery helper and return the results
+      return getPaginatedResultsWithMatchingConditions<
+        DbUserDetailDto,
+        UsersListingFilterOptions
+      >(query, usersRecordListingFilterRequest);
+    } else {
+      query = UserDetailModel.query("GSI2PK").eq(this.GSI2PK);
     }
 
     /**
@@ -76,30 +139,36 @@ class UserDetailDao implements BaseDao {
      *
      * When you use the sort() method in Dynamoose,
      * it sorts the items based on the sort key of the index you're querying.
-     *
      */
     query = query.sort(
-      usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum
+      usersRecordListingFilterRequest.sortOrder as SortOrderTypeEnum // by default sets to descending order(refer "request.helper.ts")
     );
 
+    // if userType is provided then get only users of that type
+    if (usersRecordListingFilterRequest.userType) {
+      query = query
+        .where("userType")
+        .contains(usersRecordListingFilterRequest.userType);
+    }
+
     // Apply date range filter if provided
-    if (
-      usersRecordListingFilterRequest.fromDate ||
-      usersRecordListingFilterRequest.toDate
-    ) {
-      query = query.and().parenthesis((condition) => {
-        if (usersRecordListingFilterRequest.fromDate) {
-          condition
-            .where("createdAt")
-            .ge(usersRecordListingFilterRequest.fromDate);
-        }
-        if (usersRecordListingFilterRequest.toDate) {
-          condition
-            .where("createdAt")
-            .le(usersRecordListingFilterRequest.toDate);
-        }
-        return condition;
-      });
+    const {fromDate, toDate} = usersRecordListingFilterRequest;
+
+    // If both fromDate and toDate are provided
+    if(fromDate && toDate) {
+      const fromDateIsoString: string = dateHelperObj.getISODateFromTimestamp(fromDate);
+      const toDateIsoString: string = dateHelperObj.getISODateFromTimestamp(toDate);
+      query = query.where("GSI2SK").between(this.formatGSI2SKWithDate(fromDateIsoString), this.formatGSI2SKWithDate(toDateIsoString));
+    } 
+    // If only fromDate is provided
+    else if(fromDate) {
+      const fromDateIsoString: string = dateHelperObj.getISODateFromTimestamp(fromDate);
+      query = query.where("GSI2SK").ge(this.formatGSI2SKWithDate(fromDateIsoString));
+    } 
+    // If only toDate is provided
+    else if(toDate) {
+      const toDateIsoString: string = dateHelperObj.getISODateFromTimestamp(toDate);
+      query = query.where("GSI2SK").le(this.formatGSI2SKWithDate(toDateIsoString));
     }
 
     // search by searchText if provided
@@ -121,18 +190,6 @@ class UserDetailDao implements BaseDao {
           .where("PK")
           .contains(`USR#EML#${searchTextValue}`);
 
-        // If user type is not provided or if user type is candidate,
-        // search by candidate experience company name
-        if (
-          !usersRecordListingFilterRequest.userType ||
-          usersRecordListingFilterRequest.userType === UserType.CAND
-        ) {
-          condition
-            .or()
-            .where("candidateExperience.companyName")
-            .contains(searchTextValue.toUpperCase());
-        }
-
         // Return the built condition
         return condition;
       });
@@ -146,20 +203,23 @@ class UserDetailDao implements BaseDao {
   }
 
   /**
-   * Fetches user details based on the provided email.
-   * @param email - Email address of the user
-   * @returns User details corresponding to the email
+   * get
+   *
+   * Retrieves user details based on the provided email.
+   *
+   * @param {string} email - Email of the user
+   * @returns {Promise<QueryResponse<DbUserDetailDto>>} A promise that resolves with the query response containing the user's details.
    */
-  async get(email: string) {
-    global.logger.info("Get user experience by id [DAO]");
+  async get(email: string): Promise<QueryResponse<DbUserDetailDto>> {
+    global.logger.info("Get user detail by email [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    const [skBegins] = this.sortKeys.SK_ID.split("#", 1);
+
     return UserDetailModel.query("PK")
       .eq(PK)
       .where("SK")
-      .beginsWith(skBegins)
+      .beginsWith(this.sortKeys.SK_ID.strtr({ "{userId}": "" }))
       .exec();
   }
 
@@ -181,6 +241,52 @@ class UserDetailDao implements BaseDao {
       .eq(GSI1PK)
       .where("GSI1SK")
       .eq(GSI1SK)
+      .exec();
+  }
+
+  /**
+   * getUserBasicDetailsByUserId
+   *
+   * Retrieves user details by user id, only the basic details will be returned.
+   *
+   * @param {string} userId - ID of the user
+   * @returns {Promise<QueryResponse<DbUserDetailDto>>} - Details of the user
+   */
+  async getUserBasicDetailsByUserId(
+    userId: string
+  ): Promise<QueryResponse<DbUserDetailDto>> {
+    global.logger.info("Get user basic details by userId [DAO]", {
+      filePath: __filename,
+      methodName: this.getUserBasicDetailsByUserId.name,
+      userId,
+    });
+
+    // Prepare the GSI1PK and GSI1SK values
+    const GSI1PK = this.GSI1PK;
+    const GSI1SK = this.GSI1SK.strtr({
+      "{userId}": userId,
+    });
+
+    // return user details
+    return UserDetailModel.query("GSI1PK")
+      .eq(GSI1PK)
+      .where("GSI1SK")
+      .eq(GSI1SK)
+      .attributes([
+        "PK",
+        "candidateExperience",
+        "isCandidateFresher",
+        "department",
+        "country",
+        "YOE",
+        "noticePeriod",
+        "ECTC",
+        "CTC",
+        "location",
+        "userType",
+        "cvExtract",
+        "cvExtractParsed",
+      ])
       .exec();
   }
 
@@ -259,6 +365,8 @@ class UserDetailDao implements BaseDao {
       GSI1SK: this.GSI1SK.strtr({
         "{userId}": userSignUpDTO.id,
       }),
+      GSI2PK: this.GSI2PK,
+      GSI2SK: new Date().toISOString(), // Sample value: "2025-06-11T16:15:36.0678Z"
     };
     return UserDetailModel.create(newUserSignUpDTO);
   }

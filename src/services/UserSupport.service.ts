@@ -5,7 +5,7 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import userSupportDao from "../daos/UserSupport.dao";
 
 // Import Constants
-import { GROWAASAN_APP_CONSTANTS } from "../configs/constants/Growaasan.constant";
+import { WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS } from "../configs/constants/WhatsAppBusinessPartner.constant";
 
 // Import DTOs
 import {
@@ -14,6 +14,7 @@ import {
   UserSupportUpdateApiDto,
   UserSupportUpdateDto
 } from "../dtos/UserSupport.dto";
+import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE } from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
 
 // Import Models 
 import { DbUserSupportDto } from "../db/models/UserSupport.model";
@@ -28,7 +29,7 @@ import {
   UserType
 } from "../enums/User.enum";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
-import { GrowaasanTemplateNameEnum } from "../enums/GrowaasanTemplate.enum";
+import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
 
 // Import Services
 import UserReferralService from "./UserReferral.service";
@@ -39,12 +40,10 @@ import CompanyService from "./Company.service";
 import {
   EmailTemplatePlaceholderEMP_QUERY_FOR_REFERRAL_BY_CAND
 } from "../dtos/EmailTemplatePlaceholder.dto";
-import { GrowaasanTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDATE, GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE } from "../dtos/GrowaasanTemplatePlaceholder.dto";
-import { GrowaasanPhoneNumberDto } from "../dtos/Growaasan.dto";
 
 // Import Libraries
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
-import { growaasanLibraryObj } from "../libraries/Growaasan.library";
+import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusinessPartner.library";
 
 // Import Utilities
 import { BaseError } from "../utils/errors.util";
@@ -122,11 +121,11 @@ class UserSupportService {
          * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
          */
         if (
-          GROWAASAN_APP_CONSTANTS.ENABLED &&
+          WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS.ENABLED &&
           userDetails[0].isWhatsappNotificationEnabled !== false
         ) {
-          // Prepare Growaasan placeholders for the message to candidate
-          const growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDATE =
+          // Prepare whatsapp placeholders for the message to candidate
+          const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDATE =
             {
               candidateName: userDetails[0].name.toTitleCase(),
               employeeName: userSupportCreateDto.userFirstName.toTitleCase(),
@@ -134,19 +133,12 @@ class UserSupportService {
               companyName: companyDetails[0].name,
             };
 
-          // Send WhatsApp message to candidate
-          await this.sendGrowaasanWhatsappMessageToCandAboutEmpReferralQuery(
-            growaasanPlaceholders,
-            {
-              countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-              phoneNumber: parseInt(
-                userDetails[0].number.replace(
-                  GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
-                  ""
-                )
-              ),
-            },
-            candEmail
+          // Send WhatsApp message to employee
+          await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+            WhatsAppBusinessPartnerTemplateNameEnum.CAND_REFEREE_RAISE_DISPUTE_CANDIDATE,
+            userDetails[0].number.strtr({ "+": "" }), // To Phone Number
+            whatsAppBusinessPartnerPlaceholders,
+            candEmail // reciever email
           );
         } else {
           global.logger.info(
@@ -179,7 +171,7 @@ class UserSupportService {
               `Employee not found.`,
               HttpStatusCode.NOT_FOUND_404
             );
-          }          
+          }
 
           let empEmail = employeeDetails[0].PK.split("#")[2];
 
@@ -189,30 +181,23 @@ class UserSupportService {
            * - If isWhatsappNotificationEnabled is `false` then Don't Send whatsapp message
            */
           if (
-            GROWAASAN_APP_CONSTANTS.ENABLED &&
+            WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS.ENABLED &&
             employeeDetails[0].isWhatsappNotificationEnabled !== false
           ) {
             // Prepare WhatsApp placeholders for the message to employee
-            const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE =
+            const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE =
               {
                 employeeName: employeeDetails[0].name.toTitleCase(),
                 candidateName: userSupportCreateDto.userFirstName.toTitleCase(),
                 referralStatus: userReferralDetails[0].status,
               };
-  
+
             // Send WhatsApp message to employee
-            await this.sendGrowaasanWhatsappMessageToEmpAboutCandReferralQuery(
-              growaasanPlaceholders,
-              {
-                countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-                phoneNumber: parseInt(
-                  employeeDetails[0].number.replace(
-                    GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
-                    ""
-                  )
-                ),
-              },
-              empEmail
+            await whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+              WhatsAppBusinessPartnerTemplateNameEnum.EMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE,
+              employeeDetails[0].number.strtr({"+": ""}), // To Phone Number
+              whatsAppBusinessPartnerPlaceholders,
+              empEmail // reciever email
             );
           } else {
             global.logger.info(
@@ -371,81 +356,6 @@ class UserSupportService {
   ): Promise<QueryResponse<DbUserSupportDto>> {
     // Call the DAO method to retrieve the support request by ID
     return userSupportDao.getSupportById(supportId);
-  }
-
-  /**
-   * sendGrowaasanWhatsappMessageToCandAboutEmpReferralQuery
-   *
-   * Sends a WhatsApp message to a candidate about an employee referral query.
-   *
-   * This method sends a WhatsApp message to a candidate regarding an employee referral query.
-   * The message is sent using the Growaasan cloud API integration.
-   *
-   * @param {GrowaasanTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDATE} placeholders - The placeholders for the WhatsApp message template.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number to send the message to.
-   * @param {string} userEmail - The email address of the candidate.
-   * @returns {Promise<boolean>} - A promise that resolves when the message is successfully sent.
-   */
-  async sendGrowaasanWhatsappMessageToCandAboutEmpReferralQuery(
-    placeholders: GrowaasanTemplatePlaceholderCAND_REFEREE_RAISE_DISPUTE_CANDIDATE,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    userEmail: string
-  ): Promise<boolean> {
-    // Send the whatsapp message using the growaasan library
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.CAND_REFEREE_RAISE_DISPUTE_CANDIDATE,
-      userEmail,
-      toPhoneNumber,
-      placeholders
-    );
-
-    // log the details
-    global.logger.info(
-      "WhatsApp Message For Referral Query to Candidate sent successfully",
-      {
-        filePath: __filename,
-        methodName:
-          this.sendGrowaasanWhatsappMessageToCandAboutEmpReferralQuery.name,
-        userEmail: userEmail,
-      }
-    );
-    return true;
-  }
-
-  /**
-   * sendGrowaasanWhatsappMessageToEmpAboutCandReferralQuery
-   *
-   * Sends a WhatsApp message to an employee about a candidate referral query.
-   *
-   * This method sends a WhatsApp message to an employee about a candidate referral query.
-   * The message is sent using the Growaasan cloud API integration.
-   *
-   * @param {GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE} placeholders - The placeholders for the WhatsApp message template.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number to send the message to.
-   * @param {string} userEmail - The email address of the employee.
-   * @returns {Promise<boolean>} - A promise that resolves when the message is successfully sent.
-   */
-  async sendGrowaasanWhatsappMessageToEmpAboutCandReferralQuery(
-    placeholders: GrowaasanTemplatePlaceholderEMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    userEmail: string
-  ) {
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.EMP_CANDIDATE_RAISE_DISPUTE_EMPLOYEE,
-      userEmail,
-      toPhoneNumber,
-      placeholders
-    );
-
-    global.logger.info(
-      "WhatsApp Message For Referral Query to Employee sent successfully",
-      {
-        filePath: __filename,
-        methodName:
-          this.sendGrowaasanWhatsappMessageToEmpAboutCandReferralQuery.name,
-        userEmail: userEmail,
-      }
-    );
   }
 }
 

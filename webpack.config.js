@@ -51,6 +51,19 @@ module.exports = {
     extensions: [".ts", ".js"],
   },
 
+  /**
+   * Memory optimization for containerized builds
+   */
+  optimization: {
+    splitChunks: false,
+    minimize: false,
+  },
+
+  /**
+   * Reduce build output to prevent memory issues
+   */
+  stats: "errors-only",
+
   module: {
     rules: [
       {

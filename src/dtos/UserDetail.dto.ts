@@ -32,9 +32,9 @@ export interface UserDetailDTO {
    * This field is used to enable/disable the whatsapp notification.
    * @type {boolean}
    *
-   * Note: For example, if a user logs in as an employee and wants to disable WhatsApp notifications on the employee dashboard while keeping them enabled on the candidate dashboard, 
+   * Note: For example, if a user logs in as an employee and wants to disable WhatsApp notifications on the employee dashboard while keeping them enabled on the candidate dashboard,
    * this `isWhatsappNotificationEnabled` setting won't work that way.
-   * When `isWhatsappNotificationEnabled` is set to `false` on the employee dashboard, 
+   * When `isWhatsappNotificationEnabled` is set to `false` on the employee dashboard,
    * it will also be `false` on the candidate dashboard, applying globally across all user roles.
    */
   isWhatsappNotificationEnabled?: boolean;

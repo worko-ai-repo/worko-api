@@ -8,6 +8,9 @@ const APP_CONSTANTS = {
   // Application default timezone
   APP_DEFAULT_TIMEZONE: process.env.TZ ?? "GMT",
 
+  // Application stage
+  APP_SLS_STAGE: process.env.APP_SLS_STAGE,
+
   // The stages/environments supported by the application.
   STAGES: {
     LOCAL: "local",
@@ -44,6 +47,26 @@ const APP_CONSTANTS = {
     CAREER_RESUME: "career-resumes", // To upload the resumes uplaoded via career page
     COMPANY_JOB_DESCRIPTION: "companies/{companyId}/company-job-descriptions", // To upload the company job description uplaoded via `corporate dashboard` or `admin dashboard`
     BULK_CVS: "companies/{companyId}/bulk-cvs/{corporateBulkJdId}", // To upload the bulk cvs uplaoded via `corporate dashboard` or `admin dashboard`
+
+    /**
+     * @NOTE:
+     *  1. Currently, company logos are being stored in the following S3 path:
+     *     "worko-ui-comp-logo-{dev|prod}/images/"
+     *     This is not an ideal structure for storing company logos. However, since this path is already in use
+     *     and contains existing logos, we are continuing to use it to maintain backward compatibility.
+     *
+     *  2. The ideal S3 path structure should be:
+     *     worko-ui-comp-logo-{dev|prod}/companies/{companyId}/{companyLogoFileName}
+     *     This structure ensures better organization and scalability but don't update the existing structure.
+     */
+    COMPANY_LOGO: "images",
+
+    /**
+     * BLOG_IMAGE
+     * 
+     * To store the blog cover images
+     */
+    BLOG_IMAGE: "blog-images",
   },
 
   /**
@@ -57,6 +80,8 @@ const APP_CONSTANTS = {
 
   // If "pageSize" from the request does not match with one of the "PAGE_LENGTH_OPTIONS" value, then this value would be used.
   PAGE_LENGTH_DEFAULT: 25,
+
+  OTP_LENGTH: 6,
 
   LAMBDA_FUNCTION_NAMES: {
     /**
@@ -103,6 +128,16 @@ const APP_CONSTANTS = {
       email: "no-reply@worko.ai",
       fullName: "Worko.ai",
     },
+    GUIDANCE_EMAIL: {
+      email: "guidance@worko.ai",
+      fullName: "Worko.ai",
+    },
+    WORKO_PRODUCT_MANAGERS: {
+      Jeetesh: {
+        email: "jeetesh@worko.ai",
+        fullName: "Worko.ai",
+      },
+    },
   },
 
   /**
@@ -120,26 +155,24 @@ const APP_CONSTANTS = {
   FRONTEND_URLS: {
     SUBS_PREMIUM_RENEW: "https://worko.ai/", // Previously "https://app.worko.ai/",
     SUBS_PREMIUM_UPGRADE: "https://worko.ai/", // Previously "https://app.worko.ai/",
-    CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/login`,
-    CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/signup/{token}`,
+    CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/auth/corporate/login`,
+    CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/auth/corporate/signup/{token}`,
     WORKO_LOGO_URL:
       "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
   },
 
-  /**
-   * JOB_APPLICATION_READABLE_STATUS
-   *
-   * This is the readable status of the job application
-   * which is used in the email body to be sent to the end user
-   */
-  JOB_APPLICATION_READABLE_STATUS: {
-    APPLIED: "Applied",
-    REJECTED: "Not Selected",
-    CV_DOWNLOADED: "CV Downloaded",
-    UNDER_EVALUATION: "Under Evaluation",
-    PROCESSING_INTERVIEW: "Processing Interview",
-    INTERVIEW_DONE: "Interview Done",
-    HIRED: "Hired",
+  FRONTEND_ORIGINS: {
+    PROD: [
+      "https://worko.ai",
+    ],
+    DEV: [
+      "https://dev-ui.worko.work", 
+      "https://dev.worko.work",    
+      "http://localhost:4200",
+      "http://localhost:8080",
+      "http://localhost:3001", 
+      "http://localhost:3002",  
+    ],
   },
 
   /**
@@ -164,19 +197,24 @@ const APP_CONSTANTS = {
   },
 
   /**
-   * REFERRAL_MINIMUM_MATCHING_SCORE
-   *
-   * Required constants for Referral score as matching score
+   * MATCHING_SCORES
    */
-  REFERRAL_MINIMUM_MATCHING_SCORE: 70,
+  MATCHING_SCORES: {
+    /**
+     * REFERRAL_MINIMUM_MATCHING_SCORE
+     *
+     * Required constants for Referral score as matching score
+     */
+    REFERRAL_MINIMUM_MATCHING_SCORE: 70,
 
-  /**
-   * JOB_APPLICATION_MINIMUM_MATCHING_SCORE
-   *
-   * Whenever a candidate applies a job from mini-job portal, this is the minimum matching score required for
-   * the job to be applied.
-   */
-  JOB_APPLICATION_MINIMUM_MATCHING_SCORE: 70,
+    /**
+     * CORPORATE_BULK_JD_RESUME_MINIMUM_MATCHING_SCORE
+     * 
+     * Whenever the corporate admin/recruiter uploads resumes for a particular job description, this is the minimum matching score required for
+     * the candidate to be selected.
+     */
+    CORPORATE_BULK_JD_RESUME_MINIMUM_MATCHING_SCORE: 70,
+  },
 
   /**
    * REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS
@@ -188,9 +226,29 @@ const APP_CONSTANTS = {
     const PROD_HOURS = 7 * 24; // 7 days converted to hours
     const DEV_HOURS = 45 / 60; // 45 minutes converted to hours
     // return the time based on the environment
-    return process.env.APP_SLS_STAGE === this.STAGES.PROD
+    return this.APP_SLS_STAGE === this.STAGES.PROD
       ? PROD_HOURS
       : DEV_HOURS;
+  },
+
+  /**
+   * CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS_AFTER_X_MINUTES
+   *
+   * This is the number of minutes after which the email and whatsapp notifications will be sent
+   * to the candidates for bulk resumes upload by particular job description.
+   *
+   * The time is different in prod and dev environments.
+   * In prod, the time is 10 minutes.
+   * In dev, the time is 10 minutes.
+   */
+  get CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS_AFTER_X_MINUTES(): number {
+    const PROD_MINUTES = 10; // 10 minutes
+    const DEV_MINUTES = 5; // 5 minutes
+
+    // return the time based on the environment
+    return this.APP_SLS_STAGE === this.STAGES.PROD
+      ? PROD_MINUTES
+      : DEV_MINUTES;
   },
 
   /**
@@ -213,10 +271,10 @@ const APP_CONSTANTS = {
    */
   get CORPORATE_USER_INVITE_DATE_EXPIRATION(): number {
     const PROD_DAYS = 15; // 15 days
-    const DEV_DAYS = 1; // 1 day
+    const DEV_DAYS = 15; // 15 days
 
     // return the time based on the environment
-    return process.env.APP_SLS_STAGE === this.STAGES.PROD
+    return this.APP_SLS_STAGE === this.STAGES.PROD
       ? PROD_DAYS
       : DEV_DAYS;
   },
@@ -235,9 +293,6 @@ const APP_CONSTANTS = {
 
   // Worko App Domain
   WORKO_APP_DOMAIN: "www.worko.ai.",
-
-  // Guidance Email
-  GUIDANCE_EMAIL: "guidance@worko.ai.",
 };
 
 export default APP_CONSTANTS;

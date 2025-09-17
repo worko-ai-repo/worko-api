@@ -432,7 +432,8 @@ class CorporateIserInviteService {
         if (
           invite.isDeleted ||
           invite.inviteStatus === CorpInviteStatusEnum.EXPIRED ||
-          invite.inviteStatus === CorpInviteStatusEnum.DELETED
+          invite.inviteStatus === CorpInviteStatusEnum.DELETED ||
+          invite.inviteStatus === CorpInviteStatusEnum.ACCEPTED
         ) {
           return invite;
         }

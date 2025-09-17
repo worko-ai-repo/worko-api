@@ -7,17 +7,30 @@ import { BaseDbDto } from "./Base.model";
 
 // Define the structure for Company Request Database Data Transfer Object (DTO)
 class DbCompanyRequestDto extends BaseDbDto {
+  // Ids
+  companyId!: string; // Refer `id` attribute in `CompanyDetail.model.ts`
+  userName!: string; 
   userType!: string;
   companyDetail!: Record<string, any>; // Utilizing Record<string, any> for a map-like structure
   status!: string;
-  userEmail?: string;
+  userEmail!: string;
   userContactNumber?: string;
+  jobUrl?: string; // Referral request that user want to apply for in this company
+  isDeleted?: boolean;
 }
 
 // Define the Company Schema including additional attributes
 const CompanySchema = new dynamoose.Schema(
   {
     ...DB_CONSTANTS.WORKO_PK_SK,
+    companyId: {
+      type: String,
+      required: true,
+    },
+    userName: {
+      type: String,
+      required: true,
+    },
     userType: {
       type: String,
       required: true,
@@ -32,11 +45,20 @@ const CompanySchema = new dynamoose.Schema(
     },
     userEmail: {
       type: String,
-      required: false,
+      required: true,
     },
     userContactNumber: {
       type: String,
       required: false,
+    },
+    jobUrl: {
+      type: String,
+      required: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   {
@@ -45,10 +67,7 @@ const CompanySchema = new dynamoose.Schema(
 );
 
 // Create the Company Model using the defined Schema
-const CompanyRequestModel = dynamoose.model<DbCompanyRequestDto>(
-  "CompanyRequest",
-  CompanySchema
-);
+const CompanyRequestModel = dynamoose.model<DbCompanyRequestDto>("CompanyRequest", CompanySchema);
 
 // Export the Company Request Model for external use
-export { CompanyRequestModel };
+export { CompanyRequestModel, DbCompanyRequestDto };

@@ -33,7 +33,6 @@ import {
   emailLibrary,
 } from "../libraries/email.library";
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-import { growaasanLibraryObj } from '../libraries/Growaasan.library';
 
 // Import Enums
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
@@ -46,13 +45,10 @@ import APP_CONSTANTS from '../configs/constants.config';
 
 // Import dtos
 import { ScheduleJobCreateDto, ScheduleJobRefReviewAcceptanceStatusInputDto } from '../dtos/ScheduleJob.dto';
-import { GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE, GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE } from '../dtos/GrowaasanTemplatePlaceholder.dto';
-import { GrowaasanPhoneNumberDto } from '../dtos/Growaasan.dto';
 import { PaginatedResultsWithMatchingConditionsResponse } from '../dtos/Common.dto';
 
 // Import enums
 import { ScheduleJobStatus, ScheduleJobType } from '../enums/ScheduleJob.enum';
-import { GrowaasanTemplateNameEnum } from '../enums/GrowaasanTemplate.enum';
 
 // Import services
 import CompanyService from "./Company.service";
@@ -755,7 +751,7 @@ class UserReferralService {
     const { matchingScore } = userReferralDetails;
 
     // Update referral status to CANCELLED if matching score is below minimum threshold
-    if (matchingScore < APP_CONSTANTS.REFERRAL_MINIMUM_MATCHING_SCORE) {
+    if (matchingScore <= APP_CONSTANTS.MATCHING_SCORES.REFERRAL_MINIMUM_MATCHING_SCORE) {
       await this.updateStatus(referralId, userEmail, ReferralStatus.REJECTED);
       logger.info(`Referral ${referralId} cancelled due to low matching score`);
     } else {
@@ -801,7 +797,7 @@ class UserReferralService {
       );
 
       // send whatsappMessage to emp on new referral request
-      await userReferralEmpServiceObj.sendGrowaasanWhatsappMsgtoEmployeesOnReferralCreation(
+      await userReferralEmpServiceObj.sendWhatsAppBusinessPartnerWhatsappMsgtoEmployeesOnReferralCreation(
         candidateName,
         matchingScore,
         userReferralDetails.jobUrl,
@@ -1017,59 +1013,6 @@ class UserReferralService {
       referralId,
       jdMatchErrorCode
     );
-  }
-
-  /**
-   * sendGrowaasanWhatsappMsgToCandWhenReferralRequestCompleted
-   *
-   * Sends a WhatsApp message to a candidate when their referral request has been completed.
-   *
-   * @param {GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE} placeholders - The placeholders for the message template.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number of the candidate to send the message to.
-   * @param {string} userEmail - The email address of the candidate.
-   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
-   */
-  async sendGrowaasanWhatsappMsgToCandWhenReferralRequestCompleted(
-    placeholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    userEmail: string
-  ): Promise<boolean> {
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.CAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE, // template name
-      userEmail,
-      toPhoneNumber,
-      placeholders
-    );
-    return true;
-  }
-
-  /**
-   * sendGrowaasanWhatsappMsgToCandWhenReferralRequestAccepted
-   *
-   * Sends a WhatsApp message to a candidate when a referral request is accepted.
-   *
-   * Sends a WhatsApp message to a candidate when a referral request is accepted.
-   * The message is sent using the Growaasan cloud API integration.
-   *
-   * @param {GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE} placeholders - The placeholders for the message template.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number of the candidate to send the message to.
-   * @param {string} userEmail - The email of the user who accepted the referral request.
-   *
-   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
-   */
-  async sendGrowaasanWhatsappMsgToCandWhenReferralRequestAccepted(
-    placeholders: GrowaasanTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    userEmail: string
-  ): Promise<boolean> {
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.CAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE, // template name
-      userEmail,
-      toPhoneNumber,
-      placeholders
-    );
-
-    return true;
   }
 }
 

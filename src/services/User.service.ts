@@ -1,48 +1,72 @@
 // Load the defaults
-import { DateTime } from 'luxon';
+import { DateTime } from "luxon";
+
+// Import query response
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Load the local constants
-import { GROWAASAN_APP_CONSTANTS } from '../configs/constants/Growaasan.constant';
 import APP_CONSTANTS from "../configs/constants.config";
 
 // Load the local daos
 import userDao from "../daos/User.dao";
 import userDetailDao from "../daos/UserDetail.dao";
-import { 
+import {
   EmailTemplatePlaceholderCAND_PREMIUM_EXPIRED_NOTIFICATION,
   EmailTemplatePlaceholderCAND_PREMIUM_UPGRADE_NOTIFICATION,
-  EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER, 
-  EmailTemplatePlaceholderCAND_PROFILE_SWITCH_NOTIFICATION, 
+  EmailTemplatePlaceholderCAND_PROFILE_COMPLETION_REMINDER,
+  EmailTemplatePlaceholderCAND_PROFILE_SWITCH_NOTIFICATION,
   EmailTemplatePlaceholderCAND_WELCOME_MSG,
   EmailTemplatePlaceholderEMP_PROFILE_COMPLETION_REMINDER,
   EmailTemplatePlaceholderEMP_SWITCH_PROFILE_NOTIFICATION,
-  EmailTemplatePlaceholderEMP_WELCOME_MSG
+  EmailTemplatePlaceholderEMP_WELCOME_MSG,
 } from "../dtos/EmailTemplatePlaceholder.dto";
-import { GrowaasanTemplatePlaceholderCAND_SIGNUP_CANDIDATE, GrowaasanTemplatePlaceholderEMP_SIGNUP_EMP } from "../dtos/GrowaasanTemplatePlaceholder.dto";
-import { GrowaasanPhoneNumberDto } from '../dtos/Growaasan.dto';
 
 // Load the local dtos
-import { SubscriptionCreateRequestDTO } from '../dtos/Subscription.dto';
-import { NewUserCandSignUpDTO, NewUserEmpSignUpDTO, UserSubscriptionDetailsUpdateDto } from "../dtos/User.dto";
-import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
+import { SubscriptionCreateRequestDTO } from "../dtos/Subscription.dto";
+import {
+  PaginatedResultsWithMatchingConditionsInternalResponse,
+} from "../dtos/Common.dto";
+import {
+  NewUserCandSignUpDTO,
+  NewUserEmpSignUpDTO,
+  UserDetailSettingCreateApiDTO,
+  UserGuidanceRequestCreateApiDTO,
+  UserGuidanceRequestFilterOptions,
+  UserSubscriptionDetailsUpdateDto,
+} from "../dtos/User.dto";
+import {
+  EmailSourceDestinationAddress,
+  emailLibrary,
+} from "../libraries/email.library";
 
 // Load the local enum
 import { UserType } from "../enums/User.enum";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
-import { UserSubscriptionStatus, UserSubscriptionType } from "../enums/UserSubscription.enum";
-import { GrowaasanTemplateNameEnum } from '../enums/GrowaasanTemplate.enum';
+import {
+  UserSubscriptionStatus,
+  UserSubscriptionType,
+} from "../enums/UserSubscription.enum";
 
 // Load the local model
+import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
+import { DbUserDetailSettingDto } from "../db/models/UserDetailSetting.model";
+import { DbUserSkillDto } from "../db/models/UserSkill.model";
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
+import { DbUserGuidanceRequestDto } from "../db/models/UserGuidanceRequest.model";
 
 // Load the local services
+import UserSkillService from "./UserSkill.service";
 import UserDetailService from "./UserDetail.service";
 import MasterSubscriptionService from "./MasterSubscription.service";
 import UserSubscriptionService from "./UserSubscription.service";
 import UserProfilePercentageService from "./UserProfilePercentage.service";
+import { userDetailSettingServiceObj } from "./UserDetailSetting.service";
+import { userGuidanceRequestServiceObj } from "./UserGuidanceRequest.service";
+import { companyServiceObj } from "../admin/services/Company.service";
 
-// Load the local libraries
-import { growaasanLibraryObj } from '../libraries/Growaasan.library';
+// Import utils
+import HttpStatusCode from "../utils/http-codes.util";
+import { BaseError } from "../utils/errors.util";
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
@@ -106,6 +130,106 @@ class UserService {
   }
 
   /**
+   * createUserDetailSetting
+   *
+   * @param {string} email
+   * @param {UserDetailSettingCreateApiDTO} validatedRequestBody
+   * @returns {Promise<DbUserDetailSettingDto>}
+   */
+  async createUserDetailSetting(
+    email: string,
+    validatedRequestBody: UserDetailSettingCreateApiDTO
+  ): Promise<DbUserDetailSettingDto> {
+    // logger
+    global.logger.info("Create user detail settings [service]", {
+      methodName: this.createUserDetailSetting.name,
+    });
+
+    return userDetailSettingServiceObj.createUserDetailSetting(
+      email,
+      validatedRequestBody
+    );
+  }
+
+  /**
+   * createUserGuidanceRequest
+   *
+   * Creates a new user guidance request in the database
+   *
+   * @param {string} cognitoUserId - the id of the user who is creating the request
+   * @param {string} email - the email of the user who is creating the request
+   * @param {string} userName - the name of the user who is creating the request
+   * @param {UserGuidanceRequestCreateApiDTO} validatedRequestBody - the data required to create the user guidance request
+   * @returns {Promise<DbUserGuidanceRequestDto>} - a promise that resolves to the newly created user guidance request
+   */
+  async createUserGuidanceRequest(
+    cognitoUserId: string,
+    email: string,
+    userName: string,
+    userPhoneNumber: string,
+    validatedRequestBody: UserGuidanceRequestCreateApiDTO
+  ): Promise<DbUserGuidanceRequestDto> {
+    // logger
+    global.logger.info("Create User Guidance Request [service]", {
+      methodName: this.createUserGuidanceRequest.name,
+    });
+
+    /**
+     * If company id is provided, get company details
+     *
+     * NOTE: Here, this condition is not much required, we can remove this condition later
+     */
+    if (validatedRequestBody.companyId) {
+      // Get company details
+      const companyDetails: QueryResponse<DbCompanyDetailDto> =
+        await companyServiceObj.getCompanyDetailById(
+          validatedRequestBody.companyId
+        );
+
+      // Throw error if company details not found
+      if (!companyDetails.count) {
+        throw new BaseError(
+          `The Company Details not found.`,
+          HttpStatusCode.NOT_FOUND_404
+        );
+      }
+    }
+
+    return userGuidanceRequestServiceObj.createUserGuidanceRequest(
+      cognitoUserId,
+      email,
+      userName,
+      userPhoneNumber,
+      validatedRequestBody
+    );
+  }
+
+  /**
+   * getAllUserGuidanceRequestByFilterOptions
+   *
+   * Retrieves all user guidance requests based on the provided filter options.
+   *
+   * @param {UserGuidanceRequestFilterOptions} userGuidanceRequestBody - The filter options for retrieving user guidance requests.
+   * @returns {Promise<PaginatedResultsWithMatchingConditionsInternalResponse<DbUserGuidanceRequestDto[]>>} A promise that resolves to a paginated response containing an array of
+   *          user guidance request DTOs and matching conditions.
+   */
+  async getAllUserGuidanceRequestByFilterOptions(
+    userGuidanceRequestBody: UserGuidanceRequestFilterOptions
+  ): Promise<
+    PaginatedResultsWithMatchingConditionsInternalResponse<
+      DbUserGuidanceRequestDto[]
+    >
+  > {
+    global.logger.info("Get user guidance request [service]", {
+      methodName: this.getAllUserGuidanceRequestByFilterOptions.name,
+    });
+
+    return userGuidanceRequestServiceObj.getAllUserGuidanceRequestByFilterOptions(
+      userGuidanceRequestBody
+    );
+  }
+
+  /**
    * @todo : Try to change name to "userAccountCreationAddtionalActvs", "finaliseUserAccountCreation"
    *
    * Sets up additional user resources after account creation.
@@ -146,140 +270,6 @@ class UserService {
         }
       );
     }
-
-    // send welcome email based on the userType .
-    // @todo Need to review this as this is moved to SQS and should be removed from here as there is no use of the below welcome email code
-    if (userType === UserType.CAND) {
-      // Prepare details required for sending the Email
-      const candName: string = userSignUpDTO.name;
-      const candEmail: string = userSignUpDTO.emailList.primary;
-
-      // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
-      const toAddress: EmailSourceDestinationAddress = {
-        email: candEmail,
-        fullName: candName,
-      };
-      const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
-        candName: candName.toTitleCase(),
-      };
-
-      // Send welcome email // todo : review it to remove from here and use SQS to send email
-      await this.sendEmailToCandWelcomeMessage(emailPlaceholders, toAddress);
-
-      // Placeholders for the growaasan whatsapp message
-      const growaasanPlaceholders: GrowaasanTemplatePlaceholderCAND_SIGNUP_CANDIDATE =
-        {
-          candidateName: candName.toTitleCase(),
-        };
-
-        // Function responsible for sending a whatsapp message to the candidate using the "GROWAASAN API INTEGRATION"
-        await this.sendGrowaasanWelcomeWhatsappMessageToCand(
-          growaasanPlaceholders,
-          {
-            countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-            phoneNumber: parseInt(
-              userSignUpDTO.number.replace(
-                GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN,
-                ""
-              )
-            ),
-          },
-          candEmail
-        );
-    } else if (userType === UserType.EMP) {
-      // Prepare details required for sending the Email
-      const empName: string = userSignUpDTO.name;
-      const empEmail: string = userSignUpDTO.emailList.primary;
-
-      // Prepare the necessary parameters required for the sendEmailToCandWelcomeMessage function
-      const toAddress: EmailSourceDestinationAddress = {
-        email: empEmail,
-        fullName: empName,
-      };
-      const emailPlaceholders: EmailTemplatePlaceholderEMP_WELCOME_MSG = {
-        empName: empName.toTitleCase(),
-      };
-
-      // Send welcome email // todo : review it to remove from here and use SQS to send email
-      await this.sendEmailToEmpWelcomeMessage(emailPlaceholders, toAddress);
-
-      // Send welcome WhatsApp message
-      const growaasanPlaceholders: GrowaasanTemplatePlaceholderEMP_SIGNUP_EMP =
-        {
-          employeeName: empName.toTitleCase(),
-        };
-
-        // Function responsible for sending a whatsapp message to the candidate
-        await this.sendGrowaasanWelcomeWhatsappMessageToEmp(
-          growaasanPlaceholders,
-          {
-            countryCode: GROWAASAN_APP_CONSTANTS.COUNTRY_CODE,
-            phoneNumber: parseInt(
-                userSignUpDTO.number.replace(
-                GROWAASAN_APP_CONSTANTS.COUNTRY_CODE_WITH_PLUS_SIGN, ''
-              )
-            ),
-          },
-          empEmail
-        );
-    }
-
-    return true;
-  }
-
-  /**
-   * sendGrowaasanWelcomeWhatsappMessageToCand
-   *
-   * Sends a welcome WhatsApp message to a candidate using the Growaasan cloud API integration.
-   *
-   * This method sends a WhatsApp message to a candidate using the specified template, placeholders, and phone number.
-   * The method also logs the details of the message sent.
-   *
-   * @param {GrowaasanTemplatePlaceholderCAND_SIGNUP_CANDIDATE} placeholders - Placeholders for the message template.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number of the candidate to send the message to.
-   * @param {string} userEmail - The email of the candidate.
-   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
-   */
-  async sendGrowaasanWelcomeWhatsappMessageToCand(
-    placeholders: GrowaasanTemplatePlaceholderCAND_SIGNUP_CANDIDATE,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    userEmail: string
-  ): Promise<boolean> {
-    // Send welcome whatsapp message to the candidate using the "GROWAASAN API INTEGRATION"
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.CAND_SIGNUP_CANDIDATE,
-      userEmail,
-      toPhoneNumber,
-      placeholders
-    );
-
-    return true;
-  }
-
-  /**
-   * sendGrowaasanWelcomeWhatsappMessageToEmp
-   *
-   * Sends a welcome WhatsApp message to an employee using the Growaasan cloud API integration.
-   *
-   * This method sends a WhatsApp message to an employee using the specified template, placeholders, and phone number.
-   * The method also logs the details of the message sent.
-   *
-   * @param {GrowaasanTemplatePlaceholderEMP_SIGNUP_EMP} placeholders - Placeholders for the message template.
-   * @param {GrowaasanPhoneNumberDto} toPhoneNumber - The phone number of the employee to send the message to.
-   * @param {string} userEmail - The email of the employee.
-   * @returns {Promise<boolean>} - Returns a promise that resolves when the message is sent.
-   */
-  async sendGrowaasanWelcomeWhatsappMessageToEmp(
-    placeholders: GrowaasanTemplatePlaceholderEMP_SIGNUP_EMP,
-    toPhoneNumber: GrowaasanPhoneNumberDto,
-    userEmail: string
-  ): Promise<boolean> {
-    await growaasanLibraryObj.sendGrowaasanWhatsappMessage(
-      GrowaasanTemplateNameEnum.EMP_SIGNUP_EMP,
-      userEmail,
-      toPhoneNumber,
-      placeholders
-    );
 
     return true;
   }
@@ -973,6 +963,70 @@ class UserService {
       toAddress,
       emailPlaceholders
     );
+  }
+
+  /**
+   * getUserBasicDetails
+   *
+   * Retrieves the basic user details including skills. If the user is not found
+   * or the skills are not found, it logs an error.
+   *
+   * @param {string} userId - The ID of the user.
+   * @returns {Promise<Partial<DbUserDetailDto> & Partial<DbUserSkillDto>>} - A promise that resolves to the basic user details and skills.
+   */
+  async getUserBasicDetails(
+    userId: string
+  ): Promise<Partial<DbUserDetailDto> & Partial<DbUserSkillDto>> {
+    // logger
+    global.logger.debug(`Get user basic details [service]`, {
+      userId,
+    });
+
+    // Fetch user details and log error if not found
+    const userDetailsQueryResponse: QueryResponse<DbUserDetailDto> =
+      await UserDetailService.getUserBasicDetailsByUserId(userId);
+    if (!userDetailsQueryResponse.count) {
+      global.logger.error(`User not found [service]`, {
+        userId,
+      });
+    }
+
+    // Destructure the fetched user details
+    const userDetails: DbUserDetailDto = userDetailsQueryResponse[0];
+
+    // Fetch the skills of the user and log error if not found
+    const userSkillsQueryResponse: QueryResponse<Partial<DbUserSkillDto>> =
+      await UserSkillService.getUserSkillsByEmail(userDetails.PK.split("#")[2]);
+    if (!userSkillsQueryResponse.count) {
+      global.logger.error(`User skills not found [service]`, {
+        userId,
+      });
+    }
+
+    // Destructure the fetched user skills
+    const userSkills: Partial<DbUserSkillDto> = userSkillsQueryResponse[0];
+
+    const finalUserDetailsResponse: Partial<DbUserDetailDto> &
+      Partial<DbUserSkillDto> = {
+      ...userDetails,
+      ...userSkills,
+    };
+
+    return finalUserDetailsResponse;
+  }
+  /**
+   * getUserDetailsById
+   *
+   * @param {string} userId
+   * @returns {Promise<DbUserDetailDto>}
+   */
+  async getUserDetailsById(userId: string): Promise<DbUserDetailDto> {
+    // logger
+    global.logger.info("Get user details by id [service]", {
+      userId,
+    });
+
+    return UserDetailService.getUserByIdOne(userId);
   }
 }
 

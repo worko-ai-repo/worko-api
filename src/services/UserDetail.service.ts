@@ -13,8 +13,13 @@ import userDetailDao from "../daos/UserDetail.dao";
 // Load the local dtos
 import { UserDetailDTO } from "../dtos/UserDetail.dto";
 import { EmailTemplatePlaceholderCAND_WELCOME_MSG, EmailTemplatePlaceholderEMP_WELCOME_MSG } from "../dtos/EmailTemplatePlaceholder.dto";
+import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP } from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
+
+// Import enums
+import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
 
 // Load the local libraies
+import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusinessPartner.library";
 import { EmailSourceDestinationAddress } from "../libraries/email.library";
 
 // Load the local models
@@ -40,11 +45,18 @@ class UserDetailService {
   /**
    * Retrieves user details by email id.
    *
-   * @param email - Email of the user
-   * @returns {Promise<any>} - Details of the user
+   * @param {string} email - Email of the user
+   * @returns {Promise<QueryResponse<DbUserDetailDto>>} - Details of the user
    */
-  async get(email: string) {
-    console.log("Get user detail by email [service]");
+  async get(email: string): Promise<QueryResponse<DbUserDetailDto>> {
+    // logger
+    global.logger.info("Get user detail by email [service]", {
+      filePath: __filename,
+      methodName: this.get.name,
+      email
+    });
+    
+    // Return the user details
     return userDetailDao.get(email);
   }
 
@@ -185,6 +197,24 @@ class UserDetailService {
   }
 
   /**
+   * getUserBasicDetailsByUserId
+   *
+   * Retrieves basic user details by the user ID.
+   *
+   * @param {string} userId - The ID of the user.
+   * @returns {Promise<QueryResponse<DbUserDetailDto>>} A promise that resolves to the basic user details.
+   */
+  async getUserBasicDetailsByUserId(userId: string): Promise<QueryResponse<DbUserDetailDto>> {
+    global.logger.info("Get user basic details by userId [service]", {
+      filePath: __filename,
+      methodName: this.getUserBasicDetailsByUserId.name,
+      userId
+    });
+    
+    return userDetailDao.getUserBasicDetailsByUserId(userId);
+  }
+
+  /**
    * getUserByIds
    *
    * Retrieves user details for a list of user IDs.
@@ -253,6 +283,117 @@ class UserDetailService {
     logger.info("Updating user Detail [UserDetailService]");
 
     return userDetailDao.update(email, SK, userDetailDTO);
+  }
+
+  /**
+   * sendWelcomeEmailAndWhatsappNotificationToUser
+   *
+   * Retrieves user details and sends a welcome email and whatsapp message based on the user type.
+   *
+   * @param userEmail - Email of the user
+   * @returns {Promise<boolean>} - True if email was sent successfully, false otherwise
+   */
+  async sendWelcomeEmailAndWhatsappNotificationToUser(userEmail: string): Promise<boolean> {
+    global.logger.info(
+      `Send email and whatsapp message to user [UserDetailService]`,
+      {
+        filePath: __filename,
+        methodName: this.sendWelcomeEmailAndWhatsappNotificationToUser.name,
+        userEmail,
+      }
+    );
+
+    // Retrieve the userSignupDetails by userEmail provided in message
+    const userSignupDetails: QueryResponse<DbUserDetailDto> = await this.get(
+      userEmail
+    );
+
+    // If no user found throw error
+    if (!userSignupDetails.count) {
+      throw new BaseError(
+        `The user details not found for the provided email "${userEmail}" address.`
+      );
+    }
+
+    // Retrieve userDetails from userSignUpdetails
+    const userDetails: DbUserDetailDto = userSignupDetails[0];
+    const userType: string = userDetails.userType[0];
+    const name: string = userDetails.name;
+    const email: string = userDetails.emailList.primary;
+    const userPhoneNumber: string = userDetails.number;
+
+    // Create email source and destination address
+    const toAddress: EmailSourceDestinationAddress = {
+      email: email,
+      fullName: name,
+    };
+
+    // Check if the user type is invalid
+    if (![UserType.CAND as string, UserType.EMP as string].includes(userType)) {
+      throw new BaseError(
+        `Unable to identify the user type for the provided email "${userEmail}" address.`
+      );
+    }
+
+    // Check if the user type is cand then send candidate email
+    if (userType === UserType.CAND) {
+      // Placeholders for the email
+      const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
+        candName: name.toTitleCase(),
+      };
+
+      // Placeholders for the whatsapp message
+      const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE =
+        {
+          candidateName: name.toTitleCase(),
+          pointOne: "• Personalized job matches based on your skills",
+          pointTwo: "• Access to our referral network of industry insiders",
+          pointThree: "• Career guidance from successful professionals",
+        };
+
+      // Promise to send welcome email and whatsapp message
+      await Promise.all([
+        // Send a welcome email to the candidate
+        UserService.sendEmailToCandWelcomeMessage(emailPlaceholders, toAddress),
+
+        // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
+        whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+          WhatsAppBusinessPartnerTemplateNameEnum.CAND_SIGNUP_CANDIDATE,
+          userPhoneNumber.strtr({ "+": "" }), // To Phone Number
+          whatsAppBusinessPartnerPlaceholders,
+          email
+        ),
+      ]);
+    }
+    // Check if the user type is EMP then send employee email
+    else if (userType === UserType.EMP) {
+      // Placeholders for the email
+      const emailPlaceholders: EmailTemplatePlaceholderEMP_WELCOME_MSG = {
+        empName: name.toTitleCase(),
+      };
+
+      // Placeholders for the whatsapp message
+      const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP =
+        {
+          employeeName: name.toTitleCase(),
+        };
+
+      // Promise to send welcome email and whatsapp message
+      await Promise.all([
+        // Send a welcome email to the employer
+        UserService.sendEmailToEmpWelcomeMessage(emailPlaceholders, toAddress),
+
+        // sending a whatsapp message to the candidate using the "WHATSAPP BUSINESS PARTNER API INTEGRATION"
+        whatsAppBusinessPartnerLibraryObj.sendWhatsAppBusinessPartnerWhatsappMessage(
+          WhatsAppBusinessPartnerTemplateNameEnum.EMP_SIGNUP_EMP,
+          userPhoneNumber.strtr({ "+": "" }), // To Phone Number
+          whatsAppBusinessPartnerPlaceholders,
+          email
+        ),
+      ]);
+    }
+
+    return true;
   }
 
   /**

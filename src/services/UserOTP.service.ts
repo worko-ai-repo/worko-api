@@ -3,6 +3,9 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import userOtpDao from "../daos/UserOTP.dao";
 import { DbUserOtpDto } from "../db/models/UserOTP.model";
 
+// Import constants
+import APP_CONSTANTS from "../configs/constants.config";
+
 // Import DTOs
 import { UserOtpCreateDto } from "../dtos/UserOTP.dto";
 
@@ -76,7 +79,7 @@ class UserOtpService {
     userIpAddress: string
   ): Promise<DbUserOtpDto> {
     // Generate OTP
-    const otp = OtpHelper.generateOtp(6).toString();
+    const otp: string = OtpHelper.generateOtp(APP_CONSTANTS.OTP_LENGTH);
 
     // Update the placeholders with the generated OTP,
     // so that it replaces the otp placeholder with real OTP in the email template

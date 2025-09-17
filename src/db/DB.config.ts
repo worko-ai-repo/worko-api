@@ -8,7 +8,6 @@ import { DB_CONSTANTS } from "./DB.constants";
 
 // Import all models
 import { CompanyModel } from "./models/Company.model";
-import { CompanyJobModel } from "./models/CompanyJob.model";
 import { CompanyDetailModel } from "./models/CompanyDetail.model";
 import { CompanyRequestModel } from "./models/CompanyRequest.model";
 import { CompanyJobUrlModel } from "./models/CompanyJobUrl.model";
@@ -48,9 +47,12 @@ import { WhatsappMessageLogModel } from "./models/WhatsappMessageLog.model";
 import { GrowaasanMessageLogModel } from "./models/GrowaasanMessageLog.model";
 
 import { ScheduleJobModel } from "./models/ScheduleJob.model";
-import { UserJobApplicationModel } from "./models/UserJobApplication.model";
 import { CorporateBulkJdModel } from "./models/CorporateBulkJd.model";
 import { CorporateBulkJdResumeModel } from "./models/CorporateBulkJdResume.model";
+import { WhatsAppBusinessPartnerMessageLogModel } from "./models/WhatsAppBusinessPartnerMessageLog.model";
+import { UserDetailSettingModel } from "./models/UserDetailSetting.model";
+import { UserGuidanceRequestModel } from "./models/UserGuidanceRequest.model";
+import { BlogModel } from "./models/Blog.model";
 
 /**
  * DBConfig
@@ -97,8 +99,8 @@ class DBConfig {
           secretAccessKey: process.env
             .APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
         },
-        region: "local",
-        endpoint: "http://localhost:8000",
+        region: process.env.APP_SLS_REGION,
+        endpoint: process.env.APP_AWS_DYNAMODB_NOSQL_WORKBENCH_ENDPOINT,
         // convertClassInstanceToMap: true,
       };
     }
@@ -157,13 +159,15 @@ class DBConfig {
       WhatsappTemplateModel,
       WhatsappMessageLogModel,
       ScheduleJobModel,
-      CompanyJobModel,
       GrowaasanMessageLogModel,
       CorporateUserInviteModel,
       CorporateUserModel,
-      UserJobApplicationModel,
       CorporateBulkJdModel,
       CorporateBulkJdResumeModel,
+      WhatsAppBusinessPartnerMessageLogModel,
+      UserDetailSettingModel,
+      UserGuidanceRequestModel,
+      BlogModel,
     ]);
   }
 }

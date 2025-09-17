@@ -78,3 +78,19 @@ export interface CorporateBulkJdResumesCreateDto {
   createdByUserId?: string;
   createdByCorporateUserId?: string;
 }
+
+/**
+ * CorporateBulkJdResumeCvExtractedParsedDto
+ * 
+ * This interface is used to store the extracted data from the uploaded cv
+ * Refer `cvExtractedParsed` attribute in `CorporateBulkJdResume.model.ts`
+ */
+export interface CorporateBulkJdResumeCvExtractedParsedPartialDto {
+  candidateCurrentCompany: string;
+  candidateCurrentDesignation: string;
+  candidateEmail: string;
+  candidateExperience: string;
+  candidateLocation: string;
+  candidateName: string;
+  candidatePhoneNumber: string;
+}
