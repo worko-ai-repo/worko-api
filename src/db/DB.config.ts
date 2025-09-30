@@ -102,8 +102,6 @@ class DBConfig {
         },
         region: process.env.APP_SLS_REGION,
         endpoint: process.env.APP_AWS_DYNAMODB_NOSQL_WORKBENCH_ENDPOINT,
-        region: process.env.APP_SLS_REGION,
-        endpoint: process.env.APP_AWS_DYNAMODB_NOSQL_WORKBENCH_ENDPOINT,
         // convertClassInstanceToMap: true,
       };
     }

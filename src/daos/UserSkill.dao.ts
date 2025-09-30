@@ -1,14 +1,10 @@
 // Import the dynamoose types
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
-// Import the dynamoose types
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-
 //Load the base dao
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { DbUserSkillDto, UserSkillModel } from "../db/models/UserSkill.model";
 import { DbUserSkillDto, UserSkillModel } from "../db/models/UserSkill.model";
 
 //Load the local dtos
@@ -16,7 +12,6 @@ import { UserSkillDTO } from "../dtos/UserSkill.dto";
 
 // UserSkillDao class implementing the BaseDao interface
 class UserSkillDao implements BaseDao {
-  modelName = "UserSkill";
   modelName = "UserSkill";
   partitianKey = "USR#EML#{primaryEmail}"; // Partition key structure for user emails
   sortKeys = { SK_ID: "SKILL#" }; // Sort key structure using unique IDs

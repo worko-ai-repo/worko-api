@@ -15,8 +15,14 @@ import {
   CompanyUpdateDto,
   CompanyUpdateLogoApiDto,
 } from "../dtos/Company.dto";
-import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../dtos/Common.dto";
-import { CompanyRequestListingFilterOptions, CompanyRequestListingFilterRequestDTO } from "../dtos/CompanyRequest.dto";
+import {
+  PaginatedResultsWithMatchingConditionsResponse,
+  RecordListingResponseDTO,
+} from "../dtos/Common.dto";
+import {
+  CompanyRequestListingFilterOptions,
+  CompanyRequestListingFilterRequestDTO,
+} from "../dtos/CompanyRequest.dto";
 
 // Import Helpers
 import { RequestHelper } from "../helpers/request.helper";
@@ -110,10 +116,11 @@ class CompanyController {
       }
 
       // Prepare the data required to update a company
-      const { isCompanyRequestPageFlag, ...remainingCompanyDto } = validatedCompanyRequestBody as CompanyUpdateApiDto;
+      const { isCompanyRequestPageFlag, ...remainingCompanyDto } =
+        validatedCompanyRequestBody as CompanyUpdateApiDto;
 
       let updateCompanyDTO: CompanyUpdateDto;
-      if(isCompanyRequestPageFlag) {
+      if (isCompanyRequestPageFlag) {
         // Prepare the data required to update a company
         updateCompanyDTO = {
           ...remainingCompanyDto,
@@ -124,7 +131,12 @@ class CompanyController {
       }
 
       // Call the CompanyService to update a company
-      const updateCompany: DbCompanyDetailDto = await CompanyService.updateCompany(companyId, updateCompanyDTO, isCompanyRequestPageFlag);
+      const updateCompany: DbCompanyDetailDto =
+        await CompanyService.updateCompany(
+          companyId,
+          updateCompanyDTO,
+          isCompanyRequestPageFlag
+        );
 
       // Send successful response with the created company data
       return res.status(HttpStatusCode.OK_200).json(updateCompany);
@@ -143,7 +155,11 @@ class CompanyController {
    * @param {Response} res - The response object
    * @param {NextFunction} next - The next function
    */
-  updateCompanyLogo = async (req: Request, res: Response, next: NextFunction) => {
+  updateCompanyLogo = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       global.logger.info("update Company Logo [controller]", {
         filePath: __filename,
@@ -155,7 +171,7 @@ class CompanyController {
 
       // Extract company data from the request body
       const companyDto: CompanyUpdateLogoApiDto = req.body;
-      // Validate the incoming company data using the defined joi validation schema 
+      // Validate the incoming company data using the defined joi validation schema
       const { error, value: validatedCompanyRequestBody } =
         companyUpdateLogoApiDtoValidation.validate(companyDto, {
           abortEarly: false,
@@ -209,7 +225,8 @@ class CompanyController {
 
       // Check if company name already exist
       // Call the CompanyService to get company by name
-      const company: QueryResponse<DbCompanyDetailDto> = await CompanyService.getCompanyByName(companyDto.name);
+      const company: QueryResponse<DbCompanyDetailDto> =
+        await CompanyService.getCompanyByName(companyDto.name);
       if (company.count) {
         throw new BaseError(
           "The Company name already exists. Please enter a different name to ensure uniqueness.",
@@ -259,18 +276,6 @@ class CompanyController {
 
       // Set isVerified to true (1) before passing to the service
       // recordListingFilterRequest.isVerified = 1;
-
-      // Validate the filter options and throw an error if any of them is invalid
-      let { error, value: validatedRecordListingFilterRequest } =
-        CompanyListingFilterRequestDTOValidation.validate(
-          recordListingFilterRequest,
-          {
-            abortEarly: false,
-          }
-        );
-      if (error) {
-        throw new RequestValidationError(error);
-      }
 
       // Validate the filter options and throw an error if any of them is invalid
       let { error, value: validatedRecordListingFilterRequest } =
