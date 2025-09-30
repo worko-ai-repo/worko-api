@@ -4,6 +4,9 @@ import { DateTime } from "luxon";
 // Import query response
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
+// Import aws lambda
+import { APIGatewayProxyResult } from "aws-lambda";
+
 // Load the local constants
 import APP_CONSTANTS from "../configs/constants.config";
 
@@ -24,14 +27,11 @@ import {
 // Load the local dtos
 import { SubscriptionCreateRequestDTO } from "../dtos/Subscription.dto";
 import {
-  PaginatedResultsWithMatchingConditionsInternalResponse,
-} from "../dtos/Common.dto";
-import {
   NewUserCandSignUpDTO,
   NewUserEmpSignUpDTO,
   UserDetailSettingCreateApiDTO,
-  UserGuidanceRequestCreateApiDTO,
-  UserGuidanceRequestFilterOptions,
+  UserParseCvRequestApiDto,
+  UserParseCvResponseDto,
   UserSubscriptionDetailsUpdateDto,
 } from "../dtos/User.dto";
 import {
@@ -48,11 +48,11 @@ import {
 } from "../enums/UserSubscription.enum";
 
 // Load the local model
-import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
 import { DbUserDetailSettingDto } from "../db/models/UserDetailSetting.model";
 import { DbUserSkillDto } from "../db/models/UserSkill.model";
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
-import { DbUserGuidanceRequestDto } from "../db/models/UserGuidanceRequest.model";
+import { DbUserPreferenceDto } from "../db/models/UserPreference.model";
+import { DbUserAchievementDto } from "../db/models/UserAchievement.model";
 
 // Load the local services
 import UserSkillService from "./UserSkill.service";
@@ -61,12 +61,13 @@ import MasterSubscriptionService from "./MasterSubscription.service";
 import UserSubscriptionService from "./UserSubscription.service";
 import UserProfilePercentageService from "./UserProfilePercentage.service";
 import { userDetailSettingServiceObj } from "./UserDetailSetting.service";
-import { userGuidanceRequestServiceObj } from "./UserGuidanceRequest.service";
-import { companyServiceObj } from "../admin/services/Company.service";
+import { userPreferenceServiceObj } from "./UserPreference.service";
+import UserAchievementService from "./UserAchievement.service";
+import InvokeLambdaService from "./InvokeLambda.service";
 
-// Import utils
-import HttpStatusCode from "../utils/http-codes.util";
+// Load the local utils
 import { BaseError } from "../utils/errors.util";
+import HttpStatusCode from "../utils/http-codes.util";
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
@@ -148,84 +149,6 @@ class UserService {
     return userDetailSettingServiceObj.createUserDetailSetting(
       email,
       validatedRequestBody
-    );
-  }
-
-  /**
-   * createUserGuidanceRequest
-   *
-   * Creates a new user guidance request in the database
-   *
-   * @param {string} cognitoUserId - the id of the user who is creating the request
-   * @param {string} email - the email of the user who is creating the request
-   * @param {string} userName - the name of the user who is creating the request
-   * @param {UserGuidanceRequestCreateApiDTO} validatedRequestBody - the data required to create the user guidance request
-   * @returns {Promise<DbUserGuidanceRequestDto>} - a promise that resolves to the newly created user guidance request
-   */
-  async createUserGuidanceRequest(
-    cognitoUserId: string,
-    email: string,
-    userName: string,
-    userPhoneNumber: string,
-    validatedRequestBody: UserGuidanceRequestCreateApiDTO
-  ): Promise<DbUserGuidanceRequestDto> {
-    // logger
-    global.logger.info("Create User Guidance Request [service]", {
-      methodName: this.createUserGuidanceRequest.name,
-    });
-
-    /**
-     * If company id is provided, get company details
-     *
-     * NOTE: Here, this condition is not much required, we can remove this condition later
-     */
-    if (validatedRequestBody.companyId) {
-      // Get company details
-      const companyDetails: QueryResponse<DbCompanyDetailDto> =
-        await companyServiceObj.getCompanyDetailById(
-          validatedRequestBody.companyId
-        );
-
-      // Throw error if company details not found
-      if (!companyDetails.count) {
-        throw new BaseError(
-          `The Company Details not found.`,
-          HttpStatusCode.NOT_FOUND_404
-        );
-      }
-    }
-
-    return userGuidanceRequestServiceObj.createUserGuidanceRequest(
-      cognitoUserId,
-      email,
-      userName,
-      userPhoneNumber,
-      validatedRequestBody
-    );
-  }
-
-  /**
-   * getAllUserGuidanceRequestByFilterOptions
-   *
-   * Retrieves all user guidance requests based on the provided filter options.
-   *
-   * @param {UserGuidanceRequestFilterOptions} userGuidanceRequestBody - The filter options for retrieving user guidance requests.
-   * @returns {Promise<PaginatedResultsWithMatchingConditionsInternalResponse<DbUserGuidanceRequestDto[]>>} A promise that resolves to a paginated response containing an array of
-   *          user guidance request DTOs and matching conditions.
-   */
-  async getAllUserGuidanceRequestByFilterOptions(
-    userGuidanceRequestBody: UserGuidanceRequestFilterOptions
-  ): Promise<
-    PaginatedResultsWithMatchingConditionsInternalResponse<
-      DbUserGuidanceRequestDto[]
-    >
-  > {
-    global.logger.info("Get user guidance request [service]", {
-      methodName: this.getAllUserGuidanceRequestByFilterOptions.name,
-    });
-
-    return userGuidanceRequestServiceObj.getAllUserGuidanceRequestByFilterOptions(
-      userGuidanceRequestBody
     );
   }
 
@@ -510,6 +433,7 @@ class UserService {
           candName: candName.toTitleCase(),
           candPremiumUpgradeNowMsg:
             APP_CONSTANTS.FRONTEND_URLS.SUBS_PREMIUM_UPGRADE,
+          ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
         };
       // Send email to remind upgrading subscription
       const sendEmailResponse =
@@ -538,6 +462,7 @@ class UserService {
         {
           candName: candName.toTitleCase(),
           candRenewNowMsg: APP_CONSTANTS.FRONTEND_URLS.SUBS_PREMIUM_RENEW,
+          ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
         };
       // Send email to remind renewing subscription
       const sendEmailResponse = await this.sendReminderMailToRenewSubscription(
@@ -700,6 +625,8 @@ class UserService {
         const emailPlaceholders: EmailTemplatePlaceholderEMP_SWITCH_PROFILE_NOTIFICATION =
           {
             empName: empName.toTitleCase(),
+            workoLoginUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+            ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
           };
         // Send email to remind creating multiple profiles
         const sendEmailResponse =
@@ -722,10 +649,15 @@ class UserService {
    * @param email
    * @param resume
    */
-  async updateUserCV(email: string, resume: string) {
+  async updateUserCV(
+    email: string,
+    resume: string,
+    userCvFileName?: string,
+    isCvExtracted?: boolean
+  ) {
     global.logger.info("Update user resume [service]");
     const SK = await userDetailDao.getUserDetailSK(email);
-    userDetailDao.updateCv(SK, email, resume);
+    userDetailDao.updateCv(SK, email, resume, userCvFileName, isCvExtracted);
   }
 
   /**
@@ -972,11 +904,16 @@ class UserService {
    * or the skills are not found, it logs an error.
    *
    * @param {string} userId - The ID of the user.
-   * @returns {Promise<Partial<DbUserDetailDto> & Partial<DbUserSkillDto>>} - A promise that resolves to the basic user details and skills.
+   * @returns A promise that resolves to the basic user details and skills.
    */
   async getUserBasicDetails(
     userId: string
-  ): Promise<Partial<DbUserDetailDto> & Partial<DbUserSkillDto>> {
+  ): Promise<
+    Partial<DbUserDetailDto> &
+      Partial<DbUserSkillDto> &
+      Partial<DbUserPreferenceDto> &
+      Partial<DbUserAchievementDto>
+  > {
     // logger
     global.logger.debug(`Get user basic details [service]`, {
       userId,
@@ -994,9 +931,11 @@ class UserService {
     // Destructure the fetched user details
     const userDetails: DbUserDetailDto = userDetailsQueryResponse[0];
 
+    const userRegisteredEmail: string = userDetails.PK.split("#")[2];
+
     // Fetch the skills of the user and log error if not found
-    const userSkillsQueryResponse: QueryResponse<Partial<DbUserSkillDto>> =
-      await UserSkillService.getUserSkillsByEmail(userDetails.PK.split("#")[2]);
+    const userSkillsQueryResponse: QueryResponse<DbUserSkillDto> =
+      await UserSkillService.getUserSkillsByEmail(userRegisteredEmail);
     if (!userSkillsQueryResponse.count) {
       global.logger.error(`User skills not found [service]`, {
         userId,
@@ -1004,12 +943,44 @@ class UserService {
     }
 
     // Destructure the fetched user skills
-    const userSkills: Partial<DbUserSkillDto> = userSkillsQueryResponse[0];
+    const userSkills: DbUserSkillDto = userSkillsQueryResponse[0];
+
+    const userPreferencesQueryResponse: QueryResponse<DbUserPreferenceDto> =
+      await userPreferenceServiceObj.getUserPreferenceBasicDetails(
+        userRegisteredEmail
+      );
+    if (!userPreferencesQueryResponse.count) {
+      global.logger.error(`User preferences not found [service]`, {
+        userId,
+      });
+    }
+
+    // Destructure the fetched user preferences
+    const userPreferences: DbUserPreferenceDto =
+      userPreferencesQueryResponse[0];
+
+    const userAchievementsQueryResponse: QueryResponse<DbUserAchievementDto> =
+      await UserAchievementService.getUserAchievementBasicDetails(
+        userRegisteredEmail
+      );
+    if (!userAchievementsQueryResponse.count) {
+      global.logger.error(`User achievements not found [service]`, {
+        userId,
+      });
+    }
+
+    // Destructure the fetched user achievements
+    const userAchievements: DbUserAchievementDto =
+      userAchievementsQueryResponse[0];
 
     const finalUserDetailsResponse: Partial<DbUserDetailDto> &
-      Partial<DbUserSkillDto> = {
+      Partial<DbUserSkillDto> &
+      Partial<DbUserPreferenceDto> &
+      Partial<DbUserAchievementDto> = {
       ...userDetails,
       ...userSkills,
+      ...userPreferences,
+      ...userAchievements,
     };
 
     return finalUserDetailsResponse;
@@ -1027,6 +998,50 @@ class UserService {
     });
 
     return UserDetailService.getUserByIdOne(userId);
+  }
+
+  async parseCv(
+    parseCvRequest: UserParseCvRequestApiDto
+  ): Promise<UserParseCvResponseDto> {
+    const cognitoUserId: string = global.requestLocalContext.userId;
+
+    // Parse the user details
+    const userDetailsQueryResponse: QueryResponse<DbUserDetailDto> =
+      await UserDetailService.getUserById(cognitoUserId);
+    if (!userDetailsQueryResponse.count) {
+      throw new BaseError(
+        `Your details are not found in our system, so you are not allowed to parse CV.`,
+        HttpStatusCode.FORBIDDEN_403
+      );
+    }
+
+    const userDetails: DbUserDetailDto = userDetailsQueryResponse[0];
+
+    if (userDetails?.CV !== parseCvRequest.s3ResumeId) {
+      throw new BaseError(
+        `Your CV is not found in our system, so you are not allowed to parse CV.`,
+        HttpStatusCode.FORBIDDEN_403
+      );
+    }
+
+    const cvTriggerResponse: APIGatewayProxyResult =
+      await InvokeLambdaService.triggerResumePartialExtraction(
+        parseCvRequest.s3ResumeId,
+        userDetails.id
+      );
+    global.logger.info("CV Response", {
+      methodName: this.parseCv.name,
+      statusCode: cvTriggerResponse.statusCode,
+    });
+    if (cvTriggerResponse.statusCode !== HttpStatusCode.OK_200) {
+      throw new BaseError(
+        `CV parsing failed.`,
+        cvTriggerResponse?.statusCode ??
+          HttpStatusCode.INTERNAL_SERVER_ERROR_500
+      );
+    }
+
+    return JSON.parse(cvTriggerResponse["body"]);
   }
 }
 

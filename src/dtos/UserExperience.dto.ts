@@ -18,3 +18,11 @@ export interface UserExperienceDTOWithId extends UserExperienceDTO {
   PK: string;
   SK: string;
 }
+
+export interface UserExperienceUpdateApiDto {
+  isEmailVerified?: boolean;
+}
+
+export interface UserExperienceCommonUpdateDto {
+  isEmailVerified: boolean;
+}

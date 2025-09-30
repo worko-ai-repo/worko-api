@@ -274,6 +274,25 @@ class ScriptController {
       next(error);
     }
   };
+
+  scriptToSendSmsToUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const response: boolean = await scriptServiceObj.scriptToSendSmsToUser(
+      );
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json({
+          message: `Is SMS Sent Successfully: ${response}`,
+        });
+    } catch (error) {
+      global.logger.error("Error in sending SMS", { error: error });
+      next(error);
+    }
+  };
 }
 
 export default ScriptController;

@@ -7,9 +7,6 @@ import { UserSocialProfileModel } from "../db/models/UserSocialProfile.model";
 //Load the local dtos
 import { UserSocialProfileDTO } from "../dtos/UserSocialProfile.dto";
 
-//Load UlidService for generating ULID IDs
-import UlidService from "../services/Ulid.service";
-
 // UserSocialProfileDao class implementing the BaseDao interface
 class UserSocialProfileDao implements BaseDao {
   modelName = "userSocialProfile";

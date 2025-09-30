@@ -7,6 +7,9 @@ import { DB_CONSTANTS } from "../DB.constants";
 // Import Base Dto
 import { BaseDbDto } from "./Base.model";
 
+// Import dtos
+import { CorporateUserDbPhoneNumberDetailDto } from "../../dtos/CorporateUser.dto";
+
 // Import Enums 
 import { CorporateUserTypeEnum } from "../../enums/CorporateUser.enum";
 
@@ -29,6 +32,7 @@ class DbCorporateUserDto extends BaseDbDto {
     email!: string;
     firstName!: string;
     lastName!: string;
+    phoneNumberDetails?: CorporateUserDbPhoneNumberDetailDto;
     corporateUserType!: CorporateUserTypeEnum;
 
     // Audit
@@ -50,6 +54,14 @@ class DbCorporateUserDto extends BaseDbDto {
      * who deleted the corporate user from the `CorporateUser` model.
      */
     deletedByCorporateUserId?: string;
+
+    /**
+     * If "worko admin" gives "cv duplicacy access" while inviting other corporate-admin/recruiter 
+     * then this flag will be set to true, if not then it will be set to false
+     * 
+     * if this flag is set to true then we will allow the invited corporate-admin/recruiter to give "cv duplicacy management" on job applications
+     */
+    cvDuplicacyAccess?: boolean;
 
     isDeleted!: boolean;
 }
@@ -101,6 +113,20 @@ const CorporateUserSchema = new dynamoose.Schema(
             type: String,
             required: true,
         },
+        phoneNumberDetails: {
+            type: Object,
+            required: false,
+            schema: {
+                countryCode: {
+                    type: Number,
+                    required: true,
+                },
+                phoneNumber: {
+                    type: Number,
+                    required: true,
+                },
+            },
+        },
         corporateUserType: {
             type: String,
             required: true,
@@ -119,6 +145,10 @@ const CorporateUserSchema = new dynamoose.Schema(
         },
         deletedByCorporateUserId: {
             type: String,
+            required: false,
+        },
+        cvDuplicacyAccess: {
+            type: Boolean,
             required: false,
         },
         isDeleted: {

@@ -7,8 +7,22 @@ import { Schema } from "dynamoose/dist/Schema";
 import { DB_CONSTANTS } from "../DB.constants";
 import { BaseDbDto } from "./Base.model";
 
+// Import dtos
+import {
+  UserGuidanceRequestCancelledByDetailDto,
+  UserGuidanceRequestMentorDetailDto,
+  UserGuidanceRequestPaymentConfirmationDoneDto,
+  UserGuidanceRequestPaymentConfirmationPendingDto,
+  UserGuidanceRequestPaymentRequestDto,
+  UserGuidanceRequestRejectedByDetailDto,
+  UserGuidanceRequestReScheduleMeetingDto,
+  UserGuidanceRequestScheduleMeetingDto,
+  UserGuidanceRequestStatusTrackerDto,
+} from "../../dtos/UserGuidanceRequest.dto";
+
 // import Enums
 import { UserGuidanceRequestTypeEnum } from "../../enums/User.enum";
+import { UserGuidanceRequestStatusEnum } from "../../enums/UserGuidanceRequest.enum";
 
 // Define the structure for User Guidance Request Database Data Transfer Object (DTO)
 class DbUserGuidanceRequestDto extends BaseDbDto {
@@ -35,15 +49,15 @@ class DbUserGuidanceRequestDto extends BaseDbDto {
   createdByUserId!: string;
 
   /**
-   * updatedByUsedId
+   * updatedByUserId
    *
    * @reference `id` attribute from `UserDetail.model.ts`
    */
-  updatedByUsedId?: string;
+  updatedByUserId?: string;
 
   /**
    * companyId
-   * 
+   *
    * @reference `id` attribute from `CompanyDetail.model.ts`
    */
   companyId?: string;
@@ -75,6 +89,28 @@ class DbUserGuidanceRequestDto extends BaseDbDto {
    * guidanceRequestDescription
    */
   guidanceRequestDescription!: string;
+
+  status!: UserGuidanceRequestStatusEnum;
+
+  statusTracker!: UserGuidanceRequestStatusTrackerDto[];
+
+  mentorDetails?: UserGuidanceRequestMentorDetailDto;
+
+  mentorAssignedRemarks?: string;
+
+  scheduleMeetingDetails?: UserGuidanceRequestScheduleMeetingDto;
+
+  rescheduleMeetingDetails?: UserGuidanceRequestReScheduleMeetingDto[];
+
+  paymentRequestDetails?: UserGuidanceRequestPaymentRequestDto;
+
+  paymentConfirmationPendingDetails?: UserGuidanceRequestPaymentConfirmationPendingDto;
+
+  paymentConfirmationDoneDetails?: UserGuidanceRequestPaymentConfirmationDoneDto;
+
+  rejectedByDetails?: UserGuidanceRequestRejectedByDetailDto;
+
+  cancelledByDetails?: UserGuidanceRequestCancelledByDetailDto;
 }
 
 // Define the schema for the User Guidance Request
@@ -104,7 +140,7 @@ const UserGuidanceRequestSchema: Schema = new dynamoose.Schema(
       type: String,
       required: true,
     },
-    updatedByUsedId: {
+    updatedByUserId: {
       type: String,
       required: false,
     },
@@ -123,6 +159,238 @@ const UserGuidanceRequestSchema: Schema = new dynamoose.Schema(
     guidanceRequestDescription: {
       type: String,
       required: true,
+    },
+    status: {
+      type: String,
+      required: true,
+    },
+    statusTracker: {
+      type: Array,
+      required: true,
+      schema: [
+        {
+          type: Object,
+          schema: {
+            oldStatus: {
+              type: String,
+              required: false,
+            },
+            newStatus: {
+              type: String,
+              required: true,
+            },
+            actionDate: {
+              type: String,
+              required: true,
+            },
+            actionByUserId: {
+              type: String,
+              required: true,
+            },
+            actionByUserType: {
+              type: String,
+              required: true,
+            },
+          },
+        },
+      ],
+    },
+    mentorDetails: {
+      type: Object,
+      required: false,
+      schema: {
+        userId: {
+          type: String,
+          required: true,
+        },
+        userEmail: {
+          type: String,
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+      },
+    },
+    mentorAssignedRemarks: {
+      type: String,
+      required: false,
+    },
+    scheduleMeetingDetails: {
+      type: Object,
+      required: false,
+      schema: {
+        date: {
+          type: String,
+          required: true,
+        },
+        time: {
+          type: String,
+          required: true,
+        },
+        duration: {
+          type: String,
+          required: true,
+        },
+        meetingLink: {
+          type: String,
+          required: false,
+        }
+      },
+    },
+    rescheduleMeetingDetails: {
+      type: Array,
+      required: false,
+      schema: [
+        {
+          type: Object,
+          schema: {
+            date: {
+              type: String,
+              required: true,
+            },
+            time: {
+              type: String,
+              required: true,
+            },
+            actionDate: {
+              type: String,
+              required: true,
+            },
+            actionByUserId: {
+              type: String,
+              required: true,
+            },
+            actionByUserType: {
+              type: String,
+              required: true,
+            },
+          },
+        },
+      ],
+    },
+    paymentRequestDetails: {
+      type: Object,
+      required: false,
+      schema: {
+        currency: {
+          type: String,
+          required: true,
+        },
+        totalAmount: {
+          type: Number,
+          required: true,
+        },
+        platformFee: {
+          type: Number,
+          required: true,
+        },
+        guidanceFee: {
+          type: Number,
+          required: true,
+        },
+        linkForPayment: {
+          type: String,
+          required: true,
+        },
+        actionByUserId: {
+          type: String,
+          required: true,
+        },
+        actionByUserType: {
+          type: String,
+          required: true,
+        },
+        actionDate: {
+          type: String,
+          required: true,
+        },
+      },
+    },
+    paymentConfirmationPendingDetails: {
+      type: Object,
+      required: false,
+      schema: {
+        actionByUserId: {
+          type: String,
+          required: true,
+        },
+        actionByUserType: {
+          type: String,
+          required: true,
+        },
+        actionDate: {
+          type: String,
+          required: true,
+        },
+      },
+    },
+    paymentConfirmationDoneDetails: {
+      type: Object,
+      required: false,
+      schema: {
+        uniqueTransactionReference: {
+          type: String,
+          required: true,
+        },
+        actionByUserId: {
+          type: String,
+          required: true,
+        },
+        actionByUserType: {
+          type: String,
+          required: true,
+        },
+        actionDate: {
+          type: String,
+          required: true,
+        },
+      },
+    },
+    rejectedByDetails: {
+      type: Object,
+      required: false,
+      schema: {
+        actionByUserId: {
+          type: String,
+          required: true,
+        },
+        actionByUserType: {
+          type: String,
+          required: true,
+        },
+        actionDate: {
+          type: String,
+          required: true,
+        },
+        reason: {
+          type: String,
+          required: true,
+        },
+      },
+    },
+    cancelledByDetails: {
+      type: Object,
+      required: false,
+      schema: {
+        actionByUserId: {
+          type: String,
+          required: true,
+        },
+        actionByUserType: {
+          type: String,
+          required: true,
+        },
+        actionDate: {
+          type: String,
+          required: true,
+        },
+        reason: {
+          type: String,
+          required: true,
+        },
+      },
     },
     companyName: {
       type: String,

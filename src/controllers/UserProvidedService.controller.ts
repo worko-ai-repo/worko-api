@@ -18,14 +18,14 @@ import { validateEmailField } from "../schemas/User.schema";
 // Load the shared service
 import MasterServiceService from "../services/MasterService.service";
 import UserProvidedServiceService from "../services/UserProvidedService.service";
-import UserProfilePercentageService from "../services/UserProfilePercentage.service";
+// import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
-import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+// import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 import { TimestampHelper } from "../helpers/timeStamp.helper";
 import { ProvidedServiceStatus } from "../enums/User.enum";
 import { UuidHelper } from "../helpers/uuid.helper";

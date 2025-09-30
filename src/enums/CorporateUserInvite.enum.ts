@@ -37,3 +37,10 @@ export enum CorpInviteStatusEnum {
      */
     DELETED = 'DELETED',
 }
+
+
+export enum CorporateUserInviteDbPricingPlanEnum {
+  JOB_BOARD = "JOB_BOARD",
+  HIRING_PARTNER = "HIRING_PARTNER",
+  CO_PILOT = "CO_PILOT",
+}

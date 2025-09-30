@@ -5,6 +5,9 @@ import { ObjectType } from "dynamoose/dist/General";
 // import uuidToULID from ulidx
 import { uuidToULID } from "ulidx";
 
+// Import AWS SDK
+import { awsClientCognitoIdentityProviderLibrary } from "../configs/aws-sdk.config";
+
 // import constants
 import APP_CONSTANTS from "../configs/constants.config";
 
@@ -27,7 +30,6 @@ import { CorporateUserTypeEnum } from "../enums/CorporateUser.enum";
 import { CorpInviteStatusEnum } from "../enums/CorporateUserInvite.enum";
 
 // Import helpers
-import { clientCognitoIdentityProviderObj } from "../helpers/clientCognitoIdentityProvide.helper";
 import { attachCompanyDetails } from "../helpers/companyDetailsInjector.helper";
 
 // Import libraries
@@ -69,15 +71,36 @@ class CorporateUserService {
       }
     );
 
-    // Check if the Invite is expired or isDeleted
-    // Get the list of corporate invites from the database and throw an error if invalid InviteId
     let inviteDetailsById: QueryResponse<DbCorporateUserInviteDto> =
       await corporateUserInviteServiceObj.getInviteById(
         createCorpUserDto.inviteId
       );
-    if (!inviteDetailsById.count || inviteDetailsById[0].isDeleted) {
+    if (!inviteDetailsById.count) {
       // Throw an error if the Invite Request is not found
-      throw new BaseError(`Invalid Invite`, HttpStatusCode.NOT_FOUND_404);
+      throw new BaseError(`Invite details not found`, HttpStatusCode.NOT_FOUND_404);
+    }
+
+    const inviteDetails: DbCorporateUserInviteDto = inviteDetailsById[0];
+
+    // If invite is revoked, throw an error
+    if(inviteDetails.isDeleted) {
+      throw new BaseError(`Invite has been revoked. Please contact support team for further details.`, HttpStatusCode.CONFLICT_409);
+    }
+
+    // If invite is expired, throw an error
+    if (inviteDetails.inviteStatus === CorpInviteStatusEnum.EXPIRED) {
+      throw new BaseError(
+        `Invite has been expired. Please contact support team to resend a new invite.`,
+        HttpStatusCode.CONFLICT_409
+      );
+    }
+
+    const updatedInviteExpiryAccessDetails: DbCorporateUserInviteDto = (await corporateUserInviteServiceObj.accessRequestExpiryCheck([inviteDetails]))[0]; // check if invite is expired or not and update the status to Expired if it is
+    if(updatedInviteExpiryAccessDetails.inviteStatus === CorpInviteStatusEnum.EXPIRED) {
+      throw new BaseError(
+        `Invite has been expired. Please contact support team to resend a new invite.`,
+        HttpStatusCode.CONFLICT_409
+      );
     }
 
     // check if the company exists or not and throw an error if not found
@@ -106,9 +129,9 @@ class CorporateUserService {
 
     // Create a new Corporate User
     const newCorporateUser: DbCorporateUserDto =
-      await corporateUserDaoObj.createCorporateUser(createCorpUserDto);
+      await corporateUserDaoObj.createCorporateUser(createCorpUserDto, inviteDetails.cvDuplicacyAccess);
 
-    if (newCorporateUser) {
+    if (newCorporateUser?.id) {
       // Construct full Name
       const fullName: string = `${newCorporateUser.firstName} ${newCorporateUser.lastName}`;
 
@@ -154,33 +177,51 @@ class CorporateUserService {
           ? APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.CORPORATE_ADMIN
           : APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.CORPORATE_RECRUITER;
 
-      await Promise.all([
+      const userPoolId: string | undefined = process.env.APP_AWS_COGNITO_USER_POOL_ID;
+
+      if(!userPoolId) {
+        throw new BaseError(
+          "User Pool ID is not found",
+          HttpStatusCode.INTERNAL_SERVER_ERROR_500
+        );
+      }
+
+      const postSignupTasks = [
         // Elevate the user to the appropriate cognito group
-        clientCognitoIdentityProviderObj.elevateUserToGroup(
+        awsClientCognitoIdentityProviderLibrary.elevateUserToGroup(
+          userPoolId,
           newCorporateUser.email,
           cognitoUsergroup
         ),
 
-        // Confirm the user to the corporate group
-        clientCognitoIdentityProviderObj.confirmCognitoUserSignup(
-          newCorporateUser.email
-        ),
-
-        // Verify the user
-        clientCognitoIdentityProviderObj.verifyCognitoUser(
-          newCorporateUser.email
-        ),
-
-        // Update the invite status to ACCEPTED
-        corporateUserInviteServiceObj.updateInviteById(
-          createCorpUserDto.inviteId,
+        corporateUserInviteServiceObj.updateCommonInvite(
+          newCorporateUser.companyId,
+          newCorporateUser.email,
+          newCorporateUser.inviteId,
           {
             inviteStatus: CorpInviteStatusEnum.ACCEPTED,
-            companyId: createCorpUserDto.companyId,
-            email: createCorpUserDto.email,
           }
         ),
-      ]);
+      ];
+
+      if(!inviteDetails.evaluatorCognitoUserId) {
+        global.logger.info("Evaluator Cognito User ID is not found. So we need to confirm and verify the user [service]")
+        postSignupTasks.push(
+          // Confirm the user to the corporate group
+          awsClientCognitoIdentityProviderLibrary.confirmCognitoUserSignup(
+            userPoolId,
+            newCorporateUser.email
+          ),
+  
+          // Verify the user
+          awsClientCognitoIdentityProviderLibrary.verifyCognitoUser(
+            userPoolId,
+            newCorporateUser.email,
+          )
+        );
+      }
+
+      await Promise.all(postSignupTasks);
     }
 
     return newCorporateUser;
@@ -348,7 +389,7 @@ class CorporateUserService {
   ): Promise<
     PaginatedResultsWithMatchingConditionsInternalResponse<
       (DbCorporateUserDto & {
-        companyDetails: DbCompanyDetailDto | undefined;
+        companyDetails?: DbCompanyDetailDto;
       })[]
     >
   > {
@@ -374,13 +415,13 @@ class CorporateUserService {
 
     // Enrich the data with company details
     const corporateUsersWithCompanyDetails: (DbCorporateUserDto & {
-      companyDetails: DbCompanyDetailDto | undefined;
+      companyDetails?: DbCompanyDetailDto;
     })[] = await attachCompanyDetails<DbCorporateUserDto>(userArray);
 
     // return the corporate Users with company details
     const response: PaginatedResultsWithMatchingConditionsInternalResponse<
       (DbCorporateUserDto & {
-        companyDetails: DbCompanyDetailDto | undefined;
+        companyDetails?: DbCompanyDetailDto;
       })[]
     > = {
       data: corporateUsersWithCompanyDetails,
@@ -580,6 +621,10 @@ class CorporateUserService {
     }
 
     return corporateUserDetails[0];
+  }
+
+  async getUserByCompanyIdAndUserEmail(email: string, companyId: string): Promise<QueryResponse<DbCorporateUserDto>> {
+    return corporateUserDaoObj.getUserByCompanyIdAndUserEmail(email, companyId);
   }
 }
 

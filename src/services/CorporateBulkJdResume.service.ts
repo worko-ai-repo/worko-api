@@ -127,6 +127,8 @@ class CorporateBulkJdResumeService {
            * Extract the `id` from the cloud File Name which will be used in the keys of model
            *
            * @todo: Extracting the `id` from the cloud File Name is not a appropriate way,
+           *
+           * @todo: Extracting the `id` from the cloud File Name is not a appropriate way,
            * we should have a better way to get the `id`
            */
           const resumeId: string =
@@ -134,6 +136,7 @@ class CorporateBulkJdResumeService {
 
           /**
            * Prepare Argument For Storing the Cvs in Database
+           *
            *
            * NOTE: Preparing the dynamodb keys for the model in service folder should be done in dao folder only
            */
@@ -378,6 +381,8 @@ class CorporateBulkJdResumeService {
               companyName: companyDetails.name.toTitleCase(),
               jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
               matchingScore: eachCorporateBulkJdResume.matchingScore,
+              signUpUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_SIGNUP_URL,
+              ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
             };
 
           // Send email to the candidate
@@ -409,6 +414,8 @@ class CorporateBulkJdResumeService {
               candidateName: cvExtractedParsed.candidateName.toTitleCase(),
               companyName: companyDetails.name.toTitleCase(),
               jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+              signUpUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_SIGNUP_URL,
+              ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
             };
 
           // Send email to the candidate
@@ -614,6 +621,8 @@ class CorporateBulkJdResumeService {
           companyName: companyDetails.name.toTitleCase(),
           jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
           matchingScore: corporateBulkJdResumeDetails.matchingScore,
+          signUpUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_SIGNUP_URL,
+          ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
         };
 
       // Send email to the candidate
@@ -647,6 +656,8 @@ class CorporateBulkJdResumeService {
           candidateName: cvExtractedParsed.candidateName.toTitleCase(),
           companyName: companyDetails.name.toTitleCase(),
           jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+          signUpUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_SIGNUP_URL,
+          ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
         };
 
       // Send email to the candidate

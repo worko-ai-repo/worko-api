@@ -69,11 +69,11 @@ class UserSkillDao implements BaseDao {
    * Retrieves user skills by email.
    *
    * @param {string} email - Email of the user
-   * @returns {Promise<QueryResponse<Partial<DbUserSkillDto>>> } - A promise that resolves to the query response containing the user's skills data
+   * @returns {Promise<QueryResponse<DbUserSkillDto>>} - A promise that resolves to the query response containing the user's skills data
    */
   async getUserSkillsByEmail(
     email: string
-  ): Promise<QueryResponse<Partial<DbUserSkillDto>>> {
+  ): Promise<QueryResponse<DbUserSkillDto>> {
     // logger
     global.logger.info(`Get user skills by email [DAO]`, {
       filePath: __filename,
@@ -95,7 +95,12 @@ class UserSkillDao implements BaseDao {
       .eq(PK)
       .where("SK")
       .eq(SK)
-      .attributes(["softSkills", "coreSkills", "certifications"])
+      .attributes([
+        "softSkills",
+        "coreSkills",
+        "certifications",
+        "technicalSkills",
+      ])
       .exec();
   }
 }

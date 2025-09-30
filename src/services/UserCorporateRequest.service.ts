@@ -190,7 +190,9 @@ class UserCorporateRequestService {
         const emailPlaceholders: Partial<EmailTemplatePlaceholderUSER_CORPORATE_REQUEST_EMAIL_OTP> = 
         {
             userFullName: fullName.toTitleCase(),
-            logoUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_LOGO_URL
+            logoUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_LOGO_URL,
+            verificationUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+            ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL
         };
 
         // Send OTP to user's work email to verify the same.

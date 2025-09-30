@@ -23,7 +23,7 @@ import {
 import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
 import { EmpReferralListingFilterOptions, UserReferralDTO } from "../dtos/UserReferral.dto";
 import { ScheduleJobReferralReminderInputDto, ScheduleJobCreateDto } from "../dtos/ScheduleJob.dto";
-import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
+import { PaginatedResultsWithMatchingConditionsInternalResponse, PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_REFERRAL_REQUEST_ACCEPTED_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderCAND_REFERRAL_REQUEST_COMPLETED_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_NEW_REFERRAL_REQUEST_EMPLOYEE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_REFERRAL_REQUEST_PENDING_EMPLOYEE } from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
 
 // Import Enums
@@ -58,102 +58,142 @@ import ScheduleJobService from "./ScheduleJob.service";
 // import constants
 import { WHATSAPP_APP_CONSTANTS } from "../configs/constants/Whatsapp.constant";
 import { WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS } from "../configs/constants/WhatsAppBusinessPartner.constant";
+import APP_CONSTANTS from "../configs/constants.config";
 
 /**
  *  UserReferralEmpService class responsible for managing employee-related referral operations.
  */
 class UserReferralEmpService {
-  /**
-   * getEmployeeReferrals
-   *
-   * Fetches referrals for employee based on the provided filter options.
-   *
-   * If referralStatus is AWAITING then fetch the details by calling getEmployeeAwaitingReferrals function.
-   * Otherwise, call the function to get referrals by status.
-   *
-   * @param {string} empPrimaryEmail - Employee's primary email
-   * @param {EmpReferralListingFilterOptions} empReferralListingFilterOptions - Filter options for the referral listing
-   */
-  async getEmployeeReferrals(
+  async getEmployeeRespondedReferralIds(    
     empPrimaryEmail: string,
-    empReferralListingFilterOptions: EmpReferralListingFilterOptions
-  ) {
-    // If referralStatus is AWAITING then fetch the details
-    if (empReferralListingFilterOptions.status === ReferralStatus.AWAITING) {
-      // If status is awaiting, call the function to get awaiting referrals
-      return this.getEmployeeAwaitingReferrals(
-        empPrimaryEmail,
-        empReferralListingFilterOptions
-      );
-    } else {
-      // Otherwise, call the function to get referrals by status
-      return this.getEmployeeReferralsByStatus(
-        empPrimaryEmail,
-        empReferralListingFilterOptions
-      );
-    }
-  }
-
-  /**
-   * getEmployeeAwaitingReferrals
-   *
-   * Fetches referrals for employee based on the provided filter options, excluding the referrals that the employee has already passed or rejected.
-   *
-   * @param {string} empPrimaryEmail - Employee's primary email
-   * @param {EmpReferralListingFilterOptions} empReferralListingFilterOptions - Filter options for the referral listing
-   */
-  async getEmployeeAwaitingReferrals(
-    empPrimaryEmail: string,
-    empReferralListingFilterOptions: EmpReferralListingFilterOptions
-  ):Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto>> {
-    try {
-      // Get employee's responses given to different referrals by empPrimaryEmail
+  ): Promise<string[]> {
       const userReferralResponse: QueryResponse<DbUserReferralResponseDto> =
         await UserReferralResponseService.get(empPrimaryEmail);
 
+      // Check if response exists and has data
+      if (!userReferralResponse || userReferralResponse.length === 0) {
+        return [];
+      }
+
+      const userReferralResponseData: DbUserReferralResponseDto = userReferralResponse[0];
+
       const empPassedRefIds: string[] = Array.from(
-        new Set(userReferralResponse[0]?.passedRefIds || [])
+        new Set(userReferralResponseData?.passedRefIds || [])
       );
       const empRejectedRefIds: string[] = Array.from(
-        new Set(userReferralResponse[0]?.rejectedRefIds || [])
+        new Set(userReferralResponseData?.rejectedRefIds || [])
       );
-      const referralIdsToBeExcluded: string[] = [
+      const empAcceptedRefIds: string[] = Array.from(
+        new Set(userReferralResponseData?.acceptedRefIds || [])
+      );
+      const empDoneRefIds: string[] = Array.from(
+        new Set(userReferralResponseData?.doneRefIds || [])
+      );
+      const referralIds: string[] = [
         ...empPassedRefIds,
         ...empRejectedRefIds,
+        ...empAcceptedRefIds,
+        ...empDoneRefIds
       ];
-      global.logger.debug(`employee responses info in "AWAITING" status`, {
-        filePath: __filename,
-        methodName: this.getEmployeeAwaitingReferrals.name,
-        empPrimaryEmail,
-        empPassedRefIds,
-        empRejectedRefIds,
-        referralIdsToBeExcluded,
-      });
 
-      // Get company referrals where status is awaiting
-      return userReferralDao.getCompanyReferralsByEmpEmailForAwaiting(
-          empReferralListingFilterOptions,
-          referralIdsToBeExcluded
+      return referralIds;
+  }
+
+  async getEmployeeReferrals(
+    empPrimaryEmail: string,
+    empReferralListingFilterOptions: EmpReferralListingFilterOptions
+  ): Promise<PaginatedResultsWithMatchingConditionsInternalResponse<DbUserReferralDto[]>> {
+    if(empReferralListingFilterOptions?.status) {
+      // If referralStatus is AWAITING then fetch the details
+      if (empReferralListingFilterOptions.status === ReferralStatus.AWAITING) {
+        // If status is awaiting, call the function to get awaiting referrals
+        return this.getEmployeeAwaitingReferrals(
+          empPrimaryEmail,
+          empReferralListingFilterOptions
         );
-    } catch (error) {
-      global.logger.error("Error fetching employee awaiting referrals:", error);
-      throw error;
+      } else {
+        // Otherwise, call the function to get referrals by status
+        return this.getEmployeeReferralsByStatus(
+          empPrimaryEmail,
+          empReferralListingFilterOptions
+        );
+      }
+    } else {
+      const refIds: string[] = await this.getEmployeeRespondedReferralIds(
+        empPrimaryEmail
+      );
+
+      const allStatusesReferrals: PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto> = await userReferralDao.getAllStatusesEmployeeReferrals(
+        refIds,
+        empReferralListingFilterOptions
+      );
+
+      const { lastKey, count, timesQueried, queriedCount, ...restReferrals } = allStatusesReferrals;
+      const referralsData: DbUserReferralDto[] = Object.values(restReferrals);
+      const finalReferrals: PaginatedResultsWithMatchingConditionsInternalResponse<DbUserReferralDto[]> = {
+        data: referralsData,
+        lastKey,
+        count,
+        timesQueried,
+        queriedCount,
+      }
+
+      return finalReferrals;
     }
   }
 
-  /**
-   * getEmployeeReferralsByStatus
-   *
-   * Retrieves employee referrals by status. Gets the refIds on which emp has performed the given action
-   * and then fetches referrals by filter options and refIds.
-   *
-   * @param {string} empPrimaryEmail - Employee's primary email
-   * @param {EmpReferralListingFilterOptions} empReferralListingFilterOptions - Filter options for the referral listing
-   */
+  async getEmployeeAwaitingReferrals(
+    empPrimaryEmail: string,
+    empReferralListingFilterOptions: EmpReferralListingFilterOptions
+  ): Promise<PaginatedResultsWithMatchingConditionsInternalResponse<DbUserReferralDto[]>> {
+    // Get employee's responses given to different referrals by empPrimaryEmail
+    const userReferralResponse: QueryResponse<DbUserReferralResponseDto> =
+      await UserReferralResponseService.get(empPrimaryEmail);
+
+    // Check if response exists and has data
+    const responseData = userReferralResponse && userReferralResponse.length > 0 ? userReferralResponse[0] : null;
+
+    const empPassedRefIds: string[] = Array.from(
+      new Set(responseData?.passedRefIds || [])
+    );
+    const empRejectedRefIds: string[] = Array.from(
+      new Set(responseData?.rejectedRefIds || [])
+    );
+    const referralIdsToBeExcluded: string[] = [
+      ...empPassedRefIds,
+      ...empRejectedRefIds,
+    ];
+    global.logger.debug(`employee responses info in "AWAITING" status`, {
+      filePath: __filename,
+      methodName: this.getEmployeeAwaitingReferrals.name,
+      empPrimaryEmail,
+      empPassedRefIds,
+      empRejectedRefIds,
+      referralIdsToBeExcluded,
+    });
+
+    // Get company referrals where status is awaiting
+    const awaitingReferrals: PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto> = await userReferralDao.getCompanyReferralsByEmpEmailForAwaiting(
+        empReferralListingFilterOptions,
+        referralIdsToBeExcluded
+      );
+    const { lastKey, count, timesQueried, queriedCount, ...restAwaitingReferrals } = awaitingReferrals;
+    const awaitingReferralsData: DbUserReferralDto[] = Object.values(restAwaitingReferrals);
+    const finalAwaitingReferrals: PaginatedResultsWithMatchingConditionsInternalResponse<DbUserReferralDto[]> = {
+      data: awaitingReferralsData,
+      lastKey,
+      count,
+      timesQueried,
+      queriedCount,
+    }
+
+    return finalAwaitingReferrals;
+  }
+
   async getEmployeeReferralsByStatus(
     empPrimaryEmail: string,
     empReferralListingFilterOptions: EmpReferralListingFilterOptions,
-  ) {
+  ): Promise<PaginatedResultsWithMatchingConditionsInternalResponse<DbUserReferralDto[]>>  {
     // Get company referrals where status is referralStatus
     let attributes: string[] = [];
     const referralStatus = empReferralListingFilterOptions.status;
@@ -185,10 +225,9 @@ class UserReferralEmpService {
         userReferralResponse,
       }
     )
-    if (!userReferralResponse.length) {
-      const emptyArr: DbUserReferralDto[] = [];
+    if (!userReferralResponse.count) {
       return {
-        emptyArr,
+        data: [],
         count: 0,
         lastKey: undefined,
         timesQueried: 0,
@@ -209,9 +248,8 @@ class UserReferralEmpService {
       }
     )
     if (!refIds.length) {
-      const emptyArr: DbUserReferralDto[] = [];
       return {
-        emptyArr,
+        data: [],
         count: 0,
         lastKey: undefined,
         timesQueried: 0,
@@ -220,10 +258,22 @@ class UserReferralEmpService {
     }
 
     // Get employee referrals by filter options and refIds( `refIds` contains referral IDs)
-    return userReferralDao.getEmployeeReferralsByFilterOptions(
+    const referrals: PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto> = await userReferralDao.getEmployeeReferralsByFilterOptions(
         refIds,
         empReferralListingFilterOptions
       );
+
+    const { lastKey, count, timesQueried, queriedCount, ...restReferrals } = referrals;
+    const referralsData: DbUserReferralDto[] = Object.values(restReferrals);
+    const finalReferrals: PaginatedResultsWithMatchingConditionsInternalResponse<DbUserReferralDto[]> = {
+      data: referralsData,
+      lastKey,
+      count,
+      timesQueried,
+      queriedCount,
+    }
+
+    return finalReferrals;
   }
 
   /**
@@ -306,6 +356,8 @@ class UserReferralEmpService {
         {
           emp_first_name: refereeName.toTitleCase(),
           candidate_name: candidateName.toTitleCase(),
+          ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
+          workoReferralUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_EMP_REFERRAL_LISTING_URL,
         };
 
       // Send the email using the email library
@@ -726,6 +778,7 @@ class UserReferralEmpService {
             candEmail
           );
 
+
           await this.scheduleReferralDoneStatusReminder(
             refereeEmail,
             refereeName,
@@ -747,6 +800,8 @@ class UserReferralEmpService {
             candName: candName.toTitleCase(),
             companyName: companyName,
             refereeName: refereeName.toTitleCase(),
+            workoAppUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+            ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
           };
 
         // Prepare the necessary parameters required for the sendEmailToEmpWhenReferralRequestAccepted function
@@ -759,6 +814,8 @@ class UserReferralEmpService {
           {
             empName: refereeName.toTitleCase(),
             candName: candName.toTitleCase(),
+            workoChatUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_EMP_REFERRAL_LISTING_URL,
+            ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
           };
 
         // Send emails to the candidate and the employee
@@ -827,6 +884,7 @@ class UserReferralEmpService {
           {
             candName: candName.toTitleCase(),
             companyName: companyName,
+            ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
           };
 
         // Prepare the necessary parameters required for the sendEmailToEmpWhenReferralRequestCompleted function
@@ -838,6 +896,9 @@ class UserReferralEmpService {
         const empemailPlaceholders: EmailTemplatePlaceholderEMP_REFFERAL_DONE_FOR_CAND =
           {
             empName: refereeName.toTitleCase(),
+            candidateName: candName.toTitleCase(),
+            workoReferralUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_EMP_REFERRAL_LISTING_URL,
+            ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
           };
 
         // Send emails to the candidate and the employee

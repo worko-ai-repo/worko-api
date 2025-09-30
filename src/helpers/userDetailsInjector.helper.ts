@@ -49,7 +49,7 @@ export async function injectUserDetails<
 
   // Create a map of user IDs to user details
   const userDetailsMap: Map<string, DbUserDetailDto> = new Map(
-    userDetails.map((eachUserDetail: DbUserDetailDto) => [
+    userDetails.filter(detail => detail?.id).map((eachUserDetail: DbUserDetailDto) => [
       eachUserDetail.id,
       eachUserDetail,
     ])
@@ -67,7 +67,7 @@ export async function injectUserDetails<
 
   // Create a map of corporate user IDs to corporate user details
   const corporateUserDetailsMap: Map<string, DbCorporateUserDto> = new Map(
-    corporateUserDetails.map((eachCorporateUserDetail: DbCorporateUserDto) => [
+    corporateUserDetails.filter(detail => detail?.id).map((eachCorporateUserDetail: DbCorporateUserDto) => [
       eachCorporateUserDetail.id,
       eachCorporateUserDetail,
     ])

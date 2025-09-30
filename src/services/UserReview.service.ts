@@ -18,6 +18,7 @@ import UserDetailService from "./UserDetail.service";
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
 import { EmailTemplatePlaceholderEMP_REVIEW_RATING_BY_CAND } from "../dtos/EmailTemplatePlaceholder.dto";
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
+import APP_CONSTANTS from "../configs/constants.config";
 
 /**
  * UserReviewService
@@ -54,7 +55,9 @@ class UserReviewService {
         const emailPlaceholders: EmailTemplatePlaceholderEMP_REVIEW_RATING_BY_CAND = {
           empName: refereeName.toTitleCase(),
           feedback: userReviewCreateDto.reviewText as string,
-          rating: userReviewCreateDto.rating
+          rating: userReviewCreateDto.rating,
+          workoFeedbackUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_EMP_REFERRAL_LISTING_URL,
+          ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL
         }
   
         // Send email to notify the employee about received rating and review

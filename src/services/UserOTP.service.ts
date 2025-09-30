@@ -9,6 +9,8 @@ import APP_CONSTANTS from "../configs/constants.config";
 // Import DTOs
 import { UserOtpCreateDto } from "../dtos/UserOTP.dto";
 
+// Import constants configs
+import { awsClientSnsLibrary } from "../configs/aws-sdk.config";
 
 // Import necessary library modules
 import { EmailSourceDestinationAddress, emailLibrary } from "../libraries/email.library";
@@ -18,6 +20,10 @@ import { OtpHelper } from "../helpers/otp.helper";
 
 // Import Enums
 import { UserOtpSentViaEnum, UserOtpStatusEnum } from "../enums/User.enum";
+
+// Import utils
+import { BaseError } from "../utils/errors.util";
+import HttpStatusCode from "../utils/http-codes.util";
 
 /**
  * UserOTPService
@@ -57,6 +63,54 @@ class UserOtpService {
     status?: UserOtpStatusEnum,
   ): Promise<QueryResponse<DbUserOtpDto>> {
     return userOtpDao.getByUserPrimaryEmailAndSentTo(primaryEmail, sentTo, status);
+  }
+
+  async sendOtpToPhoneNumberViaSms(
+    userPrimaryEmail: string,
+    userPhoneNumber: string,
+    userIpAddress: string,
+    messageWithOtpPlaceholder: string,
+    sender: string,
+  ) {
+    global.logger.info(`Send SMS to verify user phone number [service]`, {
+      methodName: this.sendOtpToPhoneNumberViaSms.name,
+      userPhoneNumber,
+      userIpAddress,
+    });
+
+    // Generate OTP
+    const otp: string = OtpHelper.generateOtp(6).toString();
+
+    const smsResponse: {
+      messageId: string | undefined;
+    } = await awsClientSnsLibrary.sendSms({
+      MessageAttributes: {
+        "AWS.SNS.SMS.SenderID": {
+          DataType: "String", // Amazon SNS supports the following logical data types: String, String.Array, Number, and Binary
+          StringValue: sender,
+        },
+      },
+      PhoneNumber: userPhoneNumber,
+      Message: messageWithOtpPlaceholder.strtr({
+        "{otp}": otp,
+      }),
+    });
+
+    if(!smsResponse.messageId) {
+      throw new BaseError("Failed to send SMS", HttpStatusCode.BAD_REQUEST_400);
+    }
+
+    // Create OTP object details
+    const otpObjDetails: UserOtpCreateDto = {
+      logId: smsResponse.messageId,
+      otp: otp,
+      userIpAddress: userIpAddress,
+      sentTo: userPhoneNumber,
+      sentVia: UserOtpSentViaEnum.SMS,
+    };
+
+    // Create OTP object in the database
+    return this.createOtp(userPrimaryEmail, otpObjDetails);
   }
 
   /**
@@ -125,13 +179,13 @@ class UserOtpService {
     userProvidedOtp: string,
   ): Promise<boolean> {
     // Get the ACTIVE OTP entries for provided "primaryEmail" and "sentTo"
-    const userOtps = await this.getByUserPrimaryEmailAndSentTo(primaryEmail, sentTo, UserOtpStatusEnum.ACTIVE);
+    const userOtps: QueryResponse<DbUserOtpDto> = await this.getByUserPrimaryEmailAndSentTo(primaryEmail, sentTo, UserOtpStatusEnum.ACTIVE);
     if (!userOtps.count) {
       return false;
     }
 
     // Loop through all retrived OTP entries to check if it is matching with the user provided OTP
-    const matchedOtp = userOtps.find((userOtp: DbUserOtpDto) => userOtp.otp == userProvidedOtp);
+    const matchedOtp: DbUserOtpDto | undefined = userOtps.find((userOtp: DbUserOtpDto) => userOtp.otp == userProvidedOtp);
 
     // Check if the matched OTP is found, if not return false, indicating verification failed.
     if (!matchedOtp) {

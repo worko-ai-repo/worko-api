@@ -16,13 +16,15 @@ import {
   NewUserEmpSignUpDTO,
   UserSubscriptionDetailsUpdateDto,
 } from "../dtos/User.dto";
-import { UserDetailDTO } from "../dtos/UserDetail.dto";
+import {
+  UserDetailCommonUpdateDto,
+  UserDetailDTO,
+} from "../dtos/UserDetail.dto";
 import { UsersListingFilterOptions } from "../admin/dtos/User.dto";
 import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 
 // import enums
 import { SortOrderTypeEnum } from ".././enums/Common.enum";
-import { UserType } from "../enums/User.enum";
 
 // Load helpers
 import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
@@ -86,7 +88,7 @@ class UserDetailDao implements BaseDao {
       }),
     };
   }
-  
+
   /**
    * getUsers
    *
@@ -104,15 +106,15 @@ class UserDetailDao implements BaseDao {
     // Get all the user details including candidates and employees
     let query: Query<DbUserDetailDto>;
 
-    if(usersRecordListingFilterRequest?.searchText?.includes('@')) {
+    if (usersRecordListingFilterRequest?.searchText?.includes("@")) {
       global.logger.info("Search by email [DAO]", {
         searchText: usersRecordListingFilterRequest.searchText,
       });
 
-      const {PK, SK} = this.preparePKAndSKForQuery(
+      const { PK, SK } = this.preparePKAndSKForQuery(
         usersRecordListingFilterRequest.searchText,
         ""
-      )
+      );
       query = UserDetailModel.query("PK")
         .eq(PK)
         .where("SK")
@@ -152,23 +154,36 @@ class UserDetailDao implements BaseDao {
     }
 
     // Apply date range filter if provided
-    const {fromDate, toDate} = usersRecordListingFilterRequest;
+    const { fromDate, toDate } = usersRecordListingFilterRequest;
 
     // If both fromDate and toDate are provided
-    if(fromDate && toDate) {
-      const fromDateIsoString: string = dateHelperObj.getISODateFromTimestamp(fromDate);
-      const toDateIsoString: string = dateHelperObj.getISODateFromTimestamp(toDate);
-      query = query.where("GSI2SK").between(this.formatGSI2SKWithDate(fromDateIsoString), this.formatGSI2SKWithDate(toDateIsoString));
-    } 
+    if (fromDate && toDate) {
+      const fromDateIsoString: string =
+        dateHelperObj.getISODateFromTimestamp(fromDate);
+      const toDateIsoString: string =
+        dateHelperObj.getISODateFromTimestamp(toDate);
+      query = query
+        .where("GSI2SK")
+        .between(
+          this.formatGSI2SKWithDate(fromDateIsoString),
+          this.formatGSI2SKWithDate(toDateIsoString)
+        );
+    }
     // If only fromDate is provided
-    else if(fromDate) {
-      const fromDateIsoString: string = dateHelperObj.getISODateFromTimestamp(fromDate);
-      query = query.where("GSI2SK").ge(this.formatGSI2SKWithDate(fromDateIsoString));
-    } 
+    else if (fromDate) {
+      const fromDateIsoString: string =
+        dateHelperObj.getISODateFromTimestamp(fromDate);
+      query = query
+        .where("GSI2SK")
+        .ge(this.formatGSI2SKWithDate(fromDateIsoString));
+    }
     // If only toDate is provided
-    else if(toDate) {
-      const toDateIsoString: string = dateHelperObj.getISODateFromTimestamp(toDate);
-      query = query.where("GSI2SK").le(this.formatGSI2SKWithDate(toDateIsoString));
+    else if (toDate) {
+      const toDateIsoString: string =
+        dateHelperObj.getISODateFromTimestamp(toDate);
+      query = query
+        .where("GSI2SK")
+        .le(this.formatGSI2SKWithDate(toDateIsoString));
     }
 
     // search by searchText if provided
@@ -211,7 +226,9 @@ class UserDetailDao implements BaseDao {
    * @returns {Promise<QueryResponse<DbUserDetailDto>>} A promise that resolves with the query response containing the user's details.
    */
   async get(email: string): Promise<QueryResponse<DbUserDetailDto>> {
-    global.logger.info("Get user detail by email [DAO]");
+    global.logger.info("Get user detail by email [DAO]", {
+      email,
+    });
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -274,7 +291,7 @@ class UserDetailDao implements BaseDao {
       .eq(GSI1SK)
       .attributes([
         "PK",
-        "candidateExperience",
+        "multipleCandidateExperience",
         "isCandidateFresher",
         "department",
         "country",
@@ -286,6 +303,7 @@ class UserDetailDao implements BaseDao {
         "userType",
         "cvExtract",
         "cvExtractParsed",
+        "isNoticePeriodNegotiable",
       ])
       .exec();
   }
@@ -303,11 +321,6 @@ class UserDetailDao implements BaseDao {
     return UserDetailModel.query("PK").eq(PK).where("SK").eq(SK).exec();
   }
 
-  /**
-   * Fetches user Subscription status based on the provided PK and SK.
-   * @param email - Email address of the user
-   * @returns User Subscription-Status corresponding to the email and SK
-   */
   async getUserSubscriptionStatus(email: string, SK: string) {
     global.logger.info("Get user Subscription-Status [DAO]");
     const PK = this.partitianKey.strtr({
@@ -389,6 +402,16 @@ class UserDetailDao implements BaseDao {
     return UserDetailModel.update({ PK: PK, SK: SK }, userDetailDTO);
   }
 
+  async updateUserDetail(
+    email: string,
+    id: string,
+    updateData: Partial<UserDetailCommonUpdateDto>
+  ): Promise<DbUserDetailDto> {
+    global.logger.info("Update user Detail [DAO]", { email, id, updateData });
+    const { PK, SK } = this.preparePKAndSKForQuery(email, id);
+    return UserDetailModel.update({ PK: PK, SK: SK }, updateData);
+  }
+
   /**
    *
    * @param email
@@ -412,12 +435,21 @@ class UserDetailDao implements BaseDao {
    * @param resume
    * @returns
    */
-  async updateCv(SK: String, email: string, resume: string) {
+  async updateCv(
+    SK: String,
+    email: string,
+    resume: string,
+    userCvFileName?: string,
+    isCvExtracted?: boolean
+  ) {
     global.logger.info("Update user resume [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    return UserDetailModel.update({ PK: PK, SK: SK }, { CV: resume });
+    return UserDetailModel.update(
+      { PK: PK, SK: SK },
+      { CV: resume, userCvFileName, isCvExtracted }
+    );
   }
 
   /**
@@ -502,12 +534,11 @@ class UserDetailDao implements BaseDao {
     return true;
   }
 
-  
   /**
    * scriptUpdatePkEmailToLowerCase
    *
    * Updates the specific email present in `PK` attribute to lower case in the DynamoDB table.
-   * 
+   *
    * @param {string} oldEmail - The old email address.
    * @param {string} newEmail - The new email address.
    * @returns {Promise<boolean>} A promise that resolves to a boolean value indicating whether the script was successful or not.
@@ -516,12 +547,10 @@ class UserDetailDao implements BaseDao {
     oldEmail: string,
     newEmail: string
   ): Promise<boolean> {
-    global.logger.info("update Pk email to lower case [DAO]",
-      {
-        filePath: __filename,
-        methodName: this.scriptUpdatePkEmailToLowerCase.name
-      }
-    );
+    global.logger.info("update Pk email to lower case [DAO]", {
+      filePath: __filename,
+      methodName: this.scriptUpdatePkEmailToLowerCase.name,
+    });
 
     // Generate the old partition key using the old email
     const oldPk: string = this.partitianKey.strtr({
@@ -570,7 +599,7 @@ class UserDetailDao implements BaseDao {
       // Delete the old item using the reusable deleteItem method
       const deletedOldItem = await awsLibDynamodbLibraryObj.deleteItem(
         process.env.APP_AWS_DYNAMODB_TABLE_NAME!,
-        { PK: oldPk, SK: item.SK } 
+        { PK: oldPk, SK: item.SK }
       );
       console.log("deletedOldItem: ", deletedOldItem);
 

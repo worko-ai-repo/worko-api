@@ -7,8 +7,11 @@ import { BaseDbDto } from "./Base.model";
 // Import the constants
 import { DB_CONSTANTS } from "../DB.constants";
 
+// Import dtos
+import { CorporateUserInviteDbPhoneNumberDetailDto } from "../../dtos/CorporateUserInvite.dto";
+
 // Import Enums
-import { CorporateUserInviteAccessTypeEnum, CorpInviteStatusEnum } from "../../enums/CorporateUserInvite.enum";
+import { CorporateUserInviteAccessTypeEnum, CorpInviteStatusEnum, CorporateUserInviteDbPricingPlanEnum } from "../../enums/CorporateUserInvite.enum";
 
 // Define the structure for Corporate Invite Database Data Transfer Object (DTO)
 class DbCorporateUserInviteDto extends BaseDbDto {
@@ -24,6 +27,7 @@ class DbCorporateUserInviteDto extends BaseDbDto {
   email!: string;
   firstName!: string;
   lastName!: string;
+  phoneNumberDetails?: CorporateUserInviteDbPhoneNumberDetailDto;
   inviteStatus!: CorpInviteStatusEnum; // Enum
 
   // Created By, Updated By and Deleted By Users are worko admins which are basically cognito user ids
@@ -61,6 +65,8 @@ class DbCorporateUserInviteDto extends BaseDbDto {
    */
   deletedByCorporateUserId?: string;
 
+  pricingPlan?: CorporateUserInviteDbPricingPlanEnum;
+
   // Dates
   expiresAt!: Date;
 
@@ -71,6 +77,30 @@ class DbCorporateUserInviteDto extends BaseDbDto {
    * creating a user and will block the flow for that user.
    **/
   isDeleted!: boolean;
+
+  /**
+   * Whenever a "isDeleted" flag is set to true, we need to store the reason for revoking the invite if corporate or worko admin provides reason
+   */
+  reasonForRevoke?: string;
+
+  /**
+   * evaluatorCognitoUserId
+   * 
+   * @description 
+   * We have an "Evaluator" dashboard that uses passwordless OTP login.  
+   * When a Worko Admin or Corporate Admin invites an evaluator, we generate a random password for them to access the "Evaluator" dashboard.  
+   * 
+   * However, if the same user is later invited to the "Corporate" dashboard, we store the Cognito user ID in the invite details.
+   */
+  evaluatorCognitoUserId?: string;
+
+  /**
+   * If "worko admin" gives "cv duplicacy access" while inviting other corporate-admin/recruiter 
+   * then this flag will be set to true, if not then it will be set to false
+   * 
+   * if this flag is set to true then we will allow the invited corporate-admin/recruiter to give "cv duplicacy management" on job applications
+   */
+  cvDuplicacyAccess?: boolean;
 }
 
 const CorporateUserInviteSchema = new dynamoose.Schema(
@@ -117,6 +147,20 @@ const CorporateUserInviteSchema = new dynamoose.Schema(
             type: String,
             required: true,
         },
+        phoneNumberDetails: {
+            type: Object,
+            required: false,
+            schema: {
+                countryCode: {
+                    type: Number,
+                    required: true,
+                },
+                phoneNumber: {
+                    type: Number,
+                    required: true,
+                },
+            },
+        },
         inviteStatus: {
             type: String,
             required: true,
@@ -145,6 +189,10 @@ const CorporateUserInviteSchema = new dynamoose.Schema(
             type: String,
             required: false,
         },
+        pricingPlan: {
+            type: String,
+            required: false
+        },
         expiresAt: {
             type: Date,
             required: true,
@@ -153,6 +201,18 @@ const CorporateUserInviteSchema = new dynamoose.Schema(
             type: Boolean,
             required: true,
         },
+        reasonForRevoke: {
+            type: String,
+            required: false,
+        },
+        evaluatorCognitoUserId: {
+            type: String,
+            required: false,
+        },
+        cvDuplicacyAccess: {
+            type: Boolean,
+            required: false
+        }
     },
     {
         ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,

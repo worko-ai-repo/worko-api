@@ -246,7 +246,7 @@ class CorporateUserController {
       // Call the service to fetch all jobs [Service Call]
       const corporateUserList: PaginatedResultsWithMatchingConditionsInternalResponse<
         (DbCorporateUserDto & {
-          companyDetails: DbCompanyDetailDto | undefined;
+          companyDetails?: DbCompanyDetailDto;
         })[]
       > = await corporateUserServiceObj.getAllCorpUsersWithCompanyDetails(
         filterOptions
@@ -257,13 +257,9 @@ class CorporateUserController {
         corporateUserList;
 
       // Generate the pagination response
-      const companyJobResponse: RecordListingResponseDTO<
+      const companyJobResponse = paginationResponseHelperObj.customizedPaginationRecordListingResponse<
         (DbCorporateUserDto & {
-          companyDetails: DbCompanyDetailDto | undefined;
-        })[]
-      > = paginationResponseHelperObj.customizedPaginationRecordListingResponse<
-        (DbCorporateUserDto & {
-          companyDetails: DbCompanyDetailDto | undefined;
+          companyDetails?: DbCompanyDetailDto;
         })[],
         CorporateUserLisitngFilterOptions
       >(

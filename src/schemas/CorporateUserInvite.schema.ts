@@ -2,7 +2,7 @@
 import Joi from "joi"
 
 // import enums
-import { CorporateUserInviteAccessTypeEnum, CorpInviteStatusEnum } from "../enums/CorporateUserInvite.enum"
+import { CorporateUserInviteAccessTypeEnum, CorpInviteStatusEnum, CorporateUserInviteDbPricingPlanEnum } from "../enums/CorporateUserInvite.enum"
 
 // import schemas
 import { commonSchema } from "./Common.schema";
@@ -57,6 +57,39 @@ export const CorporateUserInviteCreateApiDtoValidation = Joi.object({
             'string.empty': 'Last name is not allowed to be empty',
             'string.base': 'Last name should be a string',
         }),
+
+    phoneNumberDetails: Joi.object({
+        countryCode: Joi
+            .number()
+            .required()
+            .messages({
+                'any.required': 'Country code is required',
+                'number.base': 'Country code should be a number',
+            }),
+        phoneNumber: Joi
+            .number()
+            .required()
+            .messages({
+                'any.required': 'Phone number is required',
+                'number.base': 'Phone number should be a number',
+            })
+    }),
+
+    pricingPlan: Joi
+        .string()
+        .optional()
+        .valid(...Object.values(CorporateUserInviteDbPricingPlanEnum))
+        .messages({
+            'string.empty': 'Pricing plan is not allowed to be empty',
+            'any.only': `Please provide a valid pricing plan from below i.e. ${Object.values(CorporateUserInviteDbPricingPlanEnum).join(", ")}.`,
+        }),
+
+    cvDuplicacyAccess: Joi
+        .boolean()
+        .optional()
+        .messages({
+            'boolean.base': 'CV duplicacy access should be a boolean',
+        })
 })
 
 /**
@@ -70,11 +103,26 @@ export const CorporateUserInviteUpdateApiDtoValidation = Joi.object({
     inviteStatus: Joi
         .string()
         .optional()
-        .valid(...Object.values(CorpInviteStatusEnum))
+        .valid(CorpInviteStatusEnum.AWAITING)
         .messages({
             'string.empty': 'Invite Status is not allowed to be empty',
-            'any.only': `Please provide a valid status from below i.e. ${Object.values(CorpInviteStatusEnum).join(", ")}.`,
+            'any.only': `Only ${CorpInviteStatusEnum.AWAITING} status is allowed.`,
+        }),
+
+    cvDuplicacyAccess: Joi
+        .boolean()
+        .optional()
+        .messages({
+            'boolean.base': 'CV duplicacy access should be a boolean',
         })
+})
+
+export const corporateUserInviteSoftDeleteApiDtoValidation = Joi.object({
+    reasonForRevokingInvite: Joi.string().required().messages({
+        'any.required': 'Reason for revoking invite is required',
+        'string.empty': 'Reason for revoking invite is not allowed to be empty',
+        'string.base': 'Reason for revoking invite should be a string',
+    })
 })
 
 /**
@@ -140,6 +188,19 @@ export const CorporateInviteListingFilterOptionValidation = () => {
                 .messages({
                     "string.empty": "Status is not allowed to be empty.",
                     "any.only ": `Invalid status. Please provide a valid value from ${Object.values(CorpInviteStatusEnum).join(", ")}.`
+                }),
+
+            includeCompanyDetails: Joi
+                .boolean()
+                .optional()
+                .messages({
+                    'boolean.base': 'Include company details should be a boolean',
+                }),
+            includeRegisteredCorporateDetails: Joi
+                .boolean()
+                .optional()
+                .messages({
+                    'boolean.base': 'Include registered corporate details should be a boolean',
                 }),
         })
     );

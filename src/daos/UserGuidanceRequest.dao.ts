@@ -1,5 +1,5 @@
 //Import dynamoose
-import { Query } from "dynamoose/dist/ItemRetriever";
+import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import daos
 import BaseDao from "./Base.dao";
@@ -9,7 +9,12 @@ import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.d
 import {
   UserGuidanceRequestCreateApiDTO,
   UserGuidanceRequestFilterOptions,
-} from "../dtos/User.dto";
+  UserGuidanceRequestCommonUpdateDto,
+} from "../dtos/UserGuidanceRequest.dto";
+
+// Import enums
+import { UserType } from "../enums/User.enum";
+import { UserGuidanceRequestStatusEnum } from "../enums/UserGuidanceRequest.enum";
 
 // Import db models
 import {
@@ -22,6 +27,7 @@ import { SortOrderTypeEnum } from "../enums/Common.enum";
 
 // Import helpers
 import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
+import { dateHelperObj } from "../helpers/date.helper";
 
 // Import services
 import UlidService from "../services/Ulid.service";
@@ -35,6 +41,35 @@ class UserGuidanceRequestDao implements BaseDao {
   sortKeys = { SK_INIT: "GUIDANCE#RQST#ID#{id}" }; // `id` is the generated ulid
   GSI1PK = "GUIDANCE#RQST#";
   GSI1SK = "ID#{id}"; // `id` is the generated ulid
+
+  preparePKAndSKForQuery(
+    primaryEmail: string,
+    id: string
+  ): {
+    PK: string;
+    SK: string;
+  } {
+    return {
+      PK: this.partitianKey.strtr({
+        "{primaryEmail}": primaryEmail,
+      }),
+      SK: this.sortKeys.SK_INIT.strtr({
+        "{id}": id,
+      }),
+    };
+  }
+
+  prepareGSI1PKAndGSI1SKForQuery(id: string): {
+    GSI1PK: string;
+    GSI1SK: string;
+  } {
+    return {
+      GSI1PK: this.GSI1PK,
+      GSI1SK: this.GSI1SK.strtr({
+        "{id}": id,
+      }),
+    };
+  }
 
   /**
    * createUserGuidanceRequest
@@ -76,6 +111,15 @@ class UserGuidanceRequestDao implements BaseDao {
         "{id}": ulidId,
       }),
       createdByUserId: cognitoUserId,
+      status: UserGuidanceRequestStatusEnum.PENDING,
+      statusTracker: [
+        {
+          newStatus: UserGuidanceRequestStatusEnum.PENDING,
+          actionDate: dateHelperObj.getISODate(),
+          actionByUserId: cognitoUserId,
+          actionByUserType: UserType.CAND,
+        },
+      ],
     };
 
     return UserGuidanceRequestModel.create(userGuidanceRequestData);
@@ -130,6 +174,12 @@ class UserGuidanceRequestDao implements BaseDao {
         .eq(userGuidanceRequestBody.guidanceRequestType);
     }
 
+    if(userGuidanceRequestBody.mentorId) {
+      query = query
+        .where("mentorDetails.userId")
+        .eq(userGuidanceRequestBody.mentorId);
+    }
+
     // Apply date range filter if provided
     if (userGuidanceRequestBody.fromDate || userGuidanceRequestBody.toDate) {
       query = query.and().parenthesis((condition) => {
@@ -146,11 +196,73 @@ class UserGuidanceRequestDao implements BaseDao {
         return condition;
       });
     }
+
+    if (userGuidanceRequestBody.searchText) {
+      // remove trailing and leading spaces from the search text
+      let searchTextValue: string = userGuidanceRequestBody.searchText
+        .trim()
+        .toLowerCase();
+
+      /* 
+      The and() method initiates a condition block where all conditions within it must be satisfied.
+      The parenthesis() method allows grouping of conditions for complex queries.
+      */
+      query = query.and().parenthesis((condition) => {
+        condition
+          .where("companyName")
+          .contains(searchTextValue);
+
+        // Return the built condition
+        return condition;
+      });
+    }
+
     // Execute the query by applying the pagination helper and return the results
     return getPaginatedResultsWithMatchingConditions<
       DbUserGuidanceRequestDto,
       UserGuidanceRequestFilterOptions
     >(query, userGuidanceRequestBody);
+  }
+
+  async getUserGuidanceRequestById(
+    userGuidanceRequestId: string
+  ): Promise<QueryResponse<DbUserGuidanceRequestDto>> {
+    // logger
+    global.logger.info("Get User Guidance Request by Id [dao]", {
+      methodName: this.getUserGuidanceRequestById.name,
+      userGuidanceRequestId,
+    });
+
+    const { GSI1PK, GSI1SK } = this.prepareGSI1PKAndGSI1SKForQuery(
+      userGuidanceRequestId
+    );
+
+    return UserGuidanceRequestModel.query("GSI1PK")
+      .eq(GSI1PK)
+      .where("GSI1SK")
+      .eq(GSI1SK)
+      .exec();
+  }
+
+  async updateUserGuidanceRequestByIdAndEmail(
+    userGuidanceRequestId: string,
+    email: string,
+    updateData: Partial<UserGuidanceRequestCommonUpdateDto>
+  ): Promise<DbUserGuidanceRequestDto> {
+    // logger
+    global.logger.info("Update User Guidance Request by Id and Email [dao]", {
+      methodName: this.updateUserGuidanceRequestByIdAndEmail.name,
+      userGuidanceRequestId,
+      email,
+      updateData,
+    });
+
+    const { PK, SK } = this.preparePKAndSKForQuery(
+      email,
+      userGuidanceRequestId
+    );
+
+    return UserGuidanceRequestModel.update({ PK: PK, SK: SK }, updateData);
   }
 }
 

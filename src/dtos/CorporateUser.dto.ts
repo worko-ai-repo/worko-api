@@ -19,6 +19,7 @@ export interface CorporateUserCreateApiDto {
     corporateUserType: CorporateUserTypeEnum ;
     firstName: string;
     lastName: string;
+    phoneNumberDetails: CorporateUserDbPhoneNumberDetailDto;
 }
 
 /**
@@ -96,4 +97,9 @@ export interface CorporateUserLisitngFilterOptions extends RecordListingFilterOp
     companyId?: string;
     email?: string;
     corporateUserType?: CorporateUserTypeEnum;
+}
+
+export interface CorporateUserDbPhoneNumberDetailDto {
+    countryCode: string;
+    phoneNumber: string;
 }

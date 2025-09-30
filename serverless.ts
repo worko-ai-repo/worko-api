@@ -16,14 +16,16 @@ const serverlessConfiguration: AWS = {
     app: {
       STAGE: "${env:APP_SLS_STAGE}",
     },
-    aws:{
-      APP_AWS_ACCOUNT_ID:  "${env:APP_AWS_ACCOUNT_ID}",
+    aws: {
+      APP_SLS_REGION: "${env:APP_SLS_REGION}",
+      APP_AWS_ACCOUNT_ID: "${env:APP_AWS_ACCOUNT_ID}",
       APP_AWS_DYNAMODB_TABLE_NAME: "${env:APP_AWS_DYNAMODB_TABLE_NAME}",
       APP_AWS_VPC:  "${env:APP_AWS_VPC}",
       APP_AWS_SECURITY_GROUP: "${env:APP_AWS_SECURITY_GROUP}",
       APP_AWS_SUBNET1: "${env:APP_AWS_SUBNET1}",
       APP_AWS_SUBNET2: "${env:APP_AWS_SUBNET2}",
-      APP_AWS_COGNITO_USER_POOL_ID: "${env:APP_AWS_COGNITO_USER_POOL_ID}"
+      APP_AWS_COGNITO_USER_POOL_ID: "${env:APP_AWS_COGNITO_USER_POOL_ID}",
+      APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME: "${env:APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME}"
     },
     awsLambdaFunctions: {
       APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN: "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-api-${self:custom.app.STAGE}-app-scheduler-handler",
@@ -112,9 +114,11 @@ const serverlessConfiguration: AWS = {
         Resource: [
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-jd-resume-matching",
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:resume-parser",
-          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-job-description-parser"
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-job-description-parser",
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:${self:custom.aws.APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME}" 
         ]
-      },{
+      },
+      {
         Effect: "Allow",
         Action: [
           "iam:PassRole",
@@ -142,9 +146,27 @@ const serverlessConfiguration: AWS = {
         "Action": [
           "cognito-idp:AdminAddUserToGroup",
           "cognito-idp:AdminUpdateUserAttributes",
-          "cognito-idp:AdminConfirmSignUp"
+          "cognito-idp:AdminConfirmSignUp",
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:AdminListGroupsForUser",
         ],
         "Resource":"arn:aws:cognito-idp:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:userpool/${self:custom.aws.APP_AWS_COGNITO_USER_POOL_ID}"
+      },
+
+      /**
+       * Example policies for Amazon SNS
+       * @see https://docs.aws.amazon.com/sns/latest/dg/sns-using-identity-based-policies.html#sns-example-policies
+       */
+      {
+        Effect: "Allow",
+        Action: [
+          "sns:Publish"
+        ],
+
+        /**
+         * We want to send SMS to any mobile number, so we must set Resource to *.
+         */
+        Resource: "*", 
       }
     ]
   },

@@ -10,6 +10,9 @@ import { AwsSesClientLibrary } from "../libraries/aws-ses-client.library";
 import { AwsSqsClientLibrary } from "../libraries/aws-sqs-client.library";
 import { AwsSchedulerLibrary } from "../libraries/aws-scheduler-client.library";
 import { AwsDynamoDBLibrary } from "../libraries/aws-dynamoDb-client.library"; 
+import { AwsClientSnsLibrary } from "../libraries/aws-client-sns.library";
+import { AwsClientCognitoIdentityProviderLibrary } from "../libraries/aws-client-cognito-identity-provider.library";
+import { AwsClientLambdaLibrary } from "../libraries/aws-client-lambda.library";
 /**
  * awsConfigOptions
  * 
@@ -143,20 +146,36 @@ const awsDynamoDBConfigOptions: AWS.DynamoDB.ClientConfiguration = {
 const awsDynamoDBClientLibrary: AwsDynamoDBLibrary = new AwsDynamoDBLibrary(awsDynamoDBConfigOptions);
 console.log("The 'awsDynamoDBClientLibrary' is initialised.", { filePath: __filename, });
 
+const awsClientSnsLibrary: AwsClientSnsLibrary = new AwsClientSnsLibrary();
+global.logger.info("The 'AwsClientSnsLibrary' is initialised.");
+
+/**
+ * awsClientCognitoIdentityProviderLibrary
+ * 
+ * NOTE: For this client, the `aws-sdk v3` is used
+ */
+const awsClientCognitoIdentityProviderLibrary: AwsClientCognitoIdentityProviderLibrary = new AwsClientCognitoIdentityProviderLibrary();
+global.logger.info(`The "awsClientCognitoIdentityProviderLibrary" is initialised.`);
+
+
+const awsClientLambdaLibrary: AwsClientLambdaLibrary = new AwsClientLambdaLibrary();
+global.logger.info(`The "awsClientLambdaLibrary" is initialised.`);
+
+
 // Export the required resourses
 export {
-    // Configurations
     awsConfigOptions,
     awsS3ConfigOptions,
     awsSesConfigOptions,
     awsSqsConfigOptions,
     awsSchedulerConfigOptions,
     awsDynamoDBConfigOptions,
-
-    // Service Clients
     awsS3ClientLibrary,
     awsSesClientLibrary,
     awsSqsClientLibrary,
     awsSchedulerClientLibrary,
     awsDynamoDBClientLibrary,
+    awsClientSnsLibrary,
+    awsClientCognitoIdentityProviderLibrary,
+    awsClientLambdaLibrary,
 }

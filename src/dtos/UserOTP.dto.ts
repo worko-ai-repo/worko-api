@@ -11,5 +11,5 @@ export interface UserOtpCreateDto {
     otp: string;
     userIpAddress: string;
     sentTo: string;
-    sentVia: UserOtpSentViaEnum.EMAIL;
+    sentVia: UserOtpSentViaEnum;
 }

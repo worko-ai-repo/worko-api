@@ -4,7 +4,19 @@ export const userSkillDTOValidation = Joi.object({
   coreSkills: Joi.array()
     .items(
       Joi.object({
-        skillName: Joi.string().required().empty(""),
+        skillName: Joi.string().required().empty("").lowercase(),
+        years: Joi.number().required().min(0),
+        timestamps: Joi.object({
+          createdAt: Joi.string().required(),
+          updatedAt: Joi.string().required(),
+        }).optional(),
+      })
+    )
+    .optional(),
+  technicalSkills: Joi.array()
+    .items(
+      Joi.object({
+        skillName: Joi.string().required().empty("").lowercase(),
         years: Joi.number().required().min(0),
         timestamps: Joi.object({
           createdAt: Joi.string().required(),
@@ -16,7 +28,7 @@ export const userSkillDTOValidation = Joi.object({
   softSkills: Joi.array()
     .items(
       Joi.object({
-        skillName: Joi.string().required().empty(""),
+        skillName: Joi.string().required().empty("").lowercase(),
         timestamps: Joi.object({
           createdAt: Joi.string().required(),
         }).optional(),
@@ -26,8 +38,8 @@ export const userSkillDTOValidation = Joi.object({
   certifications: Joi.array()
     .items(
       Joi.object({
-        certName: Joi.string().required().empty(""),
-        issuedInstitution: Joi.string().required().empty(""),
+        certName: Joi.string().required().empty("").lowercase(),
+        issuedInstitution: Joi.string().required().empty("").lowercase(),
         completionDate: Joi.string().isoDate().required(),
         timestamps: Joi.object({
           createdAt: Joi.string().required(),

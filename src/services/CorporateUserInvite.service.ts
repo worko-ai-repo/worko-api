@@ -5,11 +5,14 @@ import { ObjectType } from 'dynamoose/dist/General';
 // Import Luxon
 import { DateTime } from 'luxon';
 
+// Import aws sdk configs
+import { awsClientCognitoIdentityProviderLibrary } from "../configs/aws-sdk.config";
+
 // Import Constants
 import APP_CONSTANTS from '../configs/constants.config';
 
 // Import DTO
-import { CorporateUserInviteUpdateDto, CorporateUserInviteLisitngFilterOptions, CorporateUserInviteCreateDto } from '../dtos/CorporateUserInvite.dto';
+import { CorporateUserInviteLisitngFilterOptions, CorporateUserInviteCreateDto, CorporateUserInviteCommonUpdateDto, CorporateUserInviteSoftDeleteApiDto, CorporateUserInviteUpdateApiDto } from '../dtos/CorporateUserInvite.dto';
 import { EmailTemplatePlaceholderCORP_ADMIN_ACCESS_INVITE } from '../dtos/EmailTemplatePlaceholder.dto';
 import { PaginatedResultsWithMatchingConditionsInternalResponse, PaginatedResultsWithMatchingConditionsResponse } from '../dtos/Common.dto';
 
@@ -22,6 +25,8 @@ import { EmailTemplateEnum } from '../enums/EmailTemplate.enum';
 
 // Import Helpers
 import { attachCompanyDetails } from '../helpers/companyDetailsInjector.helper';
+import { dateHelperObj } from "../helpers/date.helper";
+import { injectEntityDetailsHelperObj } from "../helpers/injectEntityDetails.helper";
 
 // Import libraries
 import { EmailSourceDestinationAddress, emailLibrary } from '../libraries/email.library';
@@ -29,6 +34,7 @@ import { EmailSourceDestinationAddress, emailLibrary } from '../libraries/email.
 // Import Models
 import { DbCompanyDetailDto } from '../db/models/CompanyDetail.model';
 import { DbCorporateUserInviteDto } from '../db/models/CorporateUserInvite.model';
+import { DbCorporateUserDto } from "../db/models/CorporateUser.model";
 
 // Import Services
 import { companyServiceObj } from '../admin/services/Company.service';
@@ -43,6 +49,53 @@ import HttpStatusCode from '../utils/http-codes.util';
  * This is a service class responsible for handling corporate-related operations from the admin side.
  */
 class CorporateIserInviteService {
+  private async sendCorporateEmailInvite(
+    inviteId: string,
+    fullName: string, 
+    recieverEmail: string, 
+    corporateUserType:CorporateUserInviteAccessTypeEnum,
+    companyName: string,
+  ) {
+      // Prepare the necessary parameters
+      const toAddress: EmailSourceDestinationAddress = {
+        email: recieverEmail,
+        fullName: fullName,
+      };
+
+      // Prepare the email placeholders
+      const emailPlaceholders: EmailTemplatePlaceholderCORP_ADMIN_ACCESS_INVITE =
+        {
+          role: corporateUserType ===
+            CorporateUserInviteAccessTypeEnum.CORPORATE_ADMIN
+              ? APP_CONSTANTS.COGNITO_READABLE_GROUPS.CORPORATE_ADMIN
+              : APP_CONSTANTS.COGNITO_READABLE_GROUPS.CORPORATE_RECRUITER,
+          userName: fullName.toTitleCase(),
+          companyName: companyName.toTitleCase(),
+          signupUrl: APP_CONSTANTS.FRONTEND_URLS.CORP_SIGNUP.strtr({
+            "{token}": inviteId,
+          }),
+          loginUrl: APP_CONSTANTS.FRONTEND_URLS.CORP_LOGIN,
+          ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
+        };
+
+      // Send Invite to the user and log if the email is not sent
+      let emailDetails = await emailLibrary.sendEmail(
+        EmailTemplateEnum.CORP_ADMIN_ACCESS_INVITE,
+        toAddress,
+        emailPlaceholders
+      );
+      if (!emailDetails.systemLogId) {
+        // Log the error message if the email is not sent
+        global.logger.error("Error in sending email invite to the corporate.", {
+          methodName: this.createInvite.name,
+        });
+
+        return false;
+      }
+
+      return true;
+  }
+
   /**
    * createInvite
    *
@@ -65,16 +118,15 @@ class CorporateIserInviteService {
       corporateUserType: corporateInviteUserCreateDto.corporateUserType,
     });
 
-    // Check if the user already has an Invite Request pending and throw an error if already exists
     const existingInvite: QueryResponse<DbCorporateUserInviteDto> =
       await corporateInviteDaoObj.getInviteByUserEmailAndCompanyId(
         corporateInviteUserCreateDto.companyId,
         corporateInviteUserCreateDto.email
-        );
+      );
     if (existingInvite.count) {
-      // Throw an error if the user already has an Invite Request pending
+      // Throw an error if the user already has an Invite Request
       throw new BaseError(
-        "An Invite Request is already pending for this email address.",
+        "An invite request already exists for the user, if you want to send invite again, please use resend invite.",
         HttpStatusCode.CONFLICT_409
       );
     }
@@ -92,56 +144,100 @@ class CorporateIserInviteService {
       );
     }
 
+    if(corporateInviteUserCreateDto.corporateUserType===CorporateUserInviteAccessTypeEnum.CORPORATE_ADMIN) {
+      // Check whether the invite with same `companyId` and `corporate-admin` accesstype is already exists
+      const existingInviteWithCompanyId: QueryResponse<DbCorporateUserInviteDto> = await corporateInviteDaoObj.getInvitesByCompanyIdAndAccessType(
+        corporateInviteUserCreateDto.companyId,
+        CorporateUserInviteAccessTypeEnum.CORPORATE_ADMIN
+      )
+      if(existingInviteWithCompanyId.count) {
+        throw new BaseError(
+          "An invite request already exists for the given access type and company.",
+          HttpStatusCode.CONFLICT_409
+        );
+      }   
+    }
+    
     // Final response object to be returned and saved in the database
     let inviteDetails: DbCorporateUserInviteDto =
       await corporateInviteDaoObj.createInvite(corporateInviteUserCreateDto);
 
     // Send email to the user if the invite is created
-    if (inviteDetails) {
-      // Unique id of the entry
-      let inviteId: string = inviteDetails.id;
+    if (inviteDetails?.id) {
+      const userPoolId: string | undefined =
+        process.env.APP_AWS_COGNITO_USER_POOL_ID;
+      if (!userPoolId) {
+        throw new BaseError(
+          "User pool id not found in the environment for interacting with cognito.",
+          HttpStatusCode.INTERNAL_SERVER_ERROR_500
+        );
+      }
 
-      // Concat the first name and last name of the user
-      let fullName: string =
-        inviteDetails.firstName + " " + inviteDetails.lastName;
-
-      // Prepare the necessary parameters
-      const toAddress: EmailSourceDestinationAddress = {
-        email: inviteDetails.email,
-        fullName: fullName,
-      };
-
-      // Prepare the email placeholders
-      const emailPlaceholders: EmailTemplatePlaceholderCORP_ADMIN_ACCESS_INVITE =
-        {
-          role:
-            corporateInviteUserCreateDto.corporateUserType ===
-            CorporateUserInviteAccessTypeEnum.CORPORATE_ADMIN
-              ? APP_CONSTANTS.COGNITO_READABLE_GROUPS.CORPORATE_ADMIN
-              : APP_CONSTANTS.COGNITO_READABLE_GROUPS.CORPORATE_RECRUITER,
-          userName: fullName.toTitleCase(),
-          companyName: companyDetails[0].name.toTitleCase(),
-          signupUrl: APP_CONSTANTS.FRONTEND_URLS.CORP_SIGNUP.strtr({
-            "{token}": inviteId,
-          }),
-          loginUrl: APP_CONSTANTS.FRONTEND_URLS.CORP_LOGIN,
-        };
-
-      // Send Invite to the user and log if the email is not sent
-      let emailDetails = await emailLibrary.sendEmail(
-        EmailTemplateEnum.CORP_ADMIN_ACCESS_INVITE,
-        toAddress,
-        emailPlaceholders
+      const isInEvaluatorGroup: {
+        cognitoUserId: string | undefined;
+        userEmail: string | undefined;
+        isInSpecifiedGroup: boolean;
+      } = await awsClientCognitoIdentityProviderLibrary.checkUserInCognitoGroup(
+        userPoolId,
+        inviteDetails.email,
+        APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.EVALUATOR
       );
-      if (!emailDetails.systemLogId) {
-        // Log the error message if the email is not sent
-        global.logger.info("Error in sending email to the user.", {
-          filePath: __filename,
+
+      if (isInEvaluatorGroup.isInSpecifiedGroup) {
+        global.logger.info("User is already in the evaluator group.", {
           methodName: this.createInvite.name,
           companyId: inviteDetails.companyId,
           email: inviteDetails.email,
           inviteId: inviteDetails.id,
+          isInEvaluatorGroup,
         });
+
+        const updateData: Partial<CorporateUserInviteCommonUpdateDto> = {
+          evaluatorCognitoUserId: isInEvaluatorGroup.cognitoUserId,
+          updatedByUserId: inviteDetails.createdByUserId,
+          updatedByCorporateUserId: inviteDetails.createdByCorporateUserId,
+        };
+
+        const updatedInviteDetails: DbCorporateUserInviteDto =
+          await this.updateCommonInvite(
+            inviteDetails.companyId,
+            inviteDetails.email,
+            inviteDetails.id,
+            updateData
+          );
+        if (!updatedInviteDetails?.evaluatorCognitoUserId) {
+          global.logger.error(
+            "Error in updating the evaluator cognito user id.",
+            {
+              methodName: this.createInvite.name,
+              companyId: inviteDetails.companyId,
+              email: inviteDetails.email,
+              inviteId: inviteDetails.id,
+              isInEvaluatorGroup,
+            }
+          );
+          throw new BaseError(
+            "Error in updating the evaluator cognito user id.",
+            HttpStatusCode.INTERNAL_SERVER_ERROR_500
+          );
+        }
+
+        inviteDetails = updatedInviteDetails;
+      }
+
+      const isCorporateEmailInviteSent: boolean =
+        await this.sendCorporateEmailInvite(
+          inviteDetails.id,
+          `${inviteDetails.firstName} ${inviteDetails.lastName}`,
+          inviteDetails.email,
+          inviteDetails.corporateUserType,
+          companyDetails[0].name
+        );
+      if (!isCorporateEmailInviteSent) {
+        throw new BaseError(
+          "Error in sending email invite to the corporate.",
+          HttpStatusCode.INTERNAL_SERVER_ERROR_500
+        );
       }
     }
 
@@ -172,29 +268,13 @@ class CorporateIserInviteService {
     return corporateInviteDaoObj.getAllInvites(filterOptions);
   }
 
-  /**
-   * getAllInvitesWithCompanyDetails
-   *
-   * This method is used to get all the corporate invites from the database. It also checks if the request is past the Expiry Date or not and if yes then updates the status to Expired.
-   * The method also enriches the data with company details.
-   *
-   * @param {CorporateUserInviteLisitngFilterOptions} filterOptions - The filter options to be applied to the query.
-   * @returns {Promise<PaginatedResultsWithMatchingConditionsInternalResponse<(DbCorporateUserInviteDto & { companyDetails: DbCompanyDetailDto | undefined; })[]>>}
-   *
-   * @see {CorporateUserInviteLisitngFilterOptions} - The filter options used by the service.
-   * @see {PaginatedResultsWithMatchingConditionsResponse} - The response structure of the method.
-   * @see {DbCorporateUserInviteDto} - The DTO used to interact with the database.
-   * @see {DbCompanyDetailDto} - The DTO used to interact with the database.
-   */
   async getAllInvitesWithCompanyDetails(
     filterOptions: CorporateUserInviteLisitngFilterOptions
-  ): Promise<
-    PaginatedResultsWithMatchingConditionsInternalResponse<
-      (DbCorporateUserInviteDto & {
-        companyDetails: DbCompanyDetailDto | undefined;
-      })[]
-    >
-  > {
+  ): Promise<PaginatedResultsWithMatchingConditionsInternalResponse<(DbCorporateUserInviteDto & {
+    companyDetails?: DbCompanyDetailDto;
+  } & {
+    corporateUserDetails?: DbCorporateUserDto;
+  })[]>> {
     global.logger.info("Fetching all corporate invites. [service]", {
       filePath: __filename,
       methodName: this.getAllInvitesWithCompanyDetails.name,
@@ -212,29 +292,47 @@ class CorporateIserInviteService {
     const userInviteArray: DbCorporateUserInviteDto[] =
       Object.values(userInviteData);
 
+    /**
+     * @todo: 
+     * As of now "accessRequestExpiryCheck", "attachCompanyDetails" and "injectEntityDetailsHelperObj.injectCorporateUserDetailsByCompanyIdAndEmail" are implemented some kind of sequential manner. 
+     * This should be changed to parallel manner using single loop to make it more efficient.
+     */
+
     // Check if the request is past the Expiry Date or not if yes then update the status to Expired
-    let updatedInvite: DbCorporateUserInviteDto[] =
-      await this.accessRequestExpiryCheck(userInviteArray);
+    let updatedInvite: (DbCorporateUserInviteDto & {
+      companyDetails?: DbCompanyDetailDto;
+    } & {
+      corporateUserDetails?: DbCorporateUserDto;
+    })[] = await this.accessRequestExpiryCheck(userInviteArray);
 
-    // Enrich the data with company details
-    const invitesWithCompanyDetails: (DbCorporateUserInviteDto & {
-      companyDetails: DbCompanyDetailDto | undefined;
-    })[] = await attachCompanyDetails<DbCorporateUserInviteDto>(updatedInvite);
+    if(filterOptions.includeCompanyDetails) {
+      // Enrich the data with company details
+      updatedInvite = await attachCompanyDetails<DbCorporateUserInviteDto>(updatedInvite);
+    }
 
-    // Return all the invites with company details
-    const allInviteDataWithCompanyDetails: PaginatedResultsWithMatchingConditionsInternalResponse<
+    if(filterOptions.includeRegisteredCorporateDetails) {
+      updatedInvite =
+        await injectEntityDetailsHelperObj.injectCorporateUserDetailsByCompanyIdAndEmail(
+          updatedInvite
+        );
+    }
+
+    // Return all the invites 
+    const finalInviteData: PaginatedResultsWithMatchingConditionsInternalResponse<
       (DbCorporateUserInviteDto & {
-        companyDetails: DbCompanyDetailDto | undefined;
+        companyDetails?: DbCompanyDetailDto;
+      } & {
+        corporateUserDetails?: DbCorporateUserDto;
       })[]
     > = {
-      data: invitesWithCompanyDetails,
+      data: updatedInvite,
       lastKey: lastKey,
       count: count,
       timesQueried: timesQueried,
       queriedCount: queriedCount,
     };
 
-    return allInviteDataWithCompanyDetails;
+    return finalInviteData;
   }
 
   /**
@@ -287,18 +385,20 @@ class CorporateIserInviteService {
     if (!InviteDetailsById.count) {
       // Throw an error if the Invite Request is not found
       throw new BaseError(
-        `Invite Request with ID: ${inviteId} not found`,
+        `Invite Request not found`,
         HttpStatusCode.NOT_FOUND_404
       );
     }
 
+    const existingInviteData: DbCorporateUserInviteDto = InviteDetailsById[0];
+
     // Check if the request is past the Expiry Date or not if yes then update the status to Expired
-    let updatedInvite: DbCorporateUserInviteDto[] =
-      await this.accessRequestExpiryCheck(InviteDetailsById);
+    let updatedInvite: DbCorporateUserInviteDto =
+      (await this.accessRequestExpiryCheck([existingInviteData]))[0];
 
     // Get the company details and throw an error if not found
     let companyDetails: QueryResponse<DbCompanyDetailDto> =
-      await companyServiceObj.getCompanyDetailById(updatedInvite[0].companyId);
+      await companyServiceObj.getCompanyDetailById(updatedInvite.companyId);
     if (!companyDetails.count) {
       throw new BaseError(
         "Company details not found",
@@ -306,14 +406,11 @@ class CorporateIserInviteService {
       );
     }
 
-    // Extract the invite details
-    const inviteDetails: DbCorporateUserInviteDto = InviteDetailsById[0];
-
     // Attach the company name
     const finalInviteDetails: Partial<DbCorporateUserInviteDto> & {
       companyName: string;
     } = {
-      ...inviteDetails,
+      ...updatedInvite,
       companyName: companyDetails[0].name, // Attach the company name
     };
 
@@ -321,21 +418,32 @@ class CorporateIserInviteService {
     return finalInviteDetails;
   }
 
-  /**
-   * updateInviteById
-   *
-   * This method is used to update the corporate invite request by its ID.
-   * The method first checks if the invite request exists and throws an error if not found.
-   * Then it updates the invite request using the provided fields.
-   *
-   * @param {string} inviteId - The ID of the invite request to be updated.
-   * @param {Partial<CorporateUserInviteUpdateDto>} corporateUserInviteDto - The DTO containing the fields to be updated.
-   * @returns {Promise<DbCorporateUserInviteDto>} - The updated corporate invite.
-   * @throws {BaseError} - Throws an error if the invite request is not found.
-   */
+  async updateCommonInvite(
+    companyId: string,
+    email: string,
+    id: string,
+    corporateUserInviteDto: Partial<CorporateUserInviteCommonUpdateDto>
+  ): Promise<DbCorporateUserInviteDto> {
+    global.logger.info("Updating Corporate Invite Request. [service]", {
+      companyId,
+      email,
+      id,
+      methodName: this.updateCommonInvite.name,
+    });
+
+    return corporateInviteDaoObj.updateCommonInvite(
+      companyId,
+      email,
+      id,
+      corporateUserInviteDto,
+    );
+  }
+
   async updateInviteById(
     inviteId: string,
-    corporateUserInviteDto: Partial<CorporateUserInviteUpdateDto>
+    corporateUserInviteDto: CorporateUserInviteUpdateApiDto,
+    actionByUserId?: string,
+    actionByCorporateUserId?: string,
   ): Promise<DbCorporateUserInviteDto> {
     global.logger.info("Updating Corporate Invite Request. [service]", {
       filePath: __filename,
@@ -353,35 +461,105 @@ class CorporateIserInviteService {
       );
     }
 
-    corporateUserInviteDto.companyId = existingInvite[0].companyId;
-    corporateUserInviteDto.email = existingInvite[0].email;
+    const existingInviteData: DbCorporateUserInviteDto = existingInvite[0];
+
+    // check if the company exists and throw an error if not found
+    let companyDetails: QueryResponse<DbCompanyDetailDto> =
+      await companyServiceObj.getCompanyDetailById(
+        existingInviteData.companyId
+      );
+    if (!companyDetails.count) {
+      // Throw an error if the CompanyId is not found
+      throw new BaseError(
+        `Requested Company not found`,
+        HttpStatusCode.NOT_FOUND_404
+      );
+    }
+    const companyData: DbCompanyDetailDto = companyDetails[0];
+
+    const { inviteStatus: requestedInviteStatus } = corporateUserInviteDto;
+    const { inviteStatus: existingInviteStatus } = existingInviteData;
+
+    let updateData: Partial<CorporateUserInviteCommonUpdateDto> = {
+      ...corporateUserInviteDto,
+      updatedByUserId: actionByUserId,
+      updatedByCorporateUserId: actionByCorporateUserId,
+    };
+
+    if (requestedInviteStatus === CorpInviteStatusEnum.AWAITING) {
+      switch (existingInviteStatus) {
+        case CorpInviteStatusEnum.ACCEPTED:
+          /**
+           * @todo: If the business team don't want to throw error
+           * and then send only the login email.
+           */
+          throw new BaseError(
+            `User is already accepted the invite and registered with us.`,
+            HttpStatusCode.BAD_REQUEST_400
+          );
+
+        case CorpInviteStatusEnum.EXPIRED:
+          updateData = {
+            expiresAt: dateHelperObj.getFutureDateWithTimezone(
+              APP_CONSTANTS.CORPORATE_USER_INVITE_DATE_EXPIRATION,
+              APP_CONSTANTS.APP_DEFAULT_TIMEZONE
+            ),
+          };
+          break;
+
+        case CorpInviteStatusEnum.DELETED:
+          updateData = {
+            isDeleted: false,
+            expiresAt: dateHelperObj.getFutureDateWithTimezone(
+              APP_CONSTANTS.CORPORATE_USER_INVITE_DATE_EXPIRATION,
+              APP_CONSTANTS.APP_DEFAULT_TIMEZONE
+            ),
+          };
+          break;
+
+        default:
+          break;
+      }
+    }
 
     // Update the Invite Request in the database
-    const updatedInvite = corporateInviteDaoObj.updateInviteById(
-      existingInvite[0],
-      corporateUserInviteDto
-    );
+    const updatedInvite: DbCorporateUserInviteDto =
+      await this.updateCommonInvite(
+        existingInviteData.companyId,
+        existingInviteData.email,
+        existingInviteData.id,
+        updateData
+      );
+
+    // if
+    if (
+      updatedInvite.inviteStatus === CorpInviteStatusEnum.AWAITING &&
+      updatedInvite.isDeleted === false
+    ) {
+      const isCorporateEmailInviteSent: boolean =
+        await this.sendCorporateEmailInvite(
+          updatedInvite.id,
+          `${updatedInvite.firstName} ${updatedInvite.lastName}`,
+          updatedInvite.email,
+          updatedInvite.corporateUserType,
+          companyData.name
+        );
+      if (!isCorporateEmailInviteSent) {
+        throw new BaseError(
+          "Error in sending email invite to the corporate.",
+          HttpStatusCode.INTERNAL_SERVER_ERROR_500
+        );
+      }
+    }
 
     return updatedInvite;
   }
 
-  /**
-   * softDeleteInvite
-   *
-   * This method is used to soft delete the corporate invite by ID.
-   * It checks if the invite request exists and throws an error if not found.
-   * It then updates the Invite Request in the database and marks it as deleted.
-   *
-   * @param {string} inviteId - The ID of the invite to be deleted.
-   * @param {string} deletedByUserId - The ID of the user who is deleting this invite.
-   * @param {string} deletedByCorporateUserId - The ID of the corporate user who is deleting this invite.
-   * @throws {BaseError} - Throws an error if the invite request is not found.
-   * @returns {Promise<DbCorporateUserInviteDto>} - The deleted corporate invite.
-   */
   async softDeleteInvite(
     inviteId: string,
+    requestBody: CorporateUserInviteSoftDeleteApiDto,
     deletedByUserId?: string,
-    deletedByCorporateUserId?: string
+    deletedByCorporateUserId?: string,
   ): Promise<DbCorporateUserInviteDto> {
     global.logger.info("Deleting Corporate Invite Request. [service]", {
       filePath: __filename,
@@ -399,19 +577,28 @@ class CorporateIserInviteService {
       );
     }
 
-    // Update the email and companyId in the inviteUpdateRequestDto
-    let inviteUpdateRequestDto: CorporateUserInviteUpdateDto = {
-      email: existingInvite[0].email,
-      companyId: existingInvite[0].companyId,
+    const existingInviteData: DbCorporateUserInviteDto = existingInvite[0];
 
-      deletedByUserId: deletedByUserId,
-      deletedByCorporateUserId: deletedByCorporateUserId,
-    };
+    if(existingInviteData.inviteStatus === CorpInviteStatusEnum.ACCEPTED){
+      // You cannot delete an accepted invite request because the corporate user is already registered
+      throw new BaseError(
+        `You cannot delete an accepted invite request because the corporate is already registered.`,
+        HttpStatusCode.FORBIDDEN_403,
+      );
+    }
 
     // Delete the Invite Request from the database
-    return corporateInviteDaoObj.softDeleteInvite(
-      inviteId,
-      inviteUpdateRequestDto
+    return this.updateCommonInvite(
+      existingInviteData.companyId,
+      existingInviteData.email,
+      existingInviteData.id,
+      {
+        isDeleted: true,
+        deletedByUserId: deletedByUserId,
+        deletedByCorporateUserId: deletedByCorporateUserId,
+        reasonForRevoke: requestBody.reasonForRevokingInvite,
+        inviteStatus: CorpInviteStatusEnum.DELETED,
+      }
     );
   }
 
@@ -428,7 +615,7 @@ class CorporateIserInviteService {
   ): Promise<DbCorporateUserInviteDto[]> {
     const updatePromises: Promise<DbCorporateUserInviteDto>[] =
       invitesDetails.map(async (invite: DbCorporateUserInviteDto) => {
-        // If the invite status is already deleted, do not update it
+        // If the invite status is already deleted or expired or it has already been accepted, do not validate it for expiry and update it
         if (
           invite.isDeleted ||
           invite.inviteStatus === CorpInviteStatusEnum.EXPIRED ||
@@ -447,12 +634,6 @@ class CorporateIserInviteService {
           DateTime.now().setZone(APP_CONSTANTS.APP_DEFAULT_TIMEZONE) >
           expirationDate
         ) {
-          const inviteUpdateRequestDto: CorporateUserInviteUpdateDto = {
-            inviteStatus: CorpInviteStatusEnum.EXPIRED,
-            email: invite.email,
-            companyId: invite.companyId,
-          };
-
           global.logger.debug(`Updating expired Invite Request`, {
             filePath: __filename,
             methodName: this.accessRequestExpiryCheck.name,
@@ -462,9 +643,13 @@ class CorporateIserInviteService {
           });
 
           // Update the Invite Request in the database
-          return await corporateInviteDaoObj.updateInviteById(
-            invite,
-            inviteUpdateRequestDto
+          return await corporateInviteDaoObj.updateCommonInvite(
+            invite.companyId,
+            invite.email,
+            invite.id,
+            {
+              inviteStatus: CorpInviteStatusEnum.EXPIRED,
+            },
           );
         } else {
           return invite;

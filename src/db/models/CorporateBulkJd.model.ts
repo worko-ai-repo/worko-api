@@ -30,6 +30,10 @@ class DbCorporateBulkJdDto extends BaseDbDto {
   mustHaveSkills?: string[];
   mustNotHaveSkills?: string[];
   goodToHaveSkills?: string[];
+  coreSkills?: string[];
+  softSkills?: string[];
+  technicalSkills?: string[];
+  industryPreferences?: string[];
   experienceRange?: MinMaxRange;
   resumesCount?: number;
 }
@@ -100,6 +104,26 @@ const CorporateBulkJdSchema: Schema = new dynamoose.Schema(
       required: false,
     },
     goodToHaveSkills: {
+      type: Array,
+      schema: String,
+      required: false,
+    },
+    coreSkills: {
+      type: Array,
+      schema: String,
+      required: false,
+    },
+    softSkills: {
+      type: Array,
+      schema: String,
+      required: false,
+    },
+    technicalSkills: {
+      type: Array,
+      schema: String,
+      required: false,
+    },
+    industryPreferences: {
       type: Array,
       schema: String,
       required: false,

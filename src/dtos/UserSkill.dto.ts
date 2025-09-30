@@ -13,6 +13,14 @@ export interface UserSkillDTO {
       createdAt: string;
     };
   }[];
+  technicalSkills?: {
+    skillName: string;
+    years: number;
+    timestamps?: {
+      createdAt: string;
+      updatedAt: string;
+    };
+  }[];
   certifications?: {
     certName?: string;
     issuedInstitution?: string;

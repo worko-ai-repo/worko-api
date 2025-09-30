@@ -2,7 +2,7 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // import configs
 import APP_CONSTANTS from "../configs/constants.config";
-import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
+import { awsClientCognitoIdentityProviderLibrary, awsS3ClientLibrary } from "../configs/aws-sdk.config";
 
 // Load the local enums
 import { UserType } from "../enums/User.enum";
@@ -11,12 +11,15 @@ import { UserType } from "../enums/User.enum";
 import userDetailDao from "../daos/UserDetail.dao";
 
 // Load the local dtos
-import { UserDetailDTO } from "../dtos/UserDetail.dto";
+import { UserDetailCommonUpdateDto, UserDetailDTO, UserDetailUpdateApiDto } from "../dtos/UserDetail.dto";
 import { EmailTemplatePlaceholderCAND_WELCOME_MSG, EmailTemplatePlaceholderEMP_WELCOME_MSG } from "../dtos/EmailTemplatePlaceholder.dto";
 import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP } from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
 
 // Import enums
 import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
+
+// Import helpers
+import { getEmailFromPK } from "../helpers/user.helper";
 
 // Load the local libraies
 import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusinessPartner.library";
@@ -27,6 +30,7 @@ import { DbUserDetailDto } from "../db/models/UserDetail.model";
 
 // Load the local services
 import UserService from "./User.service";
+import userOtpService from "./UserOTP.service";
 
 // Load the local types
 import { UserDetailProfileInfoType } from "../types/UserDetail.type";
@@ -85,6 +89,22 @@ class UserDetailService {
     return candidateDetails[0];
   }
 
+  async getUserDetailsByPkEmailIds(emailIds: string[]): Promise<DbUserDetailDto[]> {
+    // Log the action
+    global.logger.info("Get user details by ids [service]",{
+      filePath: __filename,
+      methodName: this.getUserDetailsByPkEmailIds.name
+    });
+
+
+    // Get user details by email
+    const userDetailsArray: Promise<DbUserDetailDto>[] = emailIds.map((emailId: string) => {
+      return this.getUserDetailsByEmail(emailId);
+    })
+
+    // Return the user details
+    return Promise.all(userDetailsArray);
+  }
 
   /**
    * getUserDetailsByEmailIds
@@ -285,6 +305,84 @@ class UserDetailService {
     return userDetailDao.update(email, SK, userDetailDTO);
   }
 
+  async updateUserDetail(email:string, id: string, updateData: Partial<UserDetailCommonUpdateDto>): Promise<DbUserDetailDto> {
+    global.logger.info("Update user Detail [UserDetailService]", {
+      email,
+    });
+    return userDetailDao.updateUserDetail(email, id, updateData);
+  }
+
+  async updateUserDetailByEmail(email: string, userDetailDTO: UserDetailUpdateApiDto): Promise<DbUserDetailDto> {
+    global.logger.info("Update user Detail [UserDetailService]", {
+      email,
+    });
+
+    const cognitoUserId: string = global.requestLocalContext.userId;
+    const cognitoUserGroups: string[] = global.requestLocalContext.cognitoUserGroups;
+
+    const existingUserDetail: QueryResponse<DbUserDetailDto> = await this.get(email);
+    if (!existingUserDetail.count) {
+      throw new BaseError(
+        `The user details not found for the provided email "${email}" address.`, 
+        HttpStatusCode.NOT_FOUND_404
+      );
+    }
+    const existingUserDetailData: DbUserDetailDto = existingUserDetail[0];
+    const pkEmail: string = getEmailFromPK(existingUserDetailData.PK);
+
+    if(existingUserDetailData.id !== cognitoUserId) {
+      // Check whether the cognito user is admin or not
+      if(!cognitoUserGroups.includes(APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.ADMIN)) {
+        throw new BaseError("Unauthorized", HttpStatusCode.UNAUTHORIZED_401);
+      }
+    }
+
+    if(userDetailDTO.isNumberVerified !== undefined) {
+      if(existingUserDetailData.isNumberVerified === userDetailDTO.isNumberVerified) {
+        throw new BaseError("Is Number verified is already updated.", HttpStatusCode.BAD_REQUEST_400);
+      }
+    }
+
+    if(userDetailDTO.isEmailVerified !== undefined && userDetailDTO.isAlreadyVerifiedInCognito !== true) {
+      if(existingUserDetailData.isEmailVerified === userDetailDTO.isEmailVerified) {
+        throw new BaseError("Is Email verified is already updated.", HttpStatusCode.BAD_REQUEST_400);
+      }
+
+      const userPoolId: string | undefined = process.env.APP_AWS_COGNITO_USER_POOL_ID;
+
+      if(!userPoolId) {
+        throw new BaseError(
+          "User Pool ID is not found",
+          HttpStatusCode.INTERNAL_SERVER_ERROR_500
+        );
+      }
+
+      const updateCognitoUserVerification = [
+        // Confirm the user to the corporate group
+        awsClientCognitoIdentityProviderLibrary.confirmCognitoUserSignup(
+          userPoolId,
+          pkEmail,
+        ),
+
+        // Verify the user
+        awsClientCognitoIdentityProviderLibrary.verifyCognitoUser(
+          userPoolId,
+          pkEmail,
+        ),
+      ];
+
+      await Promise.all(updateCognitoUserVerification);
+    }
+
+    const {isAlreadyVerifiedInCognito, ...restUserDetailDTO} = userDetailDTO;
+
+    const updateData: Partial<UserDetailCommonUpdateDto> = {
+      ...restUserDetailDTO,
+    }
+
+    return this.updateUserDetail(email, existingUserDetailData.id, updateData);
+  }
+
   /**
    * sendWelcomeEmailAndWhatsappNotificationToUser
    *
@@ -340,6 +438,8 @@ class UserDetailService {
       // Placeholders for the email
       const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
         candName: name.toTitleCase(),
+        workoAppUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+        ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
       };
 
       // Placeholders for the whatsapp message
@@ -370,6 +470,8 @@ class UserDetailService {
       // Placeholders for the email
       const emailPlaceholders: EmailTemplatePlaceholderEMP_WELCOME_MSG = {
         empName: name.toTitleCase(),
+        workoAppUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+        ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
       };
 
       // Placeholders for the whatsapp message
@@ -438,6 +540,8 @@ class UserDetailService {
     if (userType === UserType.CAND) {
       const emailPlaceholders: EmailTemplatePlaceholderCAND_WELCOME_MSG = {
         candName: name.toTitleCase(),
+        workoAppUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+        ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL
       };
 
       // Send a welcome email to the candidate
@@ -450,6 +554,8 @@ class UserDetailService {
     else if (userType === UserType.EMP) {
       const emailPlaceholders: EmailTemplatePlaceholderEMP_WELCOME_MSG = {
         empName: name.toTitleCase(),
+        workoAppUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+        ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
       };
 
       // Send a welcome email to the employer
@@ -500,6 +606,67 @@ class UserDetailService {
 
     // Update the user details
     return this.update(email, userDetails[0].SK, userModifiedDetails);
+  }
+
+  async sendSmsOtptoVerifyUserPhoneNumber(email: string, userIpAddress: string) {
+    global.logger.info(`Send SMS to verify user phone number [service]`, {
+      methodName: this.sendSmsOtptoVerifyUserPhoneNumber.name,
+      email
+    });
+
+    const userDetail: DbUserDetailDto = await this.getUserDetailsByEmail(email);
+
+    const cognitoUserId: string = global.requestLocalContext.userId;
+
+    if(cognitoUserId !== userDetail.id) {
+      throw new BaseError("Unauthorized", HttpStatusCode.UNAUTHORIZED_401);
+    }
+
+    const userPhoneNumber: string = userDetail.number;
+
+    return userOtpService.sendOtpToPhoneNumberViaSms(
+      email,
+      userPhoneNumber,
+      userIpAddress,
+      APP_CONSTANTS.SMS_MESSAGE_CONTENT.USER_PHONE_NUMBER_VERIFY.MESSAGE,
+      APP_CONSTANTS.SMS_MESSAGE_CONTENT.USER_PHONE_NUMBER_VERIFY.SENDER,
+    );
+  }
+
+  async verifyUserPhoneNumber(email: string, otp: string) {
+    global.logger.info(`Verify user phone number [service]`, {
+      methodName: this.verifyUserPhoneNumber.name,
+      email,
+      otp,
+    });
+
+    const userDetail: DbUserDetailDto = await this.getUserDetailsByEmail(email);
+
+    const cognitoUserId: string = global.requestLocalContext.userId;
+
+    if(cognitoUserId !== userDetail.id) {
+      throw new BaseError("Unauthorized", HttpStatusCode.UNAUTHORIZED_401);
+    }
+
+    // Verify the OTP provided by the user from the database
+    const isOtpVerified: boolean = await userOtpService.verifyOtp(email, userDetail.number, otp);
+
+    // If OTP is not verified then return false, indicating verification failed
+    if (!isOtpVerified) {
+      return false;
+    }
+
+    // As the OTP is verified, mark the user's phone number as verified
+    const updatedUserDetails = await this.update(
+      email,
+      userDetail.SK,
+      {
+        isNumberVerified: isOtpVerified
+      }
+    )
+
+    // As the OTP is verified, indicating verification successful
+    return updatedUserDetails.isNumberVerified;
   }
 }
 

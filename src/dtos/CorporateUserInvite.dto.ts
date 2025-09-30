@@ -2,7 +2,7 @@
 import { RecordListingFilterOptions, RecordListingFilterRequestDTO } from "./Common.dto";
 
 // Import Enums
-import { CorporateUserInviteAccessTypeEnum, CorpInviteStatusEnum } from "../enums/CorporateUserInvite.enum";
+import { CorporateUserInviteAccessTypeEnum, CorpInviteStatusEnum, CorporateUserInviteDbPricingPlanEnum } from "../enums/CorporateUserInvite.enum";
 
 /**
  * CorporateUserInviteCreateApiDto
@@ -17,6 +17,9 @@ export interface CorporateUserInviteCreateApiDto {
     email: string; // User Email to send the invite
     firstName: string; // Need firstName of the user
     lastName: string; // Need lastName of the user
+    phoneNumberDetails: CorporateUserInviteDbPhoneNumberDetailDto;
+    pricingPlan?: CorporateUserInviteDbPricingPlanEnum;
+    cvDuplicacyAccess?: boolean;
 }
 
 /**
@@ -44,25 +47,12 @@ export interface CorporateUserInviteCreateDto extends CorporateUserInviteCreateA
  * This is the DTO comes in the requestBody used to update the access request for the company.
  */
 export interface CorporateUserInviteUpdateApiDto {
+    cvDuplicacyAccess?: boolean;
     inviteStatus?: CorpInviteStatusEnum; // The inviteStatus of the corporate invite. Enum [AWAITING, ACCEPTED, EXPIRED]
 }
 
-/** 
- * CorporateUserInviteUpdateDto 
- * 
- * @extends CorporateUserInviteUpdateApiDto
- * 
- * This is the DTO used to update the access request for the company. Specially used by the backend team.
-*/
-export interface CorporateUserInviteUpdateDto extends CorporateUserInviteUpdateApiDto {
-    email: string;
-    companyId: string;
-
-    updatedByUserId?: string;
-    updatedByCorporateUserId?: string;
-
-    deletedByUserId?: string;
-    deletedByCorporateUserId?: string;
+export interface CorporateUserInviteSoftDeleteApiDto {
+    reasonForRevokingInvite: string;
 }
 
 /**
@@ -82,6 +72,8 @@ export interface CorporateUserInviteLisitngFilterOptionsDTO extends RecordListin
     firstName?: string;
     lastName?: string;
     inviteStatus?: CorpInviteStatusEnum;
+    includeCompanyDetails?: boolean;
+    includeRegisteredCorporateDetails?: boolean;
 }
 
 /**
@@ -101,4 +93,26 @@ export interface CorporateUserInviteLisitngFilterOptions extends RecordListingFi
     firstName?: string;
     lastName?: string;
     inviteStatus?: CorpInviteStatusEnum;
+    includeCompanyDetails?: boolean;
+    includeRegisteredCorporateDetails?: boolean;
+}
+
+export interface CorporateUserInviteCommonUpdateDto {
+  evaluatorCognitoUserId: string;
+
+  inviteStatus: CorpInviteStatusEnum;
+
+  updatedByUserId: string;
+  updatedByCorporateUserId: string;
+
+  expiresAt: Date;
+  isDeleted: boolean;
+  reasonForRevoke: string;
+  deletedByUserId: string;
+  deletedByCorporateUserId: string;
+}
+
+export interface CorporateUserInviteDbPhoneNumberDetailDto {
+    countryCode: number; // 91
+    phoneNumber: number; // 9xxxxxxxxx
 }

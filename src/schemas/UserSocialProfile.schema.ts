@@ -3,30 +3,25 @@ import Joi from "joi";
 export const userSocialProfileDTOValidation = Joi.object({
   twitter: Joi.array()
     .items(
-      Joi.string().regex(
-        /^(https?:\/\/(www\.)?twitter\.com\/[a-zA-Z0-9_]{1,15}\/?)$/,
-        "Twitter URL is not valid"
-      )
+      Joi.string()
     )
     .default([]),
 
   github: Joi.array()
     .items(
-      Joi.string().regex(
-        /^(https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_\-]+\/?)$/,
-        "GitHub URL is not valid"
-      )
+      Joi.string()
     )
     .default([]),
 
     linkedin: Joi.array()
     .items(
-      Joi.string().regex(
-        /^(https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_\-]+\/?)$/,
-        "LinkedIn URL is not valid"
-      )
+      Joi.string()
     )
     .required(),
+
+    otherSocialPlatForms: Joi.object().default({}).optional().messages({
+      "object.base": "Other social platforms must be an object",
+    }),
 
     PK: Joi
       .string()

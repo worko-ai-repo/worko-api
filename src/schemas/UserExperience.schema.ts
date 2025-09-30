@@ -144,3 +144,9 @@ export const workEmailVerificationRequestApiDtovalidation = Joi.object({
         "string.empty": "OTP should not be empty.",
     }),
 })
+
+export const userExperienceUpdateApiDtoValidation = Joi.object({
+  isEmailVerified: Joi.boolean().optional().messages({
+    "boolean.base": "Is email verified must be a boolean.",
+  })
+})

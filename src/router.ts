@@ -29,6 +29,7 @@ import UserSupportRouter from "./routers/UserSupport.router";
 import UserCorporateRequestRouter from "./routers/UserCorporateRequest.router";
 import UserCareerRequestRouter from "./routers/UserCareerRequest.router";
 import EventRouter from "./routers/Event.router";
+import UserPreferenceRouter from "./routers/UserPreference.router";
 
 // File routers
 import FileRouter from "./routers/File.router";
@@ -55,6 +56,7 @@ import CorporateBulkJdResumeRouter from "./routers/CorporateBulkJdResume.router"
 import AdminSubsRouter from "./routers/Admin.router";
 import AdminRouter from "./admin/router";
 import BlogRouter from "./routers/Blog.router";
+import UserGuidanceRequestRouter from "./routers/UserGuidanceRequest.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -83,6 +85,13 @@ router.use("/admin", AdminRouter);
 
 // Admin router @todo: discuss with lead to add below route in router.use("/admin", AdminRouter);
 router.use("/admin-subs", AdminSubsRouter);
+
+/**
+ * BLOG ROUTERS
+ * 
+ * @authorisedRoles ["admin", "public", "loggedInUser"]
+ */
+router.use("/blog", BlogRouter);
 
 /**
  * BLOG ROUTERS
@@ -199,6 +208,13 @@ router.use("/msubscription", MasterSubscriptionRouter);
  * @todo: add required authorizations after discussing with team lead
  */
 router.use("/user", UserOrderRouter);
+
+/**
+ * USER PREFERENCE ROUTERS
+ * 
+ * @authorisedRoles ["loggedInUser"] 
+ */
+router.use("/user", UserPreferenceRouter);
 
 /**
  * SCRIPT ROUTERS
@@ -321,6 +337,11 @@ router.use("/user", UserEmailRouter);
 router.use("/user", UserExperienceRouter);
 
 /**
+ * USER GUIDANCE REQUEST ROUTERS
+ */
+router.use("/user", UserGuidanceRequestRouter);
+
+/**
  * USER SOCIAL PROFILE ROUTERS
  * 
  * Regitser the "UserSociapProfile CRUD" routers
@@ -337,7 +358,16 @@ router.use("/user", UserSocialProfileRouter);
  * 
  * @authorisedRoles ["admin", "loggedInUser"]
  */
-router.use("/user", UserProfilePercentageRouter);
+/*
+WARNING: Do not remove this commented code because we may
+use this in near future
+
+NOTE: In `2024` we used `angular` in frontend and in that we used to have
+profile percentage for user(candidate, employee) but now we are not
+using it, so we are commenting this code to stop calculating the profile percentage
+for new users
+*/
+// router.use("/user", UserProfilePercentageRouter);
 
 /**
  * USER PROVIDED SERVICE ROUTERS

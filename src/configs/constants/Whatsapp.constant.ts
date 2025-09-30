@@ -67,7 +67,7 @@ const WHATSAPP_APP_CONSTANTS = {
   get EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INTERVAL(): number {
     return process.env.APP_SLS_STAGE === APP_CONSTANTS.STAGES.PROD
       ? 3 * 24 * 60 * 60 * 1000 // 3 days in milliseconds
-      : 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+      : 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
   },
 };
 

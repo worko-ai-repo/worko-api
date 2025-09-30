@@ -154,3 +154,12 @@ export enum UserGuidanceRequestTypeEnum {
    */
   OTHER = "OTHER",
 }
+
+/**
+ * UserDetailDbGenderEnum
+ */
+export enum UserDetailDbGenderEnum {
+  MALE = "MALE",
+  FEMALE = "FEMALE",
+  OTHER = "OTHER",
+}

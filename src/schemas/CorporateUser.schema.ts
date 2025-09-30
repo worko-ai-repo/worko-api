@@ -72,6 +72,22 @@ export const CorporateUserCreateApiDtoValidation = Joi.object({
             "string.empty": " 'cognitoUserId' should not be empty",
             "any.required": " 'cognitoUserId' is required"
         }),
+    phoneNumberDetails: Joi.object({
+        countryCode: Joi
+            .number()
+            .required()
+            .messages({
+                'any.required': 'Country code is required',
+                'number.base': 'Country code should be a number',
+            }),
+        phoneNumber: Joi
+            .number()
+            .required()
+            .messages({
+                'any.required': 'Phone number is required',
+                'number.base': 'Phone number should be a number',
+            })
+    })
 })
 
 /**

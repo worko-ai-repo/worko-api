@@ -3,7 +3,7 @@ import { DateTime } from "luxon";
 import { Request, Response, NextFunction } from "express";
 
 // Load local configs
-import { profilePercentageField } from "../configs/constants/UserProfilePercentage.constant";
+// import { profilePercentageField } from "../configs/constants/UserProfilePercentage.constant";
 
 // Import dynamoose types
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
@@ -14,28 +14,22 @@ import {
   NewUserEmpSignUpDTO,
   UserDetailSettingCreateApiDTO,
   UserEmployeeSignUpDTO,
-  UserGuidanceRequestCreateApiDTO,
-  UserGuidanceRequestFilterOptions,
-  UserGuidanceRequestFilterRequestDTO,
+  UserParseCvRequestApiDto,
+  UserParseCvResponseDto,
   UserProfileResponse,
   UserSignUpDTO,
 } from "../dtos/User.dto";
-import {
-  PaginatedResultsWithMatchingConditionsInternalResponse,
-  RecordListingResponseDTO,
-} from "../dtos/Common.dto";
 import { UserType } from "../dtos/Company.dto";
 import { UserExperienceDTO } from "../dtos/UserExperience.dto";
 import { UserSocialProfileDTO } from "../dtos/UserSocialProfile.dto";
-import { UserProfilePercentageDTO } from "../dtos/UserProfilePercentage.dto";
+// import { UserProfilePercentageDTO } from "../dtos/UserProfilePercentage.dto";
 
 // Load the local schema
 import {
   UserSignUpDTOValidation,
   userDetailSettingsDTOValidation,
   userEmployeeSignUpDTOValidation,
-  userGuidanceRequestCreateApiDTOValidation,
-  userGuidanceRequestFilterDtoValidation,
+  userParseCvRequestApiDTOValidation,
   userlastAccessedDashDTOValidation,
   validateEmailField,
 } from "../schemas/User.schema";
@@ -46,18 +40,17 @@ import UserEmailService from "../services/UserEmail.service";
 import UserExperienceService from "../services/UserExperience.service";
 import UserDetailService from "../services/UserDetail.service";
 import UserSocialProfileService from "../services/UserSocialProfile.service";
-import UserProfilePercentageService from "../services/UserProfilePercentage.service";
+// import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local helper
-import { paginationResponseHelperObj } from "../helpers/pagination-response.helper";
-import { RequestHelper } from "../helpers/request.helper";
-import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+// import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 
 // Import models
 import { DbUserDetailSettingDto } from "../db/models/UserDetailSetting.model";
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
 import { DbUserSkillDto } from "../db/models/UserSkill.model";
-import { DbUserGuidanceRequestDto } from "../db/models/UserGuidanceRequest.model";
+import { DbUserPreferenceDto } from "../db/models/UserPreference.model";
+import { DbUserAchievementDto } from "../db/models/UserAchievement.model";
 
 // Load local service
 import InvokeLambdaService from "../services/InvokeLambda.service";
@@ -65,8 +58,6 @@ import InvokeLambdaService from "../services/InvokeLambda.service";
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
-
-
 
 /**
  * UserController
@@ -211,7 +202,9 @@ class UserController {
 
       // Call the UserService to get user basic details
       const userBasicDetails: Partial<DbUserDetailDto> &
-        Partial<DbUserSkillDto> = await UserService.getUserBasicDetails(
+        Partial<DbUserSkillDto> &
+        Partial<DbUserPreferenceDto> &
+        Partial<DbUserAchievementDto> = await UserService.getUserBasicDetails(
         cognitoUserId
       );
 
@@ -363,6 +356,15 @@ class UserController {
         userSocialProfileDTO
       );
 
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
+
       // Initialize the user's profile completion percentage
       let userProfilePercentageDTO: UserProfilePercentageDTO =
         UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
@@ -384,6 +386,7 @@ class UserController {
         userSignUpDto.email,
         userProfilePercentageDTO
       );
+      */
 
       // If a CV is provided, trigger asynchronous resume extraction
       if (userSignUpDto.CV) {
@@ -498,6 +501,15 @@ class UserController {
       // Note: Previous comment suggests UserEmail table is no longer used
       UserExperienceService.createUserExperience(email, userExperienceDto);
 
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
+
       // Initialize the user's profile completion percentage
       let userProfilePercentageDTO: UserProfilePercentageDTO =
         UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
@@ -521,6 +533,7 @@ class UserController {
         userSignUpDto.email,
         userProfilePercentageDTO
       );
+      */
 
       // Respond with the newly created user data
       res.status(HttpStatusCode.CREATED_201).json(newUser);
@@ -582,133 +595,6 @@ class UserController {
   };
 
   /**
-   * createUserGuidanceRequest
-   *
-   * @param {Request} req - Express request object.
-   * @param {Response} res - Express response object.
-   * @param {NextFunction} next - Express next function for error handling.
-   * @throws {RequestValidationError} If the input data fails validation.
-   * @throws {BaseError} Any other errors that occur during the process.
-   */
-  createUserGuidanceRequest = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      // logger
-      global.logger.info(`Create User Guidance Request [controller]`, {
-        filePath: __filename,
-        methodName: this.createUserGuidanceRequest.name,
-      });
-
-      // Extract the userId from the response locals
-      const cognitoUserId: string = global.requestLocalContext.userId;
-
-      // Parse the user details
-      const userDetails: DbUserDetailDto = await UserService.getUserDetailsById(
-        cognitoUserId
-      );
-
-      // Extract and validate the data from request body and throw error if not valid
-      const reqBody: UserGuidanceRequestCreateApiDTO = req.body;
-      const { error: reqBodyError, value: validatedRequestBody } =
-        userGuidanceRequestCreateApiDTOValidation.validate(reqBody, {
-          abortEarly: false,
-        });
-      if (reqBodyError) {
-        throw new RequestValidationError(reqBodyError);
-      }
-
-      // Create user guidance request
-      const userGuidanceRequestDetails: DbUserGuidanceRequestDto =
-        await UserService.createUserGuidanceRequest(
-          cognitoUserId,
-          userDetails.PK.split("#")[2],
-          userDetails.name,
-          userDetails.number,
-          validatedRequestBody
-        );
-
-      return res
-        .status(HttpStatusCode.CREATED_201)
-        .json(userGuidanceRequestDetails);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * Handles the retrieval of user guidance requests based on filter options provided in the request query parameters.
-   *
-   * @param {Request} req - The HTTP request object containing query parameters for filtering user guidance requests.
-   * @param {Response} res - The HTTP response object used to send the response back to the client.
-   * @param {NextFunction} next - The next middleware function in the Express.js request-response cycle.
-   *
-   * @throws {RequestValidationError} If the provided filter options fail validation.
-   *
-   * The response includes:
-   * - `data`: The list of user guidance requests matching the filter criteria.
-   * - `count`: The total number of matching records.
-   * - `timesQueried`: The number of times the query has been executed.
-   * - `lastKey`: The key for the last record in the current page (used for pagination).
-   * - `queriedCount`: The total number of records queried.
-   */
-  getAllUserGuidanceRequestByFilterOptions = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      global.logger.info("Get user guidance request [controller]", {
-        filePath: __filename,
-        methodName: this.getAllUserGuidanceRequestByFilterOptions.name,
-      });
-
-      // Parse filter options from the request query parameters
-      const userGuidanceRequest: UserGuidanceRequestFilterOptions =
-        RequestHelper.parseFilterOptions<
-          UserGuidanceRequestFilterRequestDTO,
-          UserGuidanceRequestFilterOptions
-        >(req.query as unknown as UserGuidanceRequestFilterRequestDTO);
-
-      // Validate the request using the Joi schema
-      const { error, value: userGuidanceRequestBody } =
-        userGuidanceRequestFilterDtoValidation.validate(userGuidanceRequest, {
-          abortEarly: false,
-        });
-
-      if (error) {
-        throw new RequestValidationError(error);
-      }
-
-      // Get guidance requests using the service
-      const guidanceRequestDetails: PaginatedResultsWithMatchingConditionsInternalResponse<
-        DbUserGuidanceRequestDto[]
-      > = await UserService.getAllUserGuidanceRequestByFilterOptions(
-        userGuidanceRequestBody
-      );
-
-      // Extract the response data
-      const { lastKey, count, timesQueried, queriedCount, data } =
-        guidanceRequestDetails;
-
-      // Generate the pagination response
-      const guidanceRequestResponse: RecordListingResponseDTO<
-        DbUserGuidanceRequestDto[]
-      > = paginationResponseHelperObj.customizedPaginationRecordListingResponse<
-        DbUserGuidanceRequestDto[],
-        UserGuidanceRequestFilterOptions
-      >(data, userGuidanceRequest, count, timesQueried, lastKey, queriedCount);
-
-      res.status(HttpStatusCode.OK_200).json(guidanceRequestResponse);
-    } catch (error) {
-      // Pass the error to the next error handler
-      next(error);
-    }
-  };
-
-  /**
    *
    * updateEmailVerifyStatus
    *
@@ -736,6 +622,15 @@ class UserController {
       }
       const verify = await UserService.verifyEmail(value);
 
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
+
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
         value
       );
@@ -748,6 +643,7 @@ class UserController {
         );
 
       UserProfilePercentageService.update(value, userProfilePercentageDTO);
+      */
 
       res.status(HttpStatusCode.OK_200).json(verify);
     } catch (error) {
@@ -775,7 +671,7 @@ class UserController {
   ) => {
     try {
       global.logger.info("Update user resume [controller]");
-      const resume = req.body.resume;
+      const { resume, userCvFileName, isCvExtracted } = req.body;
       const email = req.params.id;
       const { error, value } = validateEmailField(email);
 
@@ -792,7 +688,21 @@ class UserController {
           .json({ error: "User Does Not Exist." });
       }
 
-      const update = await UserService.updateUserCV(value, resume);
+      const update = await UserService.updateUserCV(
+        value,
+        resume,
+        userCvFileName,
+        isCvExtracted
+      );
+
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
         value
@@ -806,6 +716,7 @@ class UserController {
         );
 
       UserProfilePercentageService.update(value, userProfilePercentageDTO);
+      */
 
       // Trigger for Resume extraction
       await InvokeLambdaService.triggerResumeExtraction(email);
@@ -814,6 +725,36 @@ class UserController {
     } catch (error) {
       // Handle errors
       // Pass the error to the next error handler
+      next(error);
+    }
+  };
+
+  parseCv = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const reqBody: UserParseCvRequestApiDto = req.body;
+      global.logger.info("reqBody: ", {
+        s3ResumeId: reqBody.s3ResumeId,
+        methodName: this.parseCv.name,
+      });
+
+      const { error: reqBodyError, value: validatedRequestBody } =
+        userParseCvRequestApiDTOValidation.validate(reqBody, {
+          abortEarly: false,
+        });
+      if (reqBodyError) {
+        throw new RequestValidationError(reqBodyError);
+      }
+
+      const response: UserParseCvResponseDto = await UserService.parseCv(
+        validatedRequestBody
+      );
+      return res.status(HttpStatusCode.OK_200).json(response);
+    } catch (error) {
+      global.logger.error("Error in parse cv [controller]", {
+        methodName: this.parseCv.name,
+        error: error,
+      });
+
       next(error);
     }
   };

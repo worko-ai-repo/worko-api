@@ -1,8 +1,12 @@
 // Load the local daos
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import userAchievementDao from "../daos/UserAchievement.dao";
 
 //Load the local dto
 import { UserAchievementDTO } from "../dtos/UserAchievement.dto";
+
+// Load the local model
+import { DbUserAchievementDto } from "../db/models/UserAchievement.model";
 
 /**
  * UserAchievementService class is responsible for managing user Achievement-related operations.
@@ -18,6 +22,12 @@ class UserAchievementService {
     // Logging the action of getting user Achievement by email in the service layer
     logger.info("Fetching user Achievement by email [UserAchievementService]");
     return userAchievementDao.get(email);
+  }
+
+  async getUserAchievementBasicDetails(email: string): Promise<QueryResponse<DbUserAchievementDto>> {
+    // Logging the action of getting user Achievement by email in the service layer
+    global.logger.info("Fetching user Achievement by email [UserAchievementService]");
+    return userAchievementDao.getUserAchievementBasicDetails(email);
   }
 
   /**

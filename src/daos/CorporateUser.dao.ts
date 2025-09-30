@@ -99,7 +99,8 @@ class CorporateUserDao implements BaseDao {
    * @returns {Promise<DbCorporateUserDto>} - The details of the Corporate User that was created
    */
   async createCorporateUser(
-    userDetails: CorporateUserCreateDto
+    userDetails: CorporateUserCreateDto,
+    cvDuplicacyAccess?: boolean,
   ): Promise<DbCorporateUserDto> {
     global.logger.info("Creating a new Corporate User [DAO]", {
       filePath: __filename,
@@ -115,7 +116,7 @@ class CorporateUserDao implements BaseDao {
     // Create a new Corporate User
     const fullUserdetails = {
       ...userDetails,
-
+      cvDuplicacyAccess,
       PK: this.partitianKey.strtr({
         "{companyId}": userDetails.companyId,
       }),

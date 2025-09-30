@@ -511,6 +511,8 @@ class UserReferralService {
         candName: candName.toTitleCase(),
         companyName: companyName,
         refereeName: refereeName.toTitleCase(),
+        workoAppUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+        ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
       };
 
     // Function responsible for sending the email to the candidate saying that his referral request has been accepted
@@ -612,6 +614,8 @@ class UserReferralService {
         candName: candName.toTitleCase(),
         jobUrl: jobUrl,
         companyName: companyName,
+        workoAppUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+        ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
       };
 
     // Send the email using the email library
@@ -662,6 +666,8 @@ class UserReferralService {
         jobUrl: jobUrl,
         companyName: companyName,
         rejectedReasons: this.prepareReferralRejectedReasons(rejectedByUserIds),
+        ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
+        workoAppUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
       };
 
     // Send the email using the email library
