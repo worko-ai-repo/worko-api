@@ -15,9 +15,6 @@ const APP_CONSTANTS = {
   // Application stage
   APP_SLS_STAGE: process.env.APP_SLS_STAGE,
 
-  // Application stage
-  APP_SLS_STAGE: process.env.APP_SLS_STAGE,
-
   // The stages/environments supported by the application.
   STAGES: {
     LOCAL: "local",
@@ -54,26 +51,6 @@ const APP_CONSTANTS = {
     CAREER_RESUME: "career-resumes", // To upload the resumes uplaoded via career page
     COMPANY_JOB_DESCRIPTION: "companies/{companyId}/company-job-descriptions", // To upload the company job description uplaoded via `corporate dashboard` or `admin dashboard`
     BULK_CVS: "companies/{companyId}/bulk-cvs/{corporateBulkJdId}", // To upload the bulk cvs uplaoded via `corporate dashboard` or `admin dashboard`
-
-    /**
-     * @NOTE:
-     *  1. Currently, company logos are being stored in the following S3 path:
-     *     "worko-ui-comp-logo-{dev|prod}/images/"
-     *     This is not an ideal structure for storing company logos. However, since this path is already in use
-     *     and contains existing logos, we are continuing to use it to maintain backward compatibility.
-     *
-     *  2. The ideal S3 path structure should be:
-     *     worko-ui-comp-logo-{dev|prod}/companies/{companyId}/{companyLogoFileName}
-     *     This structure ensures better organization and scalability but don't update the existing structure.
-     */
-    COMPANY_LOGO: "images",
-
-    /**
-     * BLOG_IMAGE
-     * 
-     * To store the blog cover images
-     */
-    BLOG_IMAGE: "blog-images",
 
     /**
      * @NOTE:
@@ -161,16 +138,6 @@ const APP_CONSTANTS = {
     WORKO_NO_REPLY: {
       email: "no-reply@worko.ai",
       fullName: "Worko.ai",
-    },
-    GUIDANCE_EMAIL: {
-      email: "guidance@worko.ai",
-      fullName: "Worko.ai",
-    },
-    WORKO_PRODUCT_MANAGERS: {
-      Jeetesh: {
-        email: "jeetesh@worko.ai",
-        fullName: "Worko.ai",
-      },
     },
     GUIDANCE_EMAIL: {
       email: "guidance@worko.ai",
@@ -270,16 +237,6 @@ const APP_CONSTANTS = {
      * Required constants for Referral score as matching score
      */
     REFERRAL_MINIMUM_MATCHING_SCORE: 70,
-  /**
-   * MATCHING_SCORES
-   */
-  MATCHING_SCORES: {
-    /**
-     * REFERRAL_MINIMUM_MATCHING_SCORE
-     *
-     * Required constants for Referral score as matching score
-     */
-    REFERRAL_MINIMUM_MATCHING_SCORE: 70,
 
     /**
      * CORPORATE_BULK_JD_RESUME_MINIMUM_MATCHING_SCORE
@@ -326,26 +283,6 @@ const APP_CONSTANTS = {
   },
 
   /**
-   * CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS_AFTER_X_MINUTES
-   *
-   * This is the number of minutes after which the email and whatsapp notifications will be sent
-   * to the candidates for bulk resumes upload by particular job description.
-   *
-   * The time is different in prod and dev environments.
-   * In prod, the time is 10 minutes.
-   * In dev, the time is 10 minutes.
-   */
-  get CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATIONS_AFTER_X_MINUTES(): number {
-    const PROD_MINUTES = 10; // 10 minutes
-    const DEV_MINUTES = 5; // 5 minutes
-
-    // return the time based on the environment
-    return this.APP_SLS_STAGE === this.STAGES.PROD
-      ? PROD_MINUTES
-      : DEV_MINUTES;
-  },
-
-  /**
    * SOCIAL_PROFILE_KEYS
    *
    * These are the keys for the social profiles, we are currently used for profile percentage logic,
@@ -368,7 +305,6 @@ const APP_CONSTANTS = {
     const DEV_DAYS =  15; // 15 year  
 
     // return the time based on the environment
-    return this.APP_SLS_STAGE === this.STAGES.PROD
     return this.APP_SLS_STAGE === this.STAGES.PROD
       ? PROD_DAYS
       : DEV_DAYS;
