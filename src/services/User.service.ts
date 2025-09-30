@@ -627,7 +627,6 @@ class UserService {
             empName: empName.toTitleCase(),
             workoLoginUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
             ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
-
           };
         // Send email to remind creating multiple profiles
         const sendEmailResponse =
@@ -650,7 +649,12 @@ class UserService {
    * @param email
    * @param resume
    */
-  async updateUserCV(email: string, resume: string, userCvFileName?: string, isCvExtracted?: boolean) {
+  async updateUserCV(
+    email: string,
+    resume: string,
+    userCvFileName?: string,
+    isCvExtracted?: boolean
+  ) {
     global.logger.info("Update user resume [service]");
     const SK = await userDetailDao.getUserDetailSK(email);
     userDetailDao.updateCv(SK, email, resume, userCvFileName, isCvExtracted);
@@ -952,7 +956,8 @@ class UserService {
     }
 
     // Destructure the fetched user preferences
-    const userPreferences: DbUserPreferenceDto = userPreferencesQueryResponse[0];
+    const userPreferences: DbUserPreferenceDto =
+      userPreferencesQueryResponse[0];
 
     const userAchievementsQueryResponse: QueryResponse<DbUserAchievementDto> =
       await UserAchievementService.getUserAchievementBasicDetails(
@@ -995,41 +1000,44 @@ class UserService {
     return UserDetailService.getUserByIdOne(userId);
   }
 
-  async parseCv(parseCvRequest: UserParseCvRequestApiDto): Promise<UserParseCvResponseDto> {
+  async parseCv(
+    parseCvRequest: UserParseCvRequestApiDto
+  ): Promise<UserParseCvResponseDto> {
     const cognitoUserId: string = global.requestLocalContext.userId;
 
     // Parse the user details
-    const userDetailsQueryResponse: QueryResponse<DbUserDetailDto> = await UserDetailService.getUserById(
-      cognitoUserId
-    );
-    if(!userDetailsQueryResponse.count) {
+    const userDetailsQueryResponse: QueryResponse<DbUserDetailDto> =
+      await UserDetailService.getUserById(cognitoUserId);
+    if (!userDetailsQueryResponse.count) {
       throw new BaseError(
         `Your details are not found in our system, so you are not allowed to parse CV.`,
         HttpStatusCode.FORBIDDEN_403
       );
     }
 
-    const userDetails: DbUserDetailDto = userDetailsQueryResponse[0]; 
+    const userDetails: DbUserDetailDto = userDetailsQueryResponse[0];
 
-    if(userDetails?.CV !== parseCvRequest.s3ResumeId) {
+    if (userDetails?.CV !== parseCvRequest.s3ResumeId) {
       throw new BaseError(
         `Your CV is not found in our system, so you are not allowed to parse CV.`,
         HttpStatusCode.FORBIDDEN_403
       );
     }
 
-    const cvTriggerResponse: APIGatewayProxyResult = await InvokeLambdaService.triggerResumePartialExtraction(
-      parseCvRequest.s3ResumeId,
-      userDetails.id,
-    );
+    const cvTriggerResponse: APIGatewayProxyResult =
+      await InvokeLambdaService.triggerResumePartialExtraction(
+        parseCvRequest.s3ResumeId,
+        userDetails.id
+      );
     global.logger.info("CV Response", {
       methodName: this.parseCv.name,
       statusCode: cvTriggerResponse.statusCode,
     });
-    if(cvTriggerResponse.statusCode !== HttpStatusCode.OK_200) {
+    if (cvTriggerResponse.statusCode !== HttpStatusCode.OK_200) {
       throw new BaseError(
         `CV parsing failed.`,
-        cvTriggerResponse?.statusCode ?? HttpStatusCode.INTERNAL_SERVER_ERROR_500
+        cvTriggerResponse?.statusCode ??
+          HttpStatusCode.INTERNAL_SERVER_ERROR_500
       );
     }
 

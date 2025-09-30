@@ -59,9 +59,6 @@ import InvokeLambdaService from "../services/InvokeLambda.service";
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 
-
-
-
 /**
  * UserController
  *
@@ -254,7 +251,6 @@ class UserController {
         throw new RequestValidationError(error);
       }
 
-
       // Validate email
       const { error: emailError, value: emailId } = validateEmailField(email);
 
@@ -276,9 +272,7 @@ class UserController {
       });
     } catch (error: any) {
       next(error);
-      next(error);
     }
-  };
   };
 
   /**
@@ -378,8 +372,6 @@ class UserController {
         filePath: __filename,
         methodName: this.createCandidate.name,
         userProfilePercentageDTO,
-        methodName: this.createCandidate.name,
-        userProfilePercentageDTO,
       });
 
       // Update current percentage based on the validated data
@@ -460,7 +452,6 @@ class UserController {
       const userType = UserType.EMP;
       const emailList = { primary: userSignUpDto.email };
 
-
       // Set up additional user data for employee
       let userEmpSignUpDto: NewUserEmpSignUpDTO = {
         ...userSignUpDto,
@@ -503,7 +494,6 @@ class UserController {
       const userSocialProfileDTO: UserSocialProfileDTO = {
         linkedin: [linkedinUrl],
       };
-
       UserSocialProfileService.create(email, userSocialProfileDTO);
 
       // Store user's work experience
@@ -523,9 +513,6 @@ class UserController {
       // Initialize the user's profile completion percentage
       let userProfilePercentageDTO: UserProfilePercentageDTO =
         UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
-      // Initialize the user's profile completion percentage
-      let userProfilePercentageDTO: UserProfilePercentageDTO =
-        UserProfilePercentageOperationHelper.createUserProfilePercentageDTO();
 
       // Update current percentage based on common user data
       userProfilePercentageDTO =
@@ -533,19 +520,7 @@ class UserController {
           userProfilePercentageDTO,
           copyUserSignUpDTO
         );
-      // Update current percentage based on common user data
-      userProfilePercentageDTO =
-        UserProfilePercentageOperationHelper.updateCurPerc(
-          userProfilePercentageDTO,
-          copyUserSignUpDTO
-        );
 
-      // Further update percentage based on work experience data
-      userProfilePercentageDTO =
-        UserProfilePercentageOperationHelper.updateCurPerc(
-          userProfilePercentageDTO,
-          userExperienceDto
-        );
       // Further update percentage based on work experience data
       userProfilePercentageDTO =
         UserProfilePercentageOperationHelper.updateCurPerc(
@@ -696,7 +671,7 @@ class UserController {
   ) => {
     try {
       global.logger.info("Update user resume [controller]");
-      const {resume, userCvFileName, isCvExtracted} = req.body;
+      const { resume, userCvFileName, isCvExtracted } = req.body;
       const email = req.params.id;
       const { error, value } = validateEmailField(email);
 
@@ -713,7 +688,12 @@ class UserController {
           .json({ error: "User Does Not Exist." });
       }
 
-      const update = await UserService.updateUserCV(value, resume, userCvFileName, isCvExtracted);
+      const update = await UserService.updateUserCV(
+        value,
+        resume,
+        userCvFileName,
+        isCvExtracted
+      );
 
       /*
       WARNING: Do not remove this commented code because we may
