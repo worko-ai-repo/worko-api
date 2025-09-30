@@ -53,6 +53,7 @@ import { WhatsAppBusinessPartnerMessageLogModel } from "./models/WhatsAppBusines
 import { UserDetailSettingModel } from "./models/UserDetailSetting.model";
 import { UserGuidanceRequestModel } from "./models/UserGuidanceRequest.model";
 import { BlogModel } from "./models/Blog.model";
+import { UserPreferenceModel } from "./models/UserPreference.model";
 
 /**
  * DBConfig
@@ -168,6 +169,7 @@ class DBConfig {
       UserDetailSettingModel,
       UserGuidanceRequestModel,
       BlogModel,
+      UserPreferenceModel,
     ]);
   }
 }

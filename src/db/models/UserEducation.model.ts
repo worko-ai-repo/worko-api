@@ -56,4 +56,4 @@ const UserEducationModel = dynamoose.model<DbUserEducationDto>(
 );
 
 // Export the UserEducationModel
-export { UserEducationModel };
+export { UserEducationModel, DbUserEducationDto };

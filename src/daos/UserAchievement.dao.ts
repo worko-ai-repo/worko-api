@@ -1,14 +1,15 @@
+
+// Import the dynamoose types
+import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+
 //Load the base dao
 import BaseDao from "./Base.dao";
 
 //Load the local model
-import { UserAchievementModel } from "../db/models/UserAchievement.model";
+import { DbUserAchievementDto, UserAchievementModel } from "../db/models/UserAchievement.model";
 
 //Load the local dtos
 import { UserAchievementDTO } from "../dtos/UserAchievement.dto";
-
-//Load UlidService for generating ULID IDs
-import UlidService from "../services/Ulid.service";
 
 // UserAchievementDao class implementing the BaseDao interface
 class UserAchievementDao implements BaseDao {
@@ -28,6 +29,17 @@ class UserAchievementDao implements BaseDao {
     });
     const SK = this.sortKeys.SK_ID;
     return UserAchievementModel.query("PK").eq(PK).where("SK").eq(SK).exec();
+  }
+
+  async getUserAchievementBasicDetails(email: string): Promise<QueryResponse<DbUserAchievementDto>> {
+    global.logger.info("Fetching user Achievement by email [DAO]");
+    const PK: string = this.partitianKey.strtr({
+      "{primaryEmail}": email,
+    });
+    const SK: string = this.sortKeys.SK_ID;
+    return UserAchievementModel.query("PK").eq(PK).where("SK").eq(SK).attributes([
+      "achievements"
+    ]).exec();
   }
 
   /**

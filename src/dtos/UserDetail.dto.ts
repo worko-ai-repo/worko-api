@@ -1,5 +1,13 @@
+
+// Import dtos
+import { UserDetailDbResponsibilitiesDto } from "./User.dto";
+
+// Import enums
+import { UserDetailDbGenderEnum } from "../enums/User.enum";
+
 export interface UserDetailDTO {
   name: string;
+  gender?: UserDetailDbGenderEnum;
   emailList: { [key: string]: string };
   number: string;
   userType: string[];
@@ -12,6 +20,7 @@ export interface UserDetailDTO {
   CTC?: number;
   ECTC?: number;
   noticePeriod?: number;
+  isNoticePeriodNegotiable?: boolean;
   YOE?: number;
   CV?: string;
   coverLetter?: string;
@@ -19,12 +28,9 @@ export interface UserDetailDTO {
   profileImage?: string;
   country?: string;
   isCandidateFresher: boolean;
-  candidateExperience?: {
-    companyId?: string;
-    companyName: string;
-    designation: string;
-    department: string;
-  };
+  candidateExperience?: UserDetailDbCandidateExperienceDto;
+  multipleCandidateExperience: UserDetailDbCandidateExperienceDto[];
+  responsibilities: UserDetailDbResponsibilitiesDto[];
 
   /**
    * isWhatsappNotificationEnabled
@@ -38,4 +44,36 @@ export interface UserDetailDTO {
    * it will also be `false` on the candidate dashboard, applying globally across all user roles.
    */
   isWhatsappNotificationEnabled?: boolean;
+}
+
+export interface UserDetailDbCandidateExperienceDto {
+  companyId?: string;
+  companyName: string;
+  designation: string;
+  department?: string;
+  YOE?: number;
+  startDate?: string;
+
+  /**
+   * endDate
+   * 
+   * @description if endDate is not provided or empty string, it will be considered as ongoing experience
+   */
+  endDate?: string;
+};
+
+export interface UserDetailUpdateApiDto {
+  isNumberVerified?: boolean;
+  isEmailVerified?: boolean;
+
+  /**
+   * This is used for `linkedin` signup, frontend is 
+   * making emailverified as true but we need to make it verify in dynamodb also
+   */
+  isAlreadyVerifiedInCognito?: boolean;
+}
+
+export interface UserDetailCommonUpdateDto {
+  isNumberVerified: boolean;
+  isEmailVerified: boolean;
 }

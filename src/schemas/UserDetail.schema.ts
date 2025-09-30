@@ -2,9 +2,10 @@
 import Joi from "joi";
 
 // import enums
-import { UserType } from "../enums/User.enum";
+import { UserDetailDbGenderEnum, UserType } from "../enums/User.enum";
 
 const candidateExperienceSchema = Joi.object({
+  companyId: Joi.string().optional(),
   companyName: Joi.string().allow("").optional().messages({
     "string.empty": "Company Name should not be empty.",
   }),
@@ -13,6 +14,16 @@ const candidateExperienceSchema = Joi.object({
   }),
   department: Joi.string().allow("").optional().messages({
     "string.empty": "Department should not be empty.",
+  }),
+  YOE: Joi.number().optional().messages({
+    "number.base": "YOE must be a valid number.",
+    "number.integer": "YOE must be an integer.",
+  }),
+  startDate: Joi.string().isoDate().optional().messages({
+    "date.base": "Start date must be a valid ISO date string.",
+  }),
+  endDate: Joi.string().allow("").isoDate().optional().messages({
+    "date.base": "End date must be a valid ISO date string.",
   }),
 });
 
@@ -25,6 +36,13 @@ export const userDetailDTOValidation = Joi.object({
       "any.required": "Name is required",
       "string.pattern.base":
         "Name must contain only alphabetic characters, spaces, dots, apostrophes, or hyphens",
+    }),
+  gender: Joi.string()
+    .valid(...Object.values(UserDetailDbGenderEnum))
+    .optional()
+    .messages({
+      "any.only": `Invalid gender value . Please provide a valid value from
+      ${Object.values(UserDetailDbGenderEnum).join(", ")}.`,
     }),
   emailList: Joi.object()
     .pattern(Joi.string(), Joi.string().email().required())
@@ -70,6 +88,9 @@ export const userDetailDTOValidation = Joi.object({
   CTC: Joi.number().optional(),
   ECTC: Joi.number().optional(),
   noticePeriod: Joi.number().optional(),
+  isNoticePeriodNegotiable: Joi.boolean().optional().messages({
+    "boolean.base": "Invalid notice period negotiable status.",
+  }),
   YOE: Joi.number().optional().messages({
     "number.base": "Years of experience must be a valid number.",
   }),
@@ -83,20 +104,34 @@ export const userDetailDTOValidation = Joi.object({
   //country
   country: Joi.string().optional().allow(""),
   // validate isCandidateFresher when lastAccessedDash is set to be cand or other dont accept it and throw forbiden error
-  isCandidateFresher: Joi.when("lastAccessedDash", {
-    is: UserType.CAND,
-    then: Joi.boolean().required().messages({
-      "any.required":
-        "The 'isCandidateFresher' field is required for Candidate.",
-      "boolean.base": "The value for 'isCandidateFresher' must be a boolean.",
-    }),
-    otherwise: Joi.forbidden(),
+  // isCandidateFresher: Joi.when("lastAccessedDash", {
+  //   is: UserType.CAND,
+  //   then: Joi.boolean().required().messages({
+  //     "any.required":
+  //       "The 'isCandidateFresher' field is required for Candidate.",
+  //     "boolean.base": "The value for 'isCandidateFresher' must be a boolean.",
+  //   }),
+  //   otherwise: Joi.forbidden(),
+  // }),
+  isCandidateFresher: Joi.boolean().required().messages({
+    "any.required": "The 'isCandidateFresher' field is required for Candidate.",
+    "boolean.base": "The value for 'isCandidateFresher' must be a boolean.",
   }),
-  // Validate candidateExperience when lastAccessedDash is set to be cand
-  candidateExperience: Joi.when("lastAccessedDash", {
-    // check before validating whether the isCandidateFresher is set to false then only validate
-    is: UserType.CAND,
-    then: Joi.when("isCandidateFresher", {
+  // // Validate candidateExperience when lastAccessedDash is set to be cand
+  // candidateExperience: Joi.when("lastAccessedDash", {
+  //   // check before validating whether the isCandidateFresher is set to false then only validate
+  //   is: UserType.CAND,
+  //   then: Joi.when("isCandidateFresher", {
+  //     is: false,
+  //     then: candidateExperienceSchema.required().messages({
+  //       "any.required":
+  //         "The 'candidateExperienceSchema' field is required for Candidate.",
+  //     }),
+  //     otherwise: candidateExperienceSchema.forbidden(),
+  //   }),
+  //   otherwise: Joi.forbidden(),
+  // }),
+  candidateExperience: Joi.when("isCandidateFresher", {
       is: false,
       then: candidateExperienceSchema.required().messages({
         "any.required":
@@ -104,7 +139,56 @@ export const userDetailDTOValidation = Joi.object({
       }),
       otherwise: candidateExperienceSchema.forbidden(),
     }),
-    otherwise: Joi.forbidden(),
-  }),
+  // multipleCandidateExperience: Joi.when("lastAccessedDash", {
+  //   is: UserType.CAND,
+  //   then: Joi.array().items(candidateExperienceSchema).optional().min(1).messages({
+  //     "array.min": "At least one candidate experience is required.",
+  //   }),
+  //   otherwise: Joi.forbidden(),
+  // }),
+  multipleCandidateExperience: Joi.array()
+    .items(candidateExperienceSchema)
+    .optional()
+    .min(1)
+    .messages({
+      "array.min": "At least one candidate experience is required.",
+    }),
+  responsibilities: Joi.array()
+    .items(
+      Joi.object({
+        companyId: Joi.string().optional(),
+        companyName: Joi.string().optional(),
+        date: Joi.object({
+          startDate: Joi.string().isoDate().required().messages({
+            "any.required": "Start date is required.",
+            "string.isoDate": "Start date must be a valid ISO date string.",
+          }),
+          // Empty string or undefined represents that the candidate is still working here
+          endDate: Joi.string().isoDate().optional().allow("").messages({
+            "string.isoDate": "End date must be a valid ISO date string.",
+          }),
+        }),
+        description: Joi.string().required().messages({
+          "any.required": "Description is required.",
+          "string.base": "Description must be a string.",
+        }),
+      })
+    )
+    .optional()
+    .messages({
+      "array.base": "Responsibilities must be an array of strings.",
+    }),
   isWhatsappNotificationEnabled: Joi.boolean().default(true).optional(),
 }).options({ stripUnknown: true });
+
+export const userDetailUpdateApiDtoValidation = Joi.object({
+  isNumberVerified: Joi.boolean().optional().messages({
+    "boolean.base": "Provided value must be a boolean.",
+  }),
+  isEmailVerified: Joi.boolean().optional().messages({
+    "boolean.base": "Provided value must be a boolean.",
+  }),
+  isAlreadyVerifiedInCognito: Joi.boolean().optional().messages({
+    "boolean.base": "Provided value must be a boolean.",
+  }),
+});

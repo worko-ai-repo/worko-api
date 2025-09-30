@@ -1,30 +1,23 @@
 // Load npm packages
 import { Request, Response, NextFunction } from "express";
 
-// Load dynamoose library and types
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
-
 // Load dtos
 import { ReferralListingFilterOptions, ReferralListingFilterRequestDTO } from "../dtos/UserReferral.dto";
-import { PaginatedResultsWithMatchingConditionsResponse, RecordListingResponseDTO } from "../../dtos/Common.dto";
-
-// Load enums
-import { SortOrderTypeEnum } from "../../enums/Common.enum";
+import { PaginatedResultsWithMatchingConditionsInternalResponse, RecordListingResponseDTO } from "../../dtos/Common.dto";
 
 // Load helpers
 import { RequestHelper } from "../../helpers/request.helper";
-import { lastKeyToBase64EncodeStr } from "../../helpers/dynamoose.helper";
 import { paginationResponseHelperObj } from "../../helpers/pagination-response.helper";
 
 // Load models
 import { DbUserReferralDto } from "../../db/models/UserReferral.model";
+import { DbUserDetailDto } from "../../db/models/UserDetail.model";
 
 // Load services
 import { userReferralServiceObj } from "../services/UserReferral.service";
 
 // Load schemas
 import { userReferralFilterDtoValidation } from "../schemas/UserReferral.schema";
-import { validateEmailField } from "../../schemas/User.schema";
 
 // Load utils
 import HttpStatusCode from "../../utils/http-codes.util";
@@ -78,16 +71,28 @@ class UserReferralController {
       }
 
       // Fetch the referral details from the service
-      const userReferrals: PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto> = await userReferralServiceObj.getReferrals(
-        userReferralFilterOptions
-      );
+      const userReferrals: PaginatedResultsWithMatchingConditionsInternalResponse<
+        (DbUserReferralDto & {
+          userDetails?: DbUserDetailDto;
+          employeeDetails?: DbUserDetailDto;
+        })[]
+      > = await userReferralServiceObj.getReferrals(userReferralFilterOptions);
 
       // Extract the count, timesQueried,lastKey and other details from the response
-      const { lastKey, count, timesQueried, queriedCount, ...referralDetails } = userReferrals;
+      const { lastKey, count, timesQueried, queriedCount, data: referralDetails } = userReferrals;
 
       // Generate the pagination response
-      const referralsResponse: RecordListingResponseDTO<DbUserReferralDto[]> =
-        paginationResponseHelperObj.customizedPaginationRecordListingResponse<DbUserReferralDto[],ReferralListingFilterOptions>(
+      const referralsResponse: RecordListingResponseDTO<(DbUserReferralDto & {
+          userDetails?: DbUserDetailDto;
+          employeeDetails?: DbUserDetailDto;
+        })[]> =
+        paginationResponseHelperObj.customizedPaginationRecordListingResponse
+        <
+          (DbUserReferralDto & {
+          userDetails?: DbUserDetailDto;
+          employeeDetails?: DbUserDetailDto;
+        })[],ReferralListingFilterOptions
+        >(
           Object.values(referralDetails),
           referralRecordListingFilterRequest,
           count,

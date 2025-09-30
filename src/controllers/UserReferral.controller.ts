@@ -16,10 +16,12 @@ import { MatchingScoreEntityEnum } from "../enums/Common.enum";
 // Load helpers
 import { RequestHelper } from "../helpers/request.helper";
 import { paginationResponseHelperObj } from "../helpers/pagination-response.helper";
+import { injectEntityDetailsHelperObj } from "../helpers/injectEntityDetails.helper";
 
 // import models
 import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
 import { DbUserReferralDto } from "../db/models/UserReferral.model";
+import { DbUserDetailDto } from "../db/models/UserDetail.model";
 
 // Load the local schema
 import {
@@ -137,9 +139,24 @@ class UserReferralController {
           ? Object.values(candReferralDetails)
           : candReferralDetails;
 
+      const candReferralsWithEmpDetails: (DbUserReferralDto & {
+        userDetails?: DbUserDetailDto;
+        employeeDetails?: DbUserDetailDto;
+      })[] =
+        await injectEntityDetailsHelperObj.injectEntityWithUserDetails<DbUserReferralDto>(
+          candReferrals,
+          false,
+          true
+        );
+
       // Get unique company IDs from the retrieved referrals
-      const companyIDs: string[] = candReferrals.map(
-        (referral: DbUserReferralDto) => referral.companyId
+      const companyIDs: string[] = candReferralsWithEmpDetails.map(
+        (
+          referral: DbUserReferralDto & {
+            userDetails?: DbUserDetailDto;
+            employeeDetails?: DbUserDetailDto;
+          }
+        ) => referral.companyId
       );
       const uniqueCompanyIDs: string[] = Array.from(new Set(companyIDs));
 
@@ -171,19 +188,26 @@ class UserReferralController {
           {..},{...},....
       ]
       */
-      const finalUserReferral = candReferrals.map((referral: DbUserReferralDto) => {
-        // Find the company details corresponding to the current referral
-        const companyDetails = companyDetailsResults.find(
-          (companyDetail: DbCompanyDetailDto) =>
-            companyDetail.id === referral.companyId
-        );
+      const finalUserReferral = candReferralsWithEmpDetails.map(
+        (
+          referral: DbUserReferralDto & {
+            userDetails?: DbUserDetailDto;
+            employeeDetails?: DbUserDetailDto;
+          }
+        ) => {
+          // Find the company details corresponding to the current referral
+          const companyDetails = companyDetailsResults.find(
+            (companyDetail: DbCompanyDetailDto) =>
+              companyDetail.id === referral.companyId
+          );
 
-        // Return the company name along with referral details
-        return {
-          ...referral,
-          companyName: companyDetails?.name ?? null,
-        };
-      });
+          // Return the company name along with referral details
+          return {
+            ...referral,
+            companyName: companyDetails?.name ?? null,
+          };
+        }
+      );
 
       // Generate the pagination response
       const referralsResponse: RecordListingResponseDTO<any[]> =
@@ -265,47 +289,49 @@ class UserReferralController {
         );
       
       // Destructure the retrieved employee referrals
-      const { lastKey, count, timesQueried, queriedCount, ...employeeReferrals } = empReferralDetails;
-      
-      // Check if any company referrals exist
-      if (!count) {
-        // Generate the pagination response
-        const empReferralsResponse: RecordListingResponseDTO<DbUserReferralDto[]> =
-          paginationResponseHelperObj.customizedPaginationRecordListingResponse<DbUserReferralDto[],ReferralStatusListingFilterOptions>(
-            [],
-            empReferralListingFilterOptions,
-            count,
-            timesQueried,
-            lastKey,
-            queriedCount
-          );
-          
-          // Send employee referrals as response if no company referrals found
-          return res.status(HttpStatusCode.OK_200).json(empReferralsResponse);
-        }
-        
-        // Convert the retrieved employee referrals to an array
-        const empReferrals = (
-          typeof employeeReferrals === "object"
-            ? Object.values(employeeReferrals)
-            : employeeReferrals
-        ) as DbUserReferralDto[];
+      const { lastKey, count, timesQueried, queriedCount, data: empReferrals } = empReferralDetails;
 
-        // Get unique company IDs from the retrieved referrals
-        const uniqueCompanyIDs: string[] = Array.from(
-          new Set(
-            empReferrals.map(
-              (referral: DbUserReferralDto) => referral.companyId
-            )
-          )
+      if (empReferrals.length === 0) {
+        const emptyResponse = paginationResponseHelperObj.customizedPaginationRecordListingResponse<any[], EmpReferralListingFilterOptions>([], empReferralListingFilterOptions, count, timesQueried, lastKey, queriedCount);
+
+        res.status(HttpStatusCode.OK_200).json(emptyResponse);
+      }
+
+      const userReferralWithCandidateDetails: (DbUserReferralDto & {
+        userDetails?: DbUserDetailDto;
+        employeeDetails?: DbUserDetailDto;
+      })[] =
+        await injectEntityDetailsHelperObj.injectEntityWithUserDetails<DbUserReferralDto>(
+          empReferrals,
+          true,
+          false,
         );
+
+      // Get unique company IDs from the retrieved referrals
+      const uniqueCompanyIDs: string[] = Array.from(
+        new Set(
+          userReferralWithCandidateDetails.map(
+            (
+              referral: DbUserReferralDto & {
+                userDetails?: DbUserDetailDto;
+                employeeDetails?: DbUserDetailDto;
+              }
+            ) => referral.companyId
+          )
+        )
+      );
         
       // Fetch company details for each unique company ID
       const companyDetailsResults = await CompanyService.getCompanyDetailsByIds(uniqueCompanyIDs);
   
       // Loop over the retrieved referrals and include the company name in the response
-      const finalUserReferrals = empReferrals.map(
-        (referral: DbUserReferralDto) => {
+      const finalUserReferrals = userReferralWithCandidateDetails.map(
+        (
+          referral: DbUserReferralDto & {
+            userDetails?: DbUserDetailDto;
+            employeeDetails?: DbUserDetailDto;
+          }
+        ) => {
           // Find the company details corresponding to the current referral
           const companyDetails = companyDetailsResults.find(
             (companyDetail) => companyDetail.id === referral.companyId

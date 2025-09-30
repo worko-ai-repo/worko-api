@@ -59,11 +59,11 @@ class UserSkillService {
    * Retrieves user skills by email.
    *
    * @param {string} email - The email address of the user.
-   * @returns {Promise<QueryResponse<Partial<DbUserSkillDto>>> } - A promise that resolves to the query response containing the user's skills data.
+   * @returns {Promise<QueryResponse<DbUserSkillDto>>} - A promise that resolves to the query response containing the user's skills data.
    */
   async getUserSkillsByEmail(
     email: string
-  ): Promise<QueryResponse<Partial<DbUserSkillDto>>>  {
+  ): Promise<QueryResponse<DbUserSkillDto>>  {
     // logger
     global.logger.info("Fetching user Skill by email [UserSkillService]", {
       filePath: __filename,

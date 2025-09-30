@@ -493,8 +493,7 @@ class ScriptService {
     failedUserPksAndSks: ScriptPkAndSkWithCreatedAt[];
   }> {
     const updatedUserPksAndSks: ScriptPkAndSk[] = [];
-    const stillFailedUsers: ScriptPkAndSkWithCreatedAt[] =
-      [];
+    const stillFailedUsers: ScriptPkAndSkWithCreatedAt[] = [];
 
     for (const user of failedUsers) {
       let updateRetries: number = 0;
@@ -553,6 +552,11 @@ class ScriptService {
       updatedUserPksAndSks,
       failedUserPksAndSks: stillFailedUsers,
     };
+  }
+
+  async scriptToSendSmsToUser(): Promise<boolean> {
+    global.logger.info("scriptToSendSmsToUser [service]");
+    return false;
   }
 }
 

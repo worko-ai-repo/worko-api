@@ -15,6 +15,14 @@ class DbUserSkillDto extends BaseDbDto {
       updatedAt: string;
     };
   }[];
+  technicalSkills?: {
+    skillName: string;
+    years: number;
+    timestamps?: {
+      createdAt: string;
+      updatedAt: string;
+    };
+  }[];
   softSkills?: {
     skillName: string;
     timestamps?: {
@@ -40,6 +48,11 @@ const UserSkillSchema = new dynamoose.Schema(
       schema: [Object],
     },
     coreSkills: {
+      type: Array,
+      required: false,
+      schema: [Object],
+    },
+    technicalSkills: {
       type: Array,
       required: false,
       schema: [Object],

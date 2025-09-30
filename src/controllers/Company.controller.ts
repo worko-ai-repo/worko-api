@@ -258,7 +258,7 @@ class CompanyController {
         >(req.query as unknown as CompanyListingFilterRequestDTO);
 
       // Set isVerified to true (1) before passing to the service
-      recordListingFilterRequest.isVerified = 1;
+      // recordListingFilterRequest.isVerified = 1;
 
       // Validate the filter options and throw an error if any of them is invalid
       let { error, value: validatedRecordListingFilterRequest } =

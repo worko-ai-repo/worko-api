@@ -10,6 +10,16 @@ class DbUserSocialProfileDto extends BaseDbDto {
   twitter?: string[];
   github?: string[];
   linkedin?: string[];
+
+  /**
+   * @example
+   * {
+   *   "hackerRank": ["XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"],
+   *   "codeChef": ["XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"],
+   *   "leetCode": ["XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"]
+   * }
+   */
+  otherSocialPlatForms?: Record<string, string[]>;
 }
 
 const UserSocialProfileSchema = new dynamoose.Schema(
@@ -27,6 +37,10 @@ const UserSocialProfileSchema = new dynamoose.Schema(
       type: Array, // Updated to an array of strings
       required: true,
     },
+    otherSocialPlatForms: {
+      type: Object, // Updated to an object
+      required: false,
+    },
     // Add other user-specific attributes here
   },
   {
@@ -41,4 +55,4 @@ const UserSocialProfileModel = dynamoose.model<DbUserSocialProfileDto>(
 );
 
 // Export the UserSocialProfileModel
-export { UserSocialProfileModel };
+export { UserSocialProfileModel, DbUserSocialProfileDto };

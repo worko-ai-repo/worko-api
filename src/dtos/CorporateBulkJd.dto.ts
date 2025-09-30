@@ -14,6 +14,10 @@ export interface CorporateBulkJdCreateApiDto {
   mustHaveSkills?: string[];
   mustNotHaveSkills?: string[];
   goodToHaveSkills?: string[];
+  coreSkills?: string[];
+  softSkills?: string[];
+  technicalSkills?: string[];
+  industryPreferences?: string[];
   experienceRange?: MinMaxRange;
 }
 

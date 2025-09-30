@@ -7,11 +7,8 @@ import CorporateUserController from '../controllers/CorporateUser.controller';
 // Create the instance of CorporateController
 const corporateUserController = new CorporateUserController();
 
-// Create a new mountavble router for the Corporate APIs
+// Create a new mountable router for the Corporate APIs
 const CorporateUserRouter = Router(); 
-
-// Import Middlewares
-import { validateCorporateUserRequest } from '../middlewares/validate-corporate-request.middleware';
   
 /**
  * Register a new Corporate User
@@ -25,28 +22,28 @@ CorporateUserRouter.post('/', corporateUserController.createCorpUser);
  * 
  * @authorisedRoles ["admin","corporate-admin", "corporate-recruiter"]
  */
-CorporateUserRouter.put('/:id',validateCorporateUserRequest, corporateUserController.updateCorpUserById);
+CorporateUserRouter.put('/:id', corporateUserController.updateCorpUserById);
 
 /**
  * Soft Delete Corporate User
  * 
  * @authorisedRoles ["admin","corporate-admin","corporate-recruiter"]
  */
-CorporateUserRouter.patch('/:id/delete',validateCorporateUserRequest, corporateUserController.deleteCorpUserById);
+CorporateUserRouter.patch('/:id/delete', corporateUserController.deleteCorpUserById);
 
 /**
  * Get All Corporate Users
  * 
  * @authorisedRoles ["admin","corporate-admin"]
  */
-CorporateUserRouter.get('/',validateCorporateUserRequest, corporateUserController.getAllCorpUsers);
+CorporateUserRouter.get('/', corporateUserController.getAllCorpUsers);
  
 /**
  * Get Corporate User Details By Id
  * 
  * @authorisedRoles ["admin","corporate-admin"]
  */
-CorporateUserRouter.get('/:id',validateCorporateUserRequest, corporateUserController.getCorpUserById);
+CorporateUserRouter.get('/:id', corporateUserController.getCorpUserById);
 
 /**
  * Get Corporate User Details By Id 

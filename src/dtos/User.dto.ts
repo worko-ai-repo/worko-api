@@ -155,57 +155,48 @@ export interface UserDetailSettingCreateApiDTO {
   subscribedEmailId?: string;
 }
 
-/**
- * UserGuidanceRequestCreateApiDTO
- */
-export interface UserGuidanceRequestCreateApiDTO {
-  /**
-   * guidanceRequestType
-   */
-  guidanceRequestType: UserGuidanceRequestTypeEnum;
-
-  /**
-   * guidanceDeadlineDate
-   *
-   * @description By when you need the guidance
-   * @example `2025-01-27T11:26:06.458Z` 
-   */
-  guidanceRequestDeadline: string;
-
-  /**
-   * companyName
-   *
-   * @description Any company name is allowed
-   */
-  companyName: string;
-
-  /**
-   * companyId
-   * 
-   * @description If user selects Internal Company, then this field is required
-   */
+export interface UserDetailDbResponsibilitiesDto {
   companyId?: string;
+  companyName?: string;
+  date?: {
+    startDate: string; // "2025-03-20T16:02:34.277Z"
+    endDate?: string;
+  };
+  description: string;
+};
 
+export interface UserParseCvRequestApiDto {
   /**
-   * jobUrl
+   * S3 Resume Id
+   * 
+   * After uploading resume to s3, it will return the s3 resume id 
+   * and this id will be used to parse the resume
    *
-   * @description Any job url allowed
+   * @example "01JW1CW2XX2N4THW5376VDX6EB.pdf"
    */
-  jobUrl: string;
+  s3ResumeId: string;
+}
+
+export interface UserParseCvResponseDto {
+  coreSkills?: {
+    skillName: string;
+    /**
+     * If years is not present then it will be stored as 0 and frontend should not show this years of experience for this skill
+     */
+    years: number;
+    timestamps?: {
+      createdAt: string;
+      updatedAt: string;
+    };
+  }[];
 
   /**
-   * guidanceRequestDescription
+   * If YOE is not present then it will be stored as 0 and frontend will show it as 0 and user can increase it
    */
-  guidanceRequestDescription: string;
-}
+  YOE: number;
 
-export interface UserGuidanceRequestFilterOptions extends RecordListingFilterOptions {
-  email?: string;
-  guidanceRequestType?: UserGuidanceRequestTypeEnum;
-  companyName?: string;
-}
-export interface UserGuidanceRequestFilterRequestDTO extends RecordListingFilterRequestDTO {
-  email?: string;
-  guidanceRequestType?: UserGuidanceRequestTypeEnum;
-  companyName?: string;
+  /**
+   * If not present then store it as empty array, ex:- []
+   */
+  userPreferredDepartments: string[];
 }

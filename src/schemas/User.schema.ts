@@ -286,3 +286,11 @@ export const userGuidanceRequestFilterDtoValidation = commonSchema.concat(
       }),
   })
 );
+
+export const userParseCvRequestApiDTOValidation = Joi.object({
+  s3ResumeId: Joi.string().required().messages({
+    "any.required": "The s3ResumeId field is required.",
+    "string.empty": "The s3ResumeId field cannot be empty.",
+    "any.type": "The s3ResumeId field must be a string.",
+  }),
+});

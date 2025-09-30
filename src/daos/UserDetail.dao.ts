@@ -16,13 +16,12 @@ import {
   NewUserEmpSignUpDTO,
   UserSubscriptionDetailsUpdateDto,
 } from "../dtos/User.dto";
-import { UserDetailDTO } from "../dtos/UserDetail.dto";
+import { UserDetailCommonUpdateDto, UserDetailDTO } from "../dtos/UserDetail.dto";
 import { UsersListingFilterOptions } from "../admin/dtos/User.dto";
 import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 
 // import enums
 import { SortOrderTypeEnum } from ".././enums/Common.enum";
-import { UserType } from "../enums/User.enum";
 
 // Load helpers
 import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.helper";
@@ -211,7 +210,9 @@ class UserDetailDao implements BaseDao {
    * @returns {Promise<QueryResponse<DbUserDetailDto>>} A promise that resolves with the query response containing the user's details.
    */
   async get(email: string): Promise<QueryResponse<DbUserDetailDto>> {
-    global.logger.info("Get user detail by email [DAO]");
+    global.logger.info("Get user detail by email [DAO]", {
+      email,
+    });
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
@@ -274,7 +275,7 @@ class UserDetailDao implements BaseDao {
       .eq(GSI1SK)
       .attributes([
         "PK",
-        "candidateExperience",
+        "multipleCandidateExperience",
         "isCandidateFresher",
         "department",
         "country",
@@ -286,6 +287,7 @@ class UserDetailDao implements BaseDao {
         "userType",
         "cvExtract",
         "cvExtractParsed",
+        "isNoticePeriodNegotiable",
       ])
       .exec();
   }
@@ -389,6 +391,12 @@ class UserDetailDao implements BaseDao {
     return UserDetailModel.update({ PK: PK, SK: SK }, userDetailDTO);
   }
 
+  async updateUserDetail(email: string, id: string, updateData: Partial<UserDetailCommonUpdateDto>): Promise<DbUserDetailDto> {
+    global.logger.info("Update user Detail [DAO]", { email, id, updateData });
+    const {PK, SK} = this.preparePKAndSKForQuery(email, id);
+    return UserDetailModel.update({ PK: PK, SK: SK }, updateData);
+  }
+
   /**
    *
    * @param email
@@ -412,12 +420,12 @@ class UserDetailDao implements BaseDao {
    * @param resume
    * @returns
    */
-  async updateCv(SK: String, email: string, resume: string) {
+  async updateCv(SK: String, email: string, resume: string, userCvFileName?: string, isCvExtracted?: boolean) {
     global.logger.info("Update user resume [DAO]");
     const PK = this.partitianKey.strtr({
       "{primaryEmail}": email,
     });
-    return UserDetailModel.update({ PK: PK, SK: SK }, { CV: resume });
+    return UserDetailModel.update({ PK: PK, SK: SK }, { CV: resume, userCvFileName, isCvExtracted });
   }
 
   /**

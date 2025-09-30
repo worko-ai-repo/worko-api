@@ -586,3 +586,48 @@ PostConfirmation failed with error User: arn:aws:sts::211125353899:assumed-role/
 ```sh
 [Container] 2025/07/31 08:04:22.581249 Command failed with exit status 232
 ```
+
+26. 
+```json
+{
+  "$fault": "client",
+  "$metadata": {
+    "attempts": 1,
+    "httpStatusCode": 403,
+    "requestId": "c5668d78-eb74-5d00-a106-ec5854deb164",
+    "totalRetryDelay": 0
+  },
+  "Error": {
+    "Code": "AuthorizationError",
+    "Message": "User: arn:aws:sts::211125353899:assumed-role/worko-api-dev-ap-south-1-lambdaRole/worko-api-dev-app is not authorized to perform: SNS:Publish on resource: +919666308100 because no identity-based policy allows the SNS:Publish action",
+    "Type": "Sender",
+    "message": "User: arn:aws:sts::211125353899:assumed-role/worko-api-dev-ap-south-1-lambdaRole/worko-api-dev-app is not authorized to perform: SNS:Publish on resource: +919666308100 because no identity-based policy allows the SNS:Publish action"
+  },
+  "RequestId": "c5668d78-eb74-5d00-a106-ec5854deb164",
+  "name": "AuthorizationErrorException",
+  "xmlns": "http://sns.amazonaws.com/doc/2010-03-31/"
+}
+
+```
+
+27. 
+```json
+// when i try to confirm the user which is already confirmed in cognito
+{
+    "error": {
+        "$fault": "client",
+        "$metadata": {
+            "attempts": 1,
+            "httpStatusCode": 400,
+            "requestId": "2cdb790a-7165-40f5-bf09-5b184fb95411",
+            "totalRetryDelay": 0
+        },
+        "__type": "NotAuthorizedException",
+        "name": "NotAuthorizedException"
+    },
+    "filePath": "/var/task/dist/src/app.js",
+    "level": "warn",
+    "message": "Error caught in cognito-idp-action. [Library]",
+    "methodName": "confirmCognitoUserSignup"
+}
+```

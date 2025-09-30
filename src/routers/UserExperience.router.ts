@@ -38,4 +38,11 @@ UserExperienceRouter.get("/:primaryEmail/experience/:id/request-otp", userExperi
  */
 UserExperienceRouter.post("/:primaryEmail/experience/:id/verify-otp", userExperienceController.verifyWorkEmail)
 
+/**
+ * Update the user Detail details based on the provided query parameter
+ * 
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserExperienceRouter.patch("/:email/experience", userExperienceController.updateUserExperienceByEmail);
+
 export default UserExperienceRouter;

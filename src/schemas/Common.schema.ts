@@ -1,6 +1,9 @@
 // import the necessary npm packages
 import Joi from "joi";
 
+// Import date related npm packages
+import { DateTime } from "luxon";
+
 // import the enums
 import { SortOrderTypeEnum } from "../enums/Common.enum";
 
@@ -141,3 +144,30 @@ export const anyTypeToArray = Joi
       )
   )
   .default([]); // If the user provides neither a string nor an array, return an empty array
+
+export const validateOptionalFutureDate = Joi.string()
+  .isoDate() // Ensures the string is in ISO 8601 date format
+  .optional()
+  .custom((value, helpers) => {
+    const inputDate: DateTime<true> | DateTime<false> = DateTime.fromISO(
+      value,
+      { zone: "utc" }
+    );
+    const today: DateTime<true> = DateTime.utc().startOf("day"); // Get today's date (00:00:00 UTC)
+
+    if (!inputDate.isValid) {
+      return helpers.error("string.isoDate");
+    }
+
+    if (inputDate < today) {
+      return helpers.error("date.min", { min: today.toISO() });
+    }
+
+    return value;
+  })
+  .messages({
+    "string.isoDate":
+      "Please provide a valid ISO 8601 date (e.g., 2025-01-27T11:26:06.458Z).",
+    "date.min":
+      "The date field must be today or a future date.",
+  });

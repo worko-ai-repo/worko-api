@@ -69,4 +69,6 @@ ScriptRouter.post("/update-registered-user-gsi-two", scriptController.scripToUpd
 // Endpoint to retry update registered user gsi two
 ScriptRouter.post("/retry-update-registered-user-gsi-two", scriptController.scripToRetryUpdateRegisteredUserGsiTwo);
 
+ScriptRouter.post("/send-sms-to-user", scriptController.scriptToSendSmsToUser);
+
 export default ScriptRouter;

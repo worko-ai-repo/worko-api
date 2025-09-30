@@ -1,3 +1,7 @@
+
+// Import dtos
+import { EmailTemplatePlaceholderSOCIAL_PROFILE_DETAILS } from "../dtos/EmailTemplatePlaceholder.dto";
+
 /**
  * APP_CONSTANTS
  *
@@ -107,6 +111,13 @@ const APP_CONSTANTS = {
      * AWS Lambada Configurations related to triggering "Job Description Parser"
      */
     JOB_DESCRIPTION_PARSER_LAMBDA_NAME: "worko-job-description-parser",
+
+    /**
+     * WORKO_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME
+     * 
+     * Whenever user click on upload cv then we will do partial fetching data from `cv` and till user fills details, we will deeply fetch the data from cv and store in db on background
+     */
+    WORKO_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME: process.env.APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME,
   },
 
   MATCHING_SCORE_PROMPT:
@@ -153,12 +164,21 @@ const APP_CONSTANTS = {
   },
 
   FRONTEND_URLS: {
-    SUBS_PREMIUM_RENEW: "https://worko.ai/", // Previously "https://app.worko.ai/",
-    SUBS_PREMIUM_UPGRADE: "https://worko.ai/", // Previously "https://app.worko.ai/",
-    CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/auth/corporate/login`,
-    CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/auth/corporate/signup/{token}`,
+    WORKO_APP_URL: process.env.APP_WORKO_FRONTEND_BASE_URL ?? "https://worko.ai", 
+    SUBS_PREMIUM_RENEW: "https://worko.ai/", 
+    SUBS_PREMIUM_UPGRADE: "https://worko.ai/", 
+    CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/login`,
+    CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/signup/{token}`,
     WORKO_LOGO_URL:
       "https://worko.ai/wp-content/uploads/2023/06/footer-logo.png",
+
+    /**
+     * WORKO_SIGNUP_URL
+     *
+     * @description This is the candidate or employee signup url.
+     */
+    WORKO_SIGNUP_URL: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/signup`,
+    WORKO_EMP_REFERRAL_LISTING_URL: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/employee/referral`,
   },
 
   FRONTEND_ORIGINS: {
@@ -176,6 +196,16 @@ const APP_CONSTANTS = {
   },
 
   /**
+   * SMS_MESSAGE_CONTENT
+   */
+  SMS_MESSAGE_CONTENT: {
+    USER_PHONE_NUMBER_VERIFY: {
+      SENDER: `WORKO`,
+      MESSAGE: `{otp} is the OTP to verify your mobile number on Worko and continue exploring career opportunities.`,
+    },
+  },
+
+  /**
    * COGNITO_READABLE_GROUPS
    *
    * This is the readable groups of the cognito user
@@ -185,6 +215,7 @@ const APP_CONSTANTS = {
     WORKO_ADMIN: "Admin",
     CORPORATE_ADMIN: "Corporate Admin",
     CORPORATE_RECRUITER: "Corporate Recruiter",
+    EVALUATOR: "Evaluator",
   },
 
   SCHEDULE_JOB: {
@@ -224,7 +255,7 @@ const APP_CONSTANTS = {
    */
   get REFERRAL_REVIEW_ACCEPTANCE_STATUS_AFTER_X_HOURS(): number {
     const PROD_HOURS = 7 * 24; // 7 days converted to hours
-    const DEV_HOURS = 45 / 60; // 45 minutes converted to hours
+    const DEV_HOURS = 365 * 24; // 1 year converted to hours
     // return the time based on the environment
     return this.APP_SLS_STAGE === this.STAGES.PROD
       ? PROD_HOURS
@@ -271,7 +302,7 @@ const APP_CONSTANTS = {
    */
   get CORPORATE_USER_INVITE_DATE_EXPIRATION(): number {
     const PROD_DAYS = 15; // 15 days
-    const DEV_DAYS = 15; // 15 days
+    const DEV_DAYS =  15; // 15 year  
 
     // return the time based on the environment
     return this.APP_SLS_STAGE === this.STAGES.PROD
@@ -289,10 +320,46 @@ const APP_CONSTANTS = {
     ADMIN: "admin",
     CORPORATE_ADMIN: "corporate-admin",
     CORPORATE_RECRUITER: "corporate-recruiter",
+    EVALUATOR: "evaluator",
   },
 
   // Worko App Domain
   WORKO_APP_DOMAIN: "www.worko.ai.",
+
+  WORKO_SOCIAL_PROFILE_DETAILS: {
+    INSTAGRAM: {
+      URL: process.env.APP_WORKO_SOCIAL_PROFILE_INSTAGRAM_URL,
+      LOGO_URL: process.env.APP_WORKO_SOCIAL_PROFILE_INSTAGRAM_LOGO_URL,
+    },
+    LINKEDIN: {
+      URL: process.env.APP_WORKO_SOCIAL_PROFILE_LINKEDIN_URL,
+      LOGO_URL: process.env.APP_WORKO_SOCIAL_PROFILE_LINKEDIN_LOGO_URL,
+    },
+  },
+
+  get GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL(): EmailTemplatePlaceholderSOCIAL_PROFILE_DETAILS {
+    const { INSTAGRAM, LINKEDIN } = this.WORKO_SOCIAL_PROFILE_DETAILS;
+    const { LOGO_URL: instagramLogoUrl, URL: instagramUrl } = INSTAGRAM;
+    const { LOGO_URL: linkedInLogoUrl, URL: linkedInUrl } = LINKEDIN;
+
+    const socialProfielForEmails: EmailTemplatePlaceholderSOCIAL_PROFILE_DETAILS =
+      {
+        workoLogoUrl:
+          this.WORKO_LOGO_URL ??
+          "https://worko.ai/assets/logo-text-Dfe5k43I.webp",
+        instagramUrl: instagramUrl ?? "https://instagram.com/worko_ai",
+        instagramLogoUrl:
+          instagramLogoUrl ??
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/2048px-Instagram_icon.png",
+        linkedInUrl: linkedInUrl ?? "https://www.linkedin.com/company/worko",
+        linkedInLogoUrl:
+          linkedInLogoUrl ??
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/LinkedIn_logo_initials.png/600px-LinkedIn_logo_initials.png",
+      };
+    return socialProfielForEmails
+  },
+
+  WORKO_LOGO_URL: process.env.APP_WORKO_LOGO_URL,
 };
 
 export default APP_CONSTANTS;

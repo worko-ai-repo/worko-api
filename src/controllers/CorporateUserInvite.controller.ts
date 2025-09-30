@@ -1,9 +1,6 @@
 // Import npm packages
 import { Request, Response, NextFunction } from "express";
 
-// Import ulidx
-import { uuidToULID } from "ulidx";
-
 // Import luxon for date formatting
 import { DateTime } from "luxon";
 
@@ -16,8 +13,8 @@ import {
     CorporateUserInviteCreateDto,
     CorporateUserInviteLisitngFilterOptions,
     CorporateUserInviteLisitngFilterOptionsDTO,
+    CorporateUserInviteSoftDeleteApiDto,
     CorporateUserInviteUpdateApiDto,
-    CorporateUserInviteUpdateDto,
 } from "../dtos/CorporateUserInvite.dto";
 import { PaginatedResultsWithMatchingConditionsInternalResponse, RecordListingResponseDTO } from "../dtos/Common.dto";
 
@@ -27,15 +24,19 @@ import { CorpInviteStatusEnum } from "../enums/CorporateUserInvite.enum";
 // Import Helpers
 import { RequestHelper } from "../helpers/request.helper";
 import { paginationResponseHelperObj } from "../helpers/pagination-response.helper";
+import { getActionByUserId } from "../helpers/user.helper";
+import { dateHelperObj } from "../helpers/date.helper";
 
 // Import models
 import { DbCorporateUserInviteDto } from "../db/models/CorporateUserInvite.model";
 import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
+import { DbCorporateUserDto } from "../db/models/CorporateUser.model";
 
 // Import schemas
 import {
     CorporateInviteListingFilterOptionValidation,
     CorporateUserInviteCreateApiDtoValidation,
+    corporateUserInviteSoftDeleteApiDtoValidation,
     CorporateUserInviteUpdateApiDtoValidation
 } from "../schemas/CorporateUserInvite.schema";
 
@@ -43,7 +44,7 @@ import {
 import { corporateUserInviteServiceObj } from "../services/CorporateUserInvite.service";
 
 // Import Utils
-import { RequestValidationError } from "../utils/errors.util";
+import { BaseError, RequestValidationError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
 
 /**
@@ -84,42 +85,49 @@ class CorporateUserInviteController {
                 throw new RequestValidationError(error);
             }
 
-            // Extract the cognito User Id and cognito User Groups
-            const cognitoUserId: string = global.requestLocalContext.userId;
-            const cognitoUserGroups: string[] = global.requestLocalContext.cognitoUserGroups;
+            const {actionByUserId, actionByCorporateUserId}= getActionByUserId();
 
-            // Initialize the variables
-            let createdByUserId: string | undefined;
-            let createdByCorporateUserId: string | undefined;
-
-            // If the user is a corporate user then set the `createdByCorporateUserId` else set the `createdByUserId`
-            if (
-                cognitoUserGroups.includes(
-                    APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.CORPORATE_ADMIN
-                ) || 
-                cognitoUserGroups.includes(
-                    APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.CORPORATE_RECRUITER
-                )
-            ) {
-                createdByCorporateUserId = uuidToULID(cognitoUserId);
-                global.logger.info(`User is a 'corporate recruiter/admin' with ID: ${createdByCorporateUserId}. [controller]`)
+            /**
+             * Whenever worko-admin creates a invite then few more fields are required in the request body
+             */
+            if(actionByUserId) {
+                const {pricingPlan, cvDuplicacyAccess} = requestBody;
+                if(!pricingPlan || cvDuplicacyAccess === undefined) {
+                    global.logger.error(`Missing required fields in the request body. [controller]`, {
+                        pricingPlan,
+                        cvDuplicacyAccess,
+                    })
+                    throw new BaseError("Missing required fields in the request body", HttpStatusCode.BAD_REQUEST_400);
+                }
+            } else if(actionByCorporateUserId) {
+                /**
+                 * Whenever corporate admin creates a invite then few fields are not required in the request body
+                 */
+                const {pricingPlan, cvDuplicacyAccess} = requestBody;
+                if(pricingPlan || cvDuplicacyAccess !== undefined) {
+                    global.logger.error(`Invalid fields in the request body. [controller]`, {
+                        pricingPlan,
+                        cvDuplicacyAccess,
+                    })
+                    throw new BaseError("Invalid fields in the request body", HttpStatusCode.BAD_REQUEST_400);
+                }
             } else {
-                createdByUserId = cognitoUserId;
-                global.logger.info(`User is a 'worko admin' with ID: ${createdByUserId}. [controller]`)
+                global.logger.error(`Invalid user type. [controller]`, {
+                    actionByUserId,
+                    actionByCorporateUserId,
+                })
+                throw new BaseError("Invalid user type", HttpStatusCode.BAD_REQUEST_400);
             }
 
-            // Preapre the response object
             const corporateUserInviteCreateDto: CorporateUserInviteCreateDto = {
               ...corporateUserInviteCreateApiDto,
               inviteStatus: CorpInviteStatusEnum.AWAITING,
-              createdByUserId: createdByUserId,
-              createdByCorporateUserId: createdByCorporateUserId,
-              expiresAt: DateTime.now()
-                .plus({
-                  days: APP_CONSTANTS.CORPORATE_USER_INVITE_DATE_EXPIRATION,
-                })
-                .setZone(APP_CONSTANTS.APP_DEFAULT_TIMEZONE)
-                .toMillis(),
+              createdByUserId: actionByUserId,
+              createdByCorporateUserId: actionByCorporateUserId,
+              expiresAt: dateHelperObj.getFutureDateWithTimezone(
+                APP_CONSTANTS.CORPORATE_USER_INVITE_DATE_EXPIRATION,
+                APP_CONSTANTS.APP_DEFAULT_TIMEZONE,
+              )
             };
 
             // Pass the validated request body to the service
@@ -176,24 +184,43 @@ class CorporateUserInviteController {
             }
 
             // Call the service to fetch all jobs [Service Call]
-            const corpUserInvitesList: PaginatedResultsWithMatchingConditionsInternalResponse<(DbCorporateUserInviteDto & {
-                companyDetails: DbCompanyDetailDto | undefined;
-            })[]> = await corporateUserInviteServiceObj.getAllInvitesWithCompanyDetails(corpInviteFilterOptions);
+            const corpUserInvitesList: PaginatedResultsWithMatchingConditionsInternalResponse<
+              (DbCorporateUserInviteDto & {
+                companyDetails?: DbCompanyDetailDto;
+              } & {
+                corporateUserDetails?: DbCorporateUserDto;
+              })[]
+            > =
+              await corporateUserInviteServiceObj.getAllInvitesWithCompanyDetails(
+                corpInviteFilterOptions
+              );
 
             // Extract the count, timesQueried,lastKey and other details from the response
             const { lastKey, count, timesQueried, queriedCount, data: corporateUserInviteData } = corpUserInvitesList;
 
             // Generate the pagination response
             const corporateInviteResponse: RecordListingResponseDTO<
-            (DbCorporateUserInviteDto & { companyDetails: DbCompanyDetailDto | undefined })[]> =
-            paginationResponseHelperObj.customizedPaginationRecordListingResponse<(DbCorporateUserInviteDto & { companyDetails: DbCompanyDetailDto | undefined })[],CorporateUserInviteLisitngFilterOptions>(
+              (DbCorporateUserInviteDto & {
+                companyDetails?: DbCompanyDetailDto;
+              } & {
+                corporateUserDetails?: DbCorporateUserDto;
+              })[]
+            > =
+              paginationResponseHelperObj.customizedPaginationRecordListingResponse<
+                (DbCorporateUserInviteDto & {
+                  companyDetails?: DbCompanyDetailDto;
+                } & {
+                  corporateUserDetails?: DbCorporateUserDto;
+                })[],
+                CorporateUserInviteLisitngFilterOptions
+              >(
                 corporateUserInviteData,
                 corpInviteListingFilterRequest,
                 count,
                 timesQueried,
                 lastKey,
                 queriedCount
-            );  
+              );  
 
             // Send the response
             return res.status(HttpStatusCode.OK_200).json(corporateInviteResponse);
@@ -245,21 +272,12 @@ class CorporateUserInviteController {
      * @param {Request} req - The request object.
      * @param {Response} res - The response object.
      * @param {NextFunction} next - The next function.
-     * 
-     * @see {CorporateUserInviteUpdateApiDto}  - The DTO used to validate the request body.
      */
     updateInviteById = async (req: Request, res: Response, next: NextFunction) => {
-        global.logger.info("Processing request to update Corporate Invite by ID. [controller]", {
-            filePath: __filename,
-            methodName: this.updateInviteById.name,
-        });
-
         try {
-            // Get the user ID from the request
-            const cognitoUserId: string = global.requestLocalContext.userId;
-
-            // Get the user groups from the request
-            const cognitoUserGroups: string[] = global.requestLocalContext.cognitoUserGroups;
+            global.logger.info("Processing request to update Corporate Invite by ID. [controller]", {
+                methodName: this.updateInviteById.name,
+            });
 
             // Get the ID from the request
             const inviteId: string = req.params.id;
@@ -268,43 +286,20 @@ class CorporateUserInviteController {
             const requestBody: CorporateUserInviteUpdateApiDto = req.body;
 
             // validate the request body and Throw an Error if Invalid
-            const { error, value: corporateUserInviteValidatedApiDto } = CorporateUserInviteUpdateApiDtoValidation.validate(requestBody, { abortEarly: false });
+            const { error, value: validatedRequestBody } = CorporateUserInviteUpdateApiDtoValidation.validate(requestBody, { abortEarly: false });
             if (error) {
                 throw new RequestValidationError(error);
             }
 
-            // Initialize the variables
-            let updatedByUserId: string | undefined;
-            let updatedByCorporateUserId: string | undefined;
-
-            // If the user is a corporate user then set the `updatedByCorporateUserId` else set the `updatedByUserId`
-            if (
-                cognitoUserGroups.includes(
-                    APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.CORPORATE_ADMIN
-                ) || 
-                cognitoUserGroups.includes(
-                    APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.CORPORATE_RECRUITER
-                )
-            ) {
-                updatedByCorporateUserId = uuidToULID(cognitoUserId);
-                global.logger.info(`User is a 'corporate recruiter/admin' with ID: ${updatedByCorporateUserId}. [controller]`)
-            } else {
-                updatedByUserId = cognitoUserId;
-                global.logger.info(`User is a 'worko admin' with ID: ${updatedByUserId}. [controller]`)
-            }
-
-            // Prepare the corporate invite update dto
-            const corporateUserInviteValidatedDto: Partial<CorporateUserInviteUpdateDto> = {
-                ...requestBody,
-                updatedByUserId: updatedByUserId,
-                updatedByCorporateUserId: updatedByCorporateUserId,
-            };
+            const {actionByUserId, actionByCorporateUserId} = getActionByUserId();
 
             // Call the service to update the corporate invite by its ID
             const updatedInviteDetails: DbCorporateUserInviteDto =
               await corporateUserInviteServiceObj.updateInviteById(
                 inviteId,
-                corporateUserInviteValidatedDto
+                validatedRequestBody,
+                actionByUserId,
+                actionByCorporateUserId,
               );
 
             // Send the response with updated Invite Details
@@ -330,47 +325,37 @@ class CorporateUserInviteController {
         });
 
         try {
-          // Get the user ID from the request
-          const cognitoUserId = global.requestLocalContext.userId;
+          // Get the request body
+          const requestBody: CorporateUserInviteSoftDeleteApiDto = req.body;
 
-          // Get the user groups from the request
-          const cognitoUserGroups = global.requestLocalContext.cognitoUserGroups;
+          // validate the request body and Throw an Error if Invalid
+          const { error } = corporateUserInviteSoftDeleteApiDtoValidation.validate(
+            requestBody,
+            { abortEarly: false }
+          );
+          if (error) {
+            throw new RequestValidationError(error);
+          }
 
           // Get the ID from the request and throw an error if it is not provided
           const inviteId: string = req.params.id;
 
-          // Initialize the variables
-          let deletedByUserId: string | undefined;
-          let deletedByCorporateUserId: string | undefined;
-
-          // If the user is a corporate user then set the `updatedByCorporateUserId` else set the `updatedByUserId`
-          if (
-            cognitoUserGroups.includes(
-              APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.CORPORATE_ADMIN
-            ) ||
-            cognitoUserGroups.includes(
-              APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.CORPORATE_RECRUITER
-            )
-          ) {
-            deletedByCorporateUserId = uuidToULID(cognitoUserId);
-            global.logger.info(
-              `User is a 'corporate recruiter/admin' with ID: ${deletedByCorporateUserId}. [controller]`
-            );
-          } else {
-            deletedByUserId = cognitoUserId;
-            global.logger.info(
-              `User is a 'worko admin' with ID: ${deletedByUserId}. [controller]`
-            );
-          }
+          const {actionByUserId, actionByCorporateUserId} = getActionByUserId();
 
           // Call the service to delete the corporate invite by its ID
           await corporateUserInviteServiceObj.softDeleteInvite(
             inviteId,
-            deletedByUserId,
-            deletedByCorporateUserId
+            requestBody,
+            actionByUserId,
+            actionByCorporateUserId,
           );
 
-          // Send the response
+          /**
+           * @todo In this soft delete api we are not directly removing the invite from the DB,
+           * we are just updating "isDeleted" field to true and invite status as "DELETED",
+           * So this response with status code NO_CONTENT_204 may not be appropriate and we are 
+           * not updating the status code because frontend is already integrated this api.
+           */
           return res.status(HttpStatusCode.NO_CONTENT_204).send();
         } catch (error) {
             next(error);

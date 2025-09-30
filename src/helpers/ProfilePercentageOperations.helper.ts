@@ -5,9 +5,6 @@ import {
   UserProfilePercentageDTO,
 } from "../dtos/UserProfilePercentage.dto";
 
-// import enums
-import { UserType } from "../enums/User.enum";
-
 // import helpers
 import { isFalsyOrEmpty } from "./common.helper";
 

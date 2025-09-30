@@ -4,6 +4,13 @@ import * as dynamoose from "dynamoose";
 // Load the constants
 import { DB_CONSTANTS } from "../DB.constants";
 
+// Load the local DTOs
+import { UserDetailDbResponsibilitiesDto } from "../../dtos/User.dto";
+import { UserDetailDbCandidateExperienceDto } from "../../dtos/UserDetail.dto";
+
+// Import enums
+import { UserDetailDbGenderEnum } from "../../enums/User.enum";
+
 // Load the local base model functionalities
 import { BaseDbDto } from "./Base.model";
 
@@ -16,9 +23,10 @@ class DbUserDetailDto extends BaseDbDto {
   id!: string; // Cognito Provided UserId for registered user
   GSI1PK!: string;
   GSI1SK!: string;
-  GSI2PK!: string; 
-  GSI2SK!: string; 
+  GSI2PK!: string;
+  GSI2SK!: string;
   name!: string;
+  gender?: UserDetailDbGenderEnum;
   emailList!: { [key: string]: string }; // @todo we should consider removing this. And make the fields are always upto date. Instead use the "UserEmail" SK.
   number!: string;
   userType!: string[];
@@ -32,8 +40,10 @@ class DbUserDetailDto extends BaseDbDto {
   CTC?: number;
   ECTC?: number;
   noticePeriod?: number;
+  isNoticePeriodNegotiable?: boolean;
   YOE?: number;
   CV?: string; // The uploaded cv file name.
+  userCvFileName?: string; // Name of the uploaded CV file.
   cvExtract?: string; // The extracted plain texts.
 
   /* 
@@ -77,6 +87,15 @@ class DbUserDetailDto extends BaseDbDto {
     ]
   }, */
   cvExtractParsed?: object;
+  cvExtractParsedDate?: string;
+
+  /**
+   * Whenever candidate uploads `CV` then nodejs api
+   * will trigger the `resume-parser` lambda function
+   * to extract and store the details from the uploaded CV
+   * and once the data is extracted then this field will be set to true
+   */
+  isCvExtracted?: boolean;
 
   coverLetter?: string;
   lastAccessedDash!: string;
@@ -85,12 +104,10 @@ class DbUserDetailDto extends BaseDbDto {
   companyEmailId?: string; // Current company email id of the user(mostly for employee)
   department?: string; // Department of the user in the company for which he is currently working(mostly for employee)
   isCandidateFresher?: boolean;
-  candidateExperience?: {
-    companyId?: string;
-    companyName: string;
-    designation: string;
-    department: string;
-  };
+  candidateExperience?: UserDetailDbCandidateExperienceDto;
+  multipleCandidateExperience?: UserDetailDbCandidateExperienceDto[];
+  multipleCandidateExperiencedDate?: string;
+  responsibilities?: UserDetailDbResponsibilitiesDto[];
   isWhatsappNotificationEnabled?: boolean;
 }
 
@@ -128,7 +145,7 @@ const UserDetailSchema = new dynamoose.Schema(
         type: "global",
         rangeKey: "GSI2SK",
       },
-      required: true, 
+      required: true,
     },
     GSI2SK: {
       type: String,
@@ -136,11 +153,15 @@ const UserDetailSchema = new dynamoose.Schema(
         name: "GSI2",
         type: "global",
       },
-      required: true, 
+      required: true,
     },
     name: {
       type: String,
       required: true,
+    },
+    gender: {
+      type: String,
+      required: false,
     },
     emailList: {
       type: Object,
@@ -195,6 +216,10 @@ const UserDetailSchema = new dynamoose.Schema(
       type: Number,
       required: false,
     },
+    isNoticePeriodNegotiable: {
+      type: Boolean,
+      required: false,
+    },
     YOE: {
       type: Number,
       required: false,
@@ -203,12 +228,24 @@ const UserDetailSchema = new dynamoose.Schema(
       type: String,
       required: false,
     },
+    userCvFileName: {
+      type: String,
+      required: false,
+    },
     cvExtract: {
       type: String,
-      required: false
+      required: false,
     },
     cvExtractParsed: {
       type: Object,
+      required: false,
+    },
+    cvExtractParsedDate: {
+      type: String,
+      required: false,
+    },
+    isCvExtracted: {
+      type: Boolean,
       required: false,
     },
     coverLetter: {
@@ -258,14 +295,75 @@ const UserDetailSchema = new dynamoose.Schema(
           type: String,
           required: true,
         },
+        YOE: {
+          type: Number,
+          required: false,
+        },
+        startDate: {
+          type: String,
+          required: false,
+        },
+        endDate: {
+          type: String,
+          required: false,
+        },
       },
+      required: false,
+    },
+    multipleCandidateExperiencedDate: {
+      type: String,
+      required: false,
+    },
+    multipleCandidateExperience: {
+      type: Array,
+      schema: [
+        {
+          type: Object,
+          required: false,
+          schema: {
+            companyId: {
+              type: String,
+              required: false,
+            },
+            companyName: {
+              type: String,
+              required: true,
+            },
+            designation: {
+              type: String,
+              required: true,
+            },
+            department: {
+              type: String,
+              required: false,
+            },
+            YOE: {
+              type: Number,
+              required: false,
+            },
+            startDate: {
+              type: String,
+              required: false,
+            },
+            endDate: {
+              type: String,
+              required: false,
+            },
+          },
+        },
+      ],
+      required: false,
+    },
+    responsibilities: {
+      type: Array,
+      schema: Object,
       required: false,
     },
     isWhatsappNotificationEnabled: {
       type: Boolean,
       default: true,
       required: false,
-    }
+    },
   },
   {
     ...DB_CONSTANTS.WORKO_MODEL_SCHEMA_OPTIONS,

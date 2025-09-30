@@ -1,5 +1,5 @@
 // Import dynamoose library for DynamoDB queries
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
+import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 
 //Load the base dao
@@ -516,6 +516,50 @@ class UserReferralDao implements BaseDao {
       .sort(empReferralListingFilterOptions.sortOrder as SortOrderTypeEnum)
       .where("id")
       .in(refIds);
+
+    // Execute the query by applying the paginateQuery helper and return the results
+    return getPaginatedResultsWithMatchingConditions<
+      DbUserReferralDto,
+      EmpReferralListingFilterOptions
+    >(query, empReferralListingFilterOptions);
+  }
+
+  /**
+   * getAllStatusesEmployeeReferrals
+   * 
+   * Fetches referrals for an employee based on the provided filter options and an array of referral IDs.
+   * This query will return all the referrals that are in the provided `referralIds` or
+   * are in `AWAITING` status and belong to the same company as `empReferralListingFilterOptions.companyId`.
+   *
+   * @param {string[]} referralIds - An array of referral IDs to be fetched.
+   * @param {EmpReferralListingFilterOptions} empReferralListingFilterOptions - Filter options for the referral listing.
+   */
+  async getAllStatusesEmployeeReferrals(
+    referralIds: string[], // `id` attributes of `UserReferral.model.ts`
+    empReferralListingFilterOptions: EmpReferralListingFilterOptions,
+  ){
+    let query: Query<DbUserReferralDto> = UserReferralModel.query("GSI1PK")
+      .eq(this.GSI1PK)
+      .where("GSI1SK")
+      .beginsWith("ID#")
+      .sort(empReferralListingFilterOptions.sortOrder as SortOrderTypeEnum);
+
+    // Handle the filter condition based on whether referralIds is empty or not
+    if (referralIds.length > 0) {
+      query = query.parenthesis((condition) => 
+        condition.where("id").in(referralIds)
+        .or()
+        .parenthesis((subCondition) => 
+          subCondition.where("status").eq(ReferralStatus.AWAITING)
+          .where("companyId").eq(empReferralListingFilterOptions.companyId)
+        )
+      );
+    } else {
+      // If no referralIds, only filter by AWAITING status and companyId
+      query = query
+        .where("status").eq(ReferralStatus.AWAITING)
+        .where("companyId").eq(empReferralListingFilterOptions.companyId);
+    }
 
     // Execute the query by applying the paginateQuery helper and return the results
     return getPaginatedResultsWithMatchingConditions<

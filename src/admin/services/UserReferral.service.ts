@@ -7,10 +7,14 @@ import { ReferralListingFilterOptions } from "../dtos/UserReferral.dto";
 // Load local daos
 import userReferralDao from "../../daos/UserReferral.dao";
 import userReferralResponseDao from "../../daos/UserReferralResponse.dao"
-import { PaginatedResultsWithMatchingConditionsResponse } from "../../dtos/Common.dto";
+import { PaginatedResultsWithMatchingConditionsInternalResponse, PaginatedResultsWithMatchingConditionsResponse } from "../../dtos/Common.dto";
+
+// Import helpers
+import { injectEntityDetailsHelperObj } from "../../helpers/injectEntityDetails.helper";
 
 // Load local models
 import { DbUserReferralDto } from "../../db/models/UserReferral.model";
+import { DbUserDetailDto } from "../../db/models/UserDetail.model";
 
 /**
  * UserReferralService
@@ -38,21 +42,53 @@ class UserReferralService {
     return userReferralDao.getByGSI1(referralId);
   }
 
-  /**
-   * getReferrals
-   *
-   * Retrieves referral details from the DAO based on the provided filter options.
-   *
-   * @param {ReferralListingFilterOptions} referralRecordListingFilterRequest - The filter options for the referral record listing.
-   */
+
   async getReferrals(
     referralRecordListingFilterRequest: ReferralListingFilterOptions
-  ):Promise<PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto>> {
+  ): Promise<
+    PaginatedResultsWithMatchingConditionsInternalResponse<
+      (DbUserReferralDto & {
+      userDetails?: DbUserDetailDto;
+      employeeDetails?: DbUserDetailDto;
+    })[]
+    >
+  >  {
     // Log the action of getting referral details in the service
     global.logger.info("Get all referrals [admin user referral service]");
 
     // Get all referral data from the DAO
-    return userReferralDao.getReferrals(referralRecordListingFilterRequest);
+    const referrals: PaginatedResultsWithMatchingConditionsResponse<DbUserReferralDto> = await userReferralDao.getReferrals(referralRecordListingFilterRequest);
+
+    const { lastKey, count, timesQueried, queriedCount, ...referralDetails } = referrals;
+    const referralArray: DbUserReferralDto[] = Object.values(referralDetails);
+
+    if(referralArray.length === 0) {
+      return {
+        lastKey,
+        count,
+        timesQueried,
+        queriedCount,
+        data: []
+      };
+    }
+
+    const userReferralWithCandidateDetails: (DbUserReferralDto & {
+      userDetails?: DbUserDetailDto;
+      employeeDetails?: DbUserDetailDto;
+    })[] =
+      await injectEntityDetailsHelperObj.injectEntityWithUserDetails<DbUserReferralDto>(
+        referralArray,
+        true,
+        true,
+      );
+
+    return {
+      data: userReferralWithCandidateDetails,
+      lastKey,
+      count,
+      timesQueried,
+      queriedCount,
+    };
   }
 
   /**

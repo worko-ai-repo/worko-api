@@ -10,6 +10,7 @@ import userOtpService from "./UserOTP.service";
 import ScheduleJobService from "./ScheduleJob.service";
 
 // import Constants
+import APP_CONSTANTS from "../configs/constants.config";
 import { WHATSAPP_APP_CONSTANTS } from "../configs/constants/Whatsapp.constant";
 import { WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS } from "../configs/constants/WhatsAppBusinessPartner.constant";
 
@@ -17,7 +18,7 @@ import { WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS } from "../configs/constants/Wh
 import userExperienceDao from "../daos/UserExperience.dao";
 
 // Import DTOs
-import { UserExperienceDTO } from "../dtos/UserExperience.dto";
+import { UserExperienceCommonUpdateDto, UserExperienceDTO, UserExperienceUpdateApiDto } from "../dtos/UserExperience.dto";
 import { ScheduleJobCreateDto, ScheduleJobWhatsAppReminderInputDto } from "../dtos/ScheduleJob.dto";
 import { RecordListingFilterOptions } from "../dtos/Common.dto";
 import { EmailTemplatePlaceholderUSER_WORK_EMAIL_VERIFICATION_OTP } from "../dtos/EmailTemplatePlaceholder.dto";
@@ -335,6 +336,8 @@ class UserExperienceService {
     };
     const emailPlaceholders: Partial<EmailTemplatePlaceholderUSER_WORK_EMAIL_VERIFICATION_OTP> = {
       userFullName: userFullName.toTitleCase(),
+      verificationUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_APP_URL,
+      ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
     };
 
     // Send OTP to user's work email to verify the same.
@@ -390,6 +393,48 @@ class UserExperienceService {
     options: RecordListingFilterOptions
   ): Promise<QueryResponse<DbUserExperienceDto>> {
     return userExperienceDao.getCompanyCurrentEmployeesByCompanyId(companyId, options);
+  }
+
+  async updateCommonUserExperience(email: string, id: string, updateData: Partial<UserExperienceCommonUpdateDto>): Promise<DbUserExperienceDto> {
+    global.logger.info("Update user experience [service]", {
+      email,
+      id,
+    });
+
+    return userExperienceDao.updateCommonUserExperience(email, id, updateData);
+  }
+
+  async updateUserExperienceByEmail(email: string, validatedReqBody:UserExperienceUpdateApiDto) {
+    global.logger.info("Update user experience [service]", {
+      email,
+    });
+
+    const cognitoUserId: string = global.requestLocalContext.userId;
+    const cognitoUserGroups: string[] = global.requestLocalContext.cognitoUserGroups;
+
+    const existingUserExperience: QueryResponse<DbUserExperienceDto> = await this.get(email);
+    if(!existingUserExperience.count) {
+      throw new BaseError(`The user with email:${email} doesn't contains any current experience.`, HttpStatusCode.NOT_FOUND_404);
+    }
+
+    const existingUserExperienceData: DbUserExperienceDto = existingUserExperience[0];
+
+    if(existingUserExperienceData.id !== cognitoUserId) {
+      // Check whether the cognito user is admin or not
+      if(!cognitoUserGroups.includes(APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.ADMIN)) {
+        throw new BaseError("Unauthorized", HttpStatusCode.UNAUTHORIZED_401);
+      }
+    }
+
+    if(validatedReqBody.isEmailVerified !== undefined) {
+      if(existingUserExperienceData.isEmailVerified === validatedReqBody.isEmailVerified) {
+        throw new BaseError("Is Email verified is already updated.", HttpStatusCode.BAD_REQUEST_400);
+      }
+    }
+
+    return this.updateCommonUserExperience(email, existingUserExperienceData.id, {
+      ...validatedReqBody
+    });
   }
 }
 

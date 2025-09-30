@@ -76,6 +76,6 @@ export interface EmpReferralListingFilterOptions extends RecordListingFilterOpti
 export interface EmpReferralListingFilterRequestDTO extends RecordListingFilterRequestDTO {
   // Represents the filter request DTO for querying referrals.
   // Should be used when requesting to filter referrals records.
-  status: ReferralStatus;
+  status?: ReferralStatus;
   companyId: string;
 }

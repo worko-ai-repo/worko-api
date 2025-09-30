@@ -8,7 +8,7 @@ import { DbUserExperienceDto, UserExperienceModel } from "../db/models/UserExper
 import UlidService from "../services/Ulid.service";
 
 // Load dtos and other packages
-import { UserExperienceDTO } from "../dtos/UserExperience.dto";
+import { UserExperienceCommonUpdateDto, UserExperienceDTO } from "../dtos/UserExperience.dto";
 import { QueryResponse, ScanResponse } from "dynamoose/dist/ItemRetriever";
 import { RecordListingFilterOptions, RecordListingResponseDTO } from "../dtos/Common.dto";
 import { lastKeyToBase64EncodeStr } from "../helpers/dynamoose.helper";
@@ -20,6 +20,23 @@ class UserExperienceDao implements BaseDao {
   sortKeys = { SK_ID: "EXP#ID#{uuid}" }; // Sort key structure using unique IDs
   GSI1PK = "EXP#";
   GSI1SK = "COMP#ID#{companyId}#ID#{id}";
+
+  preparePKAndSKForQuery(
+    primaryEmail: string,
+    id: string
+  ): {
+    PK: string;
+    SK: string;
+  } {
+    return {
+      PK: this.partitianKey.strtr({
+        "{primaryEmail}": primaryEmail,
+      }),
+      SK: this.sortKeys.SK_ID.strtr({
+        "{uuid}": id,
+      }),
+    };
+  }
 
   /**
    * get
@@ -91,6 +108,10 @@ class UserExperienceDao implements BaseDao {
       ...userExperienceDto,
     };
     return UserExperienceModel.create(userExperienceDTO);
+  }
+
+  async updateCommonUserExperience(email: string, id: string, updateData: Partial<UserExperienceCommonUpdateDto>) {
+    return UserExperienceModel.update(this.preparePKAndSKForQuery(email,id) as any,updateData)
   }
 
   /**

@@ -5,18 +5,18 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import { UserExperienceDTOWithId } from "../dtos/UserExperience.dto";
+import { UserExperienceDTOWithId, UserExperienceUpdateApiDto } from "../dtos/UserExperience.dto";
 
 // Load the local model
 import { DbUserExperienceDto } from "../db/models/UserExperience.model";
 
 // Load the local schema
 import { validateEmailField } from "../schemas/User.schema";
-import { userExperienceDTOArrayValidation } from "../schemas/UserExperience.schema";
+import { userExperienceDTOArrayValidation, userExperienceUpdateApiDtoValidation } from "../schemas/UserExperience.schema";
 
 // Load the shared service
 import UserExperienceService from "../services/UserExperience.service";
-import UserProfilePercentageService from "../services/UserProfilePercentage.service";
+// import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 import CompanyService from "../services/Company.service";
 
 // Load local utils
@@ -24,7 +24,7 @@ import HttpStatusCode from "../utils/http-codes.util";
 import { BaseError, RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
-import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+// import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 
 /**
  * UserExperienceController
@@ -139,34 +139,69 @@ class UserExperienceController {
         throw new RequestValidationError(error);
       }
 
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
+
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
         emailId
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
+      */
 
+      let finalResult: DbUserExperienceDto = {} as DbUserExperienceDto;
       for (let i = 0; i < userExperienceDTO.length; i++) {
+        /*
+        WARNING: Do not remove this commented code because we may
+        use this in near future
+
+        NOTE: In `2024` we used `angular` in frontend and in that we used to have
+        profile percentage for user(candidate, employee) but now we are not
+        using it, so we are commenting this code to stop calculating the profile percentage
+        for new users
+
         // checking the fields in profile percentage for UserExperience and updating the current percentage
         userProfilePercentageDTO =
           UserProfilePercentageOperationHelper.updateCurPerc(
             userProfilePercentageDTO,
             value[i]
           );
+        */
+
         // If it has an SK, then it is an update, and if it does not have an SK, it is a create
         if (userExperienceDTO[i].SK) {
-          UserExperienceService.updateUserExperience(
+          finalResult = await UserExperienceService.updateUserExperience(
             emailId,
             userExperienceDTO[i].SK,
             value[i]
           );
         } else {
-          UserExperienceService.createUserExperience(emailId, value[i]);
+          finalResult = await UserExperienceService.createUserExperience(
+            emailId,
+            value[i]
+          );
         }
       }
 
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
+
       UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
+      */
 
       // Send a successful response with user data
-      res.status(HttpStatusCode.OK_200).json();
+      res.status(HttpStatusCode.OK_200).json(finalResult);
     } catch (error: any) {
       // If it's another type of error, pass it to the next error handler
       next(error);
@@ -206,7 +241,7 @@ class UserExperienceController {
 
       // Checking whether the email and experience id are of the same user or not
       const userExperience = await UserExperienceService.getByUserPrimaryEmailAndId(primaryEmail, experienceId);
-      if (!userExperience.length) {
+      if (!userExperience.count) {
         throw new BaseError("The experience doesn't belong to the logged in user.", HttpStatusCode.BAD_REQUEST_400);
       }
       
@@ -270,6 +305,15 @@ class UserExperienceController {
         otp,
       );
 
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
+      
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
         primaryEmail
       );
@@ -284,6 +328,7 @@ class UserExperienceController {
         );
 
       UserProfilePercentageService.update(primaryEmail, userProfilePercentageDTO);
+      */
 
       // Send OTP verification details in the response
       res
@@ -292,6 +337,38 @@ class UserExperienceController {
           verificationStatus: isOtpVerified
         });
     } catch (error: any) {
+      next(error);
+    }
+  };
+
+  updateUserExperienceByEmail = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.params;
+      const { error: emailError } = validateEmailField(email);
+      if (emailError) {
+        throw new RequestValidationError(emailError);
+      }
+
+      const reqBody: UserExperienceUpdateApiDto = req.body;
+
+      const { error:reqBodyError, value: validatedReqBody } = userExperienceUpdateApiDtoValidation.validate(
+        reqBody,
+        {
+          abortEarly: false,
+        }
+      );
+      if (reqBodyError) {
+        throw new RequestValidationError(reqBodyError);
+      }
+
+      const result: DbUserExperienceDto = await UserExperienceService.updateUserExperienceByEmail(email, validatedReqBody);
+
+      res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error: any) {
+      global.logger.error("Error in update user experience [controller]", {
+        methodName: this.updateUserExperienceByEmail.name,
+        error: error,
+      });
       next(error);
     }
   };

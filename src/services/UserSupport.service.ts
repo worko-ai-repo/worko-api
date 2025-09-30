@@ -48,6 +48,7 @@ import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusiness
 // Import Utilities
 import { BaseError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
+import APP_CONSTANTS from "../configs/constants.config";
 
 /**
  * UserSupportService
@@ -311,6 +312,8 @@ class UserSupportService {
       {
         empName: refereeName.toTitleCase(),
         query: query,
+        workoReferralUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_EMP_REFERRAL_LISTING_URL,
+        ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL
       };
 
     // Send email to notify the employee about the candidate query

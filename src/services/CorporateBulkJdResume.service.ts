@@ -378,6 +378,8 @@ class CorporateBulkJdResumeService {
               companyName: companyDetails.name.toTitleCase(),
               jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
               matchingScore: eachCorporateBulkJdResume.matchingScore,
+              signUpUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_SIGNUP_URL,
+              ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
             };
 
           // Send email to the candidate
@@ -409,6 +411,8 @@ class CorporateBulkJdResumeService {
               candidateName: cvExtractedParsed.candidateName.toTitleCase(),
               companyName: companyDetails.name.toTitleCase(),
               jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+              signUpUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_SIGNUP_URL,
+              ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
             };
 
           // Send email to the candidate
@@ -614,6 +618,8 @@ class CorporateBulkJdResumeService {
           companyName: companyDetails.name.toTitleCase(),
           jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
           matchingScore: corporateBulkJdResumeDetails.matchingScore,
+          signUpUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_SIGNUP_URL,
+          ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
         };
 
       // Send email to the candidate
@@ -647,6 +653,8 @@ class CorporateBulkJdResumeService {
           candidateName: cvExtractedParsed.candidateName.toTitleCase(),
           companyName: companyDetails.name.toTitleCase(),
           jobTitle: corporateBulkJdDetails.jobTitle.toTitleCase(),
+          signUpUrl: APP_CONSTANTS.FRONTEND_URLS.WORKO_SIGNUP_URL,
+          ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
         };
 
       // Send email to the candidate

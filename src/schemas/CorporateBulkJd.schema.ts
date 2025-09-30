@@ -74,6 +74,50 @@ export const corporateBulkJdDTOValidation = Joi.object({
         "string.base": "Each skill must be a string.",
       }),
 
+    coreSkills: Joi
+      .array()
+      .items(Joi
+      .string().allow(""))
+      .optional()
+      .default([])
+      .messages({
+        "array.base": "The Core skills field should be an array of strings.",
+        "string.base": "Each skill must be a string.",
+      }),
+
+    softSkills: Joi
+      .array()
+      .items(Joi
+      .string().allow(""))
+      .optional()
+      .default([])
+      .messages({
+        "array.base": "The Soft skills field should be an array of strings.",
+        "string.base": "Each skill must be a string.",
+      }),
+
+    technicalSkills: Joi
+      .array()
+      .items(Joi
+      .string().allow(""))
+      .optional()
+      .default([])
+      .messages({
+        "array.base": "The Technical skills field should be an array of strings.",
+        "string.base": "Each skill must be a string.",
+      }),
+
+    industryPreferences: Joi
+      .array()
+      .items(Joi
+      .string().allow(""))
+      .optional()
+      .default([])
+      .messages({
+        "array.base": "The Industry preferences field should be an array of strings.",
+        "string.base": "Each skill must be a string.",
+      }),
+
     experienceRange: Joi.object({
         min: Joi
         .number()

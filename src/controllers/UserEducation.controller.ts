@@ -7,20 +7,19 @@ import { UserEducationDTOWithId } from "../dtos/UserEducation.dto";
 import { userEducationDTOArrayValidation } from "../schemas/UserEducation.schema";
 import { validateEmailField } from "../schemas/User.schema";
 
+// Import models
+import { DbUserEducationDto } from "../db/models/UserEducation.model";
+
 // Load the shared service
 import UserEducationService from "../services/UserEducation.service";
-import UserProfilePercentageService from "../services/UserProfilePercentage.service";
+// import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
-import InvokeLambdaService from "../services/InvokeLambda.service";
 
 // Load local helper
-import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
-
-//import DAOs
-import userEducationDao from "../daos/UserEducation.dao";
+// import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 
 /**
  * UserEducationController
@@ -104,34 +103,68 @@ class UserEducationController {
       } else if (error) {
         throw new RequestValidationError(error);
       }
+
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
+
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
         emailId
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
+      */
 
+      let userEducationResponse: DbUserEducationDto[] = [];
       for (let i = 0; i < userEducationDTO.length; i++) {
+        /*
+        WARNING: Do not remove this commented code because we may
+        use this in near future
+
+        NOTE: In `2024` we used `angular` in frontend and in that we used to have
+        profile percentage for user(candidate, employee) but now we are not
+        using it, so we are commenting this code to stop calculating the profile percentage
+        for new users
+
         // checking the fields in profile percentage for UserExperience and updating the current percentage
         userProfilePercentageDTO =
           UserProfilePercentageOperationHelper.updateCurPerc(
             userProfilePercentageDTO,
             value[i]
           );
+        */
+
         // If it has an SK, then it is an update, and if it does not have an SK, it is a create
         if (userEducationDTO[i].SK) {
-          UserEducationService.update(
+          const result = await UserEducationService.update(
             emailId,
             userEducationDTO[i].SK,
             value[i]
           );
+          userEducationResponse.push(result);
         } else {
-          UserEducationService.createEducation(emailId, value[i]);
+          const result = await UserEducationService.createEducation(emailId, value[i]);
+          userEducationResponse.push(result);
         }
       }
 
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
       UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
+      */
 
       // Send a successful response with user data
-      res.status(HttpStatusCode.OK_200).json();
+      res.status(HttpStatusCode.OK_200).json(userEducationResponse);
     } catch (error: any) {
       // If it's another type of error, pass it to the next error handler
       next(error);

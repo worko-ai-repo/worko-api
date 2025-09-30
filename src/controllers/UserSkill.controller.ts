@@ -7,7 +7,7 @@ import { UserSkillDTO } from "../dtos/UserSkill.dto";
 import { userSkillDTOValidation } from "../schemas/UserSkill.schema";
 // Load the shared service
 import UserSkillService from "../services/UserSkill.service";
-import UserProfilePercentageService from "../services/UserProfilePercentage.service";
+// import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -15,7 +15,7 @@ import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
 import { TimestampHelper } from "../helpers/timeStamp.helper";
-import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+// import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 import { validateEmailField } from "../schemas/User.schema";
 
 /**
@@ -81,10 +81,10 @@ class UserSkillController {
       logger.info("Create/update user Skill by email [controller]");
 
       // Extract email from request parameters
-     // Extract email from request parameters
-     const email = req.params.id;
+      // Extract email from request parameters
+      const email = req.params.id;
 
-     const { error: emailError } = validateEmailField(email);
+      const { error: emailError } = validateEmailField(email);
 
       const userSkillDTO: UserSkillDTO = req.body;
       const { error, value } = userSkillDTOValidation.validate(userSkillDTO, {
@@ -110,6 +110,10 @@ class UserSkillController {
         TimestampHelper.addTimestampsWithOutUpdatedAt(value.certifications);
       }
 
+      if (value.technicalSkills) {
+        TimestampHelper.addTimestampsWithOutUpdatedAt(value.technicalSkills);
+      }
+
       let result;
 
       // If it has an SK, then it is an update, and if it does not have an SK, it is a create
@@ -118,6 +122,15 @@ class UserSkillController {
       } else {
         result = await UserSkillService.create(email, value);
       }
+
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
         email
@@ -131,6 +144,7 @@ class UserSkillController {
         );
 
       UserProfilePercentageService.update(email, userProfilePercentageDTO);
+      */
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);

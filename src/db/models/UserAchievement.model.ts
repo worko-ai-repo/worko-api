@@ -52,4 +52,4 @@ const UserAchievementModel = dynamoose.model<DbUserAchievementDto>(
 );
 
 // Export the UserAchievementModel
-export { UserAchievementModel };
+export { UserAchievementModel, DbUserAchievementDto };

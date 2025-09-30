@@ -93,13 +93,11 @@ export const UserReferralEmployeeStatusValidation = Joi.object({
 export const userReferralStatusFilterDtoValidation = commonSchema.concat(
   Joi.object({
     status: Joi.string()
-      .required()
+      .optional()
       .valid(...Object.values(ReferralStatus))
       .messages({
         "any.only": `Invalid referral status. Please provide a valid value from
       ${Object.values(ReferralStatus).join(", ")}.`,
-        "any.required": "Referral Status is required.",
-        "string.empty": "Referral Status should not be empty.",
       })
   })
 );
@@ -108,13 +106,11 @@ export const userReferralStatusFilterDtoValidation = commonSchema.concat(
 export const empReferralFilterDtoValidation = commonSchema.concat(
   Joi.object({
     status: Joi.string()
-      .required()
       .valid(...Object.values(ReferralStatus))
       .messages({
-        "any.required": "Referral Status is required.",
         "any.only": `Invalid referral status. Please provide a valid value from
       ${Object.values(ReferralStatus).join(", ")}.`,
-        "string.empty": "Referral Status should not be empty.",
+        "string.empty": "Referral status should not be empty.",
       }),
     
     companyId: Joi.string().required().messages({

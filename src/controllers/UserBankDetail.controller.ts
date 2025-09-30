@@ -9,7 +9,7 @@ import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserBankDetailService from "../services/UserBankDetail.service";
-import UserProfilePercentageService from "../services/UserProfilePercentage.service";
+// import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
@@ -17,7 +17,7 @@ import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
 import { TimestampHelper } from "../helpers/timeStamp.helper";
-import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
+// import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 import { BankUpiStatus } from "../enums/User.enum";
 
 /**
@@ -110,11 +110,11 @@ class UserBankDetailController {
 
       // If it has an SK, then it is an update, and if it does not have an SK, it is a create
       if (req.body.SK) {
-        if (req.body.hasOwnProperty('SK')) {
+        if (req.body.hasOwnProperty("SK")) {
           delete req.body.SK;
         }
-        
-        if (req.body.hasOwnProperty('PK')) {
+
+        if (req.body.hasOwnProperty("PK")) {
           delete req.body.PK;
         }
         result = await UserBankDetailService.update(emailId, req.body);
@@ -123,6 +123,15 @@ class UserBankDetailController {
         value.upiIds[0].status = BankUpiStatus.ACTIVE;
         result = await UserBankDetailService.create(emailId, value);
       }
+
+      /*
+      WARNING: Do not remove this commented code because we may
+      use this in near future
+
+      NOTE: In `2024` we used `angular` in frontend and in that we used to have
+      profile percentage for user(candidate, employee) but now we are not
+      using it, so we are commenting this code to stop calculating the profile percentage
+      for new users
 
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
         emailId
@@ -136,6 +145,7 @@ class UserBankDetailController {
         );
 
       UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
+      */
 
       // Send a successful response with user data
       res.status(HttpStatusCode.OK_200).json(result);

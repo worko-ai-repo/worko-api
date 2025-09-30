@@ -106,6 +106,48 @@ class DateHelper {
 
     return isoDate;
   }
+
+  /**
+   * getFutureDateWithTimezone
+   *
+   * Creates a future date by adding specified days to current date and converting to specified timezone.
+   *
+   * @param {number} days - Number of days to add to current date
+   * @param {string} timezone - Timezone to set (e.g., "GMT", "Asia/Calcutta")
+   * @returns {Date} JavaScript Date object representing the future date
+   * 
+   * @example
+   * // Sample output for getFutureDateWithTimezone(15, "GMT"):
+   * // If current date is 2024-01-15T10:30:00.000Z
+   * // Returns: Mon Jan 30 2024 10:30:00 GMT+0000 (Greenwich Mean Time)
+   */
+  getFutureDateWithTimezone(days: number, timezone: string): Date {
+    return DateTime.now()
+      .plus({ days })
+      .setZone(timezone)
+      .toJSDate();
+  }
+
+  /**
+   * getFutureTimestampWithTimezone
+   *
+   * Creates a future timestamp by adding specified days to current date and converting to specified timezone.
+   *
+   * @param {number} days - Number of days to add to current date
+   * @param {string} timezone - Timezone to set (e.g., "GMT", "Asia/Calcutta")
+   * @returns {number} Timestamp in milliseconds representing the future date
+   * 
+   * @example
+   * // Sample output for getFutureTimestampWithTimezone(15, "GMT"):
+   * // If current date is 2024-01-15T10:30:00.000Z
+   * // Returns: 1706178600000
+   */
+  getFutureTimestampWithTimezone(days: number, timezone: string): number {
+    return DateTime.now()
+      .plus({ days })
+      .setZone(timezone)
+      .toMillis();
+  }
 }
 
 const dateHelperObj = new DateHelper();

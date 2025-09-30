@@ -8,24 +8,27 @@ import APP_CONSTANTS from "../configs/constants.config";
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import { UserDetailDTO } from "../dtos/UserDetail.dto";
+import { UserDetailDTO, UserDetailUpdateApiDto } from "../dtos/UserDetail.dto";
 
 // Load the local schema
-import { userDetailDTOValidation } from "../schemas/UserDetail.schema";
+import { userDetailDTOValidation, userDetailUpdateApiDtoValidation } from "../schemas/UserDetail.schema";
 import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
 import UserDetailService from "../services/UserDetail.service";
-import UserProfilePercentageService from "../services/UserProfilePercentage.service";
+// import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
 import HttpStatusCode from "../utils/http-codes.util";
 import { RequestValidationError } from "../utils/errors.util";
 
 // Load local helper
-import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
-import InvokeLambdaService from "../services/InvokeLambda.service";
+// import { UserProfilePercentageOperationHelper } from "../helpers/ProfilePercentageOperations.helper";
 import UserExperienceService from "../services/UserExperience.service";
+
+// Load models
+import { DbUserOtpDto } from "../db/models/UserOTP.model";
+import { DbUserDetailDto } from "../db/models/UserDetail.model";
 
 /**
  * UserDetailController
@@ -235,10 +238,12 @@ class UserDetailController {
         throw new RequestValidationError(error);
       }
 
+      /*
       let userProfilePercentageDTO = await UserProfilePercentageService.get(
         emailId
       );
       userProfilePercentageDTO = userProfilePercentageDTO.toJSON()[0];
+      */
 
       const result = await UserDetailService.update(
         emailId,
@@ -254,10 +259,11 @@ class UserDetailController {
         ...candidateExperienceObj
       }
       global.logger.debug("updateUserDetailObj",{
-        fileName: __filename,
         methodName: this.update.name,
         updateUserDetailObj
       });
+
+      /*
       userProfilePercentageDTO =
         UserProfilePercentageOperationHelper.updateCurPerc(
           userProfilePercentageDTO,
@@ -265,6 +271,7 @@ class UserDetailController {
         );  
 
       UserProfilePercentageService.update(emailId, userProfilePercentageDTO);
+      */
 
       // If it has an SK, then it is an update, and if it does not have an SK, it is a create
       /* if (req.body.SK) {
@@ -315,6 +322,113 @@ class UserDetailController {
       });
     } catch (error: any) {
       // If it's another type of error, pass it to the next error handler
+      next(error);
+    }
+  };
+
+  updateUserDetailByEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      global.logger.info("updateUserDetailByEmail [controller]");
+
+      const email: string = req.params.email;
+
+      const reqBody: UserDetailUpdateApiDto = req.body;
+
+      const { error, value: validatedReqBody } = userDetailUpdateApiDtoValidation.validate(
+        reqBody,
+        {
+          abortEarly: false,
+        }
+      )
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      const updatedUserDetail: DbUserDetailDto = await UserDetailService.updateUserDetailByEmail(
+        email,
+        validatedReqBody
+      );
+
+      res.status(HttpStatusCode.OK_200).json(
+        updatedUserDetail
+      )
+    } catch (error) {
+      global.logger.error("Error in updateUserDetailByEmail [controller]", {
+        methodName: this.updateUserDetailByEmail.name,
+        error
+      })
+      next(error);
+    }
+  };
+
+  sendSmsOtptoVerifyUserPhoneNumber = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      global.logger.info("sendSmsOtptoVerifyUserPhoneNumber [controller]");
+
+      const email: string = req.params.email;
+
+      // Get user's IP address from request
+      const userIpAddress: string = req.ip as string;
+
+      const { error } = validateEmailField(email);
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      const result: DbUserOtpDto = await UserDetailService.sendSmsOtptoVerifyUserPhoneNumber(
+        email,
+        userIpAddress,
+      );
+      res.status(HttpStatusCode.OK_200).json({
+        id: result.id
+      });
+    } catch (error) {
+      global.logger.error("Error in sendSmsOtptoVerifyUserPhoneNumber [controller]", {
+        methodName: this.sendSmsOtptoVerifyUserPhoneNumber.name,
+        error
+      })
+      next(error);
+    }
+  };
+
+  verifyUserPhoneNumber = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      global.logger.info("verifyUserPhoneNumber [controller]");
+
+      const email: string = req.params.email;
+
+      const { error } = validateEmailField(email);
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      const otp: string = req.body.otp;
+
+      const result: boolean = await UserDetailService.verifyUserPhoneNumber(
+        email,
+        otp
+      );
+      
+      res.status(HttpStatusCode.OK_200).json({
+        verificationStatus: result,
+      });
+    } catch (error) {
+      global.logger.error("Error in verifyUserPhoneNumber [controller]", {
+        methodName: this.verifyUserPhoneNumber.name,
+        error
+      })
       next(error);
     }
   };

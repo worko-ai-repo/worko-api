@@ -30,20 +30,6 @@ UserRouter.post("/register/employee", userController.createEmployee);
 UserRouter.post("/settings", userController.createUserDetailSetting);
 
 /**
- * createUserGuidanceRequest
- * 
- * @authorisedRoles ["loggedInUser"]
- */
-UserRouter.post("/guidance-request", userController.createUserGuidanceRequest);
-
-/**
- * Get the user guidance request based on the provided query parameter
- * 
- * @authorisedRoles ["admin", "loggedInUser"]
- */
-UserRouter.get('/guidance-request',userController.getAllUserGuidanceRequestByFilterOptions);
-
-/**
  * Get the user basic details
  * 
  * @authorisedRoles ["loggedInUser"]
@@ -81,5 +67,12 @@ UserRouter.patch("/:id/verify/email", userController.updateEmailVerifyStatus);
  * @authorisedRoles ["admin", "loggedInUser"]
  */
 UserRouter.patch("/:id/cv", userController.updateUserResume);
+
+/**
+ * Parse the cv of user 
+ * 
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserRouter.post("/parseCv", userController.parseCv);
 
 export default UserRouter;

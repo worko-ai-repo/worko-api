@@ -33,4 +33,23 @@ UserDetailRouter.get("/:userId/detail", userDetailController.getUserById);
  */
 UserDetailRouter.put("/:id/details", userDetailController.update);
 
+/**
+ * Update the user Detail details based on the provided query parameter
+ * 
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserDetailRouter.patch("/:email/details", userDetailController.updateUserDetailByEmail);
+
+/**
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserDetailRouter.get("/:email/request-otp", userDetailController.sendSmsOtptoVerifyUserPhoneNumber);
+
+/**
+ * Route to verify OTP sent to user's work email address.
+ * 
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserDetailRouter.post("/:email/verify-otp", userDetailController.verifyUserPhoneNumber);
+
 export default UserDetailRouter;
