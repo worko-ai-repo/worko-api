@@ -94,6 +94,13 @@ router.use("/admin-subs", AdminSubsRouter);
 router.use("/blog", BlogRouter);
 
 /**
+ * BLOG ROUTERS
+ * 
+ * @authorisedRoles ["admin", "public", "loggedInUser"]
+ */
+router.use("/blog", BlogRouter);
+
+/**
  * COMPANY ROUTERS
  * 
  * Regitser the "Company" routers

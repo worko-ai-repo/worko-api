@@ -46,6 +46,10 @@ import {
   UserSubscriptionStatus,
   UserSubscriptionType,
 } from "../enums/UserSubscription.enum";
+import {
+  UserSubscriptionStatus,
+  UserSubscriptionType,
+} from "../enums/UserSubscription.enum";
 
 // Load the local model
 import { DbUserDetailSettingDto } from "../db/models/UserDetailSetting.model";
@@ -55,6 +59,7 @@ import { DbUserPreferenceDto } from "../db/models/UserPreference.model";
 import { DbUserAchievementDto } from "../db/models/UserAchievement.model";
 
 // Load the local services
+import UserSkillService from "./UserSkill.service";
 import UserSkillService from "./UserSkill.service";
 import UserDetailService from "./UserDetail.service";
 import MasterSubscriptionService from "./MasterSubscription.service";
@@ -191,6 +196,7 @@ class UserService {
           methodName: userSignUpDTO.name,
           plan: planName,
         }
+      );
       );
     }
 

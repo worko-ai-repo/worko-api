@@ -145,7 +145,7 @@ const UserDetailSchema = new dynamoose.Schema(
         type: "global",
         rangeKey: "GSI2SK",
       },
-      required: true,
+      required: true, 
     },
     GSI2SK: {
       type: String,
@@ -153,7 +153,7 @@ const UserDetailSchema = new dynamoose.Schema(
         name: "GSI2",
         type: "global",
       },
-      required: true,
+      required: true, 
     },
     name: {
       type: String,

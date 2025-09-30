@@ -272,6 +272,18 @@ class CompanyController {
         throw new RequestValidationError(error);
       }
 
+      // Validate the filter options and throw an error if any of them is invalid
+      let { error, value: validatedRecordListingFilterRequest } =
+        CompanyListingFilterRequestDTOValidation.validate(
+          recordListingFilterRequest,
+          {
+            abortEarly: false,
+          }
+        );
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
       // Call the CompanyService to get company list
       const companyList: PaginatedResultsWithMatchingConditionsResponse<DbCompanyDetailDto> =
         await CompanyService.getCompanyList(

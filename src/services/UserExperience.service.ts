@@ -222,6 +222,7 @@ class UserExperienceService {
      */
     if (
       WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS.ENABLED &&
+      WHATSAPP_BUSINESS_PARTNER_APP_CONSTANTS.ENABLED &&
       userDetails[0].isWhatsappNotificationEnabled !== false
     ) {
       const whatsAppBusinessPartnerPlaceholders: WhatsAppBusinessPartnerTemplatePlaceholderEMP_PENDING_WORK_EMAIL_VERIFICATION =
@@ -236,6 +237,7 @@ class UserExperienceService {
         whatsAppBusinessPartnerPlaceholders,
         inputDetails["email"]
       );
+
 
       global.logger.info(
         `Sent WhatsApp reminder ${inputDetails["reminderCount"]} for work email verification`

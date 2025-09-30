@@ -1,5 +1,7 @@
 import { UserGuidanceRequestTypeEnum } from "../enums/User.enum";
 import { RecordListingFilterOptions, RecordListingFilterRequestDTO } from "./Common.dto";
+import { UserGuidanceRequestTypeEnum } from "../enums/User.enum";
+import { RecordListingFilterOptions, RecordListingFilterRequestDTO } from "./Common.dto";
 
 /**
  * Data required for user sign-up. Includes basic personal information,
@@ -11,6 +13,7 @@ export interface UserSignUpDTO {
   number: string;
   linkedinUrl?: string;
   ECTC?: number;
+  CTC?: number;
   CTC?: number;
   YOE?: number;
   CV?: string;

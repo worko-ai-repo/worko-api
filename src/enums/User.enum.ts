@@ -73,6 +73,9 @@ export enum UserContextTypeEnum {
   REFERRAL = "REFERRAL",
   SERVICE = "SERVICE",
   CORPORATE_BULK_JD_RESUME = "CORPORATE_BULK_JD_RESUME", // Refer `CorporateBulkJdResume.model.ts`
+  REFERRAL = "REFERRAL",
+  SERVICE = "SERVICE",
+  CORPORATE_BULK_JD_RESUME = "CORPORATE_BULK_JD_RESUME", // Refer `CorporateBulkJdResume.model.ts`
 }
 
 export enum UserOtpStatusEnum {
