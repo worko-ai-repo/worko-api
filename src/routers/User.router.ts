@@ -75,4 +75,12 @@ UserRouter.patch("/:id/cv", userController.updateUserResume);
  */
 UserRouter.post("/parseCv", userController.parseCv);
 
+/**
+ * Right after user signs up we are partially extracting the CV details
+ * so that the user will not wait for main CV extraction from the AI.
+ * 
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserRouter.patch("/:registeredEmail/paritial-cv-extract-signup", userController.updatePartialCvExtractDetails);
+
 export default UserRouter;

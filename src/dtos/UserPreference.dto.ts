@@ -18,3 +18,8 @@ export interface UserPreferenceCommonUpdateDto {
   userPreferredlocations: string[];
   userPreferredRoles: string[];
 }
+
+export interface UserPreferencePartialCvExtractUpdateDto {
+  userPreferredDepartments: string[];
+  userPreferredlocations: string[];
+}

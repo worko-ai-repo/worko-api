@@ -76,4 +76,7 @@ export interface UserDetailUpdateApiDto {
 export interface UserDetailCommonUpdateDto {
   isNumberVerified: boolean;
   isEmailVerified: boolean;
+  YOE: number;
+  CTC: number;
+  noticePeriod: number;
 }

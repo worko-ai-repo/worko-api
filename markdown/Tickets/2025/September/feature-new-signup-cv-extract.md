@@ -51,3 +51,47 @@ profile percentage for user(candidate, employee) but now we are not
 using it, so we are commenting this code to stop calculating the profile percentage
 for new users
 ```
+3. 
+[PATCH] `https://api.dev.worko.work/user/ask.72544@gmail.com/cv`
+```json
+// Request payload
+{
+   "isCvExtracted": false,
+   "resume": ".....pdf",
+   "userCvFileName":"avinash.pdf"
+}
+```
+
+4. [PATCH] `https://api.dev.worko.work/user/ask.72544@gmail.com/paritial-cv-extract-signup`
+```json
+// Request Body
+{
+   "coreSkills": [
+      {
+         "skillName": "string", 
+         
+         // If years is not present then it will be stored as 0 and frontend should not show this years of experience for this skill
+         "years": 1, // number
+      }
+   ],
+
+   // If not provided then send it as empty array, ex:- []
+   "userPreferredlocations": ["string"],
+
+   "noticePeriod": 15,
+
+   // If YOE is not provided or given as 0 then it send it as undefined 
+   "YOE": 2, // number
+
+   "CTC": 10,
+
+   // If not provided then send it as empty array, ex:- []
+   "userPreferredDepartments": ["string"],
+}
+```
+```json
+// Response
+{
+   "isUpdated": true | false,
+}
+```

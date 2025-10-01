@@ -101,8 +101,8 @@
    */
    "PK": "USR#EML#{primaryEmail}",
    "SK": "PREF#",
-   "createdAt":"",// ISO Date string
-   "updatedAt": "",// ISO Date string
+   "createdAt":"...",// ISO Date string
+   "updatedAt": "...",// ISO Date string
    "id": "...",// 
    "userPreferredDepartments": ["depone", "deptwo"],
    "email": "string@gmail.com", // registered user email
@@ -111,3 +111,28 @@
    "userPreferredRoles": ["roleone"],// optional
   }
   ```
+
+
+
+# User Education
+```sh
+PK = "USR#EML#{primaryEmail}"; 
+SK = "EDU#ID#{eduId}"; 
+```
+```ts
+{
+  PK: "USR#EML#{primaryEmail}";
+  SK: "EDU#ID#{eduId}" // "{eduId}" is the "ulidId"
+  collage: string; // name of college
+  degree: string;
+  passingYear: number;
+  createdAt: string; // ISO Date string
+}
+```
+
+# Ulid service
+```ts
+import { ulid } from "ulidx";
+
+ulid()
+```

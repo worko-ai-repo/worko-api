@@ -81,7 +81,6 @@ class UserSkillController {
       logger.info("Create/update user Skill by email [controller]");
 
       // Extract email from request parameters
-      // Extract email from request parameters
       const email = req.params.id;
 
       const { error: emailError } = validateEmailField(email);

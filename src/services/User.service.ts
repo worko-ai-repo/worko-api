@@ -32,6 +32,7 @@ import {
   UserDetailSettingCreateApiDTO,
   UserParseCvRequestApiDto,
   UserParseCvResponseDto,
+  UserPartialCvExtractDetailUpdateApiDto,
   UserSubscriptionDetailsUpdateDto,
 } from "../dtos/User.dto";
 import {
@@ -46,6 +47,9 @@ import {
   UserSubscriptionStatus,
   UserSubscriptionType,
 } from "../enums/UserSubscription.enum";
+
+// Import helpers
+import { getEmailFromPK } from "../helpers/user.helper";
 
 // Load the local model
 import { DbUserDetailSettingDto } from "../db/models/UserDetailSetting.model";
@@ -658,6 +662,76 @@ class UserService {
     global.logger.info("Update user resume [service]");
     const SK = await userDetailDao.getUserDetailSK(email);
     userDetailDao.updateCv(SK, email, resume, userCvFileName, isCvExtracted);
+  }
+
+  async updatePartialCvExtractDetails(userRegisteredEmail: string, reqBody: UserPartialCvExtractDetailUpdateApiDto): Promise<boolean> {
+    global.logger.info("Update partial cv extract details [service]", {
+      userRegisteredEmail,
+    });
+
+    const cognitoUserId: string = global.requestLocalContext.userId;
+
+    const userDetailsQueryResponse: QueryResponse<DbUserDetailDto> =
+      await UserDetailService.getUserById(cognitoUserId);
+    if (!userDetailsQueryResponse.count) {
+      throw new BaseError(
+        `Your details are not found in our system, so you are not allowed to update details.`,
+        HttpStatusCode.FORBIDDEN_403
+      );
+    }
+    const userDetails: DbUserDetailDto = userDetailsQueryResponse[0];
+
+    if(getEmailFromPK(userDetails.PK) !== userRegisteredEmail) {
+      throw new BaseError(
+        `You are not allowed to update details.`,
+        HttpStatusCode.FORBIDDEN_403
+      );
+    }
+
+    const {
+      noticePeriod,
+      YOE,
+      CTC,
+      userPreferredDepartments,
+      userPreferredlocations,
+      coreSkills,
+    } = reqBody
+
+    const updateUserData: (Promise<DbUserDetailDto> | Promise<DbUserPreferenceDto> | Promise<DbUserSkillDto>)[] = [
+      UserDetailService.updateUserDetail(userRegisteredEmail, userDetails.id, {
+        noticePeriod,
+        YOE,
+        CTC,
+      }),
+
+      userPreferenceServiceObj.createOrUpdateUserPreferenceForPartialCvExtract(
+        userRegisteredEmail,
+        cognitoUserId,
+        {
+          userPreferredDepartments,
+          userPreferredlocations,
+        }
+      ),
+
+      UserSkillService.createOrUpdateUserSkillForPartialCvExtract(
+        userRegisteredEmail,
+        {
+          coreSkills,
+        }
+      )
+    ]
+
+    const userDetailsUpdated: (DbUserDetailDto | DbUserPreferenceDto | DbUserSkillDto)[] = await Promise.all(updateUserData);
+
+    if(
+      !userDetailsUpdated[0] ||
+      !userDetailsUpdated[1] ||
+      !userDetailsUpdated[2]
+    ) {
+      return false;
+    } 
+
+    return true;
   }
 
   /**

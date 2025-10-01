@@ -5,7 +5,7 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import userSkillDao from "../daos/UserSkill.dao";
 
 //Load the local dto
-import { UserSkillDTO } from "../dtos/UserSkill.dto";
+import { UserSkillDTO, UserSkillPartialCvExtractUpdateDto } from "../dtos/UserSkill.dto";
 
 // Import models
 import { DbUserSkillDto } from "../db/models/UserSkill.model";
@@ -72,6 +72,42 @@ class UserSkillService {
     });
 
     return userSkillDao.getUserSkillsByEmail(email);
+  }
+
+  async createOrUpdateUserSkillForPartialCvExtract(
+    email: string,
+    userSkillData: UserSkillPartialCvExtractUpdateDto
+  ): Promise<DbUserSkillDto> {
+    global.logger.info(
+      "Create or update user skill for partial cv extract [Service]"
+    );
+
+    const existingUserSkill: QueryResponse<DbUserSkillDto> =
+      await this.getUserSkillsByEmail(email);
+    if (existingUserSkill.count) {
+      const existingUserSkillData: DbUserSkillDto = existingUserSkill[0]; 
+
+      const mergedSkills = [
+        ...(existingUserSkillData?.coreSkills ?? []),
+        ...(userSkillData?.coreSkills ?? []),
+      ];
+
+      // Deduplicate by skillName (case-insensitive)
+      const uniqueSkills = Array.from(
+        new Map(
+          mergedSkills.map(skill => [skill.skillName.toLowerCase(), skill])
+        ).values()
+      );
+
+      const finalUpdateData: UserSkillDTO = {
+        coreSkills: uniqueSkills,
+      };
+      return this.update(email, finalUpdateData);
+    }
+
+    return this.create(email, {
+      ...userSkillData,
+    });
   }
 }
 
