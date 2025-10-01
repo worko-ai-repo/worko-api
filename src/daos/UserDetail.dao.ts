@@ -292,7 +292,6 @@ class UserDetailDao implements BaseDao {
       .attributes([
         "PK",
         "multipleCandidateExperience",
-        "isCandidateFresher",
         "department",
         "country",
         "YOE",
@@ -301,7 +300,7 @@ class UserDetailDao implements BaseDao {
         "CTC",
         "location",
         "userType",
-        "cvExtract",
+        "isCvExtracted",
         "cvExtractParsed",
         "isNoticePeriodNegotiable",
       ])
