@@ -127,7 +127,8 @@ SK = "EDU#ID#{eduId}";
   collage: string; // name of college
   degree: string;
   passingYear: number;
-  createdAt: string; // ISO Date string
+  createdAt: number; 
+  updatedAt: number;
 }
 ```
 

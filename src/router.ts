@@ -20,7 +20,7 @@ import UserAchievementRouter from "./routers/UserAchievement.router";
 import UserReferralRouter from "./routers/UserReferral.router";
 import UserSubscriptionRouter from "./routers/UserSubscription.router";
 import UserServiceRouter from "./routers/UserService.router";
-import UserProfilePercentageRouter from "./routers/UserProfilePercentage.router";
+// import UserProfilePercentageRouter from "./routers/UserProfilePercentage.router";
 import UserBankDetailRouter from "./routers/UserBankDetail.router";
 import UserProvidedServiceRouter from "./routers/UserProvidedService.router";
 import UserAvailabilityRouter from "./routers/UserAvailability.router";
