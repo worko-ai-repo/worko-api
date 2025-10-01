@@ -688,6 +688,13 @@ class UserService {
       );
     }
 
+    if(!userDetails?.CV) {
+      throw new BaseError(
+        `Your CV is not found in our system, so you are not allowed to update details.`,
+        HttpStatusCode.FORBIDDEN_403
+      );
+    }
+
     const {
       noticePeriod,
       YOE,
