@@ -99,6 +99,7 @@
       import { ulid } from "ulidx";
       id= ulid()
    */
+   "createdByUserId": "string", // `{userId}` of attribute of: SK:- "ID#{userId}" -> "PK": "USR#EML#{primaryEmail}"
    "PK": "USR#EML#{primaryEmail}",
    "SK": "PREF#",
    "createdAt":"...",// ISO Date string
