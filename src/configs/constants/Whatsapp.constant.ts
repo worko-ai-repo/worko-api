@@ -43,16 +43,14 @@ const WHATSAPP_APP_CONSTANTS = {
    *
    * This property returns the initial delay for sending the first reminder after
    * an employee's work email has been validated. The delay is calculated differently
-   * based on the environment:
-   * - Production (PROD): 24 hours (in milliseconds)
-   * - Development/Testing: 10 minutes (in milliseconds)
+   * based on the environment
    *
    * @returns {number} - The initial delay in milliseconds.
    */
   get EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INITIAL_DELAY(): number {
     return process.env.APP_SLS_STAGE === APP_CONSTANTS.STAGES.PROD
-      ? 24 * 60 * 60 * 1000 // 24 hours in milliseconds
-      : 5 * 60 * 1000; // 5 minutes in milliseconds
+      ? 3 * 24 * 60 * 60 * 1000 // 3 days in milliseconds
+      : 5 * 60 * 1000; // 5 minutes in milliseconds // 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
   },
 
   /**
@@ -67,7 +65,7 @@ const WHATSAPP_APP_CONSTANTS = {
   get EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INTERVAL(): number {
     return process.env.APP_SLS_STAGE === APP_CONSTANTS.STAGES.PROD
       ? 3 * 24 * 60 * 60 * 1000 // 3 days in milliseconds
-      : 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
+      : 5 * 60 * 1000; // 5 minutes in milliseconds // 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
   },
 };
 
