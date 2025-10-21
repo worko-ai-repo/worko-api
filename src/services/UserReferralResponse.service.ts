@@ -2,14 +2,61 @@
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import userReferralResponseDao from "../daos/UserReferralResponse.dao";
 
-//Load the local dto
+// Import dtos
 import { UserReferralResponseDTO } from "../dtos/UserReferralResponse.dto";
+
+// Import enums
+import { CountUserDbEntityTypeEnum } from "../enums/CountUser.enum";
+
+// Import services
+import { countUserServiceObj } from "./CountUser.service";
+
+// Import models
 import { DbUserReferralResponseDto } from "../db/models/UserReferralResponse.model";
+import { DbCountUserDto } from "../db/models/CountUser.model";
 
 /**
  * UserReferralResponseService class is responsible for managing user ReferralResponse-related operations.
  */
 class UserReferralResponseService {
+  async performCountUserActivitiesAfterUserReferralResponseUpdate(
+    empEmail: string,
+    updatedUserReferralResponse: DbUserReferralResponseDto
+  ) {
+    const countUserReferralQueryResponse: QueryResponse<DbCountUserDto> = await countUserServiceObj.getCountUserByRegisteredEmailAndEntityType(empEmail, CountUserDbEntityTypeEnum.REFERRAL);
+    const countUserReferralData: DbCountUserDto = countUserReferralQueryResponse[0];
+
+    const {
+      acceptedRefIds: updatedAcceptedRefIds,
+      doneRefIds: updatedDoneRefIds,
+      rejectedRefIds: updatedRejectedRefIds,
+      passedRefIds: updatedPassedRefIds
+    } = updatedUserReferralResponse;
+
+    countUserServiceObj.createOrUpdateCountUserForReferralEntityType(
+      empEmail,
+      {
+        employeeReferralCounts: {
+          ...countUserReferralData?.employeeReferralCounts,
+
+          /**
+           * @todo Implementing `awaiting` count is tricky
+           * As of now we are putting this on hold
+           */
+
+          accepted: updatedAcceptedRefIds.length,
+          done: updatedDoneRefIds.length,
+          rejected: updatedRejectedRefIds.length,
+
+          /**
+           * @todo As of now `total` is not being implemented because `awaiting` count is tricky
+           */
+        }
+      },
+      !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+    );    
+  }
+
   /**
    * Retrieves user ReferralResponse by email.
    *

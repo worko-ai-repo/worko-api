@@ -58,7 +58,8 @@ class UserGuidanceRequestController {
         cognitoUserId
       );
 
-      if (userDetails.lastAccessedDash !== UserType.CAND) {
+      // If the user is not a candidate, throw an error
+      if (!userDetails.userType.includes(UserType.CAND)) {
         throw new BaseError(
           "Only candidates are authorized to create guidance requests",
           HttpStatusCode.FORBIDDEN_403

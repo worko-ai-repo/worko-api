@@ -32,6 +32,7 @@ import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ScheduleJobType, ScheduleJobStatus } from "../enums/ScheduleJob.enum";
 import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
+import { CountUserDbEntityTypeEnum } from "../enums/CountUser.enum";
 
 // Import Helpers
 import { urlHelperObj } from "../helpers/Url.helper";
@@ -42,6 +43,7 @@ import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusiness
 
 // Import Models
 import { DbUserReferralResponseDto } from "../db/models/UserReferralResponse.model";
+import { DbCountUserDto } from "../db/models/CountUser.model";
 
 // Import Utils
 import { BaseError } from "../utils/errors.util";
@@ -54,6 +56,7 @@ import UserReferralService from "./UserReferral.service";
 import UserReferralResponseService from "./UserReferralResponse.service";
 import CompanyService from "./Company.service";
 import ScheduleJobService from "./ScheduleJob.service";
+import { countUserServiceObj } from "./CountUser.service";
 
 // import constants
 import { WHATSAPP_APP_CONSTANTS } from "../configs/constants/Whatsapp.constant";
@@ -744,6 +747,9 @@ class UserReferralEmpService {
     // Update the referral
     let result = await userReferralDao.update(PK, SK, userReferralDTO);
 
+    UserReferralService.performCountUserActivitiesAfterReferralUpdateForCand(result);
+    UserReferralService.performCountGlobalActivitiesAfterReferralUpdate(result);
+
     if (result) {
       // Update the referral counts if the status is 'ACCEPT' or 'DONE'
       if (
@@ -963,7 +969,7 @@ class UserReferralEmpService {
     }
 
     // Fetch the referral response
-    let referralResponse = await UserReferralResponseService.get(empEmail);
+    let referralResponse: QueryResponse<DbUserReferralResponseDto> = await UserReferralResponseService.get(empEmail);
     let updateReferralResponse = referralResponse.count !== 0;
 
     // Initialize the userReferralResponseDTO
@@ -1019,7 +1025,7 @@ class UserReferralEmpService {
               rejectedUserId.userId === userId
           )
         ) {
-          throw new Error("The referral has already been rejected by you.");
+          throw new BaseError("The referral has already been rejected by you.", HttpStatusCode.BAD_REQUEST_400);
         }
         // Add the employee's rejection to the referral
         if (
@@ -1109,23 +1115,27 @@ class UserReferralEmpService {
     );
 
     // Update or create the referral response
+    let updatedReferralResponseDetails: DbUserReferralResponseDto;
     if (updateReferralResponse) {
       const { passedRefIds, rejectedRefIds, acceptedRefIds, doneRefIds } =
         referralResponse[0];
-      await UserReferralResponseService.update(empEmail, {
+      updatedReferralResponseDetails = await UserReferralResponseService.update(empEmail, {
         passedRefIds,
         rejectedRefIds,
         acceptedRefIds,
         doneRefIds,
       });
     } else {
-      await UserReferralResponseService.create(
+      updatedReferralResponseDetails = await UserReferralResponseService.create(
         empEmail,
         userReferralResponseDTO
       );
     }
 
-    return result;
+    UserReferralResponseService.performCountUserActivitiesAfterUserReferralResponseUpdate(
+      empEmail,
+      updatedReferralResponseDetails
+    )
   }
 }
 // Export an instance of the UserReferralEmpService class

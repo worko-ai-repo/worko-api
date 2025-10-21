@@ -5,7 +5,11 @@
  *
  */
 const DB_CONSTANTS = {
-  WORKO_TABLE_NAME: "worko", // Defines the name of the 'worko' table in the database
+  // Table names of worko
+  WORKO_TABLE_NAMES: {
+    workoTableName: "worko",
+    workoCountTableName: "worko-count",
+  },
   WORKO_PK_SK: {
     // Defines the primary key (PK) and sort key (SK) for the 'worko' table
     PK: { type: String, hashKey: true },
