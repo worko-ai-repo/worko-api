@@ -87,15 +87,21 @@ class UserReferralService {
     );
     const countUserReferralData: DbCountUserDto = countUserReferralQueryResponse[0];
 
+    const total: number | undefined = countUserReferralData?.candidateReferralCounts?.total;
+    const awaiting: number | undefined = countUserReferralData?.candidateReferralCounts?.awaiting;
+    const accepted: number | undefined = countUserReferralData?.candidateReferralCounts?.accepted;
+    const done: number | undefined = countUserReferralData?.candidateReferralCounts?.done;
+    const rejected: number | undefined = countUserReferralData?.candidateReferralCounts?.rejected;
+
     if(updatedReferralData.status === ReferralStatus.REJECTED) {
       countUserServiceObj.createOrUpdateCountUserForReferralEntityType(
         candidateEmail,
         {
           candidateReferralCounts: {
             ...countUserReferralData?.candidateReferralCounts,
-            total: (countUserReferralData?.candidateReferralCounts?.total ?? 0) - 1,
-            awaiting: (countUserReferralData?.candidateReferralCounts?.awaiting ?? 0) - 1,
-            rejected: (countUserReferralData?.candidateReferralCounts?.rejected ?? 0) + 1
+            total: (total ? total - 1:0),
+            awaiting: (awaiting ? awaiting - 1:0),
+            rejected: (rejected ? rejected + 1:1)
           }
         },
         !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
@@ -106,8 +112,8 @@ class UserReferralService {
         {
           candidateReferralCounts: {
             ...countUserReferralData?.candidateReferralCounts,
-            awaiting: (countUserReferralData?.candidateReferralCounts?.awaiting ?? 0) - 1,
-            accepted: (countUserReferralData?.candidateReferralCounts?.accepted ?? 0) + 1
+            awaiting: (awaiting ? awaiting - 1:0),
+            accepted: (accepted ? accepted + 1:1)
           }
         },
         !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
@@ -118,8 +124,8 @@ class UserReferralService {
         {
           candidateReferralCounts: {
             ...countUserReferralData?.candidateReferralCounts,
-            accepted: (countUserReferralData?.candidateReferralCounts?.accepted ?? 0) - 1,
-            done: (countUserReferralData?.candidateReferralCounts?.done ?? 0) + 1
+            accepted: (accepted ? accepted - 1:0),
+            done: (done ? done + 1:1)
           }
         },
         !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
@@ -130,8 +136,8 @@ class UserReferralService {
         {
           candidateReferralCounts: {
             ...countUserReferralData?.candidateReferralCounts,
-            total: (countUserReferralData?.candidateReferralCounts?.total ?? 0) - 1,
-            awaiting: (countUserReferralData?.candidateReferralCounts?.awaiting ?? 0) - 1,
+            total: (total ? total - 1:0),
+            awaiting: (awaiting ? awaiting - 1:0),
           }
         },
         !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
@@ -146,14 +152,18 @@ class UserReferralService {
       CountGlobalDbEntityTypeEnum.REFERRAL
     );
     const countGlobalReferralData: DbCountGlobalDto = countGlobalReferralQueryResponse[0];
+    const awaiting: number | undefined = countGlobalReferralData?.referralCounts?.awaiting;
+    const accepted: number | undefined = countGlobalReferralData?.referralCounts?.accepted;
+    const done: number | undefined = countGlobalReferralData?.referralCounts?.done;
+    const rejected: number | undefined = countGlobalReferralData?.referralCounts?.rejected;
 
     if(updatedReferralData.status === ReferralStatus.REJECTED) {
       countGlobalServiceObj.createOrUpdateCountGlobalForReferralEntityType(
         {
           referralCounts: {
             ...countGlobalReferralData?.referralCounts,
-            awaiting: (countGlobalReferralData?.referralCounts?.awaiting ?? 0) - 1,
-            rejected: (countGlobalReferralData?.referralCounts?.rejected ?? 0) + 1
+            awaiting: (awaiting ? awaiting - 1:0),
+            rejected: (rejected ? rejected + 1:1)
           }
         },
         !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
@@ -163,8 +173,8 @@ class UserReferralService {
         {
           referralCounts: {
             ...countGlobalReferralData?.referralCounts,
-            awaiting: (countGlobalReferralData?.referralCounts?.awaiting ?? 0) - 1,
-            accepted: (countGlobalReferralData?.referralCounts?.accepted ?? 0) + 1
+            awaiting: (awaiting ? awaiting - 1:0),
+            accepted: (accepted ? accepted + 1:1)
           }
         },
         !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
@@ -174,8 +184,8 @@ class UserReferralService {
         {
           referralCounts: {
             ...countGlobalReferralData?.referralCounts,
-            accepted: (countGlobalReferralData?.referralCounts?.accepted ?? 0) - 1,
-            done: (countGlobalReferralData?.referralCounts?.done ?? 0) + 1
+            accepted: (accepted ? accepted - 1:0),
+            done: (done ? done + 1:1)
           }
         },
         !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
@@ -185,7 +195,7 @@ class UserReferralService {
         {
           referralCounts: {
             ...countGlobalReferralData?.referralCounts,
-            awaiting: (countGlobalReferralData?.referralCounts?.awaiting ?? 0) - 1,
+            awaiting: (awaiting ? awaiting - 1:0),
           }
         },
         !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
@@ -253,8 +263,8 @@ class UserReferralService {
       {
         candidateReferralCounts: {
           ...countUserReferralData?.candidateReferralCounts,
-          total: (countUserReferralData?.candidateReferralCounts?.total ?? 0) + 1,
-          awaiting: (countUserReferralData?.candidateReferralCounts?.awaiting ?? 0) + 1
+          total: (countUserReferralData?.candidateReferralCounts?.total ? countUserReferralData.candidateReferralCounts.total + 1:1),
+          awaiting: (countUserReferralData?.candidateReferralCounts?.awaiting ? countUserReferralData.candidateReferralCounts.awaiting + 1:1)
         }
       },
       !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
@@ -269,7 +279,7 @@ class UserReferralService {
       {
         referralCounts: {
           ...countGlobalReferralData?.referralCounts,
-          awaiting: (countGlobalReferralData?.referralCounts?.awaiting ?? 0) + 1,
+          awaiting: (countGlobalReferralData?.referralCounts?.awaiting ? countGlobalReferralData.referralCounts.awaiting + 1:1),
         }
       },
       !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
