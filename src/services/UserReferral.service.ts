@@ -952,12 +952,6 @@ class UserReferralService {
     // Update referral status to CANCELLED if matching score is below minimum threshold
     if (matchingScore <= APP_CONSTANTS.MATCHING_SCORES.REFERRAL_MINIMUM_MATCHING_SCORE) {
       const updatedReferral: DbUserReferralDto = await this.updateStatus(referralId, userEmail, ReferralStatus.REJECTED);
-
-      this.performCountUserActivitiesAfterReferralUpdateForCand(
-        updatedReferral
-      )
-
-      this.performCountGlobalActivitiesAfterReferralUpdate(updatedReferral)
       logger.info(`Referral ${referralId} cancelled due to low matching score`);
     } else {
       // Create a delayed message to check referral status after 5 days
