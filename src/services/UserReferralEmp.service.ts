@@ -1137,7 +1137,9 @@ class UserReferralEmpService {
     await UserReferralResponseService.performCountUserActivitiesAfterUserReferralResponseUpdate(
       empEmail,
       updatedReferralResponseDetails
-    )
+    );
+
+    return result;
   }
 }
 // Export an instance of the UserReferralEmpService class
