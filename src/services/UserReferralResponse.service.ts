@@ -33,7 +33,7 @@ class UserReferralResponseService {
       passedRefIds: updatedPassedRefIds
     } = updatedUserReferralResponse;
 
-    countUserServiceObj.createOrUpdateCountUserForReferralEntityType(
+    await countUserServiceObj.createOrUpdateCountUserForReferralEntityType(
       empEmail,
       {
         employeeReferralCounts: {

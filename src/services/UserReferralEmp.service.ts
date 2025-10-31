@@ -747,8 +747,10 @@ class UserReferralEmpService {
     // Update the referral
     let result = await userReferralDao.update(PK, SK, userReferralDTO);
 
-    UserReferralService.performCountUserActivitiesAfterReferralUpdateForCand(result);
-    UserReferralService.performCountGlobalActivitiesAfterReferralUpdate(result);
+    await Promise.all([
+      UserReferralService.performCountUserActivitiesAfterReferralUpdateForCand(result),
+      UserReferralService.performCountGlobalActivitiesAfterReferralUpdate(result)
+    ]);
 
     if (result) {
       // Update the referral counts if the status is 'ACCEPT' or 'DONE'
@@ -1132,7 +1134,7 @@ class UserReferralEmpService {
       );
     }
 
-    UserReferralResponseService.performCountUserActivitiesAfterUserReferralResponseUpdate(
+    await UserReferralResponseService.performCountUserActivitiesAfterUserReferralResponseUpdate(
       empEmail,
       updatedReferralResponseDetails
     )
