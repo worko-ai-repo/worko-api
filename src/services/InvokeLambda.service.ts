@@ -1,4 +1,3 @@
-
 // import aws lambda related types
 import { APIGatewayProxyResult } from "aws-lambda";
 
@@ -19,6 +18,16 @@ import { MatchingScoreEntityEnum } from "../enums/Common.enum";
 // import utils
 import { BaseError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
+import {
+  InterviewCompletionPayload,
+  InterviewCompletionResponse,
+  InterviewFeedbackPayload,
+  InterviewFeedbackResponse,
+  InterviewInitialPayload,
+  InterviewInitialResponse,
+  InterviewLambdaFnMode,
+} from "../dtos/UserInterview.dto";
+import { InvocationTypeEnum } from "../enums/InvokeLambda.enum";
 
 /**
  * API Invoke Error Codes:
@@ -69,37 +78,90 @@ class InvokeLambdaService {
     return awsClientLambdaLibrary.triggerLambdaEventInvocationType<{
       USER_PK: string;
       USER_DETAIL_SK: string;
-    }>(
-      APP_CONSTANTS.LAMBDA_FUNCTION_NAMES.RESUME_EXTRACTION_LAMBDA_NAME,
-      payload
-    );
+    }>(APP_CONSTANTS.LAMBDA_FUNCTION_NAMES.RESUME_EXTRACTION_LAMBDA_NAME, payload);
   }
 
   async triggerResumePartialExtraction(
     s3ResumeId: string,
-    userId: string,
+    userId: string
   ): Promise<APIGatewayProxyResult> {
     // log the info
     global.logger.info("Trigger OpenSearch Operation Lambda [service]", {
       methodName: this.triggerResumePartialExtraction.name,
     });
 
-    const lambdaName: string | undefined = APP_CONSTANTS.LAMBDA_FUNCTION_NAMES.WORKO_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME;
-    if(!lambdaName ) {
+    const lambdaName: string | undefined =
+      APP_CONSTANTS.LAMBDA_FUNCTION_NAMES.WORKO_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME;
+    if (!lambdaName) {
       global.logger.error("Lambda name not found in constants");
-      throw new BaseError("Lambda name not found in constants", HttpStatusCode.INTERNAL_SERVER_ERROR_500);
+      throw new BaseError(
+        "Lambda name not found in constants",
+        HttpStatusCode.INTERNAL_SERVER_ERROR_500
+      );
     }
 
     return awsClientLambdaLibrary.triggerLambdaRequestResponseInvocationType<{
       s3ResumeId: string;
       userId: string;
-    }>(
-      lambdaName,
-      {
-        s3ResumeId,
-        userId
-      }
-    );
+    }>(lambdaName, {
+      s3ResumeId,
+      userId,
+    });
+  }
+
+  /**
+   * triggerInterviewService
+   *
+   * @description Triggers the interview initiation lambda function with different services
+   */
+  // --- Overloads ---
+  async triggerInterviewService(
+    payload: InterviewInitialPayload,
+    mode: "initial",
+    invocationType: InvocationTypeEnum
+  ): Promise<InterviewInitialResponse>;
+
+  async triggerInterviewService(
+    payload: InterviewFeedbackPayload,
+    mode: "feedback",
+    invocationType: InvocationTypeEnum
+  ): Promise<InterviewFeedbackResponse>;
+
+  async triggerInterviewService(
+    payload: InterviewCompletionPayload,
+    mode: "completion",
+    invocationType: InvocationTypeEnum
+  ): Promise<InterviewCompletionResponse>;
+
+  // --- Implementation ---
+  async triggerInterviewService(
+    payload: InterviewInitialPayload | InterviewFeedbackPayload | InterviewCompletionPayload,
+    mode: InterviewLambdaFnMode,
+    invocationType: InvocationTypeEnum
+  ): Promise<InterviewInitialResponse | InterviewFeedbackResponse | InterviewCompletionResponse> {
+    global.logger.info("Trigger Interview Service Lambda [service]", {
+      filePath: __filename,
+      methodName: "triggerInterviewService",
+      mode,
+      invocationType,
+    });
+
+    const lambdaName =
+      APP_CONSTANTS.LAMBDA_FUNCTION_NAMES.INTERVIEW_SERVICE_LAMBDA_NAME ||
+      "worko-video-interview-workflow";
+    // update payload with mode
+    (payload as any)["mode"] = mode;
+    console.log("Interview Service Lambda Payload:", payload);
+    
+    const response = invocationType === InvocationTypeEnum.EventType 
+      ? await awsClientLambdaLibrary.triggerLambdaEventInvocationType(lambdaName, payload)
+      : await awsClientLambdaLibrary.triggerLambdaRequestResponseInvocationType(lambdaName, payload);
+    
+    console.warn("Interview Service Lambda Response:", response);
+    const parsedResponse =
+      typeof response.body === "string" ? JSON.parse(response.body) : response.body;
+
+    return parsedResponse;
   }
 }
 

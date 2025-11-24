@@ -394,6 +394,12 @@ var isEvaluatorUrl = function (url, httpMethod) {
 
     // Evaluator detail routers
     { path: "/evaluator-detail*", method: HttpMethodsConstants.GET },
+
+    // User Interview Routers
+    {
+      path: "/user/interview/request",
+      method: HttpMethodsConstants.POST,
+    },
   ];
 
   const result = checkMatchingPattern(url, urlList, httpMethod);
@@ -459,9 +465,36 @@ var isCorporateRecruiterUrl = function (url, httpMethod) {
     { path: "/evaluator-detail*", method: HttpMethodsConstants.GET },
 
     // User Job Application Author Note Routers
-    { path: "/job-application-author-note/", method: HttpMethodsConstants.POST },
-    { path: "/job-application-author-note/:jobApplicationId/:authorId", method: HttpMethodsConstants.GET },
-    { path: "/job-application-author-note/:jobApplicationId/:noteId", method: HttpMethodsConstants.PATCH },
+    {
+      path: "/job-application-author-note/",
+      method: HttpMethodsConstants.POST,
+    },
+    {
+      path: "/job-application-author-note/:jobApplicationId/:authorId",
+      method: HttpMethodsConstants.GET,
+    },
+    {
+      path: "/job-application-author-note/:jobApplicationId/:noteId",
+      method: HttpMethodsConstants.PATCH,
+    },
+
+    // Count Company Job routers
+    {
+      path: "/counts/:companyId/:jobId/:entityType/company-job",
+      method: HttpMethodsConstants.GET,
+    },
+
+    // Count Company Routers
+    {
+      path: "/counts/:companyId/:entityType/company",
+      method: HttpMethodsConstants.GET,
+    },
+
+    // User Interview Routers
+    {
+      path: "/user/interview/request",
+      method: HttpMethodsConstants.POST,
+    },
   ];
 
   const result = checkMatchingPattern(url, urlList, httpMethod);
@@ -526,9 +559,36 @@ var isCorporateAdminUrl = function (url, httpMethod) {
     { path: "/evaluator-detail*", method: HttpMethodsConstants.GET },
 
     // User Job Application Author Note Routers
-    { path: "/job-application-author-note/", method: HttpMethodsConstants.POST },
-    { path: "/job-application-author-note/:jobApplicationId/:authorId", method: HttpMethodsConstants.GET },
-    { path: "/job-application-author-note/:jobApplicationId/:noteId", method: HttpMethodsConstants.PATCH },
+    {
+      path: "/job-application-author-note/",
+      method: HttpMethodsConstants.POST,
+    },
+    {
+      path: "/job-application-author-note/:jobApplicationId/:authorId",
+      method: HttpMethodsConstants.GET,
+    },
+    {
+      path: "/job-application-author-note/:jobApplicationId/:noteId",
+      method: HttpMethodsConstants.PATCH,
+    },
+
+    // Count Company Job routers
+    {
+      path: "/counts/:companyId/:jobId/:entityType/company-job",
+      method: HttpMethodsConstants.GET,
+    },
+
+    // Count Company Routers
+    {
+      path: "/counts/:companyId/:entityType/company",
+      method: HttpMethodsConstants.GET,
+    },
+
+    // User Interview Routers
+    {
+      path: "/user/interview/request",
+      method: HttpMethodsConstants.POST,
+    },
   ];
 
   const result = checkMatchingPattern(url, urlList, httpMethod);
@@ -635,12 +695,42 @@ var isAdminUrl = function (url, httpMethod) {
     { path: "/evaluator-detail*", method: HttpMethodsConstants.GET },
 
     // Guidance Request routers
-    { path: "/user/guidance-request/:id/WORKO_ADMIN_ACTION", method: HttpMethodsConstants.PATCH },
+    {
+      path: "/user/guidance-request/:id/WORKO_ADMIN_ACTION",
+      method: HttpMethodsConstants.PATCH,
+    },
 
     // User Job Application Author Note Routers
-    { path: "/job-application-author-note/", method: HttpMethodsConstants.POST },
-    { path: "/job-application-author-note/:jobApplicationId/:authorId", method: HttpMethodsConstants.GET },
-    { path: "/job-application-author-note/:jobApplicationId/:noteId", method: HttpMethodsConstants.PATCH },
+    {
+      path: "/job-application-author-note/",
+      method: HttpMethodsConstants.POST,
+    },
+    {
+      path: "/job-application-author-note/:jobApplicationId/:authorId",
+      method: HttpMethodsConstants.GET,
+    },
+    {
+      path: "/job-application-author-note/:jobApplicationId/:noteId",
+      method: HttpMethodsConstants.PATCH,
+    },
+
+    // Count global routers
+    {
+      path: "/counts/:entityType/global-count",
+      method: HttpMethodsConstants.GET,
+    },
+
+    // Count Company Job routers
+    {
+      path: "/counts/:companyId/:jobId/:entityType/company-job",
+      method: HttpMethodsConstants.GET,
+    },
+
+    // User Interview Routers
+    {
+      path: "/user/interview/request",
+      method: HttpMethodsConstants.POST,
+    },
   ];
 
   const result = checkMatchingPattern(url, adminUrlList, httpMethod);

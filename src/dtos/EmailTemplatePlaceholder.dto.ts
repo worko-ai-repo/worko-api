@@ -402,3 +402,18 @@ export interface EmailTemplatePlaceholderMENTOR_USER_GUIDANCE_REQUEST_CANCELLED_
   candidateName: string;
   mentorName: string;
 }
+
+/**
+ * EmailTemplatePlaceholderINTERVIEW_REQUEST_BY_CORPORATE_USER
+ * 
+ * Represents the placeholders for the email template used when a corporate user requests an interview for a candidate.
+ */
+export interface EmailTemplatePlaceholderINTERVIEW_REQUEST_BY_CORPORATE_USER {
+  recipientEmail: string;
+  recipientName: string;
+  companyName: string;
+  position: string;
+  jobUrl: string;
+  interviewUrl: string;
+  requesterName: string;
+}

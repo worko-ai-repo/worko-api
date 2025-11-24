@@ -51,7 +51,7 @@ const APP_CONSTANTS = {
     CAREER_RESUME: "career-resumes", // To upload the resumes uplaoded via career page
     COMPANY_JOB_DESCRIPTION: "companies/{companyId}/company-job-descriptions", // To upload the company job description uplaoded via `corporate dashboard` or `admin dashboard`
     BULK_CVS: "companies/{companyId}/bulk-cvs/{corporateBulkJdId}", // To upload the bulk cvs uplaoded via `corporate dashboard` or `admin dashboard`
-
+    USER_INTERVIEW_RECORDING: "users/{userId}/interview/{interviewId}", // To upload the individual user's interview recordings
     /**
      * @NOTE:
      *  1. Currently, company logos are being stored in the following S3 path:
@@ -118,6 +118,14 @@ const APP_CONSTANTS = {
      * Whenever user click on upload cv then we will do partial fetching data from `cv` and till user fills details, we will deeply fetch the data from cv and store in db on background
      */
     WORKO_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME: process.env.APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME,
+    
+    /**
+     * INTERVIEW_SERVICE_LAMBDA_NAME
+     * 
+     * Lambda function name for "Interview Service" like initiate interview, generating feedback and completion of interview
+     */
+    INTERVIEW_SERVICE_LAMBDA_NAME: process.env.APP_AWS_INTERVIEW_SERVICE_LAMBDA_NAME,
+  
   },
 
   MATCHING_SCORE_PROMPT:
@@ -166,7 +174,9 @@ const APP_CONSTANTS = {
   FRONTEND_URLS: {
     WORKO_APP_URL: process.env.APP_WORKO_FRONTEND_BASE_URL ?? "https://worko.ai", 
     SUBS_PREMIUM_RENEW: "https://worko.ai/", 
-    SUBS_PREMIUM_UPGRADE: "https://worko.ai/", 
+    SUBS_PREMIUM_UPGRADE: "https://worko.ai/",
+    INTERVIEW_PORTAL: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/interview/{token}?stage=continue`, 
+    JOB_DETAILS: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/job/{companyName}/{jobId}`,
     CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/login`,
     CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/signup/{token}`,
     WORKO_LOGO_URL:
@@ -360,6 +370,10 @@ const APP_CONSTANTS = {
   },
 
   WORKO_LOGO_URL: process.env.APP_WORKO_LOGO_URL,
+
+  INTERVIEW_SETTINGS:{
+    TOTAL_QUESTIONS: 6,
+  }
 };
 
 export default APP_CONSTANTS;

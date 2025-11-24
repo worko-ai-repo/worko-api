@@ -6,7 +6,15 @@ import APP_CONSTANTS from "../configs/constants.config";
 import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
 
 // Import DTOs
-import { BlogCoverImagePreSignedUrlToUploadFileRequestApiDto, BulkCvPreSignedUrlToViewApiDto, CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto, CompanyLogoPreSignedUrlToUploadFileRequestApiDto, PreSignedUrlToUploadFileResponseDto } from "../dtos/File.dto";
+import {
+  BlogCoverImagePreSignedUrlToUploadFileRequestApiDto,
+  BulkCvPreSignedUrlToViewApiDto,
+  CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto,
+  CompanyLogoPreSignedUrlToUploadFileRequestApiDto,
+  InterviewRecordingPreSignedUrlToUploadFileRequestApiDto,
+  InterviewRecordingPreSignedUrlToViewApiDto,
+  PreSignedUrlToUploadFileResponseDto,
+} from "../dtos/File.dto";
 
 // Import enums
 import { FileResourceKey } from "../enums/File.enum";
@@ -23,6 +31,8 @@ import {
   FileGeneratePsuToUploadUserProfilePicDTOValidation,
   FileGeneratePsuToUploadUserResumeDTOValidation,
   FileGeneratePsuToViewBulkJdResumeDTOValidation,
+  FileGeneratePsuToUploadInterviewRecordingDTOValidation,
+  FileGeneratePsuToViewInterviewRecordingDTOValidation,
 } from "../schemas/File.schema";
 
 // Import utilities
@@ -89,6 +99,10 @@ class FileController {
         case FileResourceKey.COMPANY_JOB_DESCRIPTION:
           return this.generatePsuToUploadCompanyJobDescription(req, res, next);
 
+        // Frontend wants to generate the pre-signed url to upload interviewChunk
+        case FileResourceKey.USER_INTERVIEW_RECORDING:
+          return this.generatePsuToUploadInterviewChunks(req, res, next);
+
         // As resource keys are not matched above, let frontend know about the same.
         default:
           throw new BaseError(
@@ -141,6 +155,10 @@ class FileController {
       else if (resourceKey === FileResourceKey.BULK_CVS) {
         return this.generatePsuToViewBulkCv(req, res, next);
       }
+      // Frontend wants to get the user's interview recording chunks
+      else if (resourceKey === FileResourceKey.USER_INTERVIEW_RECORDING) {
+        return this.generatePsuToViewInterviewChunks(req, res, next);
+      }
 
       // As resource keys are not matched above, let frontend know about the same.
       throw new BaseError(
@@ -176,12 +194,9 @@ class FileController {
       let requestBodyObject = req.body;
 
       // Validate the request data
-      const { error } = FileGeneratePsuToUploadUserResumeDTOValidation.validate(
-        requestBodyObject,
-        {
-          abortEarly: false,
-        }
-      );
+      const { error } = FileGeneratePsuToUploadUserResumeDTOValidation.validate(requestBodyObject, {
+        abortEarly: false,
+      });
 
       if (error) {
         throw new RequestValidationError(error);
@@ -198,19 +213,17 @@ class FileController {
         .pop() as string; // It is expected in request payload to provide flexibility
 
       // Prepare the user's resume file name
-      const resumeCloudFileName =
-        UlidService.getUlidId() + "." + resumeUserFileExtension;
+      const resumeCloudFileName = UlidService.getUlidId() + "." + resumeUserFileExtension;
 
       // Generate the AWS S3 Signed Url
-      const fileSignedUrl =
-        await awsS3ClientLibrary.getSignedUrlForUploadingObject(
-          process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
-          fileUploadPath + "/" + resumeCloudFileName,
-          APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
-          {
-            ContentType: requestBodyObject.resumeFileMimeType, // It is expected in request payload to provide flexibility
-          }
-        );
+      const fileSignedUrl = await awsS3ClientLibrary.getSignedUrlForUploadingObject(
+        process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+        fileUploadPath + "/" + resumeCloudFileName,
+        APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
+        {
+          ContentType: requestBodyObject.resumeFileMimeType, // It is expected in request payload to provide flexibility
+        }
+      );
 
       // Prepare the response object
       const resObject: PreSignedUrlToUploadFileResponseDto = {
@@ -252,23 +265,21 @@ class FileController {
       let requestBodyObject = req.body;
 
       // Validate the request data
-      const { error } =
-        FileGeneratePsuToUploadUserProfilePicDTOValidation.validate(
-          requestBodyObject,
-          {
-            abortEarly: false,
-          }
-        );
+      const { error } = FileGeneratePsuToUploadUserProfilePicDTOValidation.validate(
+        requestBodyObject,
+        {
+          abortEarly: false,
+        }
+      );
 
       if (error) {
         throw new RequestValidationError(error);
       }
 
       // Get the base path where the user's ProfilePic file would be uploaded
-      const fileUploadPath =
-        APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_PROFILE_PIC.strtr({
-          "{userId}": requestBodyObject.userId.toString(),
-        });
+      const fileUploadPath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_PROFILE_PIC.strtr({
+        "{userId}": requestBodyObject.userId.toString(),
+      });
 
       // Get the user's ProfilePic file extension
       const profilePicUserFileExtension = requestBodyObject.profileUserFileName
@@ -276,19 +287,17 @@ class FileController {
         .pop() as string; // It is expected in request payload to provide flexibility
 
       // Prepare the user's ProfilePic file name
-      const profilePicCloudFileName =
-        UlidService.getUlidId() + "." + profilePicUserFileExtension;
+      const profilePicCloudFileName = UlidService.getUlidId() + "." + profilePicUserFileExtension;
 
       // Generate the AWS S3 Signed Url
-      const fileSignedUrl =
-        await awsS3ClientLibrary.getSignedUrlForUploadingObject(
-          process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
-          fileUploadPath + "/" + profilePicCloudFileName,
-          APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
-          {
-            ContentType: requestBodyObject.profileFileMimeType, // It is expected in request payload to provide flexibility
-          }
-        );
+      const fileSignedUrl = await awsS3ClientLibrary.getSignedUrlForUploadingObject(
+        process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+        fileUploadPath + "/" + profilePicCloudFileName,
+        APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
+        {
+          ContentType: requestBodyObject.profileFileMimeType, // It is expected in request payload to provide flexibility
+        }
+      );
 
       // Prepare the response object
       const resObject: PreSignedUrlToUploadFileResponseDto = {
@@ -321,25 +330,22 @@ class FileController {
   ) => {
     try {
       // Get the request body
-      let requestBodyObject: CompanyLogoPreSignedUrlToUploadFileRequestApiDto =
-        req.body;
+      let requestBodyObject: CompanyLogoPreSignedUrlToUploadFileRequestApiDto = req.body;
 
       // Validate the request data
-      const { error } =
-        FileGeneratePsuToUploadCompanyLogoDTOValidation.validate(
-          requestBodyObject,
-          {
-            abortEarly: false,
-          }
-        );
+      const { error } = FileGeneratePsuToUploadCompanyLogoDTOValidation.validate(
+        requestBodyObject,
+        {
+          abortEarly: false,
+        }
+      );
 
       if (error) {
         throw new RequestValidationError(error);
       }
 
       // Get the base path where the company logo file would be uploaded.
-      const fileUploadPath: string =
-        APP_CONSTANTS.AWS_S3_DIR_PATHS.COMPANY_LOGO;
+      const fileUploadPath: string = APP_CONSTANTS.AWS_S3_DIR_PATHS.COMPANY_LOGO;
 
       /**
        * Get the company logo file extension
@@ -354,7 +360,7 @@ class FileController {
 
       /**
        * Prepare the company logo file name
-       * 
+       *
        * @example:
        *  1. "2vhd2uidvkqh3kv2rf6697.jpg"
        *  2. "2vhd2uiugdqwidvkqh3kv2.png"
@@ -362,15 +368,14 @@ class FileController {
       const companyLogoCloudFileName: string = `${UlidService.getUlidId()}.${companyLogoFileExtension}`;
 
       // Generate the AWS S3 Signed Url
-      const fileSignedUrl: string =
-        await awsS3ClientLibrary.getSignedUrlForUploadingObject(
-          process.env.APP_AWS_S3_BUCKET_WORKO_UI_COMP_LOGO as string,
-          `${fileUploadPath}/${companyLogoCloudFileName}`,
-          APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
-          {
-            ContentType: requestBodyObject.companyLogoFileMimeType,
-          }
-        );
+      const fileSignedUrl: string = await awsS3ClientLibrary.getSignedUrlForUploadingObject(
+        process.env.APP_AWS_S3_BUCKET_WORKO_UI_COMP_LOGO as string,
+        `${fileUploadPath}/${companyLogoCloudFileName}`,
+        APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
+        {
+          ContentType: requestBodyObject.companyLogoFileMimeType,
+        }
+      );
 
       // Prepare the response object
       const resObject: PreSignedUrlToUploadFileResponseDto = {
@@ -403,17 +408,15 @@ class FileController {
   ) => {
     try {
       // Get the request body
-      let requestBodyObject: BlogCoverImagePreSignedUrlToUploadFileRequestApiDto =
-        req.body;
+      let requestBodyObject: BlogCoverImagePreSignedUrlToUploadFileRequestApiDto = req.body;
 
       // Validate the request data
-      const { error } =
-        FileGeneratePsuToUploadBlogCoverImageDTOValidation.validate(
-          requestBodyObject,
-          {
-            abortEarly: false,
-          }
-        );
+      const { error } = FileGeneratePsuToUploadBlogCoverImageDTOValidation.validate(
+        requestBodyObject,
+        {
+          abortEarly: false,
+        }
+      );
 
       if (error) {
         throw new RequestValidationError(error);
@@ -443,15 +446,14 @@ class FileController {
       const blogCoverImageCloudName: string = `${UlidService.getUlidId()}.${blogCoverImageFileExtension}`;
 
       // Generate the AWS S3 Signed Url
-      const fileSignedUrl: string =
-        await awsS3ClientLibrary.getSignedUrlForUploadingObject(
-          process.env.APP_AWS_S3_BUCKET_WORKO_UI_COMP_LOGO as string,
-          `${fileUploadPath}/${blogCoverImageCloudName}`,
-          APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
-          {
-            ContentType: requestBodyObject.blogCoverImageFileMimeType,
-          }
-        );
+      const fileSignedUrl: string = await awsS3ClientLibrary.getSignedUrlForUploadingObject(
+        process.env.APP_AWS_S3_BUCKET_WORKO_UI_COMP_LOGO as string,
+        `${fileUploadPath}/${blogCoverImageCloudName}`,
+        APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
+        {
+          ContentType: requestBodyObject.blogCoverImageFileMimeType,
+        }
+      );
 
       // Prepare the response object
       const resObject: PreSignedUrlToUploadFileResponseDto = {
@@ -493,13 +495,12 @@ class FileController {
       let requestBodyObject = req.body;
 
       // Validate the request data
-      const { error } =
-        FileGeneratePsuToUploadCareerResumeDTOValidation.validate(
-          requestBodyObject,
-          {
-            abortEarly: false,
-          }
-        );
+      const { error } = FileGeneratePsuToUploadCareerResumeDTOValidation.validate(
+        requestBodyObject,
+        {
+          abortEarly: false,
+        }
+      );
 
       if (error) {
         throw new RequestValidationError(error);
@@ -509,13 +510,10 @@ class FileController {
       const uploadPath = APP_CONSTANTS.AWS_S3_DIR_PATHS.CAREER_RESUME;
 
       // Get the career CV file extension
-      const careerCVFileExtension = requestBodyObject.careerCVFileName
-        .split(".")
-        .pop() as string; // It is expected in request payload to provide flexibility
+      const careerCVFileExtension = requestBodyObject.careerCVFileName.split(".").pop() as string; // It is expected in request payload to provide flexibility
 
       // Prepare the career CV file name
-      const careerCvCloudFileName =
-        UlidService.getUlidId() + "." + careerCVFileExtension;
+      const careerCvCloudFileName = UlidService.getUlidId() + "." + careerCVFileExtension;
 
       // Generate the AWS S3 Signed Url
       const signedUrl = await awsS3ClientLibrary.getSignedUrlForUploadingObject(
@@ -563,47 +561,42 @@ class FileController {
   ) => {
     try {
       // Get the request body
-      let requestBodyObject: CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto =
-        req.body;
+      let requestBodyObject: CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto = req.body;
 
       // Validate the request data and throw a validation error if invalid
-      const { error } =
-        FileGeneratePsuToUploadCompanyJobDescriptionDTOValidation.validate(
-          requestBodyObject,
-          {
-            abortEarly: false,
-          }
-        );
+      const { error } = FileGeneratePsuToUploadCompanyJobDescriptionDTOValidation.validate(
+        requestBodyObject,
+        {
+          abortEarly: false,
+        }
+      );
       if (error) {
         throw new RequestValidationError(error);
       }
 
       // Get the base path where the company job description file would be uploaded
-      const fileUploadPath: string =
-        APP_CONSTANTS.AWS_S3_DIR_PATHS.COMPANY_JOB_DESCRIPTION.strtr({
-          "{companyId}": requestBodyObject.companyId.toString(),
-        });
+      const fileUploadPath: string = APP_CONSTANTS.AWS_S3_DIR_PATHS.COMPANY_JOB_DESCRIPTION.strtr({
+        "{companyId}": requestBodyObject.companyId.toString(),
+      });
 
       // Get the Company job description file extension
-      const companyJobDescriptionFileExtension =
-        requestBodyObject.companyJobDescriptionFileName
-          .split(".")
-          .pop() as string; // Sample Output: "pdf"
+      const companyJobDescriptionFileExtension = requestBodyObject.companyJobDescriptionFileName
+        .split(".")
+        .pop() as string; // Sample Output: "pdf"
 
       // Prepare the Company job description file name
       const companyJobDescriptionCloudFileName: string =
         UlidService.getUlidId() + "." + companyJobDescriptionFileExtension;
 
       // Generate the AWS S3 Signed Url
-      const fileSignedUrl: string =
-        await awsS3ClientLibrary.getSignedUrlForUploadingObject(
-          process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
-          fileUploadPath + "/" + companyJobDescriptionCloudFileName,
-          APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
-          {
-            ContentType: requestBodyObject.companyJobDescriptionFileMimeType, // It is expected in request payload to provide flexibility
-          }
-        );
+      const fileSignedUrl: string = await awsS3ClientLibrary.getSignedUrlForUploadingObject(
+        process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+        fileUploadPath + "/" + companyJobDescriptionCloudFileName,
+        APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
+        {
+          ContentType: requestBodyObject.companyJobDescriptionFileMimeType, // It is expected in request payload to provide flexibility
+        }
+      );
 
       // Prepare the response object
       const resObject: PreSignedUrlToUploadFileResponseDto = {
@@ -623,6 +616,137 @@ class FileController {
   };
 
   /**
+   * generatePsuToUploadInterviewChunks
+   *
+   * Generate the Pre-signed URL to upload interview recording chunks.
+   * The frontend will upload the interview recording chunks to the cloud using the provided pre-signed url.
+   *
+   * Note: Here the file mime type and extension of the file is expected in the request to provide flexibility.
+   *
+   * @param req Request
+   * @param res Response
+   * @param next NextFunction
+   * @returns {Promise<any>}
+   */
+  private generatePsuToUploadInterviewChunks = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> => {
+    try {
+      // Get the request body
+      let requestBodyObject: InterviewRecordingPreSignedUrlToUploadFileRequestApiDto = req.body;
+
+      // Validate the request data
+      const { error } = FileGeneratePsuToUploadInterviewRecordingDTOValidation.validate(
+        requestBodyObject,
+        {
+          abortEarly: false,
+        }
+      );
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Get the base path where the interview recording chunk would be uploaded
+      const fileUploadPath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_INTERVIEW_RECORDING.strtr({
+        "{interviewId}": requestBodyObject.interviewId.toString(),
+        "{userId}": requestBodyObject.userId.toString(),
+      });
+
+      // Get the interview recording chunk file extension
+      const chunkFileExtension = requestBodyObject.chunkFileName.split(".").pop() as string; // It is expected in request payload to provide flexibility
+
+      // Prepare the interview recording chunk file name with optional sequence
+      const chunkSequencePrefix = requestBodyObject.chunkSequence
+        ? `chunk_${requestBodyObject.chunkSequence}_`
+        : "";
+      const chunkCloudFileName =
+        chunkSequencePrefix + UlidService.getUlidId() + "." + chunkFileExtension;
+
+      // Generate the AWS S3 Signed Url
+      const fileSignedUrl = await awsS3ClientLibrary.getSignedUrlForUploadingObject(
+        process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+        fileUploadPath + "/" + chunkCloudFileName,
+        APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
+        {
+          ContentType: requestBodyObject.chunkFileMimeType, // It is expected in request payload to provide flexibility
+        }
+      );
+
+      // Prepare the response object
+      const resObject: PreSignedUrlToUploadFileResponseDto = {
+        userFileName: requestBodyObject.chunkFileName,
+        cloudFileName: chunkCloudFileName,
+        fileMimeType: requestBodyObject.chunkFileMimeType,
+        fileExtension: chunkFileExtension,
+        awsS3SignedUrl: fileSignedUrl,
+      };
+
+      // Return the response
+      return res.status(HttpStatusCode.OK_200).json(resObject);
+    } catch (error) {
+      // Let global error handler handle the exception (app.ts)
+      next(error);
+    }
+  };
+
+  /**
+   * generatePsuToViewInterviewChunks
+   *
+   * Get the interview recording chunks from cloud storage.
+   *
+   * @param req Request
+   * @param res Response
+   * @param next NextFunction
+   * @returns {Promise<any>}
+   */
+  private generatePsuToViewInterviewChunks = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> => {
+    try {
+      const interviewId = req.params["id"];
+      const cloudFileName = req.params["cloudFileName"];
+
+      // Validate the request parameters
+      const requestParams: InterviewRecordingPreSignedUrlToViewApiDto = {
+        interviewId: interviewId,
+      };
+
+      const { error } = FileGeneratePsuToViewInterviewRecordingDTOValidation.validate(
+        requestParams,
+        {
+          abortEarly: false,
+        }
+      );
+
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Construct the file path in the cloud storage
+      const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_INTERVIEW_RECORDING.strtr({
+        "{interviewId}": interviewId.toString(),
+      });
+
+      // Generate the object URL for viewing the interview recording chunk
+      const objectUrl = await awsS3ClientLibrary.generateObjectUrl(
+        process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+        filePath + "/" + cloudFileName
+      );
+
+      // Return the object URL to the frontend
+      return res.status(HttpStatusCode.OK_200).json({ objectUrl });
+    } catch (error) {
+      // Let global error handler handle the exception (app.ts)
+      next(error);
+    }
+  };
+
+  /**
    * getUserResume
    *
    * Get the user's resume from cloud storage.
@@ -633,11 +757,7 @@ class FileController {
    * @param userId string
    * @returns {Promise<any>}
    */
-  private getUserResume = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<any> => {
+  private getUserResume = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
       const userId = req.params["id"];
       const cloudFileName = req.params["cloudFileName"];
@@ -755,10 +875,9 @@ class FileController {
       const cloudFileName = req.params["cloudFileName"];
 
       // Construct the file path in the cloud storage
-      const filePath =
-        APP_CONSTANTS.AWS_S3_DIR_PATHS.COMPANY_JOB_DESCRIPTION.strtr({
-          "{companyId}": companyId.toString(),
-        });
+      const filePath = APP_CONSTANTS.AWS_S3_DIR_PATHS.COMPANY_JOB_DESCRIPTION.strtr({
+        "{companyId}": companyId.toString(),
+      });
 
       // Assume that you have a method to generate the object URL
       const objectUrl = await awsS3ClientLibrary.generateObjectUrl(
@@ -782,7 +901,7 @@ class FileController {
    * @param {Request} req - The incoming request object.
    * @param {Response} res - The outgoing response object.
    * @param {NextFunction} next - The next function in the middleware chain.
-   * 
+   *
    * @param {string} cloudFileName - The name of the file in the cloud storage.
    */
   private generatePsuToViewBulkCv = async (
@@ -795,12 +914,12 @@ class FileController {
       const cloudFileName: string = req.params["cloudFileName"];
 
       // retrieve the request body and throw error if it is invalid
-      const reqQuery = req.query as unknown as BulkCvPreSignedUrlToViewApiDto; 
+      const reqQuery = req.query as unknown as BulkCvPreSignedUrlToViewApiDto;
       const { error } = FileGeneratePsuToViewBulkJdResumeDTOValidation.validate(reqQuery, {
         abortEarly: false,
       });
-      if(error){
-        throw new RequestValidationError(error)
+      if (error) {
+        throw new RequestValidationError(error);
       }
 
       // Construct the file path in the cloud storage

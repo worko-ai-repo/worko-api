@@ -155,4 +155,10 @@ export enum EmailTemplateEnum {
    * The template name used to send an email to mentor, when the worko-admin submit meeting link.
    */
   MENTOR_USER_GUIDANCE_REQUEST_MEETING_CONFIRMED_UPDATE_STATUS = "MENTOR_USER_GUIDANCE_REQUEST_MEETING_CONFIRMED_UPDATE_STATUS",
+
+  /**
+   * The template name used to send an email to candidate when the interview is requested by corporate user.
+   */
+  INTERVIEW_REQUEST_BY_CORPORATE_USER = "INTERVIEW_REQUEST_BY_CORPORATE_USER",
+
 }

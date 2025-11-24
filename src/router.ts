@@ -57,6 +57,7 @@ import AdminSubsRouter from "./routers/Admin.router";
 import AdminRouter from "./admin/router";
 import BlogRouter from "./routers/Blog.router";
 import UserGuidanceRequestRouter from "./routers/UserGuidanceRequest.router";
+import UserInterviewRouter from "./routers/UserInterview.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -340,6 +341,16 @@ router.use("/user", UserExperienceRouter);
  * USER GUIDANCE REQUEST ROUTERS
  */
 router.use("/user", UserGuidanceRequestRouter);
+
+ /**
+  * USER INTERVIEW
+  * 
+  * Register the "User Interview" routers
+  * 
+  * @authorisedRoles ["admin", "loggedInUser"]
+  * @todo add required authorizations after discussing with team lead
+  */
+router.use("/user", UserInterviewRouter);
 
 /**
  * USER SOCIAL PROFILE ROUTERS
