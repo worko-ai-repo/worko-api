@@ -175,7 +175,7 @@ const APP_CONSTANTS = {
     WORKO_APP_URL: process.env.APP_WORKO_FRONTEND_BASE_URL ?? "https://worko.ai", 
     SUBS_PREMIUM_RENEW: "https://worko.ai/", 
     SUBS_PREMIUM_UPGRADE: "https://worko.ai/",
-    INTERVIEW_PORTAL: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/interview/{token}?stage=continue`, 
+    INTERVIEW_PORTAL: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/v1/interview/new?stage=new`, 
     JOB_DETAILS: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/jobs/{companyName}/{jobId}`,
     CORP_LOGIN: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/login`,
     CORP_SIGNUP: `${process.env.APP_WORKO_FRONTEND_BASE_URL}/auth/corporate/signup/{token}`,

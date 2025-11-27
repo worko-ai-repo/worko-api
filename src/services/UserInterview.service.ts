@@ -65,9 +65,9 @@ class InterviewService {
     const emailPlaceholders: EmailTemplatePlaceholderINTERVIEW_REQUEST_BY_CORPORATE_USER = {
       ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
       recipientEmail: data.recieverEmail,
-      recipientName: data.fullName,
-      companyName: data.companyName,
-      position: data.position,
+      recipientName: data.fullName?.toTitleCase(),
+      companyName: data.companyName?.toTitleCase(),
+      position: data.position?.toTitleCase(),
       interviewUrl: APP_CONSTANTS.FRONTEND_URLS.INTERVIEW_PORTAL.strtr({
         "{token}": data.interviewId,
       }),
@@ -76,7 +76,7 @@ class InterviewService {
       }).strtr({
         "{jobId}": data.jobId,
       }),
-      requesterName: data.corporateUserName,
+      requesterName: data.corporateUserName?.toTitleCase(),
     };
     global.logger.info("Email Placeholders: ", emailPlaceholders);
     // Send Invite to the user and log if the email is not sent
