@@ -118,7 +118,8 @@ const serverlessConfiguration: AWS = {
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-jd-resume-matching",
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:resume-parser",
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-job-description-parser",
-          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:${self:custom.aws.APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME}" 
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:${self:custom.aws.APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME}",
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-video-interview-workflow"
         ]
       },
       {
