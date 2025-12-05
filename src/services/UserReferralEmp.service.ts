@@ -32,6 +32,7 @@ import { ReferralActions } from "../enums/User.enum";
 import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ScheduleJobType, ScheduleJobStatus } from "../enums/ScheduleJob.enum";
 import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
+import { CountUserDbEntityTypeEnum } from "../enums/CountUser.enum";
 
 // Import Helpers
 import { urlHelperObj } from "../helpers/Url.helper";
@@ -42,6 +43,7 @@ import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusiness
 
 // Import Models
 import { DbUserReferralResponseDto } from "../db/models/UserReferralResponse.model";
+import { DbCountUserDto } from "../db/models/CountUser.model";
 
 // Import Utils
 import { BaseError } from "../utils/errors.util";
@@ -54,6 +56,7 @@ import UserReferralService from "./UserReferral.service";
 import UserReferralResponseService from "./UserReferralResponse.service";
 import CompanyService from "./Company.service";
 import ScheduleJobService from "./ScheduleJob.service";
+import { countUserServiceObj } from "./CountUser.service";
 
 // import constants
 import { WHATSAPP_APP_CONSTANTS } from "../configs/constants/Whatsapp.constant";
@@ -519,12 +522,14 @@ class UserReferralEmpService {
    * @param {string} email - Email address of the employee.
    * @param {string} empName - Name of the employee.
    * @param {string} referralId - ID of the referral request to check the status.
+   * @param {number} reminderCount - Number of times the reminder has been sent.
    * @returns {Promise<boolean>} - Promise that resolves when the reminder is successfully scheduled.
    */
   async scheduleReferralDoneStatusReminder(
     email: string,
     empName: string,
-    referralId: string
+    referralId: string,
+    reminderCount: number
   ): Promise<boolean> {
     // This is a delay before the first reminder is sent. Usually, this is 24 hours for PROD and 5 mins for Dev
     const delay =
@@ -539,6 +544,7 @@ class UserReferralEmpService {
         email,
         empName,
         referralId,
+        reminderCount,
       };
 
     // Create the payload for scheduling the job
@@ -564,10 +570,10 @@ class UserReferralEmpService {
    *
    * @param {string} referralId - The ID of the referral request to review.
    * @param {string} userEmail - The email address of the user who made the referral request.
-   *
+   * @param {number} currentReminderCount - The current number of reminders sent for the referral request.
    * @returns {Promise<boolean>} - Returns a promise that resolves with a boolean indicating if the message was sent or not.
    */
-  async reviewReferralDoneStatusReminder(referralId: string): Promise<boolean> {
+  async reviewReferralDoneStatusReminder(referralId: string, currentReminderCount: number): Promise<boolean> {
     global.logger.info(
       `Reviewing referral completion status for referral ID: ${referralId}`,
       {
@@ -596,6 +602,11 @@ class UserReferralEmpService {
       let candEmail = userReferralDetails[0].PK.split("#")[2];
       let candDetails = await UserDetailService.get(candEmail);
 
+      const referralDoneReminderLimit: string | undefined = process.env.APP_WORKO_REFERRAL_DONE_STATUS_REMAINDER_LIMIT;
+      if(!referralDoneReminderLimit) {
+        throw new BaseError("APP_WORKO_REFERRAL_DONE_STATUS_REMAINDER_LIMIT is not defined", HttpStatusCode.BAD_REQUEST_400);
+      }
+
       /**
        * - If isWhatsappNotificationEnabled is `undefined` then Send whatsapp message
        * - If isWhatsappNotificationEnabled is `true` then Send whatsapp message
@@ -619,23 +630,35 @@ class UserReferralEmpService {
           refereeEmail // reciever email
         );
 
-        // Schedule the next reminder after the 36 hours on prod and 5 min on dev
-        const delay =
-          WHATSAPP_APP_CONSTANTS.EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INTERVAL;
-        const scheduleTime = DateTime.now().plus({ milliseconds: delay });
+        if(currentReminderCount < parseInt(referralDoneReminderLimit)) {
+          const delay: number =
+            WHATSAPP_APP_CONSTANTS.EMP_REF_VALIDATE_DONE_STATUS_REMINDER_INTERVAL;
+          const scheduleTime = DateTime.now().plus({ milliseconds: delay });
 
-        const scheduleJobPayload: ScheduleJobCreateDto = {
-          type: ScheduleJobType.REFERRAL_DONE_STATUS_REMINDER,
-          scheduleTime: scheduleTime.toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss"),
-          input: { email: refereeEmail, empName: refereeName, referralId },
-          desc: `Check referral status and send WhatsApp reminder for ${refereeEmail} if still accepted`,
-          status: ScheduleJobStatus.SCHEDULED,
-        };
+          const payload: ScheduleJobReferralReminderInputDto = {
+            email: refereeEmail,
+            empName: refereeName,
+            referralId,
+            reminderCount: currentReminderCount + 1,
+          };
 
-        await ScheduleJobService.createScheduleJob(scheduleJobPayload);
+          const scheduleJobPayload: ScheduleJobCreateDto = {
+            type: ScheduleJobType.REFERRAL_DONE_STATUS_REMINDER,
+            scheduleTime: scheduleTime.toUTC().toFormat("yyyy-MM-dd'T'HH:mm:ss"),
+            input: payload,
+            desc: `Check referral status and send WhatsApp reminder for ${refereeEmail} if still accepted`,
+            status: ScheduleJobStatus.SCHEDULED,
+          };
+
+          await ScheduleJobService.createScheduleJob(scheduleJobPayload);
+        }
       } else {
         global.logger.info(
-          `Skipping sending WhatsApp message to ${refereeEmail} as the employee has disabled the WhatsApp notification.`
+          `Skipping sending WhatsApp message to ${refereeEmail}.`,
+          {
+            remainderCount: currentReminderCount,
+            methodName: this.reviewReferralDoneStatusReminder.name,
+          }
         );
       }
     } else {
@@ -724,6 +747,11 @@ class UserReferralEmpService {
     // Update the referral
     let result = await userReferralDao.update(PK, SK, userReferralDTO);
 
+    await Promise.all([
+      UserReferralService.performCountUserActivitiesAfterReferralUpdateForCand(result),
+      UserReferralService.performCountGlobalActivitiesAfterReferralUpdate(result)
+    ]);
+
     if (result) {
       // Update the referral counts if the status is 'ACCEPT' or 'DONE'
       if (
@@ -782,7 +810,8 @@ class UserReferralEmpService {
           await this.scheduleReferralDoneStatusReminder(
             refereeEmail,
             refereeName,
-            result.id
+            result.id,
+            1,
           );
         } else {
           global.logger.info(
@@ -942,7 +971,7 @@ class UserReferralEmpService {
     }
 
     // Fetch the referral response
-    let referralResponse = await UserReferralResponseService.get(empEmail);
+    let referralResponse: QueryResponse<DbUserReferralResponseDto> = await UserReferralResponseService.get(empEmail);
     let updateReferralResponse = referralResponse.count !== 0;
 
     // Initialize the userReferralResponseDTO
@@ -998,7 +1027,7 @@ class UserReferralEmpService {
               rejectedUserId.userId === userId
           )
         ) {
-          throw new Error("The referral has already been rejected by you.");
+          throw new BaseError("The referral has already been rejected by you.", HttpStatusCode.BAD_REQUEST_400);
         }
         // Add the employee's rejection to the referral
         if (
@@ -1088,21 +1117,27 @@ class UserReferralEmpService {
     );
 
     // Update or create the referral response
+    let updatedReferralResponseDetails: DbUserReferralResponseDto;
     if (updateReferralResponse) {
       const { passedRefIds, rejectedRefIds, acceptedRefIds, doneRefIds } =
         referralResponse[0];
-      await UserReferralResponseService.update(empEmail, {
+      updatedReferralResponseDetails = await UserReferralResponseService.update(empEmail, {
         passedRefIds,
         rejectedRefIds,
         acceptedRefIds,
         doneRefIds,
       });
     } else {
-      await UserReferralResponseService.create(
+      updatedReferralResponseDetails = await UserReferralResponseService.create(
         empEmail,
         userReferralResponseDTO
       );
     }
+
+    await UserReferralResponseService.performCountUserActivitiesAfterUserReferralResponseUpdate(
+      empEmail,
+      updatedReferralResponseDetails
+    );
 
     return result;
   }

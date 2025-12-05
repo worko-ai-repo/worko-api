@@ -69,6 +69,9 @@ const serverlessConfiguration: AWS = {
           "arn:aws:dynamodb:ap-south-1:*:table/worko",
           "arn:aws:dynamodb:ap-south-1:*:table/worko/index/GSI1",
           "arn:aws:dynamodb:ap-south-1:*:table/worko/index/GSI2",
+
+          "arn:aws:dynamodb:${self:custom.aws.APP_SLS_REGION}:*:table/worko-count",
+          "arn:aws:dynamodb:${self:custom.aws.APP_SLS_REGION}:*:table/worko-count/index/GSI1",
         ]
       },
       {
@@ -115,7 +118,8 @@ const serverlessConfiguration: AWS = {
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-jd-resume-matching",
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:resume-parser",
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-job-description-parser",
-          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:${self:custom.aws.APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME}" 
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:${self:custom.aws.APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME}",
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-video-interview-workflow"
         ]
       },
       {

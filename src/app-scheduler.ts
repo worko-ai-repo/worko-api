@@ -25,7 +25,7 @@ import HttpStatusCode from './utils/http-codes.util';
 import DBConfig from './db/DB.config';
 
 // Import Dtos
-import { ScheduleJobCorporateBulkJdResumeNotificationsInputDto, ScheduleJobRefReviewAcceptanceStatusInputDto, ScheduleJobWhatsAppReminderInputDto } from './dtos/ScheduleJob.dto';
+import { ScheduleJobCorporateBulkJdResumeNotificationsInputDto, ScheduleJobReferralReminderInputDto, ScheduleJobRefReviewAcceptanceStatusInputDto, ScheduleJobWhatsAppReminderInputDto } from './dtos/ScheduleJob.dto';
 
 /**
  * Initializes the database configuration.
@@ -195,47 +195,8 @@ export const handler = async (event: any, context: Context): Promise<object> => 
             break;
           }
 
-          /**
-           * REFERRAL_DONE_STATUS_REMINDER
-           *
-           * Processes the Referral Done Status Reminder schedule job.
-           *
-           * @description Sends a WhatsApp reminder to the employee if a referral has been accepted for a long time
-           *              (typically 24 hours) but has not been completed yet.
-           *
-           * We decided to use `Bracket Notation` to retrieve the `referralId` and `userEmail` from the `referralDoneStatusReminderInputDetails` object.
-           *
-           * @example
-           * const referralDoneStatusReminderInputDetails = {
-           *     "userId": "e1134dca-6071-70ff-2941-54fcce656f38",
-           *     "referralId": "01JAW61V473GMTWMQHGXXEHZB8",
-           *     "userEmail": "divy.raushan26@gmail.com"
-           * }
-           *
-           * // Attempt to retrieve userEmail using dot notation
-           * const userEmailRetrievingUsingDotNotation = referralDoneStatusReminderInputDetails.userEmail;
-           * console.log(userEmail); // [ERR]: userEmail is not defined
-           *
-           * // Correctly retrieving userEmail using bracket notation
-           * const userEmailRetrievingUsingBracketNotation = referralDoneStatusReminderInputDetails["userEmail"];
-           * console.log(userEmailRetrievingUsingBracketNotation); // [LOG]: "divy.raushan26@gmail.com"
-           *
-           * const referralDoneStatusReminderInputDetailsSecond = {
-           *     userId: "second.e1134dca-6071-70ff-2941-54fcce656f38",
-           *     referralId: "second.01JAW61V473GMTWMQHGXXEHZB8",
-           *     userEmail: "second.divy.raushan26@gmail.com"
-           * }
-           *
-           * // Retrieving userEmail using bracket notation in referralDoneStatusReminderInputDetailsSecond
-           * const userEmailRetrievingUsingBracketNotationSecond = referralDoneStatusReminderInputDetailsSecond["userEmail"];
-           * console.log(userEmailRetrievingUsingBracketNotationSecond); // [LOG]: "second.divy.raushan26@gmail.com"
-           *
-           * // Retrieving userEmail using dot notation in referralDoneStatusReminderInputDetailsSecond
-           * const userEmailRetrievingUsingDotNotationSecond = referralDoneStatusReminderInputDetailsSecond.userEmail;
-           * console.log(userEmailRetrievingUsingDotNotationSecond); // [LOG]: "second.divy.raushan26@gmail.com"
-           */
           case ScheduleJobType.REFERRAL_DONE_STATUS_REMINDER: {
-            const referralDoneStatusReminderInputDetails = scheduleJob.input as ScheduleJobRefReviewAcceptanceStatusInputDto;
+            const referralDoneStatusReminderInputDetails = scheduleJob.input as ScheduleJobReferralReminderInputDto;
 
             global.logger.info(
               "App scheduler handler [REFERRAL_DONE_STATUS_REMINDER]: referralId and userEmail: ",
@@ -249,6 +210,7 @@ export const handler = async (event: any, context: Context): Promise<object> => 
             // Send the reminder for referral completion
             await userReferralEmpServiceObj.reviewReferralDoneStatusReminder(
               referralDoneStatusReminderInputDetails["referralId"],
+              referralDoneStatusReminderInputDetails["reminderCount"]
             );
             break;
           }

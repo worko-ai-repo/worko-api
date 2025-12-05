@@ -16,8 +16,10 @@ import {
   UserEmployeeSignUpDTO,
   UserParseCvRequestApiDto,
   UserParseCvResponseDto,
+  UserPartialCvExtractDetailUpdateApiDto,
   UserProfileResponse,
   UserSignUpDTO,
+  UserUpdateResumeDto,
 } from "../dtos/User.dto";
 import { UserType } from "../dtos/Company.dto";
 import { UserExperienceDTO } from "../dtos/UserExperience.dto";
@@ -30,6 +32,8 @@ import {
   userDetailSettingsDTOValidation,
   userEmployeeSignUpDTOValidation,
   userParseCvRequestApiDTOValidation,
+  userPartialCvExtractDetailUpdateApiDtoValidation,
+  userUpdateResumeDtoValidation,
   userlastAccessedDashDTOValidation,
   validateEmailField,
 } from "../schemas/User.schema";
@@ -671,7 +675,18 @@ class UserController {
   ) => {
     try {
       global.logger.info("Update user resume [controller]");
-      const { resume, userCvFileName, isCvExtracted } = req.body;
+      const requestBody: UserUpdateResumeDto = req.body;
+
+      const { error: requestBodyError, value: validatedRequestBody } = userUpdateResumeDtoValidation.validate(
+        requestBody,
+        { abortEarly: false }
+      );
+
+      if (requestBodyError) {
+        throw new RequestValidationError(requestBodyError);
+      }
+
+      const { resume, userCvFileName, isCvExtracted } = validatedRequestBody;
       const email = req.params.id;
       const { error, value } = validateEmailField(email);
 
@@ -752,6 +767,41 @@ class UserController {
     } catch (error) {
       global.logger.error("Error in parse cv [controller]", {
         methodName: this.parseCv.name,
+        error: error,
+      });
+
+      next(error);
+    }
+  };
+
+  updatePartialCvExtractDetails = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const reqBody: UserPartialCvExtractDetailUpdateApiDto = req.body;
+
+      const { error: reqBodyError, value: validatedRequestBody } =
+        userPartialCvExtractDetailUpdateApiDtoValidation.validate(reqBody, {
+          abortEarly: false,
+        });
+      if (reqBodyError) {
+        throw new RequestValidationError(reqBodyError);
+      }
+
+      const userRegisteredEmail: string = req.params.registeredEmail;
+      const { error, value } = validateEmailField(userRegisteredEmail);
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      const response: boolean = await UserService.updatePartialCvExtractDetails(
+        userRegisteredEmail,
+        validatedRequestBody
+      );
+      return res.status(HttpStatusCode.OK_200).json({
+        isUpdated: response,
+      });
+    } catch (error) {
+      global.logger.error("Error in partial update cv extract details [controller]", {
+        methodName: this.updatePartialCvExtractDetails.name,
         error: error,
       });
 

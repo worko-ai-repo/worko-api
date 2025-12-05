@@ -34,4 +34,11 @@ export enum FileResourceKey {
    * Blog related resource keys
    */
   BLOG_COVER_IMAGE = "BLOG_COVER_IMAGE",
+
+  /**
+   * User Interview Recording related resource keys
+   * 
+   * @description Used to store the interview recording chunks uploaded by the user during the interview session.
+   */
+  USER_INTERVIEW_RECORDING = "USER_INTERVIEW_RECORDING",
 }

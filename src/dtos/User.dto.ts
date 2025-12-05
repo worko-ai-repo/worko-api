@@ -198,3 +198,49 @@ export interface UserParseCvResponseDto {
    */
   userPreferredDepartments: string[];
 }
+
+export interface UserUpdateResumeDto {
+  /**
+   * S3 Resume Id
+   *
+   * @example "01JW1CW2XX2N4THW5376VDX6EB.pdf"
+   */
+  resume: string;
+
+  /**
+   * @example "resume.pdf"
+   */
+  userCvFileName: string;
+
+  isCvExtracted: boolean;
+}
+
+export interface UserPartialCvExtractDetailUpdateApiDto {
+  coreSkills: {
+    skillName: string;
+    /**
+     * If years is not present then it will be stored as 0 and frontend should not show this years of experience for this skill
+     */
+    years: number;
+    timestamps?: {
+      createdAt: string;
+      updatedAt: string;
+    };
+  }[];
+
+  userPreferredlocations: string[];
+
+  noticePeriod: number;
+
+  /**
+   * If YOE is not present then it will be stored as 0 and frontend will show it as 0 and user can increase it
+   */
+  YOE: number;
+
+  CTC: number;
+
+  /**
+   * If not present then store it as empty array, ex:- []
+   */
+  userPreferredDepartments: string[];
+}

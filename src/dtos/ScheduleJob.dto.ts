@@ -205,4 +205,13 @@ export interface ScheduleJobReferralReminderInputDto {
    * @type {string}
    */
   referralId: string;
+
+  /**
+   * reminderCount
+   *
+   * The number of reminders to be sent. This field helps in scheduling multiple reminders as needed.
+   *
+   * @type {number}
+   */
+  reminderCount: number;
 }

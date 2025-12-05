@@ -1,4 +1,3 @@
-
 // Import
 import * as dynamoose from "dynamoose";
 
@@ -54,6 +53,9 @@ import { UserDetailSettingModel } from "./models/UserDetailSetting.model";
 import { UserGuidanceRequestModel } from "./models/UserGuidanceRequest.model";
 import { BlogModel } from "./models/Blog.model";
 import { UserPreferenceModel } from "./models/UserPreference.model";
+import { CountUserModel } from "./models/CountUser.model";
+import { CountGlobalModel } from "./models/CountGlobal.model";
+import { InterviewModel } from "./models/UserInterview.model";
 
 /**
  * DBConfig
@@ -85,9 +87,7 @@ class DBConfig {
    */
   setDynamooseConnection() {
     // Log message
-    global.logger.info(
-      "Establish the 'DynamoDB' connection through 'Dynamoose'."
-    );
+    global.logger.info("Establish the 'DynamoDB' connection through 'Dynamoose'.");
 
     // Configuration to connect to the DynamodDB database
     let config = {};
@@ -97,8 +97,7 @@ class DBConfig {
       config = {
         credentials: {
           accessKeyId: process.env.APP_AWS_DYNAMODB_ACCESS_KEY_ID as string,
-          secretAccessKey: process.env
-            .APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
+          secretAccessKey: process.env.APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
         },
         region: process.env.APP_SLS_REGION,
         endpoint: process.env.APP_AWS_DYNAMODB_NOSQL_WORKBENCH_ENDPOINT,
@@ -116,14 +115,11 @@ class DBConfig {
     dynamoose.aws.ddb.set(ddb);
   }
 
-  /**
-   * registerDynamooseModels
-   *
-   * Register the models created for differet PK and SK to communicate with Dynamoose.
-   */
-  registerDynamooseModels() {
-    console.log("Registering the all available models");
-    const workoTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAME, [
+  registerDynamooseWorkoModels() {
+    global.logger.info(
+      `Registering all available models for "${DB_CONSTANTS.WORKO_TABLE_NAMES.workoTableName}" dynamodb table.`
+    );
+    const workoTable = new dynamoose.Table(DB_CONSTANTS.WORKO_TABLE_NAMES.workoTableName, [
       UserDetailModel,
       UserModel,
       UserEmailModel,
@@ -170,7 +166,23 @@ class DBConfig {
       UserGuidanceRequestModel,
       BlogModel,
       UserPreferenceModel,
+      InterviewModel,
     ]);
+  }
+
+  registerDynamooseWorkoCountModels() {
+    global.logger.info(
+      `Registering all available models for "${DB_CONSTANTS.WORKO_TABLE_NAMES.workoCountTableName}" dynamodb table.`
+    );
+    const workoCountTable = new dynamoose.Table(
+      DB_CONSTANTS.WORKO_TABLE_NAMES.workoCountTableName,
+      [CountUserModel, CountGlobalModel]
+    );
+  }
+
+  registerDynamooseModels() {
+    this.registerDynamooseWorkoModels();
+    this.registerDynamooseWorkoCountModels();
   }
 }
 

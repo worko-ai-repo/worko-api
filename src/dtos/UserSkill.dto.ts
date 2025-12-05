@@ -30,3 +30,15 @@ export interface UserSkillDTO {
     };
   }[];
 }
+
+
+export interface UserSkillPartialCvExtractUpdateDto {
+  coreSkills: {
+    skillName: string;
+    years: number;
+    timestamps?: {
+      createdAt: string;
+      updatedAt: string;
+    };
+  }[];
+}

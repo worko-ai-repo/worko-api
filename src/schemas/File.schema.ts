@@ -48,7 +48,8 @@ export const FileGeneratePsuToUploadCompanyLogoDTOValidation = Joi.object({
       "any.required": "The 'companyLogoFileName' field is required.",
       "string.empty": "The 'companyLogoFileName' field should not be empty.",
       "string.base": "The 'companyLogoFileName' field should be a string.",
-      "string.pattern.base": "The 'companyLogoFileName' must include a file extension (e.g., 'logo.png').",
+      "string.pattern.base":
+        "The 'companyLogoFileName' must include a file extension (e.g., 'logo.png').",
     }),
 
   companyLogoFileMimeType: Joi.string().required().messages({
@@ -71,7 +72,8 @@ export const FileGeneratePsuToUploadBlogCoverImageDTOValidation = Joi.object({
       "any.required": "The 'blogCoverImageFileName' field is required.",
       "string.empty": "The 'blogCoverImageFileName' field should not be empty.",
       "string.base": "The 'blogCoverImageFileName' field should be a string.",
-      "string.pattern.base": "The 'blogCoverImageFileName' must include a file extension (e.g., 'logo.png').",
+      "string.pattern.base":
+        "The 'blogCoverImageFileName' must include a file extension (e.g., 'logo.png').",
     }),
 
   blogCoverImageFileMimeType: Joi.string().required().messages({
@@ -101,36 +103,73 @@ export const FileGeneratePsuToUploadCareerResumeDTOValidation = Joi.object({
  * Joi validation schema to validate the request data for uploading a company job description.
  */
 export const FileGeneratePsuToUploadCompanyJobDescriptionDTOValidation = Joi.object({
-  companyId: Joi
-    .string()
-    .required()
-    .messages({
-      "any.required": "The 'Company Id' field is required.",
-    }),
-  companyJobDescriptionFileName: Joi
-    .string()
-    .required()
-    .messages({
-      "any.required": "The 'Job Description File Name' field is required.",
-    }),
-  companyJobDescriptionFileMimeType: Joi
-    .string()
-    .required()
-    .messages({
-      "any.required": "The 'Job Description File Mime Type' field is required.",
-    }),
+  companyId: Joi.string().required().messages({
+    "any.required": "The 'Company Id' field is required.",
+  }),
+  companyJobDescriptionFileName: Joi.string().required().messages({
+    "any.required": "The 'Job Description File Name' field is required.",
+  }),
+  companyJobDescriptionFileMimeType: Joi.string().required().messages({
+    "any.required": "The 'Job Description File Mime Type' field is required.",
+  }),
 });
 
 /**
  * FileGeneratePsuToViewBulkJdResumeDTOValidation
  */
 export const FileGeneratePsuToViewBulkJdResumeDTOValidation = Joi.object({
-  corporateBulkJdId: Joi
-    .string()
+  corporateBulkJdId: Joi.string().required().messages({
+    "any.required": "Corporate Bulk Jd Id is required.",
+    "string.empty": "Corporate Bulk Jd Id should not be empty.",
+    "string.base": "Corporate Bulk Jd Id should be a string.",
+  }),
+});
+
+/**
+ * FileGeneratePsuToUploadInterviewRecordingDTOValidation
+ *
+ * Joi validation schema to validate the request data for uploading interview recording chunks.
+ */
+export const FileGeneratePsuToUploadInterviewRecordingDTOValidation = Joi.object({
+  userId: Joi.string().required().messages({
+    "any.required": "The 'userId' field is required",
+  }),
+  interviewId: Joi.string().required().messages({
+    "any.required": "The 'interviewId' field is required.",
+    "string.empty": "The 'interviewId' field should not be empty.",
+    "string.base": "The 'interviewId' field should be a string.",
+  }),
+  chunkFileName: Joi.string()
+    .pattern(/^[^\/\\]+?\.[a-zA-Z0-9]+$/)
     .required()
     .messages({
-      "any.required": "Corporate Bulk Jd Id is required.",
-      "string.empty": "Corporate Bulk Jd Id should not be empty.",
-      "string.base": "Corporate Bulk Jd Id should be a string.",
+      "any.required": "The 'chunkFileName' field is required.",
+      "string.empty": "The 'chunkFileName' field should not be empty.",
+      "string.base": "The 'chunkFileName' field should be a string.",
+      "string.pattern.base":
+        "The 'chunkFileName' must include a file extension (e.g., 'chunk_1.webm').",
     }),
-})
+  chunkFileMimeType: Joi.string().required().messages({
+    "any.required": "The 'chunkFileMimeType' field is required.",
+    "string.empty": "The 'chunkFileMimeType' field should not be empty.",
+    "string.base": "The 'chunkFileMimeType' field should be a string.",
+  }),
+  chunkSequence: Joi.number().integer().min(1).optional().messages({
+    "number.base": "The 'chunkSequence' field should be a number.",
+    "number.integer": "The 'chunkSequence' field should be an integer.",
+    "number.min": "The 'chunkSequence' field should be at least 1.",
+  }),
+});
+
+/**
+ * FileGeneratePsuToViewInterviewRecordingDTOValidation
+ *
+ * Joi validation schema to validate the request data for viewing interview recording chunks.
+ */
+export const FileGeneratePsuToViewInterviewRecordingDTOValidation = Joi.object({
+  interviewId: Joi.string().required().messages({
+    "any.required": "The 'interviewId' field is required.",
+    "string.empty": "The 'interviewId' field should not be empty.",
+    "string.base": "The 'interviewId' field should be a string.",
+  }),
+});

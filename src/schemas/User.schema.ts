@@ -185,3 +185,95 @@ export const userParseCvRequestApiDTOValidation = Joi.object({
     "any.type": "The s3ResumeId field must be a string.",
   }),
 });
+
+export const userUpdateResumeDtoValidation = Joi.object({
+  resume: Joi.string().required().messages({
+    "any.required": "The resume field is required.",
+    "string.empty": "The resume field cannot be empty.",
+    "any.type": "The resume field must be a string.",
+  }),
+
+  userCvFileName: Joi.string().required().messages({
+    "any.required": "The userCvFileName field is required.",
+    "string.empty": "The userCvFileName field cannot be empty.",
+    "any.type": "The userCvFileName field must be a string.",
+  }),
+
+  /**
+   * We are accepting only false value for isCvExtracted
+   * because if user uploads the CV then we will start the CV parsing process
+   * again and once the CV is parsed then we will update the isCvExtracted field from ai code
+   */
+  isCvExtracted: Joi.boolean().valid(false).required().messages({
+    "any.required": "The isCvExtracted field is required.",
+    "boolean.base": "The isCvExtracted field must be a boolean.",
+  }),
+});
+
+export const userPartialCvExtractDetailUpdateApiDtoValidation = Joi.object({
+  coreSkills: Joi.array()
+    .items(
+      Joi.object({
+        skillName: Joi.string().required().lowercase().messages({
+          "any.required": "The skillName field is required.",
+          "string.empty": "The skillName field cannot be empty.",
+          "any.type": "The skillName field must be a string.",
+        }),
+        years: Joi.number().required().messages({
+          "any.required": "The years field is required.",
+          "number.base": "The years field must be a number.",
+        }),
+        timestamps: Joi.object({
+          createdAt: Joi.string().isoDate().required().messages({
+            "any.required": "The createdAt field is required.",
+            "string.empty": "The createdAt field cannot be empty.",
+            "any.type": "The createdAt field must be a string.",
+          }),
+          updatedAt: Joi.string().isoDate().required().messages({
+            "any.required": "The updatedAt field is required.",
+            "string.empty": "The updatedAt field cannot be empty.",
+            "any.type": "The updatedAt field must be a string.",
+          }),
+        }).optional(),
+      })
+    )
+    .required()
+    .messages({
+      "any.required": "The coreSkills field is required.",
+      "array.base": "The coreSkills field must be an array.",
+    }),
+  userPreferredlocations: Joi.array()
+    .items(Joi.string().required().lowercase().messages({
+      "any.required": "The userPreferredlocations field is required.",
+      "string.empty": "The userPreferredlocations field cannot be empty.",
+      "any.type": "The userPreferredlocations field must be a string.",
+    }))
+    .required()
+    .messages({
+      "any.required": "The userPreferredlocations field is required.",
+      "array.base": "The userPreferredlocations field must be an array.",
+    }),
+  noticePeriod: Joi.number().required().messages({
+    "any.required": "The noticePeriod field is required.",
+    "number.base": "The noticePeriod field must be a number.",
+  }),
+  YOE: Joi.number().required().messages({
+    "any.required": "The YOE field is required.",
+    "number.base": "The YOE field must be a number.",
+  }),
+  CTC: Joi.number().required().messages({
+    "any.required": "The CTC field is required.",
+    "number.base": "The CTC field must be a number.",
+  }),
+  userPreferredDepartments: Joi.array()
+    .items(Joi.string().lowercase().required().messages({
+      "any.required": "The userPreferredDepartments field is required.",
+      "string.empty": "The userPreferredDepartments field cannot be empty.",
+      "any.type": "The userPreferredDepartments field must be a string.",
+    }))
+    .required()
+    .messages({
+      "any.required": "The userPreferredDepartments field is required.",
+      "array.base": "The userPreferredDepartments field must be an array.",
+    }),
+})

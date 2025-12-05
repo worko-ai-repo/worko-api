@@ -6,7 +6,7 @@ import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import { userPreferenceDaoObj } from "../daos/UserPreference.dao";
 
 // Import dtos
-import { UserPreferenceCommonUpdateDto, UserPreferenceCreateOrUpdateApiDto, UserPreferenceCreateDto, } from "../dtos/UserPreference.dto";
+import { UserPreferenceCommonUpdateDto, UserPreferenceCreateOrUpdateApiDto, UserPreferenceCreateDto, UserPreferencePartialCvExtractUpdateDto, } from "../dtos/UserPreference.dto";
 
 // Import helpers
 import { userAuthorization } from "../helpers/user.helper";
@@ -33,6 +33,15 @@ class UserPreferenceService {
     }
   }
 
+  private checkUserPreferenceUpdateAccess(
+    cognitoUserId: string,
+    itemCreatedByUserId: string,
+  ) {
+    if (cognitoUserId !== itemCreatedByUserId) {
+      throw new BaseError("You are not allowed to update user preference", HttpStatusCode.FORBIDDEN_403);
+    }
+  }
+
   async createOrUpdateUserPreference(
     requestBody: UserPreferenceCreateOrUpdateApiDto
   ): Promise<DbUserPreferenceDto> {
@@ -50,16 +59,7 @@ class UserPreferenceService {
     if (existingUserPreference.count) {
       const existingUserPreferenceData: DbUserPreferenceDto = existingUserPreference[0];
 
-      if (existingUserPreferenceData.createdByUserId !== cognitoUserId) {
-        global.logger.error("Unauthorized to update user preference", {
-          methodName: this.createUserPreference.name,
-          error: "Unauthorized to update user preference",
-          userPreferenceCreatedByUserId: existingUserPreferenceData.createdByUserId,
-          cognitoUserId: cognitoUserId,
-        });
-
-        throw new BaseError("Unauthorized", HttpStatusCode.UNAUTHORIZED_401);
-      }
+      this.checkUserPreferenceUpdateAccess(cognitoUserId, existingUserPreferenceData.createdByUserId);
 
       // Exclude email from the update data because no need to update email again
       const {email, ...updateData} = requestBody;
@@ -78,6 +78,46 @@ class UserPreferenceService {
     };
 
     return this.createUserPreference(userPreferenceData);
+  }
+
+  async createOrUpdateUserPreferenceForPartialCvExtract(
+    email: string,
+    cognitoUserId: string,
+    userPreferenceData: UserPreferencePartialCvExtractUpdateDto
+  ): Promise<DbUserPreferenceDto> {
+    global.logger.info("Create or update user preference for partial cv extract [Service]");
+
+    const existingUserPreference: QueryResponse<DbUserPreferenceDto> = await this.getUserPreferenceByEmail(email);
+    if(existingUserPreference.count) {
+      const existingUserPreferenceData: DbUserPreferenceDto = existingUserPreference[0];
+
+      this.checkUserPreferenceUpdateAccess(cognitoUserId, existingUserPreferenceData.createdByUserId);
+
+      const finalUpdateData: Partial<UserPreferenceCommonUpdateDto> = {
+        // This is to remove duplicates
+        userPreferredDepartments: [
+          ...new Set([
+            ...(existingUserPreferenceData?.userPreferredDepartments ?? []),
+            ...userPreferenceData.userPreferredDepartments
+          ].map(dep => dep.toLowerCase()))
+        ],
+        userPreferredlocations: [
+          ...new Set([
+            ...(existingUserPreferenceData?.userPreferredlocations ?? []),
+            ...userPreferenceData.userPreferredlocations
+          ].map(loc => loc.toLowerCase()))
+        ],
+        updatedByUserId: cognitoUserId,
+      };
+      return this.updateUserPreference(email, finalUpdateData);
+    }
+
+    const userPreferenceDataWithUserId: UserPreferenceCreateDto = {
+      ...userPreferenceData,
+      email,
+      createdByUserId: cognitoUserId,
+    };
+    return this.createUserPreference(userPreferenceDataWithUserId);
   }
 
   async createUserPreference(userPreferenceData: UserPreferenceCreateDto): Promise<DbUserPreferenceDto> {

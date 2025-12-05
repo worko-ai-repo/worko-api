@@ -26,6 +26,7 @@ import {
 // import models
 import { DbUserReferralDto } from "../db/models/UserReferral.model";
 import { DbUserSubsDto } from "../db/models/UserSubscription.model";
+import { DbCountUserDto } from "../db/models/CountUser.model";
 
 // Import Libraries
 import {
@@ -40,21 +41,33 @@ import { ReferralStatus } from "../enums/UserReferral.enum";
 import { ReferralActions } from "../enums/User.enum";
 import { UserSubscriptionStatus } from "../enums/UserSubscription.enum";
 
+// Import helpers
+import { getEmailFromPK } from "../helpers/user.helper";
+
 // Import constants
 import APP_CONSTANTS from '../configs/constants.config';
 
 // Import dtos
 import { ScheduleJobCreateDto, ScheduleJobRefReviewAcceptanceStatusInputDto } from '../dtos/ScheduleJob.dto';
 import { PaginatedResultsWithMatchingConditionsResponse } from '../dtos/Common.dto';
+import { CountUserDbCandidateReferralDto } from "../dtos/CountUser.dto";
 
 // Import enums
 import { ScheduleJobStatus, ScheduleJobType } from '../enums/ScheduleJob.enum';
+import { CountUserDbEntityTypeEnum } from "../enums/CountUser.enum";
+import { CountGlobalDbEntityTypeEnum } from '../enums/CountGlobal.enum';
+
+// Import models
+import { DbCountGlobalDto } from "../db/models/CountGlobal.model";
+import { DbUserReferralResponseDto } from '../db/models/UserReferralResponse.model';
 
 // Import services
 import CompanyService from "./Company.service";
 import UserSubscriptionService from "./UserSubscription.service";
 import ScheduleJobService from './ScheduleJob.service';
 import { userReferralEmpServiceObj } from './UserReferralEmp.service';
+import { countUserServiceObj } from "./CountUser.service";
+import { countGlobalServiceObj } from "./CountGlobal.service";
 
 // Import utlis
 import { BaseError } from '../utils/errors.util';
@@ -64,6 +77,132 @@ import HttpStatusCode from '../utils/http-codes.util';
  *  UserReferralService class responsible for managing user referral-related operations.
  */
 class UserReferralService {
+  async performCountUserActivitiesAfterReferralUpdateForCand(
+    updatedReferralData: DbUserReferralDto
+  ): Promise<void> {
+    const candidateEmail: string = getEmailFromPK(updatedReferralData.PK);
+    const countUserReferralQueryResponse: QueryResponse<DbCountUserDto> = await countUserServiceObj.getCountUserByRegisteredEmailAndEntityType(
+      candidateEmail, 
+      CountUserDbEntityTypeEnum.REFERRAL
+    );
+    const countUserReferralData: DbCountUserDto = countUserReferralQueryResponse[0];
+
+    const total: number | undefined = countUserReferralData?.candidateReferralCounts?.total;
+    const awaiting: number | undefined = countUserReferralData?.candidateReferralCounts?.awaiting;
+    const accepted: number | undefined = countUserReferralData?.candidateReferralCounts?.accepted;
+    const done: number | undefined = countUserReferralData?.candidateReferralCounts?.done;
+    const rejected: number | undefined = countUserReferralData?.candidateReferralCounts?.rejected;
+
+    if(updatedReferralData.status === ReferralStatus.REJECTED) {
+      await countUserServiceObj.createOrUpdateCountUserForReferralEntityType(
+        candidateEmail,
+        {
+          candidateReferralCounts: {
+            ...countUserReferralData?.candidateReferralCounts,
+            total: (total ? total - 1:0),
+            awaiting: (awaiting ? awaiting - 1:0),
+            rejected: (rejected ? rejected + 1:1)
+          }
+        },
+        !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      );
+    } else if(updatedReferralData.status === ReferralStatus.ACCEPTED) {
+      await countUserServiceObj.createOrUpdateCountUserForReferralEntityType(
+        candidateEmail,
+        {
+          candidateReferralCounts: {
+            ...countUserReferralData?.candidateReferralCounts,
+            awaiting: (awaiting ? awaiting - 1:0),
+            accepted: (accepted ? accepted + 1:1)
+          }
+        },
+        !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      );
+    } else if(updatedReferralData.status === ReferralStatus.DONE) {
+      await countUserServiceObj.createOrUpdateCountUserForReferralEntityType(
+        candidateEmail,
+        {
+          candidateReferralCounts: {
+            ...countUserReferralData?.candidateReferralCounts,
+            accepted: (accepted ? accepted - 1:0),
+            done: (done ? done + 1:1)
+          }
+        },
+        !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      );
+    } else if (updatedReferralData.status === ReferralStatus.WITHDRAWN) {
+      await countUserServiceObj.createOrUpdateCountUserForReferralEntityType(
+        candidateEmail,
+        {
+          candidateReferralCounts: {
+            ...countUserReferralData?.candidateReferralCounts,
+            total: (total ? total - 1:0),
+            awaiting: (awaiting ? awaiting - 1:0),
+          }
+        },
+        !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      );
+    }
+  }
+
+  async performCountGlobalActivitiesAfterReferralUpdate(
+    updatedReferralData: DbUserReferralDto
+  ): Promise<void> {
+    const countGlobalReferralQueryResponse: QueryResponse<DbCountGlobalDto> = await countGlobalServiceObj.getCountGlobalByEntityType(
+      CountGlobalDbEntityTypeEnum.REFERRAL
+    );
+    const countGlobalReferralData: DbCountGlobalDto = countGlobalReferralQueryResponse[0];
+    const awaiting: number | undefined = countGlobalReferralData?.referralCounts?.awaiting;
+    const accepted: number | undefined = countGlobalReferralData?.referralCounts?.accepted;
+    const done: number | undefined = countGlobalReferralData?.referralCounts?.done;
+    const rejected: number | undefined = countGlobalReferralData?.referralCounts?.rejected;
+
+    if(updatedReferralData.status === ReferralStatus.REJECTED) {
+      await countGlobalServiceObj.createOrUpdateCountGlobalForReferralEntityType(
+        {
+          referralCounts: {
+            ...countGlobalReferralData?.referralCounts,
+            awaiting: (awaiting ? awaiting - 1:0),
+            rejected: (rejected ? rejected + 1:1)
+          }
+        },
+        !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      );
+    } else if(updatedReferralData.status === ReferralStatus.ACCEPTED) {
+      await countGlobalServiceObj.createOrUpdateCountGlobalForReferralEntityType(
+        {
+          referralCounts: {
+            ...countGlobalReferralData?.referralCounts,
+            awaiting: (awaiting ? awaiting - 1:0),
+            accepted: (accepted ? accepted + 1:1)
+          }
+        },
+        !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      );
+    } else if(updatedReferralData.status === ReferralStatus.DONE) {
+      await countGlobalServiceObj.createOrUpdateCountGlobalForReferralEntityType(
+        {
+          referralCounts: {
+            ...countGlobalReferralData?.referralCounts,
+            accepted: (accepted ? accepted - 1:0),
+            done: (done ? done + 1:1)
+          }
+        },
+        !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      );
+    } else if (updatedReferralData.status === ReferralStatus.WITHDRAWN) {
+      await countGlobalServiceObj.createOrUpdateCountGlobalForReferralEntityType(
+        {
+          referralCounts: {
+            ...countGlobalReferralData?.referralCounts,
+            awaiting: (awaiting ? awaiting - 1:0),
+          }
+        },
+        !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      );
+    }
+  }
+
   /**
    * Processes a referral request made by a user(candidate).
    *
@@ -115,6 +254,38 @@ class UserReferralService {
       referralRequest.userSubscriptionId,
       ReferralStatus.AWAITING
     );
+
+    const countUserReferralQueryResponse: QueryResponse<DbCountUserDto> = await countUserServiceObj.getCountUserByRegisteredEmailAndEntityType(email, CountUserDbEntityTypeEnum.REFERRAL);
+    const countUserReferralData: DbCountUserDto = countUserReferralQueryResponse[0];
+
+    const countGlobalReferralQueryResponse: QueryResponse<DbCountGlobalDto> = await countGlobalServiceObj.getCountGlobalByEntityType(
+      CountGlobalDbEntityTypeEnum.REFERRAL
+    );
+    const countGlobalReferralData: DbCountGlobalDto = countGlobalReferralQueryResponse[0];
+
+    await Promise.all([
+      countUserServiceObj.createOrUpdateCountUserForReferralEntityType(
+        email,
+        {
+          candidateReferralCounts: {
+            ...countUserReferralData?.candidateReferralCounts,
+            total: (countUserReferralData?.candidateReferralCounts?.total ? countUserReferralData.candidateReferralCounts.total + 1:1),
+            awaiting: (countUserReferralData?.candidateReferralCounts?.awaiting ? countUserReferralData.candidateReferralCounts.awaiting + 1:1)
+          }
+        },
+        !!countUserReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      ),
+      countGlobalServiceObj.createOrUpdateCountGlobalForReferralEntityType(
+        {
+          referralCounts: {
+            ...countGlobalReferralData?.referralCounts,
+            awaiting: (countGlobalReferralData?.referralCounts?.awaiting ? countGlobalReferralData.referralCounts.awaiting + 1:1),
+          }
+        },
+        !!countGlobalReferralQueryResponse.count // If count user already exists in ddb then `true` else `false`
+      )
+    ]);
+
     return createdReferral;
 
     //below block checks gets the ExtractedJd from db if it is there
@@ -391,11 +562,12 @@ class UserReferralService {
     // Logging the action of updating user Referral status in the service layer
     global.logger.info("Updating user Referral status [UserReferralService]");
 
+    // Get the referral details
+    let referral = await this.getReferralById(referralId);
+    const referralDataBeforeUpdate: DbUserReferralDto = referral[0];
+
     // if the new status is DONE, update the user response
     if (newStatus === ReferralStatus.DONE) {
-      // Get the referral details
-      let referral = await this.getReferralById(referralId);
-
       // Retrive the employee details
       let empUserId = referral[0].acceptedByUserId as string;
       const empDetail = await UserDetailService.getUserById(empUserId);
@@ -409,6 +581,7 @@ class UserReferralService {
         );
 
         // If the userReferralResponse is found, update the user response
+        let updatedReferralResponseDetails: DbUserReferralResponseDto
         if (userReferralResponse.count) {
           // Remove the referralId from 'acceptedRefIds' from the userReferralResponse and add the referralId in 'doneRefIds' if found
           userReferralResponse[0].acceptedRefIds =
@@ -419,7 +592,7 @@ class UserReferralService {
             userReferralResponse[0].doneRefIds.concat(referralId);
 
           // Update the UserReferralResponse
-          await UserReferralResponseService.update(empEmail, {
+          updatedReferralResponseDetails = await UserReferralResponseService.update(empEmail, {
             passedRefIds: userReferralResponse[0].passedRefIds,
             rejectedRefIds: userReferralResponse[0].rejectedRefIds,
             acceptedRefIds: userReferralResponse[0].acceptedRefIds,
@@ -433,11 +606,16 @@ class UserReferralService {
             acceptedRefIds: [],
             doneRefIds: [referralId],
           };
-          await UserReferralResponseService.update(
+          updatedReferralResponseDetails = await UserReferralResponseService.update(
             empEmail,
             userReferralNewResponse
           );
         }
+
+        UserReferralResponseService.performCountUserActivitiesAfterUserReferralResponseUpdate(
+          empEmail,
+          updatedReferralResponseDetails
+        )
       }
     }
 
@@ -451,11 +629,21 @@ class UserReferralService {
     // Calculate and update referral counts when referral status has been updated
     if (updatedReferralStatus) {
       const userSubscriptionId = updatedReferralStatus.userSubscriptionId;
-      await this.calculateAndUpdateReferralCounts(
-        candEmail,
-        userSubscriptionId,
-        newStatus
-      );
+      await Promise.all([
+        this.calculateAndUpdateReferralCounts(
+          candEmail,
+          userSubscriptionId,
+          newStatus
+        ),
+
+        this.performCountUserActivitiesAfterReferralUpdateForCand(
+          updatedReferralStatus
+        ),
+
+        this.performCountGlobalActivitiesAfterReferralUpdate(
+          updatedReferralStatus
+        )        
+      ])
     }
 
     return updatedReferralStatus;
@@ -483,11 +671,21 @@ class UserReferralService {
     // Update the referral counts
     if (updatedReferralStatus) {
       const userSubscriptionId = updatedReferralStatus.userSubscriptionId;
-      await this.calculateAndUpdateReferralCounts(
-        candEmail,
-        userSubscriptionId,
-        ReferralStatus.WITHDRAWN
-      );
+      await Promise.all([
+        this.calculateAndUpdateReferralCounts(
+          candEmail,
+          userSubscriptionId,
+          ReferralStatus.WITHDRAWN
+        ),
+
+        this.performCountUserActivitiesAfterReferralUpdateForCand(
+          updatedReferralStatus
+        ),
+
+        this.performCountGlobalActivitiesAfterReferralUpdate(
+          updatedReferralStatus
+        )
+      ])
     }
     return updatedReferralStatus;
   }
@@ -758,7 +956,7 @@ class UserReferralService {
 
     // Update referral status to CANCELLED if matching score is below minimum threshold
     if (matchingScore <= APP_CONSTANTS.MATCHING_SCORES.REFERRAL_MINIMUM_MATCHING_SCORE) {
-      await this.updateStatus(referralId, userEmail, ReferralStatus.REJECTED);
+      const updatedReferral: DbUserReferralDto = await this.updateStatus(referralId, userEmail, ReferralStatus.REJECTED);
       logger.info(`Referral ${referralId} cancelled due to low matching score`);
     } else {
       // Create a delayed message to check referral status after 5 days
