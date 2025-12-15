@@ -52,4 +52,20 @@ UserDetailRouter.get("/:email/request-otp", userDetailController.sendSmsOtptoVer
  */
 UserDetailRouter.post("/:email/verify-otp", userDetailController.verifyUserPhoneNumber);
 
+/**
+ * @authorisedRoles ["loggedInUser"]
+ * @description 
+ *    1. whenever the agency submits a unregistered candidate for a job,
+ *     if `corporate-recruiter/admin` or `worko-admin` moves the candidate to applicant then
+ *     we are creating his account from backend with temporary password and the email,
+ *     so that the candidate can login with temporary password and before that we will 
+ *     send him the otp because the email in cognito stored as "Force Change Password" and Unverified email.
+ */
+UserDetailRouter.post("/request-otp/force-change-password", userDetailController.sendOtpForceChangePasswordViaEmail);
+
+/**
+ * @authorisedRoles ["loggedInUser"]
+ */
+UserDetailRouter.post("/verify-otp/force-change-password", userDetailController.verifyOtpForceChangePasswordViaEmail);
+
 export default UserDetailRouter;

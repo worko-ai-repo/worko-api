@@ -31,7 +31,7 @@ import { getPaginatedResultsWithMatchingConditions } from "../helpers/dynamoose.
 import { dateHelperObj } from "../helpers/date.helper";
 
 // import lib dynamodb library
-import { awsLibDynamodbLibraryObj } from "../libraries/aws-lib-dynamodb.library";
+// import { awsLibDynamodbLibraryObj } from "../libraries/aws-lib-dynamodb.library";
 
 // UserDetailDao class implementing the BaseDao interface
 class UserDetailDao implements BaseDao {
@@ -550,7 +550,7 @@ class UserDetailDao implements BaseDao {
       filePath: __filename,
       methodName: this.scriptUpdatePkEmailToLowerCase.name,
     });
-
+    /*
     // Generate the old partition key using the old email
     const oldPk: string = this.partitianKey.strtr({
       "{primaryEmail}": oldEmail,
@@ -610,8 +610,9 @@ class UserDetailDao implements BaseDao {
         }
       );
     }
+    */
 
-    return true;
+    return false;
   }
 }
 

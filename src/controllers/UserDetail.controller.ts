@@ -8,10 +8,10 @@ import APP_CONSTANTS from "../configs/constants.config";
 import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
-import { UserDetailDTO, UserDetailUpdateApiDto } from "../dtos/UserDetail.dto";
+import { UserDetailDTO, UserDetailForceChangePasswordSendOtpApiDto, UserDetailForceChangePasswordVerifyOtpApiDto, UserDetailUpdateApiDto } from "../dtos/UserDetail.dto";
 
 // Load the local schema
-import { userDetailDTOValidation, userDetailUpdateApiDtoValidation } from "../schemas/UserDetail.schema";
+import { userDetailDTOValidation, userDetailForceChangePasswordSendOtpApiDtoValidation, userDetailForceChangePasswordVerifyOtpApiDtoValidation, userDetailUpdateApiDtoValidation } from "../schemas/UserDetail.schema";
 import { validateEmailField } from "../schemas/User.schema";
 
 // Load the shared service
@@ -432,6 +432,79 @@ class UserDetailController {
       next(error);
     }
   };
+
+  sendOtpForceChangePasswordViaEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      global.logger.info("sendOtpForceChangePasswordViaEmail [controller]");
+      const reqBody: UserDetailForceChangePasswordSendOtpApiDto = req.body;
+      let { error, value } = userDetailForceChangePasswordSendOtpApiDtoValidation.validate(
+        reqBody,
+        {
+          abortEarly: false,
+        }
+      );
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Get user's IP address from request
+      const userIpAddress: string = req.ip as string;
+
+      const result: DbUserOtpDto = await UserDetailService.sendOtpForceChangePasswordViaEmail(
+        reqBody.candidateRegisteredEmail,
+        userIpAddress
+      );
+      res.status(HttpStatusCode.OK_200).json({
+        id: result.id
+      });
+
+    } catch (error) {
+      global.logger.error("Error in sendOtpForceChangePasswordViaEmail [controller]", {
+        methodName: this.sendOtpForceChangePasswordViaEmail.name,
+        error
+      })
+      next(error);
+    }
+  }
+
+  async verifyOtpForceChangePasswordViaEmail(req: Request, res: Response, next: NextFunction) {
+    try {
+      global.logger.info("verifyOtpForceChangePasswordViaEmail [controller]");
+
+      const reqBody: UserDetailForceChangePasswordVerifyOtpApiDto = req.body;
+      let { error, value } = userDetailForceChangePasswordVerifyOtpApiDtoValidation.validate(
+        reqBody,
+        {
+          abortEarly: false,
+        }
+      );
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Verify the OTP received from user to make sure the work email belogs to the user only.
+      const isOtpVerified: boolean = await UserDetailService.verifyOtpForceChangePasswordViaEmail(
+        value
+      );
+
+      // Send OTP verification details in the response
+      res
+        .status(HttpStatusCode.OK_200)
+        .json({
+          verificationStatus: isOtpVerified
+        });
+    } catch (error) {
+      global.logger.error("Error in verifyOtpForceChangePasswordViaEmail [controller]", {
+        methodName: this.verifyOtpForceChangePasswordViaEmail.name,
+        error
+      })
+      next(error);
+    }
+  }
 }
 
 export default UserDetailController;

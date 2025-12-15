@@ -5,6 +5,7 @@ import { Query, QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import configs
 import { awsDynamoDBClientLibrary } from "../configs/aws-sdk.config";
+import type { QueryCommandInput, QueryCommandOutput } from "@aws-sdk/client-dynamodb";
 
 // Import daos
 import userDetailDao from "../daos/UserDetail.dao";
@@ -196,8 +197,8 @@ class ScriptService {
   private async getUserAllReferralsByQuery(
     lastKey?: any,
     pageSize: number = 25
-  ): Promise<AWS.DynamoDB.QueryOutput> {
-    const params: AWS.DynamoDB.QueryInput = {
+  ): Promise<QueryCommandOutput> {
+    const params: QueryCommandInput = {
       TableName: process.env.APP_AWS_DYNAMODB_TABLE_NAME || "worko",
       IndexName: "GSI1",
       KeyConditionExpression: "GSI1PK = :gsi1pkPrefix",

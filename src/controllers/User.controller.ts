@@ -400,6 +400,11 @@ class UserController {
       // Respond with the newly created user data
       res.status(HttpStatusCode.CREATED_201).json(newUser);
     } catch (error) {
+      global.logger.error(`Error in create candidate [controller]`,{
+        filePath: __filename,
+        methodName: this.createCandidate.name,
+        error
+      });
       // Any errors that occur (validation, database, etc.) are passed to the global error handler
       next(error);
     }

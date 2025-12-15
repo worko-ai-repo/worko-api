@@ -39,5 +39,12 @@ export enum SqsMsgEventEnum {
   * Whenever a user signs up and verifies his email using one time password (OTP), 
   * then In `worko-api-cognito-post-confirmation-trigger` lambda function will trigger this SQS event to send email and whatsapp welcome notification to the user.
   */
- USER_SEND_WELCOME_EMAIL_AND_WHATSAPP_NOTIFICATION = "USER_SEND_WELCOME_EMAIL_AND_WHATSAPP_NOTIFICATION"
+ USER_SEND_WELCOME_EMAIL_AND_WHATSAPP_NOTIFICATION = "USER_SEND_WELCOME_EMAIL_AND_WHATSAPP_NOTIFICATION",
+
+ /**
+  * UPDATE_CV_CENTRAL_CAND_PROFILE
+  * @description 
+  *  This event is triggered when a user updates their CV in their candidate dashboard and we will update the user data in central candidate profile.
+  */
+ UPDATE_CV_CENTRAL_CAND_PROFILE = "UPDATE_CV_CENTRAL_CAND_PROFILE",
 }

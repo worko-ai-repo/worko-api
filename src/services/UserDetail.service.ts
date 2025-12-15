@@ -1,5 +1,8 @@
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
+// Import cognito related types
+import { AdminGetUserCommandOutput, AdminUpdateUserAttributesCommandOutput, AttributeType } from "@aws-sdk/client-cognito-identity-provider";
+
 // import configs
 import APP_CONSTANTS from "../configs/constants.config";
 import { awsClientCognitoIdentityProviderLibrary, awsS3ClientLibrary } from "../configs/aws-sdk.config";
@@ -11,15 +14,17 @@ import { UserType } from "../enums/User.enum";
 import userDetailDao from "../daos/UserDetail.dao";
 
 // Load the local dtos
-import { UserDetailCommonUpdateDto, UserDetailDTO, UserDetailUpdateApiDto } from "../dtos/UserDetail.dto";
-import { EmailTemplatePlaceholderCAND_WELCOME_MSG, EmailTemplatePlaceholderEMP_WELCOME_MSG } from "../dtos/EmailTemplatePlaceholder.dto";
+import { UserDetailCommonUpdateDto, UserDetailDTO, UserDetailForceChangePasswordVerifyOtpApiDto, UserDetailUpdateApiDto } from "../dtos/UserDetail.dto";
+import { EmailTemplatePlaceholderCAND_FORCE_CHANGE_PASSWORD_EMAIL_VERIFICATION_OTP, EmailTemplatePlaceholderCAND_WELCOME_MSG, EmailTemplatePlaceholderEMP_WELCOME_MSG } from "../dtos/EmailTemplatePlaceholder.dto";
 import { WhatsAppBusinessPartnerTemplatePlaceholderCAND_SIGNUP_CANDIDATE, WhatsAppBusinessPartnerTemplatePlaceholderEMP_SIGNUP_EMP } from "../dtos/WhatsAppBusinessPartnerTemplatePlaceholder.dto";
 
 // Import enums
 import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
+import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 
 // Import helpers
 import { getEmailFromPK } from "../helpers/user.helper";
+import { dateHelperObj } from "../helpers/date.helper";
 
 // Load the local libraies
 import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusinessPartner.library";
@@ -27,10 +32,14 @@ import { EmailSourceDestinationAddress } from "../libraries/email.library";
 
 // Load the local models
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
+import { DbCandidateParsedCvDto } from "../db/gcp-firestore-models/CandidateParsedCv.model";
+import { DbCentralCandidateProfileDto } from "../db/gcp-firestore-models/CentralCandidateProfile.model";
 
 // Load the local services
 import UserService from "./User.service";
 import userOtpService from "./UserOTP.service";
+import { candidateParsedCvServiceObj } from "./CandidateParsedCv.service";
+import { centralCandidateProfileServiceObj } from "./CentralCandidateProfile.service";
 
 // Load the local types
 import { UserDetailProfileInfoType } from "../types/UserDetail.type";
@@ -302,7 +311,55 @@ class UserDetailService {
     // Logging the action of updating user Detail in the service layer
     logger.info("Updating user Detail [UserDetailService]");
 
-    return userDetailDao.update(email, SK, userDetailDTO);
+    const result: DbUserDetailDto = await userDetailDao.update(email, SK, userDetailDTO);
+    /**
+     * @description 
+     *  1. Update user preference data in "CentralCandidateProfile.model.ts" if exists
+     */
+    const centralCandidateProfile: DbCentralCandidateProfileDto | undefined = await centralCandidateProfileServiceObj.getCentralCandidateProfileById(email);
+    if (centralCandidateProfile) {
+      const { 
+        YOE,
+        CTC,
+        multipleCandidateExperience,
+        noticePeriod,
+        location,
+        isNoticePeriodNegotiable,
+      } = result;
+      const updateCandParsedData: Partial<DbCandidateParsedCvDto> = {
+        updatedAt: dateHelperObj.getISODate(),
+        noticePeriod,
+        isNoticePeriodNegotiable
+      };
+      if(YOE) {
+        updateCandParsedData.totalYOE = YOE;
+        updateCandParsedData.relevantYOE = YOE;
+      }
+      if(CTC) {
+        updateCandParsedData.currentCTC = CTC;
+        updateCandParsedData.expectedCTC = CTC;
+      }
+      if(multipleCandidateExperience) {
+        updateCandParsedData.multipleCandidateExperience = multipleCandidateExperience;
+      }
+      if(location) {
+        updateCandParsedData.location = location;
+      }
+
+      const updateCandidateParsedCvData: DbCandidateParsedCvDto | undefined = await candidateParsedCvServiceObj.updateCandidateParsedCvWithEmbedding(
+        centralCandidateProfile.latestCandidateParsedCvId,
+        updateCandParsedData
+      );
+      if (!updateCandidateParsedCvData) {
+        global.logger.error("Failed to update candidate parsed cv data [Service]", {
+          methodName: this.update.name,
+          centralCandidateProfile,
+          updateCandidateParsedCvData,
+        });
+        throw new BaseError("Failed to update.", HttpStatusCode.INTERNAL_SERVER_ERROR_500);
+      }
+    }
+    return result;
   }
 
   async updateUserDetail(email:string, id: string, updateData: Partial<UserDetailCommonUpdateDto>): Promise<DbUserDetailDto> {
@@ -667,6 +724,161 @@ class UserDetailService {
 
     // As the OTP is verified, indicating verification successful
     return updatedUserDetails.isNumberVerified;
+  }
+
+  async sendOtpForceChangePasswordViaEmail(
+    candidateRegisteredEmail: string,
+    userIpAddress: string
+  ) {
+    global.logger.info(`Send OTP to force change password via email [service]`, {
+      methodName: this.sendOtpForceChangePasswordViaEmail.name,
+      candidateRegisteredEmail
+    });
+
+    const userDetails: QueryResponse<DbUserDetailDto> = await this.get(candidateRegisteredEmail);
+    if(!userDetails.count) {
+      throw new BaseError(`The user details not found for the provided email "${candidateRegisteredEmail}" address.`, HttpStatusCode.NOT_FOUND_404);
+    }
+    const userDetailData: DbUserDetailDto = userDetails[0];
+
+    const {
+      isEmailVerified,
+      name: candidateName,
+    }= userDetailData;
+    if(isEmailVerified) {
+      global.logger.error(`The user email is already verified [service]`, {
+        methodName: this.sendOtpForceChangePasswordViaEmail.name,
+        candidateRegisteredEmail,
+        userDetailData
+      })
+      throw new BaseError("Your email is already verified.", HttpStatusCode.CONFLICT_409);
+    }
+
+    // Prepare the placeholders and to address to send the email
+    const toAddress: EmailSourceDestinationAddress = {
+      email: candidateRegisteredEmail,
+      fullName: candidateName.toTitleCase(),
+    };
+    const emailPlaceholders: EmailTemplatePlaceholderCAND_FORCE_CHANGE_PASSWORD_EMAIL_VERIFICATION_OTP = {
+      candidateName: candidateName.toTitleCase(),
+
+      /**
+       * @note As of now this is empty but in reused method it will be set.
+       */
+      otp: "",
+      ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
+    };
+
+    // Send OTP to user's work email to verify the same.
+    return userOtpService.sendOtpViaEmail(
+      candidateRegisteredEmail,
+      EmailTemplateEnum.CAND_FORCE_CHANGE_PASSWORD_EMAIL_VERIFICATION_OTP,
+      toAddress,
+      emailPlaceholders,
+      userIpAddress
+    );
+  }
+
+  async verifyOtpForceChangePasswordViaEmail(reqBody: UserDetailForceChangePasswordVerifyOtpApiDto) {
+    global.logger.info(`Verify OTP to force change password via email [service]`, {
+      methodName: this.sendOtpForceChangePasswordViaEmail.name,
+      candidateRegisteredEmail: reqBody.candidateRegisteredEmail
+    });
+
+    const workoUserPoolId: string | undefined = process.env.APP_AWS_COGNITO_USER_POOL_ID;
+    if(!workoUserPoolId) {
+      global.logger.error(`Failed to verify cand email, Worko User Pool Id not found`, { 
+        methodName: this.verifyOtpForceChangePasswordViaEmail.name, 
+        workoUserPoolId 
+      });
+      throw new BaseError("Failed to verify your email.", HttpStatusCode.INTERNAL_SERVER_ERROR_500);
+    }
+
+    const {
+      candidateRegisteredEmail,
+      otp
+    } = reqBody;
+
+    const userDetails: QueryResponse<DbUserDetailDto> = await this.get(candidateRegisteredEmail);
+    if(!userDetails.count) {
+      throw new BaseError(`Your details not found for the provided email "${candidateRegisteredEmail}" address.`, HttpStatusCode.NOT_FOUND_404);
+    }
+    const userDetailData: DbUserDetailDto = userDetails[0];
+
+    const {
+      isEmailVerified,
+    }= userDetailData;
+    if(isEmailVerified) {
+      global.logger.error(`The user email is already verified [service]`, {
+        methodName: this.sendOtpForceChangePasswordViaEmail.name,
+        candidateRegisteredEmail,
+        userDetailData
+      })
+      throw new BaseError("Your email is already verified.", HttpStatusCode.CONFLICT_409);
+    }
+
+    const candCognitoDetails: AdminGetUserCommandOutput = await awsClientCognitoIdentityProviderLibrary.getUserDetails(
+      workoUserPoolId,
+      userDetailData.id
+    );
+    if(!candCognitoDetails) {
+      global.logger.error(`Failed to verify cand email, Cognito user details not found`, {
+        methodName: this.verifyOtpForceChangePasswordViaEmail.name,
+        candidateRegisteredEmail,
+        candCognitoDetails
+      });
+      throw new BaseError(`Your details not found for the provided email "${candidateRegisteredEmail}" address.`, HttpStatusCode.INTERNAL_SERVER_ERROR_500);
+    }
+
+    const isCandidateCognitoUserEmailVerified: boolean =
+      candCognitoDetails?.UserAttributes?.find(
+        (attr: AttributeType) => attr.Name === "email_verified"
+      )?.Value === "true";
+    if(isCandidateCognitoUserEmailVerified) {
+      global.logger.error(`The user email is already verified in cognito [service]`, {
+        methodName: this.sendOtpForceChangePasswordViaEmail.name,
+        candidateRegisteredEmail,
+        candCognitoDetails
+      });
+
+      throw new BaseError("Your email is already verified.", HttpStatusCode.CONFLICT_409);
+    }
+
+    // Verify the OTP provided by the user from the database
+    const isOtpVerified: boolean = await userOtpService.verifyOtp(candidateRegisteredEmail, candidateRegisteredEmail, otp);
+
+    // If OTP is not verified then return false, indicating verification failed
+    if (!isOtpVerified) {
+      return false;
+    }
+
+    // As the OTP is verified, mark the user's email as verified
+    const updatedUserDetails: DbUserDetailDto = await this.updateUserDetail(
+      candidateRegisteredEmail,
+      userDetailData.id,
+      {
+        isEmailVerified: isOtpVerified
+      }
+    );
+
+    if(!updatedUserDetails.isEmailVerified) {
+      global.logger.error(`The isEmailVerified is not updated in aws dynamodb. [service]`, {
+        methodName: this.sendOtpForceChangePasswordViaEmail.name,
+        candidateRegisteredEmail,
+        updatedUserDetails
+      })
+      throw new BaseError("Failed to verify your email.", HttpStatusCode.INTERNAL_SERVER_ERROR_500);
+    }
+
+    // Update email as verified in cognito
+    const updatedCognitoUserDetails: AdminUpdateUserAttributesCommandOutput = await awsClientCognitoIdentityProviderLibrary.verifyCognitoUser(workoUserPoolId, userDetailData.id);
+    global.logger.info(`The user email is verified in cognito [service]`, {
+      methodName: this.sendOtpForceChangePasswordViaEmail.name,
+      candidateRegisteredEmail,
+      updatedCognitoUserDetails
+    });
+
+    return true;
   }
 }
 

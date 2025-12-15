@@ -206,6 +206,7 @@ class CorporateBulkJdResumeController {
 
       let createdByUserId: string | undefined;
       let createdByCorporateUserId: string | undefined;
+      let createdByAgencyUserId: string | undefined;
 
       // If the user is a corporate user then set the `createdByCorporateUserId` else set the `createdByUserId`
       if (
@@ -223,12 +224,17 @@ class CorporateBulkJdResumeController {
           createdByCorporateUserId,
         });
       } else {
-        createdByUserId = cognitoUserId;
-        global.logger.info(`User is a worko admin [controller]`, {
-          filePath: __filename,
-          methodName: this.createCorporateBulkJdResumes.name,
-          createdByUserId,
-        });
+        if(cognitoUserGroups.includes(APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.ADMIN)){
+          createdByUserId = cognitoUserId;
+          global.logger.info(`User is a worko admin [controller]`, {
+            createdByUserId,
+          });
+        } else {
+          createdByAgencyUserId = cognitoUserId;
+          global.logger.info(`User is an agency user performing bulk screening [controller]`, {
+            createdByAgencyUserId,
+          });
+        }
       }
 
       // Create Resumes in database
@@ -237,7 +243,7 @@ class CorporateBulkJdResumeController {
           corporateBulkJdId,
           requestBody,
           createdByUserId,
-          createdByCorporateUserId
+          createdByCorporateUserId,
         );
 
       // return the response

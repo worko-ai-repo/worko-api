@@ -1,5 +1,24 @@
 // NPM packages
-import AWS from "aws-sdk";
+import {
+  SESClient,
+  CreateTemplateCommand,
+  UpdateTemplateCommand,
+  DeleteTemplateCommand,
+  GetTemplateCommand,
+  SendEmailCommand,
+  SendTemplatedEmailCommand,
+  type SESClientConfig,
+  type CreateTemplateCommandInput,
+  type CreateTemplateCommandOutput,
+  type UpdateTemplateCommandInput,
+  type UpdateTemplateCommandOutput,
+  type DeleteTemplateCommandOutput,
+  type GetTemplateCommandOutput,
+  type SendEmailCommandInput,
+  type SendEmailCommandOutput,
+  type SendTemplatedEmailCommandInput,
+  type SendTemplatedEmailCommandOutput,
+} from "@aws-sdk/client-ses";
 
 /**
  * AwsSesClientLibrary
@@ -13,15 +32,15 @@ class AwsSesClientLibrary {
    *
    * AWS SES object to perform SES related operations.
    */
-  private ses: AWS.SES;
+  private ses: SESClient;
 
   /**
    * constructor
    *
-   * @param {AWS.SES.ClientConfiguration} config
+   * @param {SESClientConfig} config
    */
-  constructor(private config: AWS.SES.ClientConfiguration) {
-    this.ses = new AWS.SES(this.config);
+  constructor(private config: SESClientConfig) {
+    this.ses = new SESClient(this.config);
 
     // Log message
     console.log(`The '${AwsSesClientLibrary.name}' is initialised."`, {
@@ -37,9 +56,9 @@ class AwsSesClientLibrary {
    * @param {AWS.SES.ClientConfiguration} config
    * @returns {void}
    */
-  updateConfig(config: AWS.SES.ClientConfiguration): void {
+  updateConfig(config: SESClientConfig): void {
     this.config = config;
-    this.ses = new AWS.SES(config);
+    this.ses = new SESClient(config);
   }
 
   /**
@@ -56,7 +75,7 @@ class AwsSesClientLibrary {
    * @param {AWS.SES.Types.CreateTemplateRequest} emailTemplate 
    * @returns {Promise<AWS.SES.Types.CreateTemplateResponse>}
    */
-  async createEmailTemplate(emailTemplate: AWS.SES.Types.CreateTemplateRequest): Promise<AWS.SES.Types.CreateTemplateResponse> {
+  async createEmailTemplate(emailTemplate: CreateTemplateCommandInput): Promise<CreateTemplateCommandOutput> {
     // Logger message
     global.logger.info("Creating master email template in AWS SES (data).", {
       filePath: __filename,
@@ -65,7 +84,7 @@ class AwsSesClientLibrary {
     });
 
     // Creae the email template in AWS SES
-    return this.ses.createTemplate(emailTemplate).promise();
+    return this.ses.send(new CreateTemplateCommand(emailTemplate));
   }
 
   /**
@@ -76,8 +95,8 @@ class AwsSesClientLibrary {
    * @param {AWS.SES.Types.UpdateTemplateRequest} emailTemplate 
    * @returns {Promise<AWS.SES.Types.UpdateTemplateResponse>}
    */
-  async updateEmailTemplate(emailTemplate: AWS.SES.Types.UpdateTemplateRequest): Promise<AWS.SES.Types.UpdateTemplateResponse> {
-    return this.ses.updateTemplate(emailTemplate).promise();
+  async updateEmailTemplate(emailTemplate: UpdateTemplateCommandInput): Promise<UpdateTemplateCommandOutput> {
+    return this.ses.send(new UpdateTemplateCommand(emailTemplate));
   }
   
   /**
@@ -91,7 +110,7 @@ class AwsSesClientLibrary {
    * @param {string} templateName
    * @returns {Promise<AWS.SES.Types.DeleteTemplateResponse>}
    */
-  async deleteEmailTemplateByName(templateName: string): Promise<AWS.SES.Types.DeleteTemplateResponse> {
+  async deleteEmailTemplateByName(templateName: string): Promise<DeleteTemplateCommandOutput> {
     // Logger message
     global.logger.warn("Deleting master email template from AWS SES (data).", {
       filePath: __filename,
@@ -100,7 +119,7 @@ class AwsSesClientLibrary {
     });
 
     // Delete the email template from AWS SES
-    return this.ses.deleteTemplate({ TemplateName: templateName }).promise();
+    return this.ses.send(new DeleteTemplateCommand({ TemplateName: templateName }));
   }
   
   /**
@@ -111,8 +130,8 @@ class AwsSesClientLibrary {
    * @param {string} templateName 
    * @returns {Promise<AWS.SES.Types.GetTemplateResponse>}
    */
-  async getEmailTemplateByTemplateName(templateName: string): Promise<AWS.SES.Types.GetTemplateResponse> {
-    return this.ses.getTemplate({ TemplateName: templateName }).promise();
+  async getEmailTemplateByTemplateName(templateName: string): Promise<GetTemplateCommandOutput> {
+    return this.ses.send(new GetTemplateCommand({ TemplateName: templateName }));
   }
 
   /**
@@ -129,7 +148,7 @@ class AwsSesClientLibrary {
    * @param {AWS.SES.Types.SendEmailRequest} emailDetails 
    * @returns {Promise<AWS.SES.Types.SendEmailResponse>}
    */
-  async sendEmail(emailDetails: AWS.SES.Types.SendEmailRequest): Promise<AWS.SES.Types.SendEmailResponse> {
+  async sendEmail(emailDetails: SendEmailCommandInput): Promise<SendEmailCommandOutput> {
     // Logger message
     global.logger.info("Sending email using AWS SES (data).", {
       filePath: __filename,
@@ -138,7 +157,7 @@ class AwsSesClientLibrary {
     });
 
     // Send the email and return the response
-    return this.ses.sendEmail(emailDetails).promise();
+    return this.ses.send(new SendEmailCommand(emailDetails));
   }
   
   /**
@@ -149,19 +168,19 @@ class AwsSesClientLibrary {
    * @param {AWS.SES.Types.SendTemplatedEmailRequest} emailDetails 
    * @returns {Promise<AWS.SES.Types.SendTemplatedEmailResponse>}
    */
-  async sendTemplatedEmail(emailDetails: AWS.SES.Types.SendTemplatedEmailRequest): Promise<AWS.SES.Types.SendTemplatedEmailResponse> {
+  async sendTemplatedEmail(emailDetails: SendTemplatedEmailCommandInput): Promise<SendTemplatedEmailCommandOutput> {
     // Logger message
     global.logger.info("Sending email using AWS SES (data).", {
       filePath: __filename,
       methodName: this.sendTemplatedEmail.name,
       templateName: emailDetails.Template,
-      toEmail: emailDetails.Destination.ToAddresses,
+      toEmail: emailDetails.Destination?.ToAddresses,
       fromEmail: emailDetails.Source,
       placeholders: emailDetails.TemplateData,
     });
 
     // Send the email and return the response
-    return this.ses.sendTemplatedEmail(emailDetails).promise();
+    return this.ses.send(new SendTemplatedEmailCommand(emailDetails));
   }
 }
 

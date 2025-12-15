@@ -1,5 +1,9 @@
 // NPM Packages
-import AWS from "aws-sdk";
+import type { S3ClientConfig } from "@aws-sdk/client-s3";
+import type { SESClientConfig } from "@aws-sdk/client-ses";
+import type { SQSClientConfig } from "@aws-sdk/client-sqs";
+import type { SchedulerClientConfig } from "@aws-sdk/client-scheduler";
+import type { DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 
 // Import configs
 import APP_CONSTANTS from "./constants.config";
@@ -13,23 +17,20 @@ import { AwsDynamoDBLibrary } from "../libraries/aws-dynamoDb-client.library";
 import { AwsClientSnsLibrary } from "../libraries/aws-client-sns.library";
 import { AwsClientCognitoIdentityProviderLibrary } from "../libraries/aws-client-cognito-identity-provider.library";
 import { AwsClientLambdaLibrary } from "../libraries/aws-client-lambda.library";
+import { AwsClientSecretsManagerLibrary } from "../libraries/aws-client-secrets-manager.libary";
 /**
- * awsConfigOptions
+ * getAwsConfig
  * 
- * Generic configurations for the AWS services.
+ * Generic configurations for AWS SDK v3 services.
  */
-let awsConfigOptions: AWS.ConfigurationOptions = {};
-
-// For the "local" env/stage use the credentials from the environment config, 
-// and for all other envs/stages the permissions from the lambda function would be used.
-if (process.env.APP_STAGE == APP_CONSTANTS.STAGES.LOCAL) {
-    awsConfigOptions = {
-        accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
+const getAwsConfig = () => ({
+    credentials: process.env.APP_STAGE == APP_CONSTANTS.STAGES.LOCAL ? {
+        accessKeyId: process.env.APP_AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY!,
         sessionToken: process.env.APP_AWS_SESSION_TOKEN,
-        region: process.env.APP_AWS_REGION,
-    }
-}
+    } : undefined,
+    region: process.env.APP_AWS_REGION,
+});
 
 /**
  * ****************************************************************************************************
@@ -42,10 +43,7 @@ if (process.env.APP_STAGE == APP_CONSTANTS.STAGES.LOCAL) {
  * 
  * AWS S3 specific configurations extending the "awsConfigOptions".
  */
-const awsS3ConfigOptions: AWS.S3.ClientConfiguration = {
-    ...awsConfigOptions,
-    apiVersion: "2023-09-08"
-}
+const awsS3ConfigOptions: S3ClientConfig = getAwsConfig();
 
 /**
  * awsS3ClientLibrary
@@ -66,10 +64,7 @@ console.log("The 'awsS3ClientLibrary' is initialised.", { filePath: __filename, 
  * 
  * AWS SES specific configurations extending the "awsConfigOptions".
  */
-const awsSesConfigOptions: AWS.SES.ClientConfiguration = {
-    ...awsConfigOptions,
-    apiVersion: "2010-12-01"
-}
+const awsSesConfigOptions: SESClientConfig = getAwsConfig();
 
 /**
  * awsSesClientLibrary
@@ -90,9 +85,7 @@ console.log("The 'awsSesClientLibrary' is initialised.", { filePath: __filename,
  * 
  * AWS SQS specific configurations extending the "awsConfigOptions".
  */
-const awsSqsConfigOptions: AWS.SQS.ClientConfiguration = {
-    ...awsConfigOptions,
-}
+const awsSqsConfigOptions: SQSClientConfig = getAwsConfig();
 
 /**
  * awsSqsClientLibrary
@@ -113,9 +106,7 @@ console.log("The 'awsSqsClientLibrary' is initialised.", { filePath: __filename,
  * 
  * AWS Scheduler specific configurations extending the "awsConfigOptions".
  */
-const awsSchedulerConfigOptions: AWS.Scheduler.ClientConfiguration = {
-    ...awsConfigOptions,
-}
+const awsSchedulerConfigOptions: SchedulerClientConfig = getAwsConfig();
 
 /**
  * awsSchedulerClientLibrary
@@ -132,11 +123,9 @@ console.log("The 'awsSchedulerClientLibrary' is initialised.", { filePath: __fil
 /**
  * awsDynamoDBConfigOptions
  * 
- * AWS DynamoDB specific configurations extending the "awsConfigOptions".
+ * AWS DynamoDB specific configurations.
  */
-const awsDynamoDBConfigOptions: AWS.DynamoDB.ClientConfiguration = {
-    ...awsConfigOptions,
-}
+const awsDynamoDBConfigOptions: DynamoDBClientConfig = getAwsConfig();
 
 /**
  * awsDynamoDBClientLibrary
@@ -161,10 +150,17 @@ global.logger.info(`The "awsClientCognitoIdentityProviderLibrary" is initialised
 const awsClientLambdaLibrary: AwsClientLambdaLibrary = new AwsClientLambdaLibrary();
 global.logger.info(`The "awsClientLambdaLibrary" is initialised.`);
 
+/**
+ * awsClientSecretsManagerLibrary
+ * 
+ * NOTE: For this client secrets manager, the `aws-sdk v3` is used
+ */
+const awsClientSecretsManagerLibrary: AwsClientSecretsManagerLibrary = new AwsClientSecretsManagerLibrary();
+global.logger.info(`The "awsClientSecretsManagerLibrary" is initialised.`);
+
 
 // Export the required resourses
 export {
-    awsConfigOptions,
     awsS3ConfigOptions,
     awsSesConfigOptions,
     awsSqsConfigOptions,
@@ -178,4 +174,5 @@ export {
     awsClientSnsLibrary,
     awsClientCognitoIdentityProviderLibrary,
     awsClientLambdaLibrary,
+    awsClientSecretsManagerLibrary
 }

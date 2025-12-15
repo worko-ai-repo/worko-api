@@ -32,7 +32,7 @@ import { corporateBulkJdServiceObj } from "../services/CorporateBulkJd.service";
 import { corporateBulkJdDTOValidation, corporateBulkJdFilterDtoValidation } from "../schemas/CorporateBulkJd.schema";
 
 // Import Utils
-import { RequestValidationError } from "../utils/errors.util";
+import { BaseError, RequestValidationError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
 
 /**
@@ -102,12 +102,23 @@ class CorporateBulkJdController {
           createdByCorporateUserId,
         });
       } else {
-        createdByUserId = cognitoUserId;
-        global.logger.info(`User is a worko admin [controller]`, {
-          filePath: __filename,
-          methodName: this.createCorporateBulkJd.name,
-          createdByUserId,
-        });
+        if(cognitoUserGroups.includes(APP_CONSTANTS.COGNITO_IDENTITY_POOL_GROUPS.ADMIN)){
+          createdByUserId = cognitoUserId;
+          global.logger.info(`User is a worko admin [controller]`, {
+            filePath: __filename,
+            methodName: this.createCorporateBulkJd.name,
+            createdByUserId,
+          });
+        } else {
+          global.logger.error(`User is not a corporate recruiter/admin or worko-admin [controller]`, {
+            cognitoUserGroups,
+            actionBy: cognitoUserId
+          })
+          throw new BaseError(
+            "You are not allowed to perform this action.",
+            HttpStatusCode.FORBIDDEN_403
+          )
+        }
       }
 
       // Create the Corporate Bulk Job Description Internal Dto

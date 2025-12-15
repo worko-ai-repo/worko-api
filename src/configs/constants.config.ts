@@ -94,7 +94,7 @@ const APP_CONSTANTS = {
      * Lambda function name for "Resume Extraction"
      * AWS Lambada Configurations related to triggering "Resume Extraction"
      */
-    RESUME_EXTRACTION_LAMBDA_NAME: "resume-parser",
+    RESUME_EXTRACTION_LAMBDA_NAME: `worko-resume-parser-${process.env.APP_STAGE}`,
 
     /**
      * MATCHING_SCORE_LAMBDA_NAME
@@ -194,9 +194,11 @@ const APP_CONSTANTS = {
   FRONTEND_ORIGINS: {
     PROD: [
       "https://worko.ai",
+      "https://agency.worko.ai",
     ],
     DEV: [
       "https://dev-ui.worko.work", 
+      "https://agency.worko.work",
       "https://dev.worko.work",    
       "http://localhost:4200",
       "http://localhost:8080",

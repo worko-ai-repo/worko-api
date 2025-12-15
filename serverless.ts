@@ -13,6 +13,25 @@ const serverlessConfiguration: AWS = {
     "serverless-webpack",
   ],
   custom: {
+    webpack: {
+      webpackConfig: './webpack.config.js',
+      packager: 'npm',
+      includeModules: {
+        forceExclude: [
+          '@aws-sdk/client-cognito-identity-provider',
+          '@aws-sdk/client-dynamodb',
+          '@aws-sdk/client-lambda',
+          '@aws-sdk/client-s3',
+          '@aws-sdk/client-scheduler',
+          '@aws-sdk/client-ses',
+          '@aws-sdk/client-sqs',
+          '@aws-sdk/lib-storage',
+          '@aws-sdk/client-secrets-manager',
+          '@aws-sdk/client-sns',
+          '@aws-sdk/s3-request-presigner',
+        ]
+      }
+    },
     app: {
       STAGE: "${env:APP_SLS_STAGE}",
     },
@@ -25,7 +44,9 @@ const serverlessConfiguration: AWS = {
       APP_AWS_SUBNET1: "${env:APP_AWS_SUBNET1}",
       APP_AWS_SUBNET2: "${env:APP_AWS_SUBNET2}",
       APP_AWS_COGNITO_USER_POOL_ID: "${env:APP_AWS_COGNITO_USER_POOL_ID}",
-      APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME: "${env:APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME}"
+      APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME: "${env:APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME}",
+      APP_AWS_SECRETS_MANAGER_GCP_FIRESTORE_ARN_SECRET: "${env:APP_AWS_SECRETS_MANAGER_GCP_FIRESTORE_ARN_SECRET}",
+      APP_AWS_SECRETS_MANAGER_GCP_AI_PLATFORM_ARN_SECRET: "${env:APP_AWS_SECRETS_MANAGER_GCP_AI_PLATFORM_ARN_SECRET}",
     },
     awsLambdaFunctions: {
       APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN: "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-api-${self:custom.app.STAGE}-app-scheduler-handler",
@@ -116,7 +137,7 @@ const serverlessConfiguration: AWS = {
         ],
         Resource: [
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-jd-resume-matching",
-          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:resume-parser",
+          "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-resume-parser-${self:custom.app.STAGE}",
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-job-description-parser",
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:${self:custom.aws.APP_AWS_RESUME_SIGNUP_SKILLS_PARSER_LAMBDA_NAME}",
           "arn:aws:lambda:ap-south-1:${self:custom.aws.APP_AWS_ACCOUNT_ID}:function:worko-video-interview-workflow"
@@ -171,6 +192,16 @@ const serverlessConfiguration: AWS = {
          * We want to send SMS to any mobile number, so we must set Resource to *.
          */
         Resource: "*", 
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+            "secretsmanager:GetSecretValue",
+        ],
+       "Resource":[
+          "arn:aws:secretsmanager:${self:custom.aws.APP_SLS_REGION}:${self:custom.aws.APP_AWS_ACCOUNT_ID}:secret:${self:custom.aws.APP_AWS_SECRETS_MANAGER_GCP_FIRESTORE_ARN_SECRET}",
+          "arn:aws:secretsmanager:${self:custom.aws.APP_SLS_REGION}:${self:custom.aws.APP_AWS_ACCOUNT_ID}:secret:${self:custom.aws.APP_AWS_SECRETS_MANAGER_GCP_AI_PLATFORM_ARN_SECRET}"
+        ] 
       }
     ]
   },

@@ -12,6 +12,7 @@ import "./libraries/logger.library";
 
 // Import configs
 import DBConfig from "./db/DB.config";
+import "./configs/gcp-sdk.config";
 import APP_CONSTANTS from "./configs/constants.config";
 
 // Import middlewares
@@ -20,7 +21,7 @@ import { getAuthorizerContext } from "./middlewares/authorizer-context.middlewar
 // Import the routes
 import routes from "./router";
 
-// Import Utils
+// Import utils
 import { errorHandler } from "./utils/error-handler.util";
 
 class App {

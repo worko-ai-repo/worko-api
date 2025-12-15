@@ -2,6 +2,9 @@
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import { ObjectType } from "dynamoose/dist/General";
 
+// import firestore package
+import { DocumentData, QuerySnapshot } from "@google-cloud/firestore";
+
 // import constants
 import APP_CONSTANTS from "../configs/constants.config";
 
@@ -14,7 +17,7 @@ import {
   CorporateBulkJdResumeCreateResponseDto,
   CorporateBulkJdResumeCreateApiDto,
   CorporateBulkJdResumesCreateDto,
-  CorporateBulkJdResumeCvExtractedParsedPartialDto,
+  CorporateBulkJdResumeDbCvExtractedParsedDto,
 } from "../dtos/CorporateBulkJdResume.dto";
 import { PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 import {
@@ -35,6 +38,12 @@ import { CorporateBulkJdResumeProcessingStatusEnum } from "../enums/CorporateBul
 import { EmailTemplateEnum } from "../enums/EmailTemplate.enum";
 import { WhatsAppBusinessPartnerTemplateNameEnum } from "../enums/WhatsAppBusinessPartnerTemplate.enum";
 import { UserContextTypeEnum } from "../enums/User.enum";
+import { CorporateCandidateProfileDbRefereeTypeEnum } from "../enums/CorporateCandidateProfile.enum";
+import { CentralCandidateProfileDbRefereeTypeEnum } from "../enums/CentralCandidateProfile.enum";
+import { CandidateParsedCvAwsS3ResourceTypeEnum } from "../enums/CandidateParsedCv.enum";
+
+// Import helpers
+import { dateHelperObj } from "../helpers/date.helper";
 
 // Import libraries
 import {
@@ -47,15 +56,23 @@ import { whatsAppBusinessPartnerLibraryObj } from "../libraries/WhatsAppBusiness
 import { DbCorporateBulkJdResumeDto } from "../db/models/CorporateBulkJdResume.model";
 import { DbCorporateBulkJdDto } from "../db/models/CorporateBulkJd.model";
 import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
+import { DbCorporateCandidateProfileDto } from "../db/gcp-firestore-models/CorporateCandidateProfile.model";
+import { DbCentralCandidateProfileDto } from "../db/gcp-firestore-models/CentralCandidateProfile.model";
+import { DbCandidateParsedCvDto } from "../db/gcp-firestore-models/CandidateParsedCv.model";
 
 // import services
 import { corporateBulkJdServiceObj } from "./CorporateBulkJd.service";
 import { fileServiceObj } from "./File.service";
 import { companyServiceObj } from "../admin/services/Company.service";
+import { corporateCandidateProfileServiceObj } from "./CorporateCandidateProfile.service";
+import UlidService from "./Ulid.service";
+import { centralCandidateProfileServiceObj } from "./CentralCandidateProfile.service";
+import { candidateParsedCvServiceObj } from "./CandidateParsedCv.service";
 
 // import utils
 import { BaseError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
+
 
 /**
  * CorporateBulkJdResumeService
@@ -78,7 +95,7 @@ class CorporateBulkJdResumeService {
     corporateBulkJdId: string,
     corporateBulkJdResumeDto: CorporateBulkJdResumeCreateApiDto,
     createdByUserId?: string,
-    createdByCorporateUserId?: string
+    createdByCorporateUserId?: string,
   ): Promise<CorporateBulkJdResumeCreateResponseDto> {
     // logger
     global.logger.info(
@@ -244,6 +261,205 @@ class CorporateBulkJdResumeService {
     return corporateBulkJdCvsResponseDto;
   }
 
+  private async performCandProfileDatabaseActivitiesAfterBulkScreening(
+    corporateBulkJdResume: DbCorporateBulkJdResumeDto,
+    companyDetails: DbCompanyDetailDto,
+    cvExtractedParsed: CorporateBulkJdResumeDbCvExtractedParsedDto
+  ) {
+    const {companyId, cloudFileName: candidateCvAwsS3FileName, corporateBulkJdId} = corporateBulkJdResume;
+    const {
+      candidateNumber,
+      candidatePhoneCountryCode,
+      candidateName,
+      candidateNoticePeriod,
+      isNoticePeriodNegotiable,
+      candidateEmail,
+      candidateLocation,
+      candidateCurrentCompany,
+      candidateCurrentDesignation,
+      candidateRelevantYOE,
+      candidateTotalYOE,
+      candidateExpectedCTC,
+      candidateCurrentCTC,
+      candidateReadyToRelocate,
+      coreSkills,
+      technicalSkills,
+      userPreferredDepartments,
+      userPreferredIndustries,
+      userPreferredlocations,
+      userPreferredRoles
+    } = cvExtractedParsed;
+    const {
+      name: companyName
+    } = companyDetails;
+
+    const existingCorporateCandidateProfile: QuerySnapshot<DocumentData, DocumentData> = await corporateCandidateProfileServiceObj.getDuplicateCorporateCandidateProfile(
+      companyId,
+      candidateEmail,
+      {
+        number: candidateNumber,
+        countryCode: candidatePhoneCountryCode
+      }
+    );
+    const currentDate: string = dateHelperObj.getISODate();
+    if(!existingCorporateCandidateProfile.empty) {
+      const existingCorporateCandidateProfileData = existingCorporateCandidateProfile.docs[0].data() as DbCorporateCandidateProfileDto;
+      if(existingCorporateCandidateProfileData.candidateEmail === candidateEmail) {
+        let updateCorporateCandidateProfileData: Partial<DbCorporateCandidateProfileDto> = {
+          updatedAt: currentDate
+        };
+
+        const updateEntityCandidateProfilePromises = [];
+        
+        if(Object.keys(updateCorporateCandidateProfileData).length>1) {
+          updateEntityCandidateProfilePromises.push(
+            corporateCandidateProfileServiceObj.updateCorporateCandidateProfileById(existingCorporateCandidateProfileData.id, updateCorporateCandidateProfileData)
+          )
+        }
+
+        if(updateEntityCandidateProfilePromises.length) {
+          await Promise.all(updateEntityCandidateProfilePromises);
+        }
+      } else if(existingCorporateCandidateProfileData.phoneNumberDetails.number === candidateNumber && existingCorporateCandidateProfileData.phoneNumberDetails.countryCode === candidatePhoneCountryCode) {
+        global.logger.debug(`Candidate already exists with same phone number and country code [SERVICE]`, {
+          existingCorporateCandidateProfileData,
+          candidateEmail,
+          candidateNumber,
+        });
+      }
+    } else {
+      // Prepare Create corporate candidate profile
+      const corporateCandidateProfileCreateData: DbCorporateCandidateProfileDto = {
+        id: UlidService.getUlidId(),
+        createdAt: currentDate,
+        updatedAt: currentDate,
+        companyId: companyId,
+        candidateEmail: candidateEmail,
+        refereeType: CorporateCandidateProfileDbRefereeTypeEnum.INTERNAL,
+        phoneNumberDetails: {
+          number: candidateNumber,
+          countryCode: candidatePhoneCountryCode
+        },
+
+        /**
+         * @note We given it empty to avoid typescript error, this will be updated in below lines of code
+         */
+        candidateParsedCvId: "", 
+      };
+
+      // Get existing candidate data from `CentralCandidateProfile` model
+      const existingCentralCandidateProfile: DbCentralCandidateProfileDto | undefined =
+        await centralCandidateProfileServiceObj.getCentralCandidateProfileById(
+          candidateEmail
+        );
+
+      let createOrUpdateCentralCandidateProfile: Promise<DbCentralCandidateProfileDto | undefined>;
+
+      if(existingCentralCandidateProfile) {
+        corporateCandidateProfileCreateData.candidateParsedCvId = existingCentralCandidateProfile.latestCandidateParsedCvId;
+        
+        createOrUpdateCentralCandidateProfile = centralCandidateProfileServiceObj.updateCentralCandidateProfileById(
+          candidateEmail,
+          {
+            updatedAt: currentDate,
+            candidateProfileInCompanies: [
+              ...(existingCentralCandidateProfile?.candidateProfileInCompanies ?? []),
+              {
+                companyId: companyId,
+                companyName: companyName,
+              }
+            ],
+            corporateCandidateProfileIds: [
+              ...(existingCentralCandidateProfile?.corporateCandidateProfileIds ?? []),
+              corporateCandidateProfileCreateData.id
+            ],
+          }
+        )
+      } else {
+        // Prepare Create candidate parsed CV
+        const candidateParsedCvCreateData: DbCandidateParsedCvDto = {
+          id: UlidService.getUlidId(),
+          createdAt: currentDate,
+          updatedAt: currentDate,
+          name: candidateName,
+          email: candidateEmail,
+          phoneNumberDetails: {
+            number: candidateNumber,
+            countryCode: candidatePhoneCountryCode
+          },
+          currentCompany: candidateCurrentCompany,
+          currentDesignation: candidateCurrentDesignation,
+          totalYOE: candidateTotalYOE,
+          relevantYOE: candidateRelevantYOE,
+          currentCTC: candidateCurrentCTC,
+          expectedCTC: candidateExpectedCTC,
+          noticePeriod: candidateNoticePeriod,
+          location: candidateLocation?.toLowerCase(),
+          readyToRelocate: candidateReadyToRelocate,
+          coreSkills: coreSkills,
+          technicalSkills: technicalSkills,
+          userPreferredDepartments: userPreferredDepartments,
+          userPreferredIndustries: userPreferredIndustries,
+          userPreferredlocations: userPreferredlocations,
+          userPreferredRoles: userPreferredRoles,
+          cvAwsS3ResourceType: CandidateParsedCvAwsS3ResourceTypeEnum.BULK_CVS,
+          cvAwsS3BucketName: process.env.APP_AWS_S3_BUCKET_WORKO_CORPORATE as string,
+          cvAwsS3FilePath: APP_CONSTANTS.AWS_S3_DIR_PATHS.BULK_CVS.strtr({
+            "{companyId}": companyId,
+            "{corporateBulkJdId}": corporateBulkJdId
+          }),
+          cvAwsS3FileName: candidateCvAwsS3FileName,
+          cvAwsS3FileTracker: [
+            {
+              actionDate: currentDate,
+              resourceType: CandidateParsedCvAwsS3ResourceTypeEnum.BULK_CVS,
+              bucketName: process.env.APP_AWS_S3_BUCKET_WORKO_CORPORATE as string,
+              filePath: APP_CONSTANTS.AWS_S3_DIR_PATHS.BULK_CVS.strtr({
+                "{companyId}": companyId,
+                "{corporateBulkJdId}": corporateBulkJdId
+              }),
+              fileName: candidateCvAwsS3FileName
+            }
+          ],
+          isNoticePeriodNegotiable,
+          companyId: companyId,
+          corporateCandidateProfileId: corporateCandidateProfileCreateData.id,
+          corporateBulkJdId: corporateBulkJdId
+        };
+        corporateCandidateProfileCreateData.candidateParsedCvId = candidateParsedCvCreateData.id;
+        const createCandidateParsedCvWithEmbedding: DbCandidateParsedCvDto | undefined = await candidateParsedCvServiceObj.createCandidateParsedCvWithEmbedding(candidateParsedCvCreateData);
+
+        let createCentralCandidateProfileData: DbCentralCandidateProfileDto = {
+          id: candidateEmail,
+          createdAt: currentDate,
+          updatedAt: currentDate,
+          candidateEmail: candidateEmail,
+          phoneNumberDetails: candidateParsedCvCreateData.phoneNumberDetails,
+          refereeType: CentralCandidateProfileDbRefereeTypeEnum.INTERNAL,
+          candidateProfileInCompanies: [
+            {
+              companyId: companyId,
+              companyName: companyName,
+            },
+          ],
+          corporateCandidateProfileIds: [corporateCandidateProfileCreateData.id],
+          candidateParsedCvIds: [candidateParsedCvCreateData.id],
+          latestCandidateParsedCvId: candidateParsedCvCreateData.id,
+        };
+        createOrUpdateCentralCandidateProfile = centralCandidateProfileServiceObj.createCentralCandidateProfile(createCentralCandidateProfileData);
+      }
+
+      const candProfilePromises = [
+        corporateCandidateProfileServiceObj.createCorporateCandidateProfile(corporateCandidateProfileCreateData),
+        createOrUpdateCentralCandidateProfile
+      ]
+
+      const candidateProfileResult: (DbCentralCandidateProfileDto | DbCorporateCandidateProfileDto | undefined)[] = await Promise.all(candProfilePromises);
+
+      return candidateProfileResult;
+    }
+  }
+
   /**
    * sendEmailAndWhatsappNotificationsToBulkResumeCandidatesByCorporateBulkJdId
    *
@@ -327,10 +543,19 @@ class CorporateBulkJdResumeService {
         }
       ]
     >[] = corporateBulkJdResumesData.map(
-      (eachCorporateBulkJdResume: DbCorporateBulkJdResumeDto) => {
+      async (eachCorporateBulkJdResume: DbCorporateBulkJdResumeDto) => {
         // Get Cv Extracted Parsed
-        const cvExtractedParsed =
-          eachCorporateBulkJdResume.cvExtractedParsed as CorporateBulkJdResumeCvExtractedParsedPartialDto;
+        const cvExtractedParsed: CorporateBulkJdResumeDbCvExtractedParsedDto | undefined =
+          eachCorporateBulkJdResume.cvExtractedParsed;
+        if(!cvExtractedParsed) {
+          return Promise.resolve([{
+            awsMessageId: null,
+            systemLogId: null
+          }, {
+            systemLogId: null,
+            whatsAppBusinessPartnerSendMessageResponseId: null
+          }])
+        }
 
         // Construct the email address object
         const toAddress: EmailSourceDestinationAddress = {
@@ -501,8 +726,25 @@ class CorporateBulkJdResumeService {
       corporateBulkJdResumeResponse[0];
 
     // Get CV Extracted Parsed details
-    const cvExtractedParsed =
-      corporateBulkJdResumeDetails.cvExtractedParsed as CorporateBulkJdResumeCvExtractedParsedPartialDto;
+    const cvExtractedParsed: CorporateBulkJdResumeDbCvExtractedParsedDto | undefined =
+      corporateBulkJdResumeDetails.cvExtractedParsed;
+    if(!cvExtractedParsed) {
+      global.logger.error(
+        `CV Extracted Parsed Not found, So Email and Whatsapp notification not sent. [SERVICE]`,
+        {
+          filePath: __filename,
+          methodName:
+            this
+              .corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate
+              .name,
+          corporateBulkJdResumeId: corporateBulkJdResumeId,
+        }
+      )
+      throw new BaseError(
+        "CV Extracted Parsed Not found",
+        HttpStatusCode.INTERNAL_SERVER_ERROR_500
+      )
+    }
 
     if(!cvExtractedParsed.candidateEmail) {
       global.logger.info(
@@ -669,7 +911,11 @@ class CorporateBulkJdResumeService {
     }
 
     // Wait for both email and whatsapp promises to resolve
-    await Promise.all([emailPromises, whatsAppPromises]);
+    await Promise.all([emailPromises, whatsAppPromises,this.performCandProfileDatabaseActivitiesAfterBulkScreening(
+      corporateBulkJdResumeDetails,
+      companyDetails,
+      cvExtractedParsed
+    )]);
 
     return true;
   }

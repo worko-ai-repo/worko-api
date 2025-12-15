@@ -31,6 +31,9 @@ export enum EmailTemplateEnum {
 
   USER_WORK_EMAIL_VERIFICATION_OTP = "USER_WORK_EMAIL_VERIFICATION_OTP",
   USER_CORPORATE_REQUEST_EMAIL_OTP = "USER_CORPORATE_REQUEST_EMAIL_OTP",
+
+  CAND_FORCE_CHANGE_PASSWORD_EMAIL_VERIFICATION_OTP = "CAND_FORCE_CHANGE_PASSWORD_EMAIL_VERIFICATION_OTP",
+
   /**
    * The template name used when a candidate's referral is automatically cancelled
    * after a specified number of days.

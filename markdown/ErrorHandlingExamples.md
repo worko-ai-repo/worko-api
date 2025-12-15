@@ -631,3 +631,45 @@ PostConfirmation failed with error User: arn:aws:sts::211125353899:assumed-role/
     "methodName": "confirmCognitoUserSignup"
 }
 ```
+
+28. 
+```json
+{
+    "errorType": "Runtime.ImportModuleError",
+    "errorMessage": "Error: Cannot find module 'aws-sdk'\nRequire stack:\n- /var/task/dist/src/app.js\n- /var/runtime/index.mjs",
+    "stack": [
+        "Runtime.ImportModuleError: Error: Cannot find module 'aws-sdk'",
+        "Require stack:",
+        "- /var/task/dist/src/app.js",
+        "- /var/runtime/index.mjs",
+        "    at _loadUserApp (file:///var/runtime/index.mjs:1192:17)",
+        "    at async UserFunction.js.module.exports.load (file:///var/runtime/index.mjs:1235:21)",
+        "    at async start (file:///var/runtime/index.mjs:1454:23)",
+        "    at async file:///var/runtime/index.mjs:1464:1"
+    ]
+}
+```
+
+29. 
+```sh
+[Container] 2025/12/15 04:33:39.608316 Running command npm i
+npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm WARN deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated querystring@0.2.1: The querystring API is considered Legacy. new code should use the URLSearchParams API instead.
+npm WARN deprecated querystring@0.2.0: The querystring API is considered Legacy. new code should use the URLSearchParams API instead.
+npm WARN deprecated supertest@6.3.4: Please upgrade to supertest v7.1.3+, see release notes at https://github.com/forwardemail/supertest/releases/tag/v7.1.3 - maintenance is supported by Forward Email @ https://forwardemail.net
+npm WARN deprecated superagent@7.1.6: Please upgrade to superagent v10.2.2+, see release notes at https://github.com/forwardemail/superagent/releases/tag/v10.2.2 - maintenance is supported by Forward Email @ https://forwardemail.net
+npm WARN deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+npm WARN deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm WARN deprecated superagent@8.1.2: Please upgrade to superagent v10.2.2+, see release notes at https://github.com/forwardemail/superagent/releases/tag/v10.2.2 - maintenance is supported by Forward Email @ https://forwardemail.net
+npm ERR! code EMFILE
+npm ERR! syscall open
+npm ERR! path /tmp/.npm/_cacache/index-v5/79/51/119f67269d825f31edcc5339b2bbd15e984164719e3ea04a21bda619f3cd
+npm ERR! errno -24
+npm ERR! EMFILE: too many open files, open '/tmp/.npm/_cacache/index-v5/79/51/119f67269d825f31edcc5339b2bbd15e984164719e3ea04a21bda619f3cd'
+
+npm ERR! A complete log of this run can be found in: /tmp/.npm/_logs/2025-12-15T04_33_39_846Z-debug-0.log
+
+[Container] 2025/12/15 04:34:07.542283 Command failed with exit status 232
+```

@@ -1,6 +1,7 @@
 // Import Configurations
 import { awsSesClientLibrary } from "../configs/aws-sdk.config";
 import APP_CONSTANTS from "../configs/constants.config";
+import type { SendTemplatedEmailCommandInput } from "@aws-sdk/client-ses";
 
 
 // Import DTOs
@@ -158,7 +159,7 @@ class EmailLibrary {
     );
 
     // Prepare request body as required by the AWS SES "sendTemplatedEmail" method
-    let sendTemplatedEmailAwsSesRequest: AWS.SES.Types.SendTemplatedEmailRequest =
+    let sendTemplatedEmailAwsSesRequest: SendTemplatedEmailCommandInput =
       {
         Source: fromAddressStr,
         Destination: {

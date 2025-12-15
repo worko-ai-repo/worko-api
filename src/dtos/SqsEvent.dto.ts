@@ -67,3 +67,7 @@ export interface SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto exten
      * NOTE: As of now this interface is empty, we can add more attributes later
      */
 }
+
+export interface SqsMsgUpdateCvCentralCandProfileReqDto extends SqsMsgBaseReqDto {
+
+}

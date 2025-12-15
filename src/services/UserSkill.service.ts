@@ -7,8 +7,20 @@ import userSkillDao from "../daos/UserSkill.dao";
 //Load the local dto
 import { UserSkillDTO, UserSkillPartialCvExtractUpdateDto } from "../dtos/UserSkill.dto";
 
+// Import helpers
+import { dateHelperObj } from "../helpers/date.helper";
+
 // Import models
 import { DbUserSkillDto } from "../db/models/UserSkill.model";
+import { DbCandidateParsedCvDto } from "../db/gcp-firestore-models/CandidateParsedCv.model";
+import { DbCentralCandidateProfileDto } from "../db/gcp-firestore-models/CentralCandidateProfile.model";
+
+// Import services
+import { candidateParsedCvServiceObj } from "./CandidateParsedCv.service";
+import { centralCandidateProfileServiceObj } from "./CentralCandidateProfile.service";
+
+import { BaseError } from "../utils/errors.util";
+import HttpStatusCode from "../utils/http-codes.util";
 
 /**
  * UserSkillService class is responsible for managing user Skill-related operations.
@@ -50,7 +62,41 @@ class UserSkillService {
     // Logging the action of updating user Skill in the service layer
     logger.info("Updating user Skill [UserSkillService]");
 
-    return userSkillDao.update(email, userSkillDTO);
+    const result: DbUserSkillDto = await userSkillDao.update(email, userSkillDTO);
+    /**
+     * @description 
+     *  1. Update user preference data in "CentralCandidateProfile.model.ts" if exists
+     */
+    const centralCandidateProfile: DbCentralCandidateProfileDto | undefined = await centralCandidateProfileServiceObj.getCentralCandidateProfileById(email);
+    if (centralCandidateProfile) {
+      const { 
+        coreSkills,
+        technicalSkills
+      } = result;
+      const updateCandParsedData: Partial<DbCandidateParsedCvDto> = {
+        updatedAt: dateHelperObj.getISODate(),
+      };
+      if(coreSkills && coreSkills.length) {
+        updateCandParsedData.coreSkills = coreSkills;
+      }
+      if(technicalSkills && technicalSkills.length) {
+        updateCandParsedData.technicalSkills = technicalSkills;
+      }
+
+      const updateCandidateParsedCvData: DbCandidateParsedCvDto | undefined = await candidateParsedCvServiceObj.updateCandidateParsedCvWithEmbedding(
+        centralCandidateProfile.latestCandidateParsedCvId,
+        updateCandParsedData
+      );
+      if (!updateCandidateParsedCvData) {
+        global.logger.error("Failed to update candidate parsed cv data [Service]", {
+          methodName: this.update.name,
+          centralCandidateProfile,
+          updateCandidateParsedCvData,
+        });
+        throw new BaseError("Failed to update.", HttpStatusCode.INTERNAL_SERVER_ERROR_500);
+      }
+    }
+    return result;
   }
 
   /**

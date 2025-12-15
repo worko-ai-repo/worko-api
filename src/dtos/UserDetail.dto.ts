@@ -80,3 +80,12 @@ export interface UserDetailCommonUpdateDto {
   CTC: number;
   noticePeriod: number;
 }
+
+export interface UserDetailForceChangePasswordSendOtpApiDto {
+  candidateRegisteredEmail: string;
+}
+
+export interface UserDetailForceChangePasswordVerifyOtpApiDto {
+  candidateRegisteredEmail: string;
+  otp: string;
+}

@@ -1,5 +1,25 @@
 // NPM packages
-import AWS from "aws-sdk";
+import {
+  SQSClient,
+  SendMessageCommand,
+  ReceiveMessageCommand,
+  DeleteMessageCommand,
+  PurgeQueueCommand,
+  GetQueueUrlCommand,
+  CreateQueueCommand,
+  type SQSClientConfig,
+  type SendMessageCommandInput,
+  type SendMessageCommandOutput,
+  type ReceiveMessageCommandInput,
+  type ReceiveMessageCommandOutput,
+  type DeleteMessageCommandInput,
+  type DeleteMessageCommandOutput,
+  type PurgeQueueCommandInput,
+  type PurgeQueueCommandOutput,
+  type GetQueueUrlCommandInput,
+  type CreateQueueCommandInput,
+  type CreateQueueCommandOutput,
+} from "@aws-sdk/client-sqs";
 
 /**
  * AwsSqsClientLibrary
@@ -13,15 +33,15 @@ class AwsSqsClientLibrary {
    *
    * AWS SQS object to perform SQS related operations.
    */
-  private sqs: AWS.SQS;
+  private sqs: SQSClient;
 
   /**
    * constructor
    *
-   * @param {AWS.SQS.ClientConfiguration} config
+   * @param {SQSClientConfig} config
    */
-  constructor(private config: AWS.SQS.ClientConfiguration) {
-    this.sqs = new AWS.SQS(this.config);
+  constructor(private config: SQSClientConfig) {
+    this.sqs = new SQSClient(this.config);
 
     // Log message
     console.log(`The '${AwsSqsClientLibrary.name}' is initialised."`, {
@@ -37,9 +57,9 @@ class AwsSqsClientLibrary {
    * @param {AWS.SQS.ClientConfiguration} config
    * @returns {void}
    */
-  updateConfig(config: AWS.SQS.ClientConfiguration): void {
+  updateConfig(config: SQSClientConfig): void {
     this.config = config;
-    this.sqs = new AWS.SQS(config);
+    this.sqs = new SQSClient(config);
   }
 
   /**
@@ -58,8 +78,8 @@ class AwsSqsClientLibrary {
    * @param {number} [delaySeconds] 
    * @returns {Promise<AWS.SQS.SendMessageResult>}
    */
-  async sendMessage(queueUrl: string, messageBody: string, delaySeconds?: number): Promise<AWS.SQS.SendMessageResult> {
-    const params: AWS.SQS.SendMessageRequest = {
+  async sendMessage(queueUrl: string, messageBody: string, delaySeconds?: number): Promise<SendMessageCommandOutput> {
+    const params: SendMessageCommandInput = {
       QueueUrl: queueUrl,
       MessageBody: messageBody,
       ...(delaySeconds && { DelaySeconds: delaySeconds }),
@@ -74,7 +94,7 @@ class AwsSqsClientLibrary {
       delaySeconds: delaySeconds,
     });
 
-    return this.sqs.sendMessage(params).promise();
+    return this.sqs.send(new SendMessageCommand(params));
   }
 
   /**
@@ -93,8 +113,8 @@ class AwsSqsClientLibrary {
    * @param {number} [waitTimeSeconds=0] 
    * @returns {Promise<AWS.SQS.ReceiveMessageResult>}
    */
-  async receiveMessages(queueUrl: string, maxNumberOfMessages: number = 1, waitTimeSeconds: number = 0): Promise<AWS.SQS.ReceiveMessageResult> {
-    const params: AWS.SQS.ReceiveMessageRequest = {
+  async receiveMessages(queueUrl: string, maxNumberOfMessages: number = 1, waitTimeSeconds: number = 0): Promise<ReceiveMessageCommandOutput> {
+    const params: ReceiveMessageCommandInput = {
       QueueUrl: queueUrl,
       MaxNumberOfMessages: maxNumberOfMessages,
       WaitTimeSeconds: waitTimeSeconds,
@@ -109,7 +129,7 @@ class AwsSqsClientLibrary {
       waitTimeSeconds: waitTimeSeconds,
     });
 
-    return this.sqs.receiveMessage(params).promise();
+    return this.sqs.send(new ReceiveMessageCommand(params));
   }
 
   /**
@@ -127,8 +147,8 @@ class AwsSqsClientLibrary {
    * @param {string} receiptHandle 
    * @returns {Promise<{}>}
    */
-  async deleteMessage(queueUrl: string, receiptHandle: string): Promise<{}> {
-    const params: AWS.SQS.DeleteMessageRequest = {
+  async deleteMessage(queueUrl: string, receiptHandle: string): Promise<DeleteMessageCommandOutput> {
+    const params: DeleteMessageCommandInput = {
       QueueUrl: queueUrl,
       ReceiptHandle: receiptHandle,
     };
@@ -141,7 +161,7 @@ class AwsSqsClientLibrary {
       receiptHandle: receiptHandle,
     });
 
-    return this.sqs.deleteMessage(params).promise();
+    return this.sqs.send(new DeleteMessageCommand(params));
   }
 
   /**
@@ -158,8 +178,8 @@ class AwsSqsClientLibrary {
    * @param {string} queueUrl 
    * @returns {Promise<{}>}
    */
-  async purgeQueue(queueUrl: string): Promise<{}> {
-    const params: AWS.SQS.PurgeQueueRequest = {
+  async purgeQueue(queueUrl: string): Promise<PurgeQueueCommandOutput> {
+    const params: PurgeQueueCommandInput = {
       QueueUrl: queueUrl,
     };
 
@@ -170,7 +190,7 @@ class AwsSqsClientLibrary {
       queueUrl: queueUrl,
     });
 
-    return this.sqs.purgeQueue(params).promise();
+    return this.sqs.send(new PurgeQueueCommand(params));
   }
 
   /**
@@ -182,7 +202,7 @@ class AwsSqsClientLibrary {
    * @returns {Promise<string>}
    */
   async getQueueUrl(queueName: string): Promise<string> {
-    const params: AWS.SQS.GetQueueUrlRequest = {
+    const params: GetQueueUrlCommandInput = {
       QueueName: queueName,
     };
 
@@ -193,7 +213,7 @@ class AwsSqsClientLibrary {
       queueName: queueName,
     });
 
-    const result = await this.sqs.getQueueUrl(params).promise();
+    const result = await this.sqs.send(new GetQueueUrlCommand(params));
     if (!result.QueueUrl) {
       throw new Error(`Queue URL not found for queue name: ${queueName}`);
     }
@@ -209,8 +229,8 @@ class AwsSqsClientLibrary {
    * @param {AWS.SQS.CreateQueueRequest["Attributes"]} [attributes] 
    * @returns {Promise<AWS.SQS.CreateQueueResult>}
    */
-  async createQueue(queueName: string, attributes?: AWS.SQS.CreateQueueRequest["Attributes"]): Promise<AWS.SQS.CreateQueueResult> {
-    const params: AWS.SQS.CreateQueueRequest = {
+  async createQueue(queueName: string, attributes?: Record<string, string>): Promise<CreateQueueCommandOutput> {
+    const params: CreateQueueCommandInput = {
       QueueName: queueName,
       Attributes: attributes,
     };
@@ -223,7 +243,7 @@ class AwsSqsClientLibrary {
       attributes: attributes,
     });
 
-    return this.sqs.createQueue(params).promise();
+    return this.sqs.send(new CreateQueueCommand(params));
   }
 }
 

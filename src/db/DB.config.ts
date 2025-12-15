@@ -2,7 +2,7 @@
 import * as dynamoose from "dynamoose";
 
 // Import DB constants
-import APP_CONSTANTS from "../configs/constants.config";
+// import APP_CONSTANTS from "../configs/constants.config";
 import { DB_CONSTANTS } from "./DB.constants";
 
 // Import all models
@@ -90,26 +90,28 @@ class DBConfig {
     global.logger.info("Establish the 'DynamoDB' connection through 'Dynamoose'.");
 
     // Configuration to connect to the DynamodDB database
-    let config = {};
+    let config = {
+      region: process.env.APP_SLS_REGION,
+    };
 
     // If the stage is local then use then connect to the local DynamoDB
-    if (process.env.APP_STAGE == APP_CONSTANTS.STAGES.LOCAL) {
-      config = {
-        credentials: {
-          accessKeyId: process.env.APP_AWS_DYNAMODB_ACCESS_KEY_ID as string,
-          secretAccessKey: process.env.APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
-        },
-        region: process.env.APP_SLS_REGION,
-        endpoint: process.env.APP_AWS_DYNAMODB_NOSQL_WORKBENCH_ENDPOINT,
-        // convertClassInstanceToMap: true,
-      };
-    }
+    // if (process.env.APP_STAGE == APP_CONSTANTS.STAGES.LOCAL) {
+    //   config = {
+    //     credentials: {
+    //       accessKeyId: process.env.APP_AWS_DYNAMODB_ACCESS_KEY_ID as string,
+    //       secretAccessKey: process.env.APP_AWS_DYNAMODB_SECRET_ACCESS_KEY as string,
+    //     },
+    //     region: process.env.APP_SLS_REGION,
+    //     endpoint: process.env.APP_AWS_DYNAMODB_NOSQL_WORKBENCH_ENDPOINT,
+    //     // convertClassInstanceToMap: true,
+    //   };
+    // }
     // For other stages, the required permissions would be added in the "serverless.ts" file
-    else {
-      config = {
-        region: process.env.APP_SLS_REGION,
-      };
-    }
+    // else {
+    //   config = {
+    //     region: process.env.APP_SLS_REGION,
+    //   };
+    // }
 
     const ddb = new dynamoose.aws.ddb.DynamoDB(config);
     dynamoose.aws.ddb.set(ddb);

@@ -234,3 +234,20 @@ export interface MinMaxRange {
   min: number;
   max: number;
 }
+
+export interface GcpFirestoreInteractionDto {
+  databaseName: string;
+  collectionName: string;
+}
+
+export interface CommonPhoneNumberDto {
+  /**
+   * @example 9666308100
+   */
+  number: number;
+
+  /**
+   * @example 91
+   */
+  countryCode: number;
+}

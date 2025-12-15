@@ -192,3 +192,21 @@ export const userDetailUpdateApiDtoValidation = Joi.object({
     "boolean.base": "Provided value must be a boolean.",
   }),
 });
+
+export const userDetailForceChangePasswordSendOtpApiDtoValidation = Joi.object({
+  candidateRegisteredEmail: Joi.string().email().required().messages({
+    "any.required": "Candidate registered email is required.",
+    "string.email": "Candidate registered email is invalid.",
+  }),
+});
+
+export const userDetailForceChangePasswordVerifyOtpApiDtoValidation = Joi.object({
+  candidateRegisteredEmail: Joi.string().email().required().messages({
+    "any.required": "Candidate registered email is required.",
+    "string.email": "Candidate registered email is invalid.",
+  }),
+  otp: Joi.string().required().messages({
+    "any.required": "OTP is required.",
+    "string.empty": "OTP should not be empty.",
+  }),
+})

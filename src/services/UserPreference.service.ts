@@ -10,13 +10,21 @@ import { UserPreferenceCommonUpdateDto, UserPreferenceCreateOrUpdateApiDto, User
 
 // Import helpers
 import { userAuthorization } from "../helpers/user.helper";
+import { dateHelperObj } from "../helpers/date.helper";
 
 // Import models
 import { DbUserPreferenceDto } from "../db/models/UserPreference.model";
+import { DbCentralCandidateProfileDto } from "../db/gcp-firestore-models/CentralCandidateProfile.model";
+import { DbCandidateParsedCvDto } from "../db/gcp-firestore-models/CandidateParsedCv.model";
+
+// Import services
+import { centralCandidateProfileServiceObj } from "./CentralCandidateProfile.service";
+import { candidateParsedCvServiceObj } from "./CandidateParsedCv.service";
 
 // Import utils
 import { BaseError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
+
 
 class UserPreferenceService {
   private async checkUserPreferenceAuthorization(
@@ -45,7 +53,7 @@ class UserPreferenceService {
   async createOrUpdateUserPreference(
     requestBody: UserPreferenceCreateOrUpdateApiDto
   ): Promise<DbUserPreferenceDto> {
-    global.logger.info("Create user preference [Service]");
+    global.logger.info("Create or update user preference [Service]");
 
     const cognitoUserId: string = global.requestLocalContext.userId;
 
@@ -142,7 +150,59 @@ class UserPreferenceService {
     updateData: Partial<UserPreferenceCommonUpdateDto>
   ): Promise<DbUserPreferenceDto> {
     global.logger.info("Update user preference [Service]");
-    return userPreferenceDaoObj.updateUserPreference(email, updateData);
+    const updatedUserPreference: DbUserPreferenceDto = await userPreferenceDaoObj.updateUserPreference(email, updateData);
+
+    /**
+     * @description 
+     *  1. Update user preference data in "CentralCandidateProfile.model.ts" if exists
+     */
+    global.logger.info("Looking up central candidate profile", { email });
+    const centralCandidateProfile: DbCentralCandidateProfileDto | undefined = await centralCandidateProfileServiceObj.getCentralCandidateProfileById(email);
+    global.logger.info("Central candidate profile lookup result", { 
+      email, 
+      centralCandidateProfile
+    });
+    if (centralCandidateProfile) {
+      global.logger.info("Update user preference in central candidate profile [Service]", {
+        methodName: this.updateUserPreference.name,
+        centralCandidateProfile,
+      }); 
+      const { userPreferredlocations, userPreferredDepartments, userPreferredIndustries, userPreferredRoles } = updatedUserPreference;
+      const updateCandParsedData: Partial<DbCandidateParsedCvDto> = {
+        updatedAt: dateHelperObj.getISODate(),
+      };
+      if(userPreferredDepartments && userPreferredDepartments.length) {
+        updateCandParsedData.userPreferredDepartments = userPreferredDepartments;
+      }
+      if(userPreferredlocations && userPreferredlocations.length) {
+        updateCandParsedData.userPreferredlocations = userPreferredlocations;
+      }
+      if(userPreferredIndustries && userPreferredIndustries.length) {
+        updateCandParsedData.userPreferredIndustries = userPreferredIndustries;
+      }
+      if(userPreferredRoles && userPreferredRoles.length) {
+        updateCandParsedData.userPreferredRoles = userPreferredRoles;
+      }
+      const updateCandidateParsedCvData: DbCandidateParsedCvDto | undefined = await candidateParsedCvServiceObj.updateCandidateParsedCvWithEmbedding(
+        centralCandidateProfile.latestCandidateParsedCvId,
+        updateCandParsedData
+      );
+      if (!updateCandidateParsedCvData) {
+        global.logger.error("Failed to update candidate parsed cv data [Service]", {
+          methodName: this.updateUserPreference.name,
+          centralCandidateProfile,
+          updateCandidateParsedCvData,
+        });
+        throw new BaseError("Failed to update.", HttpStatusCode.INTERNAL_SERVER_ERROR_500);
+      }
+    } else {
+      global.logger.warn("Central candidate profile not found [Service]", {
+        methodName: this.updateUserPreference.name,
+        centralCandidateProfile,
+      });
+    }
+
+    return updatedUserPreference;
   }
 }
 

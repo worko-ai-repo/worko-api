@@ -1,8 +1,7 @@
-// Import installed packages
-import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 
 // Import configurations
 import { awsSesClientLibrary } from "../configs/aws-sdk.config";
+import type { CreateTemplateCommandInput, CreateTemplateCommandOutput, DeleteTemplateCommandOutput, UpdateTemplateCommandInput, UpdateTemplateCommandOutput } from "@aws-sdk/client-ses";
 
 // Import DAOs
 import emailTemplateDao from "../daos/EmailTemplate.dao";
@@ -34,7 +33,7 @@ class EmailTemplateService {
   async createEmailTemplate(emailTemplate: EmailTemplateCreateDto): Promise<DbEmailTemplateDto | null> {
     // == Create email template in AWS SES.
     // Email template data required for AWS SES create
-    let createEmailTempSesData: AWS.SES.Types.CreateTemplateRequest = {
+    let createEmailTempSesData: CreateTemplateCommandInput = {
       Template: {
         TemplateName: emailTemplate.templateName,
         SubjectPart: emailTemplate.subject,
@@ -44,7 +43,7 @@ class EmailTemplateService {
     }
 
     // Create email template in AWS SES
-    let createEmailTempSesResponse: any = await awsSesClientLibrary.createEmailTemplate(createEmailTempSesData);
+    let createEmailTempSesResponse: CreateTemplateCommandOutput = await awsSesClientLibrary.createEmailTemplate(createEmailTempSesData);
 
     // Logger message
     global.logger.info("Creating master email template in AES SES (response).", {
@@ -54,7 +53,7 @@ class EmailTemplateService {
     });
 
     // Check if the Email Template was not created in the AWS SES
-    if (!createEmailTempSesResponse?.ResponseMetadata?.RequestId) {
+    if (!createEmailTempSesResponse.$metadata.requestId) {
       return null;
     }
 
@@ -92,7 +91,7 @@ class EmailTemplateService {
   async updateEmailTemplate(emailTemplate: EmailTemplateUpdateDto): Promise<DbEmailTemplateDto | null> {
     // == Update email template in AWS SES.
     // Email template data required for AWS SES update
-    let updateEmailTempData: AWS.SES.Types.UpdateTemplateRequest = {
+    let updateEmailTempData: UpdateTemplateCommandInput = {
       Template: {
         TemplateName: emailTemplate.templateName,
         SubjectPart: emailTemplate.subject,
@@ -102,17 +101,17 @@ class EmailTemplateService {
     }
     
     // Update email template in AWS SES
-    let updateEmailTempSesResponse: any = await awsSesClientLibrary.updateEmailTemplate(updateEmailTempData);
+    let updateEmailTempSesResponse: UpdateTemplateCommandOutput = await awsSesClientLibrary.updateEmailTemplate(updateEmailTempData);
 
     // Logger message
     global.logger.info("Updating master email template in AES SES (response).", {
       filePath: __filename,
       methodName: this.updateEmailTemplate.name,
-      createEmailTempSesResponse: updateEmailTempSesResponse,
+      updateEmailTempSesResponse: updateEmailTempSesResponse,
     });
 
     // Check if the Email Template was not updated in the AWS SES
-    if (!updateEmailTempSesResponse?.ResponseMetadata?.RequestId) {
+    if (!updateEmailTempSesResponse.$metadata.requestId) {
       return null;
     }
 
@@ -165,7 +164,7 @@ class EmailTemplateService {
    */
   async deleteEmailTemplateByName(templateName: string): Promise<boolean> {
     // == Delete the email template from AES SES
-    let deleteTemplateSesResponse: any = await awsSesClientLibrary.deleteEmailTemplateByName(templateName);
+    let deleteTemplateSesResponse: DeleteTemplateCommandOutput = await awsSesClientLibrary.deleteEmailTemplateByName(templateName);
     
     // Logger message
     global.logger.warn("Deleting master email template from AWS SES (response).", {
@@ -178,7 +177,7 @@ class EmailTemplateService {
     // Check if the Email Template was not deleted in the AWS SES
     // Note: It is just requestId returned by AWS, it does not indicate whether the email is deleted or not.
     // But it can help to get more information from the AWS if required.
-    if (!deleteTemplateSesResponse?.ResponseMetadata?.RequestId) {
+    if (!deleteTemplateSesResponse.$metadata.requestId) {
       return false;
     }
 

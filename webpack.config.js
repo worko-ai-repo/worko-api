@@ -1,41 +1,17 @@
-// const path = require("path");
 
-// module.exports = {
-//   entry: "./src/app.ts",
-//   target: "node",
-//   mode: "development",
-
-//   output: {
-//     publicPath: "dist",
-//     path: path.resolve(__dirname, "dist"),
-//     filename: "bundle.js",
-//   },
-//   resolve: {
-//     extensions: [".ts", ".js"],
-//   },
-
-//   module: {
-//     rules: [
-//       {
-//         test: /\.ts$/,
-//         use: "ts-loader",
-//         include: [path.resolve(__dirname, "src")],
-//         exclude: /node_modules/,
-//       },
-//     ],
-//   },
-//   devServer: {
-//     static: {
-//       directory: path.join(__dirname, "dist"), // The root directory to serve content from
-//     },
-//     compress: true, // Enable gzip compression
-//     port: 8080, // Port on which the development server will run
-//     hot: true, // Enable hot module replacement
-//   },
-// };
+/**
+ * @see https://webpack.js.org/guides/typescript/
+ * @see https://programoholic.medium.com/build-and-deploy-serverless-application-with-webpack-584163367390
+ * @description
+ *  1. Reduce the build size of the application from more than `250MB` to 2–3 MB per lambda using webpack
+ */
 
 const path = require("path");
 const slsw = require("serverless-webpack");
+const webpack = require("webpack");
+const nodeExternals = require("webpack-node-externals");
+const TerserPlugin = require("terser-webpack-plugin");
+const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 module.exports = {
   entry: slsw.lib.entries,
@@ -51,12 +27,21 @@ module.exports = {
     extensions: [".ts", ".js"],
   },
 
+  plugins: [new ForkTsCheckerWebpackPlugin()],
+
   /**
-   * Memory optimization for containerized builds
+   * Optimization for Lambda deployment
    */
   optimization: {
-    splitChunks: false,
-    minimize: false,
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          keep_classnames: true,
+          keep_fnames: true,
+        },
+      }),
+    ],
   },
 
   /**
@@ -68,10 +53,16 @@ module.exports = {
     rules: [
       {
         test: /\.ts$/,
-        use: "ts-loader",
+        loader: "ts-loader",
+        options: {
+          // disable type checker - we will use it in fork plugin
+          transpileOnly: true,
+        },
         include: [path.resolve(__dirname, "src")],
         exclude: /node_modules/,
       },
     ],
   },
+  node: false,
+  externals: [nodeExternals()],
 };

@@ -140,11 +140,22 @@ class UserOtpService {
     emailPlaceholders.otp = otp;
 
     // Send email with OTP to candidate
-    const emailResponse = await emailLibrary.sendEmail(
+    const emailResponse: {
+      awsMessageId: string | null;
+      systemLogId: string | null;
+    } = await emailLibrary.sendEmail(
       emailTemplateName,
       toAddress,
       emailPlaceholders
     );
+    
+    if(!emailResponse.systemLogId) {
+      global.logger.error(`System log ID not found`, {
+        emailResponse,
+        methodName: this.sendOtpViaEmail.name
+      })
+      throw new BaseError("Failed to send email", HttpStatusCode.INTERNAL_SERVER_ERROR_500);
+    }
 
     // Extract system log ID from email response
     const logId = emailResponse.systemLogId as string;

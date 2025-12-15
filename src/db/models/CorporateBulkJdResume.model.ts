@@ -7,6 +7,9 @@ import { Schema } from "dynamoose/dist/Schema";
 import { DB_CONSTANTS } from "../DB.constants";
 import { BaseDbDto } from "./Base.model";
 
+// import dtos
+import { CorporateBulkJdResumeDbCvExtractedParsedDto } from "../../dtos/CorporateBulkJdResume.dto";
+
 // import Enums
 import { CorporateBulkJdResumeProcessingStatusEnum } from "../../enums/CorporateBulkJdResume.enum";
 
@@ -41,8 +44,28 @@ class DbCorporateBulkJdResumeDto extends BaseDbDto {
    * Possible Details for `cvExtractedParsed` are as follows:
    * Candidate Name, Candidate Experience, Candidate Current company, Candidate Current Designation, Candidate Email ID,
    * Candidate Phone Number
+   * 
+   * @example 
+    {
+      "candidateName": "Rohith Appala",
+      "candidateEmail": "rohithappala777@gmail.com",
+      "candidatePhoneNumber": "+919666308100",
+      "candidateNumber": 9666308100,
+      "candidatePhoneCountryCode": 91,
+      "candidateCurrentCompany": "Worko.ai-India"
+      "candidateCurrentDesignation": "NodeJs Backend Developer",
+      "candidateExperience": 3,
+      "candidateTotalYOE": 3,
+      "candidateRelevantYOE": 4,
+      "candidateCurrentCTC": 10,
+      "candidateExpectedCTC": 9,
+      "candidateNoticePeriod": 60,
+      "candidateLocation": "Hyderabad, Telangana",
+      "candidateReadyToRelocate": false,
+      "isNoticePeriodNegotiable": false,
+    }
    */
-  cvExtractedParsed?: object;
+  cvExtractedParsed?: CorporateBulkJdResumeDbCvExtractedParsedDto;
   cvExtract?: string;
   matchingScore!: number;
   jdMatchErrorCode?: number;

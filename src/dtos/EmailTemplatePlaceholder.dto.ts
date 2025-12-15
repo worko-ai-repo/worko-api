@@ -38,6 +38,11 @@ export interface EmailTemplatePlaceholderUSER_WORK_EMAIL_VERIFICATION_OTP extend
     verificationUrl: string;
 }
 
+export interface EmailTemplatePlaceholderCAND_FORCE_CHANGE_PASSWORD_EMAIL_VERIFICATION_OTP extends EmailTemplatePlaceholderSOCIAL_PROFILE_DETAILS {
+  candidateName: string;
+  otp: string;
+}
+
 export interface EmailTemplatePlaceholderCAND_PREMIUM_UPGRADE_NOTIFICATION extends EmailTemplatePlaceholderSOCIAL_PROFILE_DETAILS {
     candName: string;
     candPremiumUpgradeNowMsg: string;

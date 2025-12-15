@@ -18,6 +18,7 @@ import {
   SqsMsgReferralValidationMatchingScoreReqDto,
   SqsMsgReviewReferralAcceptanceStatusReqDto,
   SqsMsgSendWelcomeEmailAndWhatsappNotificationToUserReqDto,
+  SqsMsgUpdateCvCentralCandProfileReqDto,
 } from "./dtos/SqsEvent.dto";
 
 // Import local Enums
@@ -27,6 +28,7 @@ import { SqsMsgEventEnum } from "./enums/SqsEvent.enum";
 import UserReferralService from "./services/UserReferral.service";
 import UserDetailService from "./services/UserDetail.service";
 import { corporateBulkJdResumeServiceObj } from "./services/CorporateBulkJdResume.service";
+import { centralCandidateProfileServiceObj } from "./services/CentralCandidateProfile.service";
 
 // Import utils
 import { BaseError } from "./utils/errors.util";
@@ -397,6 +399,33 @@ const reviewReferralAcceptanceStatus = async (
   }
 };
 
+const performCvCentralCandProfileUpdate = async (
+  message: SqsMsgUpdateCvCentralCandProfileReqDto,
+): Promise<object> => {
+  try {
+    const { userEmail: candidateEmail } = message;
+
+    const isCvCentralCandProfileUpdated: boolean = await centralCandidateProfileServiceObj.performCvCentralCandProfileUpdate(
+      candidateEmail,
+    );
+
+    // Return success response if review was successful
+    if (isCvCentralCandProfileUpdated) {
+      return sendSuccessResponse(
+        HttpStatusCode.OK_200,
+        "Cv Central candidate profile updated successfully."
+      );
+    } else {
+      throw new BaseError(`Unable to update Cv Central candidate profile.`);
+    }
+  } catch (error: any) {
+    return sendErrResponse(
+      error,
+      error?.errorMsg ?? error?.message
+    );
+  }
+};
+
 /**
  * Main handler function for processing SQS events.
  * It determines the type of event and calls the appropriate function to handle it.
@@ -469,7 +498,13 @@ export const handler = async (
       );
     } else if (messageEvent === SqsMsgEventEnum.USER_SEND_WELCOME_EMAIL) {
       return sendWelcomeEmailToUser(parsedMessage, event, context);
-    } else if (messageEvent === SqsMsgEventEnum.CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION) {
+    } 
+    /**
+     * @note
+     *  1. Earlier we used this only for sending email when score is generated, but 
+     *  now we will use this event type for storing the candidate data in gcp firestore by validating.
+     */
+    else if (messageEvent === SqsMsgEventEnum.CORPORATE_BULK_JD_RESUME_SEND_EMAIL_AND_WHATSAPP_NOTIFICATION) {
       return corporateBulkJdResumeSendEmailAndWhatsappNotificationAsCandidate(
         parsedMessage as SqsMsgCorporateBulkJDResumeSendEmailAndWhatsappNotificationReqDto,
         event,
@@ -481,7 +516,11 @@ export const handler = async (
         event,
         context
       );
-    } 
+    } else if(messageEvent === SqsMsgEventEnum.UPDATE_CV_CENTRAL_CAND_PROFILE) {
+      return performCvCentralCandProfileUpdate(
+        parsedMessage as SqsMsgUpdateCvCentralCandProfileReqDto
+      );
+    }
       
     // Throw error if event type is invalid
     throw new Error(

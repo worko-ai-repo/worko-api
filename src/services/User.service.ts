@@ -47,9 +47,12 @@ import {
   UserSubscriptionStatus,
   UserSubscriptionType,
 } from "../enums/UserSubscription.enum";
+import { CentralCandidateProfileDbRefereeTypeEnum } from "../enums/CentralCandidateProfile.enum";
+import { CandidateParsedCvAwsS3ResourceTypeEnum } from "../enums/CandidateParsedCv.enum";
 
 // Import helpers
-import { getEmailFromPK } from "../helpers/user.helper";
+import { getEmailFromPK, getPhoneCountryCodeAndNumber } from "../helpers/user.helper";
+import { dateHelperObj } from "../helpers/date.helper";
 
 // Load the local model
 import { DbUserDetailSettingDto } from "../db/models/UserDetailSetting.model";
@@ -57,6 +60,9 @@ import { DbUserSkillDto } from "../db/models/UserSkill.model";
 import { DbUserDetailDto } from "../db/models/UserDetail.model";
 import { DbUserPreferenceDto } from "../db/models/UserPreference.model";
 import { DbUserAchievementDto } from "../db/models/UserAchievement.model";
+import { DbCentralCandidateProfileDto } from "../db/gcp-firestore-models/CentralCandidateProfile.model";
+import { DbCandidateParsedCvDto } from "../db/gcp-firestore-models/CandidateParsedCv.model";
+import { DbCorporateCandidateProfileDto } from "../db/gcp-firestore-models/CorporateCandidateProfile.model";
 
 // Load the local services
 import UserSkillService from "./UserSkill.service";
@@ -68,10 +74,15 @@ import { userDetailSettingServiceObj } from "./UserDetailSetting.service";
 import { userPreferenceServiceObj } from "./UserPreference.service";
 import UserAchievementService from "./UserAchievement.service";
 import InvokeLambdaService from "./InvokeLambda.service";
+import { centralCandidateProfileServiceObj } from "./CentralCandidateProfile.service";
+import UlidService from "./Ulid.service";
+import { candidateParsedCvServiceObj } from "./CandidateParsedCv.service";
+import { corporateCandidateProfileServiceObj } from "./CorporateCandidateProfile.service";
 
 // Load the local utils
 import { BaseError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
+
 
 // @todo all methods from everything (Dao, Service, etc) should return the response,
 // it will help the caller to know what happed with the action and what is the response.
@@ -127,8 +138,12 @@ class UserService {
     // Create a new user in db
     let createdUser = await userDetailDao.add(userSignUpDTO);
 
-    // call setupUserResources to set up additional user resources after account creation
-    await this.setupUserResources(createdUser, createdUser.userType[0]);
+    await Promise.all([
+      // call setupUserResources to set up additional user resources after account creation
+      await this.setupUserResources(createdUser, createdUser.userType[0]),
+
+      await this.performCandProfileDatabaseActivitiesAfterSignUp(createdUser),
+    ]);
 
     // Create a new user in db
     return createdUser;
@@ -154,6 +169,131 @@ class UserService {
       email,
       validatedRequestBody
     );
+  }
+
+  private async performCandProfileDatabaseActivitiesAfterSignUp(
+    userDetail: DbUserDetailDto
+  ) {
+    const {
+      PK,
+      name: candidateName,
+      number: candidateNumber,
+      id: candidateCognitoUserId,
+      noticePeriod: candidateNoticePeriod,
+      isNoticePeriodNegotiable: isCandidateNoticePeriodNegotiable,
+      CV: candidateCvAwsS3FileName,
+      YOE: candidateYoe,
+      CTC: candidateCtc,
+      ECTC: candidateEctc,
+      location: candidateLocation,
+    } = userDetail;
+
+    const {phoneCountryCode, phoneNumber} = getPhoneCountryCodeAndNumber(candidateNumber);
+    const candidateRegisteredEmail: string = getEmailFromPK(PK);
+
+    const existingCentralCandProfile: DbCentralCandidateProfileDto | undefined = await centralCandidateProfileServiceObj.getCentralCandidateProfileById(
+      candidateRegisteredEmail
+    );
+
+    const currentDate: string = dateHelperObj.getISODate();
+
+    // Prepare Create candidate parsed CV
+    const candidateParsedCvCreateData: DbCandidateParsedCvDto = {
+      id: UlidService.getUlidId(),
+      createdAt: currentDate,
+      updatedAt: currentDate,
+      name: candidateName.toLowerCase(),
+      email: candidateRegisteredEmail,
+      phoneNumberDetails: {
+        number: phoneNumber,
+        countryCode: phoneCountryCode
+      },
+      // currentCompany: ,
+      // currentDesignation: ,
+      totalYOE: candidateYoe,
+      relevantYOE: candidateYoe,
+      currentCTC: candidateCtc,
+      expectedCTC: candidateEctc,
+      noticePeriod: candidateNoticePeriod,
+      location: candidateLocation?.toLowerCase(),
+      // readyToRelocate: ,
+      cvAwsS3ResourceType: CandidateParsedCvAwsS3ResourceTypeEnum.USER_RESUME,
+      cvAwsS3BucketName: process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+      cvAwsS3FilePath: APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_RESUME.strtr({
+        "{userId}": candidateCognitoUserId,
+      }),
+      cvAwsS3FileName: candidateCvAwsS3FileName,
+      cvAwsS3FileTracker: [
+        {
+          actionDate: currentDate,
+          resourceType: CandidateParsedCvAwsS3ResourceTypeEnum.USER_RESUME,
+          bucketName: process.env.APP_AWS_S3_BUCKET_WORKO_APP as string,
+          filePath: APP_CONSTANTS.AWS_S3_DIR_PATHS.USER_RESUME.strtr({
+            "{userId}": candidateCognitoUserId,
+          }),
+          fileName: candidateCvAwsS3FileName
+        }
+      ],
+      isNoticePeriodNegotiable: isCandidateNoticePeriodNegotiable,
+      userDetailId: candidateCognitoUserId
+    };
+
+    if(existingCentralCandProfile) {
+      const updateCentralCandidateProfileData: Partial<DbCentralCandidateProfileDto> = {
+        updatedAt: currentDate,
+        userDetailId: candidateCognitoUserId,
+        candidateParsedCvIds: [
+          ...(existingCentralCandProfile?.candidateParsedCvIds ?? []),
+          candidateParsedCvCreateData.id
+        ],
+        latestCandidateParsedCvId: candidateParsedCvCreateData.id,
+      };
+
+      const updateCandidateParsedCvData: Partial<DbCandidateParsedCvDto> = {
+        /**
+         * @todo: Discuss with "CTO" and "Product Manager" about updating other existing fields by comparing with new candidate registered data
+         */
+
+        updatedAt: currentDate,
+        userDetailId: candidateCognitoUserId,
+      }
+
+      const updateCorporateCandidateProfileData: Partial<DbCorporateCandidateProfileDto> = {
+        updatedAt: currentDate,
+        userDetailId: candidateCognitoUserId,
+      }
+
+      if(existingCentralCandProfile.phoneNumberDetails.number !== phoneNumber || existingCentralCandProfile.phoneNumberDetails.countryCode !== phoneCountryCode) {
+        updateCentralCandidateProfileData.phoneNumberDetails = candidateParsedCvCreateData.phoneNumberDetails;
+        updateCandidateParsedCvData.phoneNumberDetails = candidateParsedCvCreateData.phoneNumberDetails;
+        updateCorporateCandidateProfileData.phoneNumberDetails = candidateParsedCvCreateData.phoneNumberDetails;
+      }
+
+      const candProfilePromises = [
+        candidateParsedCvServiceObj.createCandidateParsedCv(candidateParsedCvCreateData),
+        centralCandidateProfileServiceObj.updateCentralCandidateProfileById(existingCentralCandProfile.id, updateCentralCandidateProfileData),
+        (existingCentralCandProfile.corporateCandidateProfileIds ? corporateCandidateProfileServiceObj.updateBulkCorporateCandidateProfileByIds(existingCentralCandProfile.corporateCandidateProfileIds, updateCorporateCandidateProfileData) : Promise.resolve(false)),
+      ];
+
+      await Promise.all(candProfilePromises);
+    } else {
+      const createCentralCandidateProfileData: DbCentralCandidateProfileDto = {
+        id: candidateRegisteredEmail,
+        createdAt: currentDate,
+        updatedAt: currentDate,
+        candidateEmail: candidateRegisteredEmail,
+        phoneNumberDetails: candidateParsedCvCreateData.phoneNumberDetails,
+        refereeType: CentralCandidateProfileDbRefereeTypeEnum.WORKO,
+        userDetailId: candidateCognitoUserId,
+        candidateParsedCvIds: [candidateParsedCvCreateData.id],
+        latestCandidateParsedCvId: candidateParsedCvCreateData.id,
+      };
+
+      await Promise.all([
+        candidateParsedCvServiceObj.createCandidateParsedCv(candidateParsedCvCreateData),
+        centralCandidateProfileServiceObj.createCentralCandidateProfile(createCentralCandidateProfileData),
+      ]);
+    }
   }
 
   /**
