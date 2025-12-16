@@ -55,7 +55,7 @@ const serverlessConfiguration: AWS = {
   },
   provider: {
     name: "aws",
-    runtime: "nodejs18.x",
+    runtime: "nodejs20.x",
     stage: process.env.APP_SLS_STAGE, // @todo it is not being resolved, it needs to be fixed.
     environment: {
       APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN: "${self:custom.awsLambdaFunctions.APP_AWS_SCHEDULER_HANDLER_LAMBDA_ARN}",
