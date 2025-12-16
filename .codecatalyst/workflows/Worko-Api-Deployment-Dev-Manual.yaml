@@ -25,7 +25,7 @@ Actions:
         - Run: export NODE_OPTIONS="--max-old-space-size=8192"
         - Run: npm install -g n
         - Run: npm i -g serverless@3.38.0
-        - Run: npm i
+        - Run: npm install
         - Run: npm run build
         - Run: export AWS_REGION=ap-south-1
         - Run: cp environments/.env.dev .env
