@@ -328,9 +328,15 @@ class UserDetailService {
       } = result;
       const updateCandParsedData: Partial<DbCandidateParsedCvDto> = {
         updatedAt: dateHelperObj.getISODate(),
-        noticePeriod,
-        isNoticePeriodNegotiable
       };
+
+      if(noticePeriod) {
+        updateCandParsedData.noticePeriod = noticePeriod;
+      }
+      if(isNoticePeriodNegotiable) {
+        updateCandParsedData.isNoticePeriodNegotiable = isNoticePeriodNegotiable;
+      }
+
       if(YOE) {
         updateCandParsedData.totalYOE = YOE;
         updateCandParsedData.relevantYOE = YOE;
@@ -346,18 +352,22 @@ class UserDetailService {
         updateCandParsedData.location = location;
       }
 
-      const updateCandidateParsedCvData: DbCandidateParsedCvDto | undefined = await candidateParsedCvServiceObj.updateCandidateParsedCvWithEmbedding(
-        centralCandidateProfile.latestCandidateParsedCvId,
-        updateCandParsedData
-      );
-      if (!updateCandidateParsedCvData) {
-        global.logger.error("Failed to update candidate parsed cv data [Service]", {
-          methodName: this.update.name,
-          centralCandidateProfile,
-          updateCandidateParsedCvData,
-        });
-        throw new BaseError("Failed to update.", HttpStatusCode.INTERNAL_SERVER_ERROR_500);
-      }
+      let updateCandidateParsedCvData: DbCandidateParsedCvDto | undefined;
+
+      // If any of the above fields are updated, update the candidate parsed cv data with embedding else update the candidate parsed cv data
+      if(
+        noticePeriod ||
+        isNoticePeriodNegotiable ||
+        YOE ||
+        CTC ||
+        multipleCandidateExperience ||
+        location
+      ) {
+        updateCandidateParsedCvData = await candidateParsedCvServiceObj.updateCandidateParsedCvWithEmbedding(
+          centralCandidateProfile.latestCandidateParsedCvId,
+          updateCandParsedData
+        );
+      } 
     }
     return result;
   }

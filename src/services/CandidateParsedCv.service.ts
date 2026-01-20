@@ -210,6 +210,10 @@ class CandidateParsedCvService {
     return candidateParsedCvDaoObj.updateCandidateParsedCvWithEmbedding(id, updateData, this.createSearchOptimizedCandidateParsedCvEmbeddingText(mergedData));
   }
 
+  async updateCandidateParsedCvById(id: string, updateDto: Partial<DbCandidateParsedCvDto>): Promise<DbCandidateParsedCvDto | undefined> {
+    return candidateParsedCvDaoObj.updateCandidateParsedCvById(id, updateDto);
+  }
+
   async retrieveRegisteredUserDetailsForCandidateParsedCvSync(
     registeredCandidateEmail: string,
     latestCandidateParsedCv: DbCandidateParsedCvDto

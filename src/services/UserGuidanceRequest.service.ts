@@ -716,35 +716,37 @@ class UserGuidanceRequestService {
 
         const { userId, userEmail } = updatedUserGuidanceRequest.mentorDetails;
 
-        const mentorDetails: DbUserDetailDto =
-          await UserDetailService.getUserByIdOne(userId);
-
-        const { name: mentorName } = mentorDetails;
-        const titleCaseMentorName: string = mentorName.toTitleCase();
-
         const mentorCurrentExperience: QueryResponse<DbUserExperienceDto> =
           await UserExperienceService.get(userEmail);
+        
+        if(mentorCurrentExperience.count) {
+          const mentorCurrentExperienceData: DbUserExperienceDto =
+            mentorCurrentExperience[0];
 
-        const mentorCurrentExperienceData: DbUserExperienceDto =
-          mentorCurrentExperience[0];
+          const { companyName: mentorCompanyName } = mentorCurrentExperienceData;
 
-        const { companyName: mentorCompanyName } = mentorCurrentExperienceData;
+          const mentorDetails: DbUserDetailDto =
+            await UserDetailService.getUserByIdOne(userId);
 
-        // Construct the email placeholders object
-        const mentorAssignedEmailPlaceholdersToCandidate: EmailTemplatePlaceholderCAND_USER_GUIDANCE_REQUEST_MENTOR_ASSIGNED_UPDATE_STATUS =
-          {
-            candidateName: titleCaseCandidateName,
-            mentorName: titleCaseMentorName,
-            mentorCompanyName: mentorCompanyName.toTitleCase(),
-            ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
-          };
+          const { name: mentorName } = mentorDetails;
+          const titleCaseMentorName: string = mentorName.toTitleCase();
 
-        // Send email to the corporate user
-        await emailLibrary.sendEmail(
-          EmailTemplateEnum.CAND_USER_GUIDANCE_REQUEST_MENTOR_ASSIGNED_UPDATE_STATUS,
-          toAddress,
-          mentorAssignedEmailPlaceholdersToCandidate
-        );
+          // Construct the email placeholders object
+          const mentorAssignedEmailPlaceholdersToCandidate: EmailTemplatePlaceholderCAND_USER_GUIDANCE_REQUEST_MENTOR_ASSIGNED_UPDATE_STATUS =
+            {
+              candidateName: titleCaseCandidateName,
+              mentorName: titleCaseMentorName,
+              mentorCompanyName: mentorCompanyName.toTitleCase(),
+              ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
+            };
+
+          // Send email to the corporate user
+          await emailLibrary.sendEmail(
+            EmailTemplateEnum.CAND_USER_GUIDANCE_REQUEST_MENTOR_ASSIGNED_UPDATE_STATUS,
+            toAddress,
+            mentorAssignedEmailPlaceholdersToCandidate,
+          );
+        }
 
         break;
       }
