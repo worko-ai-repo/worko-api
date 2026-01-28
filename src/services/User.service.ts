@@ -142,7 +142,7 @@ class UserService {
       // call setupUserResources to set up additional user resources after account creation
       await this.setupUserResources(createdUser, createdUser.userType[0]),
 
-      await this.performCandProfileDatabaseActivitiesAfterSignUp(createdUser),
+      userType === UserType.CAND && await this.performCandProfileDatabaseActivitiesAfterSignUp(createdUser),
     ]);
 
     // Create a new user in db

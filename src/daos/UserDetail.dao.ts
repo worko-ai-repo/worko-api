@@ -199,9 +199,6 @@ class UserDetailDao implements BaseDao {
       */
       query = query.and().parenthesis((condition) => {
         condition
-          .where("name")
-          .contains(searchTextValue)
-          .or()
           .where("PK")
           .contains(`USR#EML#${searchTextValue}`);
 

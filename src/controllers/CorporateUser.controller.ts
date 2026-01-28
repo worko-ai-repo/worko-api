@@ -16,6 +16,8 @@ import {
   CorporateUserCreateDto,
   CorporateUserLisitngFilterOptions,
   CorporateUserLisitngFilterOptionsDTO,
+  CorporateUserReferralSourceTypeSendOtpApiDto,
+  CorporateUserReferralSourceTypeVerifyOtpApiDto,
   CorporateUserUpdateApiDto,
 } from "../dtos/CorporateUser.dto";
 import { PaginatedResultsWithMatchingConditionsInternalResponse, RecordListingResponseDTO } from "../dtos/Common.dto";
@@ -27,6 +29,7 @@ import { paginationResponseHelperObj } from "../helpers/pagination-response.help
 // import models
 import { DbCorporateUserDto } from "../db/models/CorporateUser.model";
 import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
+import { DbUserOtpDto } from "../db/models/UserOTP.model";
 
 // Import Services
 import { corporateUserServiceObj } from "../services/CorporateUser.service";
@@ -35,11 +38,13 @@ import { corporateUserServiceObj } from "../services/CorporateUser.service";
 import {
   CorporateUserCreateApiDtoValidation,
   CorporateUserListingFilterOptionValidation,
+  corporateUserReferralSourceTypeSendOtpApiDtoValidation,
+  corporateUserReferralSourceTypeVerifyOtpApiDtoValidation,
   CorporateUserUpdateApiDtoValidation,
 } from "../schemas/CorporateUser.schema";
 
 // Import Utils
-import { BaseError, RequestValidationError } from "../utils/errors.util";
+import { RequestValidationError } from "../utils/errors.util";
 import HttpStatusCode from "../utils/http-codes.util";
 
 /**
@@ -351,6 +356,77 @@ class CorporateUserController {
       next(error);
     }
   };
+
+  sendOtpReferralSourceTypeViaEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const reqBody: CorporateUserReferralSourceTypeSendOtpApiDto = req.body;
+      let { error, value } = corporateUserReferralSourceTypeSendOtpApiDtoValidation.validate(
+        reqBody,
+        {
+          abortEarly: false,
+        }
+      );
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Get user's IP address from request
+      const userIpAddress: string = req.ip as string;
+
+      const result: DbUserOtpDto = await corporateUserServiceObj.sendOtpReferralSourceTypeViaEmail(
+        reqBody.referralSourceTypeEmail,
+        userIpAddress
+      );
+      res.status(HttpStatusCode.OK_200).json({
+        id: result.id
+      });
+
+    } catch (error) {
+      global.logger.error("Error at catch block [controller]", {
+        methodName: this.sendOtpReferralSourceTypeViaEmail.name,
+        error
+      })
+      next(error);
+    }
+  }
+
+  verifyOtpReferralSourceTypeViaEmail = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const reqBody: CorporateUserReferralSourceTypeVerifyOtpApiDto = req.body;
+      let { error, value } = corporateUserReferralSourceTypeVerifyOtpApiDtoValidation.validate(
+        reqBody,
+        {
+          abortEarly: false,
+        }
+      );
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      // Verify the OTP received from user to make sure the work email belogs to the user only.
+      const isOtpVerified: boolean = await corporateUserServiceObj.verifyOtpReferralSourceTypeViaEmail(
+        reqBody.referralSourceTypeEmail,
+        reqBody.otp
+      );
+
+      // Send OTP verification details in the response
+      res
+        .status(HttpStatusCode.OK_200)
+        .json({
+          verificationStatus: isOtpVerified
+        });
+    } catch (error) {
+      global.logger.error("Error in verifyOtpForceChangePasswordViaEmail [controller]", {
+        methodName: this.verifyOtpReferralSourceTypeViaEmail.name,
+        error
+      })
+      next(error);
+    }
+  }
 }
 
 // Export Default Controller

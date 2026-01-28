@@ -1,6 +1,9 @@
 // Import npm packages
 import { Request, Response, NextFunction } from "express";
 
+// Import configs
+import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
+
 // Import Services
 import { scriptServiceObj } from "../services/Script.service";
 
@@ -288,6 +291,26 @@ class ScriptController {
         .json({
           message: `Is SMS Sent Successfully: ${response}`,
         });
+    } catch (error) {
+      global.logger.error("Error in sending SMS", { error: error });
+      next(error);
+    }
+  };
+
+  scriptToTestEmailFromS3 = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { id } = req.body
+      // const response = await awsS3ClientLibrary.retrieveEmailFromS3(
+      //   "worko-referral-email-dev",
+      //   `referral-sourcetype/${id}`
+      // );
+      return res
+        .status(HttpStatusCode.OK_200)
+        .json({});
     } catch (error) {
       global.logger.error("Error in sending SMS", { error: error });
       next(error);

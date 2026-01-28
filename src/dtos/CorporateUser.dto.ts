@@ -103,3 +103,22 @@ export interface CorporateUserDbPhoneNumberDetailDto {
     countryCode: string;
     phoneNumber: string;
 }
+
+export interface CorporateUserReferralSourceTypeSendOtpApiDto {
+  /**
+   * @description
+   *  1. This email will be submitted by "corporate-admin"
+   * @example "pankaj@amazon.com"
+   */
+  referralSourceTypeEmail: string;
+}
+
+export interface CorporateUserReferralSourceTypeVerifyOtpApiDto {
+  /**
+   * @description
+   *  1. This email will be submitted by "corporate-admin"
+   * @example "pankaj@amazon.com"
+   */
+  referralSourceTypeEmail: string;
+  otp: string;
+}

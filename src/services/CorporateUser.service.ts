@@ -1,3 +1,7 @@
+
+// Import google cloud firestore
+import { DocumentData, QuerySnapshot } from "@google-cloud/firestore";
+
 // Import dynamoose types
 import { QueryResponse } from "dynamoose/dist/ItemRetriever";
 import { ObjectType } from "dynamoose/dist/General";
@@ -18,7 +22,7 @@ import {
   CorporateUserUpdateApiDto,
   CorporateUserUpdateDto,
 } from "../dtos/CorporateUser.dto";
-import { EmailTemplatePlaceholderCORP_USER_SUCCESSFUL_SIGNUP } from "../dtos/EmailTemplatePlaceholder.dto";
+import { EmailTemplatePlaceholderCORP_REFERRAL_SOURCE_TYPE_EMAIL_VERIFICATION_OTP, EmailTemplatePlaceholderCORP_USER_SUCCESSFUL_SIGNUP } from "../dtos/EmailTemplatePlaceholder.dto";
 import { PaginatedResultsWithMatchingConditionsInternalResponse, PaginatedResultsWithMatchingConditionsResponse } from "../dtos/Common.dto";
 
 // Import daos
@@ -42,10 +46,13 @@ import {
 import { DbCompanyDetailDto } from "../db/models/CompanyDetail.model";
 import { DbCorporateUserDto } from "../db/models/CorporateUser.model";
 import { DbCorporateUserInviteDto } from "../db/models/CorporateUserInvite.model";
+import { DbReferralSourceTypeActivationDto } from "../db/gcp-firestore-models/ReferralSourceTypeActivation.model";
 
 // Import services
 import { companyServiceObj } from "../admin/services/Company.service";
 import { corporateUserInviteServiceObj } from "./CorporateUserInvite.service";
+import { referralSourceTypeActivationServiceObj } from "./ReferralSourceTypeActivation.service";
+import userOtpService from "./UserOTP.service";
 
 // Import Utils
 import { BaseError } from "../utils/errors.util";
@@ -625,6 +632,79 @@ class CorporateUserService {
 
   async getUserByCompanyIdAndUserEmail(email: string, companyId: string): Promise<QueryResponse<DbCorporateUserDto>> {
     return corporateUserDaoObj.getUserByCompanyIdAndUserEmail(email, companyId);
+  }
+
+  async sendOtpReferralSourceTypeViaEmail(
+    referralSourceTypeEmail: string,
+    userIpAddress: string
+  ) {
+    const existingReferralSourceTypeActivation: QuerySnapshot<DocumentData, DocumentData> = await referralSourceTypeActivationServiceObj.getReferralSourceTypeActivationByEmail(referralSourceTypeEmail);
+    if(!existingReferralSourceTypeActivation.empty) {
+      const existingReferralSourceTypeActivationData = existingReferralSourceTypeActivation.docs[0]?.data() as DbReferralSourceTypeActivationDto;
+      const {
+        isEmailVerified,
+      } = existingReferralSourceTypeActivationData;
+      if(isEmailVerified) {
+        global.logger.error(`The referral source type email is already verified [service]`, {
+          methodName: this.sendOtpReferralSourceTypeViaEmail.name,
+          referralSourceTypeEmail,
+          existingReferralSourceTypeActivationData
+        })
+        throw new BaseError("Email is already verified.", HttpStatusCode.CONFLICT_409);
+      }
+    }
+
+    // Prepare the placeholders and to address to send the email
+    const toAddress: EmailSourceDestinationAddress = {
+      email: referralSourceTypeEmail,
+    };
+    const emailPlaceholders: EmailTemplatePlaceholderCORP_REFERRAL_SOURCE_TYPE_EMAIL_VERIFICATION_OTP = {
+      /**
+       * @note As of now this is empty but in reused method it will be set.
+       */
+      otp: "",
+      ...APP_CONSTANTS.GET_WORKO_SOCIAL_PROFILES_TO_SEND_EMAIL,
+    };
+
+    return userOtpService.sendOtpViaEmail(
+      referralSourceTypeEmail,
+      EmailTemplateEnum.CORP_REFERRAL_SOURCE_TYPE_EMAIL_VERIFICATION_OTP,
+      toAddress,
+      emailPlaceholders,
+      userIpAddress
+    );
+  }
+
+  async verifyOtpReferralSourceTypeViaEmail(
+    referralSourceTypeEmail: string,
+    otp: string
+  ) {
+    global.logger.info(`Verify OTP to verify referral source type email [service]`, {
+      methodName: this.verifyOtpReferralSourceTypeViaEmail.name,
+      referralSourceTypeEmail,
+      otp
+    });
+
+    const existingReferralSourceTypeActivation: QuerySnapshot<DocumentData, DocumentData> = await referralSourceTypeActivationServiceObj.getReferralSourceTypeActivationByEmail(referralSourceTypeEmail);
+    if(!existingReferralSourceTypeActivation.empty) {
+      const existingReferralSourceTypeActivationData = existingReferralSourceTypeActivation.docs[0]?.data() as DbReferralSourceTypeActivationDto;
+      const {
+        isEmailVerified,
+      } = existingReferralSourceTypeActivationData;
+      if(isEmailVerified) {
+        global.logger.error(`The referral source type email is already verified [service]`, {
+          methodName: this.sendOtpReferralSourceTypeViaEmail.name,
+          referralSourceTypeEmail,
+          existingReferralSourceTypeActivationData
+        })
+        throw new BaseError("Email is already verified.", HttpStatusCode.CONFLICT_409);
+      }
+    }
+
+    // Verify the OTP provided by the user from the database
+    const isOtpVerified: boolean = await userOtpService.verifyOtp(referralSourceTypeEmail, referralSourceTypeEmail, otp);
+
+    return isOtpVerified;
   }
 }
 

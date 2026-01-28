@@ -13,6 +13,9 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Upload } from "@aws-sdk/lib-storage";
 
+// Import mailparser
+// import { ParsedMail, simpleParser } from 'mailparser';
+
 // Import configs
 import APP_CONSTANTS from "../configs/constants.config";
 
@@ -261,6 +264,38 @@ class AwsS3ClientLibrary {
       { expiresIn: expiresInSecs }
     );
   }
+
+  /*
+  async retrieveEmailFromS3(bucketName: string, objectKey: string) {
+    try {
+      // Get email from S3
+      const response = await this.s3.send(new GetObjectCommand({
+        Bucket: bucketName,
+        Key: objectKey
+      }));
+
+      // Convert stream to string
+      const emailContent: string | undefined = await response.Body?.transformToString();
+      
+      if (!emailContent) {
+        throw new Error('No email content found');
+      }
+
+      // Parse email content
+      const parsedEmail: ParsedMail = await simpleParser(emailContent);
+      
+      return parsedEmail;
+    } catch (error: any) {
+      global.logger.error('Error retrieving email from S3', {
+        methodName: this.retrieveEmailFromS3.name,
+        error: error.message,
+        bucketName,
+        objectKey
+      });
+      throw new BaseError(APP_CONSTANTS.ERROR_MESSAGE_UNKNOWN_EXCEPTION);
+    }
+  }
+  */
 }
 
 export { AwsS3ClientLibrary };

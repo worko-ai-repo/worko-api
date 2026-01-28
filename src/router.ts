@@ -58,6 +58,7 @@ import AdminRouter from "./admin/router";
 import BlogRouter from "./routers/Blog.router";
 import UserGuidanceRequestRouter from "./routers/UserGuidanceRequest.router";
 import UserInterviewRouter from "./routers/UserInterview.router";
+import ReferralSourceTypeActivationRouter from "./routers/ReferralSourceTypeActivation.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -468,6 +469,8 @@ router.use("/webhook", WebhookRouter);
 
 // Register the "Order" routers
 // router.use("/sample-order", OrderRouter);
+
+router.use("/referral-sourcetype-activation", ReferralSourceTypeActivationRouter);
 
 // Export the router
 export default router;

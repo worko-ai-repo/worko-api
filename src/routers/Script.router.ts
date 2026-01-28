@@ -71,4 +71,6 @@ ScriptRouter.post("/retry-update-registered-user-gsi-two", scriptController.scri
 
 ScriptRouter.post("/send-sms-to-user", scriptController.scriptToSendSmsToUser);
 
+ScriptRouter.post("/test-email-from-s3", scriptController.scriptToTestEmailFromS3);
+
 export default ScriptRouter;

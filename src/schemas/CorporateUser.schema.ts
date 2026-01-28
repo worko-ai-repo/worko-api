@@ -195,3 +195,26 @@ export const validateCompanyIdFields = (companyId: string) => {
     
     return companyIdSchema.validate(companyId);
 };
+
+export const corporateUserReferralSourceTypeSendOtpApiDtoValidation = Joi.object({
+    referralSourceTypeEmail: Joi.string().required().email().messages({
+        "any.required": "Referral source type email is required.",
+        "string.empty": "Referral source type email should not be empty.",
+        "string.base": "Referral source type email should be a string.",
+        "string.email": "Referral source type email should be a valid email.",
+    }),
+})
+
+export const corporateUserReferralSourceTypeVerifyOtpApiDtoValidation = Joi.object({
+    referralSourceTypeEmail: Joi.string().required().email().messages({
+        "any.required": "Referral source type email is required.",
+        "string.empty": "Referral source type email should not be empty.",
+        "string.base": "Referral source type email should be a string.",
+        "string.email": "Referral source type email should be a valid email.",
+    }),
+
+    otp: Joi.string().required().messages({
+    "any.required": "OTP is required.",
+    "string.empty": "OTP should not be empty.",
+    }),
+})

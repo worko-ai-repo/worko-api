@@ -52,5 +52,15 @@ CorporateUserRouter.get('/:id', corporateUserController.getCorpUserById);
  */
 CorporateUserRouter.get('/:id/cognito', corporateUserController.getCorpUserByCognitoId);
 
+/**
+ * @authorisedRoles ["corporate-admin"]
+ */
+CorporateUserRouter.post("/request-otp/referral-sourcetype", corporateUserController.sendOtpReferralSourceTypeViaEmail);
+
+/**
+ * @authorisedRoles ["corporate-admin"]
+ */
+CorporateUserRouter.post("/verify-otp/referral-sourcetype", corporateUserController.verifyOtpReferralSourceTypeViaEmail);
+
 // Export Corporate router
 export default CorporateUserRouter;
