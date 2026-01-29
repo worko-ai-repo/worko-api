@@ -273,6 +273,8 @@ class CorporateBulkJdResumeService {
       candidateName,
       candidateNoticePeriod,
       isNoticePeriodNegotiable,
+      about,
+      education,
       candidateEmail,
       candidateLocation,
       candidateCurrentCompany,
@@ -357,23 +359,29 @@ class CorporateBulkJdResumeService {
 
       if(existingCentralCandidateProfile) {
         corporateCandidateProfileCreateData.candidateParsedCvId = existingCentralCandidateProfile.latestCandidateParsedCvId;
-        
+        const updateCentralCandidateProfileData: Partial<DbCentralCandidateProfileDto> = {
+          updatedAt: currentDate,
+          candidateProfileInCompanies: [
+            ...(existingCentralCandidateProfile?.candidateProfileInCompanies ?? []),
+            {
+              companyId: companyId,
+              companyName: companyName,
+            }
+          ],
+          corporateCandidateProfileIds: [
+            ...(existingCentralCandidateProfile?.corporateCandidateProfileIds ?? []),
+            corporateCandidateProfileCreateData.id
+          ],
+        }
+        if(!existingCentralCandidateProfile.candidateParsedCvIds.includes(existingCentralCandidateProfile.latestCandidateParsedCvId)) {
+          updateCentralCandidateProfileData.candidateParsedCvIds = [
+            ...existingCentralCandidateProfile.candidateParsedCvIds,
+            existingCentralCandidateProfile.latestCandidateParsedCvId
+          ]
+        }
         createOrUpdateCentralCandidateProfile = centralCandidateProfileServiceObj.updateCentralCandidateProfileById(
           candidateEmail,
-          {
-            updatedAt: currentDate,
-            candidateProfileInCompanies: [
-              ...(existingCentralCandidateProfile?.candidateProfileInCompanies ?? []),
-              {
-                companyId: companyId,
-                companyName: companyName,
-              }
-            ],
-            corporateCandidateProfileIds: [
-              ...(existingCentralCandidateProfile?.corporateCandidateProfileIds ?? []),
-              corporateCandidateProfileCreateData.id
-            ],
-          }
+          updateCentralCandidateProfileData
         )
       } else {
         // Prepare Create candidate parsed CV
@@ -396,6 +404,8 @@ class CorporateBulkJdResumeService {
           noticePeriod: candidateNoticePeriod,
           location: candidateLocation?.toLowerCase(),
           readyToRelocate: candidateReadyToRelocate,
+          about,
+          education,
           coreSkills: coreSkills,
           technicalSkills: technicalSkills,
           userPreferredDepartments: userPreferredDepartments,

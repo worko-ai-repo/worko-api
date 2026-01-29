@@ -113,6 +113,15 @@ export interface CorporateBulkJdResumeDbCvExtractedParsedDto {
   candidateLocation?: string; // "Hyderabad, Telangana";
   candidateReadyToRelocate?: boolean; // false;
   isNoticePeriodNegotiable?: boolean; // false;
+  about?: string;
+  education?: {
+    collage: string;
+    degree: string;
+    startedYear?: number;
+    passingYear: number;
+    grade?: string;
+    field?: string;
+  }[];
 
   coreSkills?: {
     skillName: string;

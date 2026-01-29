@@ -321,6 +321,7 @@ class UserDetailService {
       const { 
         YOE,
         CTC,
+        ECTC,
         multipleCandidateExperience,
         noticePeriod,
         location,
@@ -354,19 +355,21 @@ class UserDetailService {
 
       let updateCandidateParsedCvData: DbCandidateParsedCvDto | undefined;
 
-      // If any of the above fields are updated, update the candidate parsed cv data with embedding else update the candidate parsed cv data
       if(
         noticePeriod ||
         isNoticePeriodNegotiable ||
         YOE ||
         CTC ||
         multipleCandidateExperience ||
-        location
+        location ||
+        ECTC
       ) {
-        updateCandidateParsedCvData = await candidateParsedCvServiceObj.updateCandidateParsedCvWithEmbedding(
-          centralCandidateProfile.latestCandidateParsedCvId,
-          updateCandParsedData
-        );
+        /**
+         * @description
+         *  1. Worko admin should see the updated candidate data when candidate updates his profile in his candidate dashboard.
+         *  2. Corporates should not see the updated candidate data, but this updated candidate will
+         *     be shown to corporate only when candidate applies for a job in their company.
+         */
       } 
     }
     return result;
