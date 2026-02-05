@@ -214,6 +214,10 @@ class CandidateParsedCvService {
     return candidateParsedCvDaoObj.updateCandidateParsedCvById(id, updateDto);
   }
 
+  async updateCandidateParsedCvByIds(ids: string[], updateDto: Partial<DbCandidateParsedCvDto>): Promise<boolean> {
+    return candidateParsedCvDaoObj.updateCandidateParsedCvByIds(ids, updateDto);
+  }
+
   async retrieveRegisteredUserDetailsForCandidateParsedCvSync(
     registeredCandidateEmail: string,
     latestCandidateParsedCv: DbCandidateParsedCvDto

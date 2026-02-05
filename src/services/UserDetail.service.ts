@@ -326,10 +326,15 @@ class UserDetailService {
         noticePeriod,
         location,
         isNoticePeriodNegotiable,
+        about,
       } = result;
       const updateCandParsedData: Partial<DbCandidateParsedCvDto> = {
         updatedAt: dateHelperObj.getISODate(),
       };
+
+      if(about) {
+        updateCandParsedData.about = about;
+      }
 
       if(noticePeriod) {
         updateCandParsedData.noticePeriod = noticePeriod;
@@ -353,8 +358,6 @@ class UserDetailService {
         updateCandParsedData.location = location;
       }
 
-      let updateCandidateParsedCvData: DbCandidateParsedCvDto | undefined;
-
       if(
         noticePeriod ||
         isNoticePeriodNegotiable ||
@@ -364,13 +367,34 @@ class UserDetailService {
         location ||
         ECTC
       ) {
+        global.logger.info("Updating candidate parsed cv with embedding [UserDetailService]", {
+          updateCandParsedData
+        });
         /**
-         * @description
-         *  1. Worko admin should see the updated candidate data when candidate updates his profile in his candidate dashboard.
-         *  2. Corporates should not see the updated candidate data, but this updated candidate will
-         *     be shown to corporate only when candidate applies for a job in their company.
+         * @todo: we should update `ECTC`, `CTC`, `YOE` only for `admin` and for `corporate`
+         * we should update only when user applies for a job, but as of now it will update for `admin`
+         * and `corporate` when `latestCandidateParsedCvId` is from `corporate`
          */
-      } 
+        await candidateParsedCvServiceObj.updateCandidateParsedCvWithEmbedding(
+          centralCandidateProfile.latestCandidateParsedCvId,
+          updateCandParsedData
+        );
+      } else {
+        global.logger.info("Updating candidate parsed cv by ids [UserDetailService]",{
+          updateCandParsedData
+        });
+        const result: boolean = await candidateParsedCvServiceObj.updateCandidateParsedCvByIds(
+          centralCandidateProfile.candidateParsedCvIds,
+          updateCandParsedData
+        );
+        if (!result) {
+          global.logger.error("Error while updating candidate parsed cv by ids [UserDetailService]", {
+            updateCandParsedData,
+            candidateParsedCvIds: centralCandidateProfile.candidateParsedCvIds,
+            centralCandidateProfile
+          });
+        }
+      }
     }
     return result;
   }

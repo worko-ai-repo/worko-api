@@ -3,15 +3,23 @@ import { Request, Response, NextFunction } from "express";
 
 // Load the local dtos
 import { UserEducationDTOWithId } from "../dtos/UserEducation.dto";
+
+// Import local helper
+import { dateHelperObj } from "../helpers/date.helper";
+
 // Load the local schema
 import { userEducationDTOArrayValidation } from "../schemas/UserEducation.schema";
 import { validateEmailField } from "../schemas/User.schema";
 
 // Import models
 import { DbUserEducationDto } from "../db/models/UserEducation.model";
+import { DbCentralCandidateProfileDto } from "../db/gcp-firestore-models/CentralCandidateProfile.model";
+import { DbCandidateParsedCvDto } from "../db/gcp-firestore-models/CandidateParsedCv.model";
 
 // Load the shared service
 import UserEducationService from "../services/UserEducation.service";
+import { candidateParsedCvServiceObj } from "../services/CandidateParsedCv.service";
+import { centralCandidateProfileServiceObj } from "../services/CentralCandidateProfile.service";
 // import UserProfilePercentageService from "../services/UserProfilePercentage.service";
 
 // Load local utils
@@ -149,6 +157,20 @@ class UserEducationController {
         } else {
           const result = await UserEducationService.createEducation(emailId, value[i]);
           userEducationResponse.push(result);
+        }
+      }
+
+      if(userEducationResponse.length > 0) {
+        const centralCandidateProfile: DbCentralCandidateProfileDto | undefined = await centralCandidateProfileServiceObj.getCentralCandidateProfileById(email);
+        if(centralCandidateProfile) {
+          const updateCandParsedData: Partial<DbCandidateParsedCvDto> = {
+            updatedAt: dateHelperObj.getISODate(),
+            education: userEducationResponse.map(edu => JSON.parse(JSON.stringify(edu)))
+          };
+          await candidateParsedCvServiceObj.updateCandidateParsedCvByIds(
+            centralCandidateProfile.candidateParsedCvIds,
+            updateCandParsedData,
+          );
         }
       }
 
