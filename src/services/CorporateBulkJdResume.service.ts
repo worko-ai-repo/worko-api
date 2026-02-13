@@ -289,7 +289,8 @@ class CorporateBulkJdResumeService {
       userPreferredDepartments,
       userPreferredIndustries,
       userPreferredlocations,
-      userPreferredRoles
+      userPreferredRoles,
+      multipleCandidateExperience
     } = cvExtractedParsed;
     const {
       name: companyName
@@ -412,6 +413,7 @@ class CorporateBulkJdResumeService {
           userPreferredIndustries: userPreferredIndustries,
           userPreferredlocations: userPreferredlocations,
           userPreferredRoles: userPreferredRoles,
+          multipleCandidateExperience,
           cvAwsS3ResourceType: CandidateParsedCvAwsS3ResourceTypeEnum.BULK_CVS,
           cvAwsS3BucketName: process.env.APP_AWS_S3_BUCKET_WORKO_CORPORATE as string,
           cvAwsS3FilePath: APP_CONSTANTS.AWS_S3_DIR_PATHS.BULK_CVS.strtr({

@@ -1,3 +1,4 @@
+
 // Import firestore packages
 import { VectorValue } from "@google-cloud/firestore";
 
@@ -95,6 +96,12 @@ interface DbCandidateParsedCvDto extends BaseFirestoreModel {
       updatedAt: string;
     };
   }[];
+  softSkills?: {
+    skillName: string;
+    timestamps?: {
+      createdAt: string;
+    };
+  }[];
   userPreferredDepartments?: string[];
   userPreferredIndustries?: string[];
   userPreferredlocations?: string[];
@@ -181,6 +188,8 @@ interface DbCandidateParsedCvDto extends BaseFirestoreModel {
 
   updatedByUserId?: string;
   updatedByCorporateUserId?: string;
+
+  isCandidateCvRefreshInProgress?: boolean;
 }
 
 export { DbCandidateParsedCvDto };
