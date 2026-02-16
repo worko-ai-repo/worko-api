@@ -296,9 +296,11 @@ class CorporateBulkJdResumeService {
       name: companyName
     } = companyDetails;
 
+    const lowerCaseCandidateEmail: string = candidateEmail.toLowerCase();
+    const lowerCaseCandidateName: string = candidateName.toLowerCase();
     const existingCorporateCandidateProfile: QuerySnapshot<DocumentData, DocumentData> = await corporateCandidateProfileServiceObj.getDuplicateCorporateCandidateProfile(
       companyId,
-      candidateEmail,
+      lowerCaseCandidateEmail,
       {
         number: candidateNumber,
         countryCode: candidatePhoneCountryCode
@@ -307,7 +309,7 @@ class CorporateBulkJdResumeService {
     const currentDate: string = dateHelperObj.getISODate();
     if(!existingCorporateCandidateProfile.empty) {
       const existingCorporateCandidateProfileData = existingCorporateCandidateProfile.docs[0].data() as DbCorporateCandidateProfileDto;
-      if(existingCorporateCandidateProfileData.candidateEmail === candidateEmail) {
+      if(existingCorporateCandidateProfileData.candidateEmail === lowerCaseCandidateEmail) {
         let updateCorporateCandidateProfileData: Partial<DbCorporateCandidateProfileDto> = {
           updatedAt: currentDate
         };
@@ -326,7 +328,7 @@ class CorporateBulkJdResumeService {
       } else if(existingCorporateCandidateProfileData.phoneNumberDetails.number === candidateNumber && existingCorporateCandidateProfileData.phoneNumberDetails.countryCode === candidatePhoneCountryCode) {
         global.logger.debug(`Candidate already exists with same phone number and country code [SERVICE]`, {
           existingCorporateCandidateProfileData,
-          candidateEmail,
+          lowerCaseCandidateEmail,
           candidateNumber,
         });
       }
@@ -337,7 +339,7 @@ class CorporateBulkJdResumeService {
         createdAt: currentDate,
         updatedAt: currentDate,
         companyId: companyId,
-        candidateEmail: candidateEmail,
+        candidateEmail: lowerCaseCandidateEmail,
         refereeType: CorporateCandidateProfileDbRefereeTypeEnum.INTERNAL,
         phoneNumberDetails: {
           number: candidateNumber,
@@ -353,7 +355,7 @@ class CorporateBulkJdResumeService {
       // Get existing candidate data from `CentralCandidateProfile` model
       const existingCentralCandidateProfile: DbCentralCandidateProfileDto | undefined =
         await centralCandidateProfileServiceObj.getCentralCandidateProfileById(
-          candidateEmail
+          lowerCaseCandidateEmail
         );
 
       let createOrUpdateCentralCandidateProfile: Promise<DbCentralCandidateProfileDto | undefined>;
@@ -381,7 +383,7 @@ class CorporateBulkJdResumeService {
           ]
         }
         createOrUpdateCentralCandidateProfile = centralCandidateProfileServiceObj.updateCentralCandidateProfileById(
-          candidateEmail,
+          lowerCaseCandidateEmail,
           updateCentralCandidateProfileData
         )
       } else {
@@ -390,8 +392,8 @@ class CorporateBulkJdResumeService {
           id: UlidService.getUlidId(),
           createdAt: currentDate,
           updatedAt: currentDate,
-          name: candidateName,
-          email: candidateEmail,
+          name: lowerCaseCandidateName,
+          email: lowerCaseCandidateEmail,
           phoneNumberDetails: {
             number: candidateNumber,
             countryCode: candidatePhoneCountryCode
@@ -442,10 +444,10 @@ class CorporateBulkJdResumeService {
         const createCandidateParsedCvWithEmbedding: DbCandidateParsedCvDto | undefined = await candidateParsedCvServiceObj.createCandidateParsedCvWithEmbedding(candidateParsedCvCreateData);
 
         let createCentralCandidateProfileData: DbCentralCandidateProfileDto = {
-          id: candidateEmail,
+          id: lowerCaseCandidateEmail,
           createdAt: currentDate,
           updatedAt: currentDate,
-          candidateEmail: candidateEmail,
+          candidateEmail: lowerCaseCandidateEmail,
           phoneNumberDetails: candidateParsedCvCreateData.phoneNumberDetails,
           refereeType: CentralCandidateProfileDbRefereeTypeEnum.INTERNAL,
           candidateProfileInCompanies: [
