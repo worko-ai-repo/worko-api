@@ -9,6 +9,7 @@ import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
 import {
   BlogCoverImagePreSignedUrlToUploadFileRequestApiDto,
   BulkCvPreSignedUrlToViewApiDto,
+  BulkCvsPsuToUploadApiDto,
   CompanyJobDescriptionPreSignedUrlToUploadFileRequestApiDto,
   CompanyLogoPreSignedUrlToUploadFileRequestApiDto,
   InterviewRecordingPreSignedUrlToUploadFileRequestApiDto,
@@ -21,6 +22,7 @@ import { FileResourceKey } from "../enums/File.enum";
 
 // Import services
 import UlidService from "../services/Ulid.service";
+import { fileServiceObj } from "../services/File.service";
 
 // Import Schemas
 import {
@@ -33,6 +35,7 @@ import {
   FileGeneratePsuToViewBulkJdResumeDTOValidation,
   FileGeneratePsuToUploadInterviewRecordingDTOValidation,
   FileGeneratePsuToViewInterviewRecordingDTOValidation,
+  bulkCvsPsuToUploadApiDtoValidation,
 } from "../schemas/File.schema";
 
 // Import utilities
@@ -102,6 +105,9 @@ class FileController {
         // Frontend wants to generate the pre-signed url to upload interviewChunk
         case FileResourceKey.USER_INTERVIEW_RECORDING:
           return this.generatePsuToUploadInterviewChunks(req, res, next);
+
+        case FileResourceKey.BULK_CVS: 
+          return this.generatePsuToUploadSingleBulkCv(req, res, next);
 
         // As resource keys are not matched above, let frontend know about the same.
         default:
@@ -691,6 +697,40 @@ class FileController {
       next(error);
     }
   };
+
+  generatePsuToUploadSingleBulkCv = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      let requestBodyObject: BulkCvsPsuToUploadApiDto = req.body;
+
+      const { error } = bulkCvsPsuToUploadApiDtoValidation.validate(
+        requestBodyObject,
+        {
+          abortEarly: false,
+        }
+      );
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
+      const response: PreSignedUrlToUploadFileResponseDto =
+        await fileServiceObj.generatePsuToUploadSingleBulkCv(requestBodyObject, true);
+
+      return res.status(HttpStatusCode.OK_200).json(response);
+    } catch (error) {
+      global.logger.error(
+        `Error at catch block in while generating pre-signed url for file upload. [File Controller]`,
+        {
+          error,
+          methodName: this.generatePsuToUploadSingleBulkCv.name,
+        }
+      );
+      next(error);
+    }
+  }
 
   /**
    * generatePsuToViewInterviewChunks

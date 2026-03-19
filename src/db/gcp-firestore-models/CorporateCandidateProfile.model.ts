@@ -12,6 +12,7 @@ import { HiringEligibilityStatusEnum } from "../../enums/Common.enum";
 import { BaseFirestoreModel } from "./Base.model";
 
 interface DbCorporateCandidateProfileDto extends BaseFirestoreModel {
+  companyName?: string;
   /**
    * @description
    *  1. "companyId" is required in this collection because for corporate users only the candidate profiles will comes through a particular company
@@ -24,6 +25,7 @@ interface DbCorporateCandidateProfileDto extends BaseFirestoreModel {
    */
   jobId?: string;
 
+  candidateName?: string;
   candidateEmail: string;
 
   phoneNumberDetails: CorporateCandidateProfileDbPhoneNumberDto;

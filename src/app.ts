@@ -109,7 +109,7 @@ class App {
   registerErrorHandlingRoutes() {
     // Route to handle the 404 Not Found error/exception
     this.app.use((req: Request, res: Response, next: NextFunction) => {
-      global.logger.error("The endpoint '%s' not found.", req.originalUrl, {
+      global.logger.error("The endpoint '%s' not found", req.originalUrl, {
         filePath: __filename,
         methodName: this.registerErrorHandlingRoutes.name
       });

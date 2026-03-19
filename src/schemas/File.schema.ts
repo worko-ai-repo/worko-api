@@ -173,3 +173,30 @@ export const FileGeneratePsuToViewInterviewRecordingDTOValidation = Joi.object({
     "string.base": "The 'interviewId' field should be a string.",
   }),
 });
+
+export const filePsuToUploadDtoValidation = Joi.object({
+  fileName: Joi.string().required().messages({
+    "any.required": "File name is required",
+    "string.empty": "File name should not be empty",
+    "string.base": "File name must be a string",
+  }),
+
+  fileMimeType: Joi.string().required().messages({
+    "any.required": "File mime type is required",
+    "string.empty": "File mime type should not be empty",
+    "string.base": "File mime type must be a string",
+  }),
+});
+
+export const bulkCvsPsuToUploadApiDtoValidation = filePsuToUploadDtoValidation.concat(
+  Joi.object({
+    companyId: Joi.string().required().messages({
+      "string.empty": "Company id is required",
+      "any.required": "Company id is required",
+    }),
+    corporateBulkJdId: Joi.string().required().messages({
+      "string.empty": "Corporate bulk jd id is required",
+      "any.required": "Corporate bulk jd id is required",
+    }),
+  })
+)

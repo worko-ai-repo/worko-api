@@ -190,6 +190,7 @@ class UserService {
 
     const {phoneCountryCode, phoneNumber} = getPhoneCountryCodeAndNumber(candidateNumber);
     const candidateRegisteredEmail: string = getEmailFromPK(PK);
+    const lowerCaseCandidateName: string = candidateName.toLowerCase();
 
     const existingCentralCandProfile: DbCentralCandidateProfileDto | undefined = await centralCandidateProfileServiceObj.getCentralCandidateProfileById(
       candidateRegisteredEmail
@@ -202,7 +203,7 @@ class UserService {
       id: UlidService.getUlidId(),
       createdAt: currentDate,
       updatedAt: currentDate,
-      name: candidateName.toLowerCase(),
+      name: lowerCaseCandidateName,
       email: candidateRegisteredEmail,
       phoneNumberDetails: {
         number: phoneNumber,
@@ -281,6 +282,7 @@ class UserService {
         id: candidateRegisteredEmail,
         createdAt: currentDate,
         updatedAt: currentDate,
+        candidateName: lowerCaseCandidateName,
         candidateEmail: candidateRegisteredEmail,
         phoneNumberDetails: candidateParsedCvCreateData.phoneNumberDetails,
         refereeType: CentralCandidateProfileDbRefereeTypeEnum.WORKO,

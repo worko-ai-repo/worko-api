@@ -227,3 +227,18 @@ export interface InterviewRecordingPreSignedUrlToViewApiDto {
    */
   interviewId: string;
 }
+
+export interface BulkCvsPsuToUploadApiDto {
+  companyId: string;
+  corporateBulkJdId: string;
+  /**
+   * @example "raj_cv.pdf"
+   */
+  fileName: string;
+
+  /**
+   * @example "application/pdf"
+   */
+  fileMimeType: string;
+}
+

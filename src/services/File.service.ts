@@ -5,12 +5,17 @@ import { awsS3ClientLibrary } from "../configs/aws-sdk.config";
 // Import DTOs
 import {
   BulkCvsPreSignedUrlToUploadFileDto,
+  BulkCvsPsuToUploadApiDto,
   CorporateBulkJdResumePreSignedUrlToUploadDto,
   PreSignedUrlToUploadFileResponseDto,
 } from "../dtos/File.dto";
 
 // Import services
 import UlidService from "../services/Ulid.service";
+
+// Import utils
+import { BaseError } from "../utils/errors.util";
+import HttpStatusCode from "../utils/http-codes.util";
 
 /**
  * FileService
@@ -88,6 +93,57 @@ class FileService {
         }
       )
     );
+  }
+
+  async generatePsuToUploadSingleBulkCv(requestBodyObject: BulkCvsPsuToUploadApiDto, skipParsing: boolean = false): Promise<PreSignedUrlToUploadFileResponseDto> {
+    const { companyId, corporateBulkJdId, fileMimeType, fileName } = requestBodyObject;
+
+    // await validatePsuToUploadBulkCvs(companyId, corporateBulkJdId);
+
+    const fileUploadPath: string =
+      APP_CONSTANTS.AWS_S3_DIR_PATHS.BULK_CVS.strtr({
+        "{companyId}": companyId,
+        "{corporateBulkJdId}": corporateBulkJdId,
+      });
+
+    const fileExtension: string = fileName.split(".").pop() as string;
+
+    const cloudFileName: string = `${UlidService.getUlidId()}.${fileExtension}`;
+
+    const bucketName: string | undefined =
+      process.env.APP_AWS_S3_BUCKET_WORKO_CORPORATE;
+    if (!bucketName) {
+      global.logger.error(`AWS S3 bucket name not found. [File Service]`, {
+        bucketName,
+        methodName: this.generatePsuToUploadBulkCvs.name,
+      });
+
+      throw new BaseError(
+        `AWS S3 bucket name not found.`,
+        HttpStatusCode.INTERNAL_SERVER_ERROR_500
+      );
+    }
+
+    const fileSignedUrl: string =
+      await awsS3ClientLibrary.getSignedUrlForUploadingObject(
+        bucketName,
+        `${fileUploadPath}/${cloudFileName}`,
+        APP_CONSTANTS.AWS_S3_SIGNED_URL_TO_UPLOAD_FILE_EXPIRY_IN_SECONDS,
+        {
+          ContentType: fileMimeType,
+          Metadata: {
+            skipParsing: skipParsing ? "true" : "false",
+          }
+        }
+      );
+
+    return {
+      userFileName: fileName,
+      cloudFileName: cloudFileName,
+      fileMimeType: fileMimeType,
+      fileExtension: fileExtension,
+      awsS3SignedUrl: fileSignedUrl,
+    };
   }
 }
 

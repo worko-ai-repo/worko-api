@@ -298,6 +298,7 @@ class CorporateBulkJdResumeService {
 
     const lowerCaseCandidateEmail: string = candidateEmail.toLowerCase();
     const lowerCaseCandidateName: string = candidateName.toLowerCase();
+    const upperCaseCompanyName: string = companyName.toUpperCase();
     const existingCorporateCandidateProfile: QuerySnapshot<DocumentData, DocumentData> = await corporateCandidateProfileServiceObj.getDuplicateCorporateCandidateProfile(
       companyId,
       lowerCaseCandidateEmail,
@@ -339,6 +340,7 @@ class CorporateBulkJdResumeService {
         createdAt: currentDate,
         updatedAt: currentDate,
         companyId: companyId,
+        candidateName: lowerCaseCandidateName,
         candidateEmail: lowerCaseCandidateEmail,
         refereeType: CorporateCandidateProfileDbRefereeTypeEnum.INTERNAL,
         phoneNumberDetails: {
@@ -370,6 +372,10 @@ class CorporateBulkJdResumeService {
               companyId: companyId,
               companyName: companyName,
             }
+          ],
+          candidateProfileInCompaniesList: [
+            ...(existingCentralCandidateProfile?.candidateProfileInCompaniesList ?? []),
+            companyName
           ],
           corporateCandidateProfileIds: [
             ...(existingCentralCandidateProfile?.corporateCandidateProfileIds ?? []),
@@ -447,15 +453,17 @@ class CorporateBulkJdResumeService {
           id: lowerCaseCandidateEmail,
           createdAt: currentDate,
           updatedAt: currentDate,
+          candidateName: lowerCaseCandidateName,
           candidateEmail: lowerCaseCandidateEmail,
           phoneNumberDetails: candidateParsedCvCreateData.phoneNumberDetails,
           refereeType: CentralCandidateProfileDbRefereeTypeEnum.INTERNAL,
           candidateProfileInCompanies: [
             {
               companyId: companyId,
-              companyName: companyName,
+              companyName: upperCaseCompanyName,
             },
           ],
+          candidateProfileInCompaniesList: [upperCaseCompanyName],
           corporateCandidateProfileIds: [corporateCandidateProfileCreateData.id],
           candidateParsedCvIds: [candidateParsedCvCreateData.id],
           latestCandidateParsedCvId: candidateParsedCvCreateData.id,
