@@ -140,6 +140,10 @@ Globals:
 
         APP_AWS_INTERVIEW_SERVICE_LAMBDA_NAME: "worko-video-interview-workflow"
 
+        # Local authorizer mock user (used when APP_STAGE=local)
+        APP_AWS_AUTH_MOCK_USER_ID: "REDACTED"
+        APP_AWS_AUTH_MOCK_USER_EMAIL: "rohithappala777+candidate3@gmail.com"
+
 Resources:
 
 # =========================================================
