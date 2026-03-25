@@ -24,6 +24,10 @@ import {
   RazorpayTransactionStatusEnum,
 } from "../enums/Razorpay.enum"; // Enums for Razorpay
 
+/**
+ * Subscriptions APIs
+ * @see https://razorpay.com/docs/api/payments/subscriptions/#plans
+ */
 class RazorpayLibrary {
   private razorpayInstance!: Razorpay;
 
