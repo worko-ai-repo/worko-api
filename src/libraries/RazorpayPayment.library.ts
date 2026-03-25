@@ -25,8 +25,14 @@ import {
 } from "../enums/Razorpay.enum"; // Enums for Razorpay
 
 /**
+ * Integrate Node.js-based website with Razorpay SDK to start accepting payments using the Razorpay Payment Gateway.
+ * @see https://razorpay.com/docs/payments/server-integration/nodejs/integration-steps/
+ * 
  * Subscriptions APIs
  * @see https://razorpay.com/docs/api/payments/subscriptions/#plans
+ * 
+ * Integrate Razorpay Subscription in react.js and node.js
+ * @see https://abhishek-gupta.medium.com/integrate-razorpay-subscription-in-react-js-and-node-js-9109e33bae1a
  */
 class RazorpayLibrary {
   private razorpayInstance!: Razorpay;
