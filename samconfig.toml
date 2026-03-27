@@ -24,8 +24,8 @@ parameter_overrides = [
     "AppWorkoFrontendBaseUrl=https://dev.worko.work",
     "AppAwsResumeSignupSkillsParserLambdaName=worko-resume-signup-skills-parser-dev",
     "AppWorkoReferralDoneStatusRemainderLimit=4",
-    "AppWorkoReferralSourceTypeActivationEmailDomain=referral.worko.work"
-    "AppGoogleClientId=214937809065-1nht31gbbqi3s409ussf2ah14il6e869.apps.googleusercontent.com"
+    "AppWorkoReferralSourceTypeActivationEmailDomain=referral.worko.work",
+    "AppGoogleClientId=214937809065-1nht31gbbqi3s409ussf2ah14il6e869.apps.googleusercontent.com",
     "AppGoogleClientSecret=REDACTED"
 ]
 
