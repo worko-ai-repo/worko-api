@@ -37,6 +37,10 @@ Parameters:
     Type: String
   AppWorkoReferralSourceTypeActivationEmailDomain:
     Type: String
+  AppGoogleClientId:
+    Type: String
+  AppGoogleClientSecret:
+    Type: String
 
 Globals:
   Function:
@@ -143,6 +147,10 @@ Globals:
         # Local authorizer mock user (used when APP_STAGE=local)
         APP_AWS_AUTH_MOCK_USER_ID: "REDACTED"
         APP_AWS_AUTH_MOCK_USER_EMAIL: "rohithappala777+candidate3@gmail.com"
+
+        # Google OAuth Credentials
+        APP_GOOGLE_CLIENT_ID: !Ref AppGoogleClientId
+        APP_GOOGLE_CLIENT_SECRET: !Ref AppGoogleClientSecret
 
 Resources:
 

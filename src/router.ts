@@ -58,6 +58,7 @@ import AdminRouter from "./admin/router";
 import BlogRouter from "./routers/Blog.router";
 import UserGuidanceRequestRouter from "./routers/UserGuidanceRequest.router";
 import UserInterviewRouter from "./routers/UserInterview.router";
+import UserGoogleInterviewTokenRouter from "./routers/UserGoogleInterviewToken.router";
 import ReferralSourceTypeActivationRouter from "./routers/ReferralSourceTypeActivation.router";
 
 // Router that contains all the routes/endpoints in the application
@@ -352,6 +353,13 @@ router.use("/user", UserGuidanceRequestRouter);
   * @todo add required authorizations after discussing with team lead
   */
 router.use("/user", UserInterviewRouter);
+
+/**
+ * USER GOOGLE INTERVIEW TOKEN ROUTERS
+ *
+ * @authorisedRoles ["loggedInUser"]
+ */
+router.use("/user", UserGoogleInterviewTokenRouter);
 
 /**
  * USER SOCIAL PROFILE ROUTERS
