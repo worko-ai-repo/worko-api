@@ -18,7 +18,7 @@ import { dateHelperObj } from "../helpers/date.helper";
 import BaseDao from "./BaseGcpFirestore.dao";
 
 class UserGoogleInterviewTokenDao implements BaseDao {
-  databaseName: string = `worko-user-db-${process.env.APP_SLS_STAGE}`;
+  databaseName: string = `worko-jobs-db-${process.env.APP_SLS_STAGE}`;
   collectionName: string = "userGoogleInterviewTokenDetails";
 
   getUserGoogleInterviewTokenModelDetails(): GcpFirestoreInteractionDto {
