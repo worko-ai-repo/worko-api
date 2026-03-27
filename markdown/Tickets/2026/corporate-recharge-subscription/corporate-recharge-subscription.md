@@ -260,7 +260,7 @@ We have `corporate-users` for a particular company in `worko` website
          12 month plan - 4 rec x 1500 x 12 = 72k
             after 3 months 4 are used
                he left with 9 months with 0 recruiters
-                  2 rec × ₹1500 × 9 = 27k
+                  2 rec × ₹1500 × 12 = 27k
       Jan 1st 2027 to Jan1st 2028: 6x12x1500=108000
       
    2. Upgrade Plan
@@ -269,5 +269,3 @@ We have `corporate-users` for a particular company in `worko` website
             11 months remaining amount should pay: 108000 - (2 rec x 3000) = 102000
                update subscription that will ready to debit on march 31st 2026 with 9000 to jan 1st 2027 with 108000
       Jan 1st 2027: 6 x 1500 x 12 = 108000
-
-   3. 
