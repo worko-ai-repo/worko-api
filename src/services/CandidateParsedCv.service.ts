@@ -149,6 +149,10 @@ class CandidateParsedCvService {
       }
     }
 
+    if (createData.about) {
+      embeddingParts.push(`About: ${createData.about}`);
+    }
+
     return embeddingParts.join(" | ");
   }
 
