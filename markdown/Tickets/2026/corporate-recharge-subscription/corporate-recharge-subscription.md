@@ -261,7 +261,7 @@ We have `corporate-users` for a particular company in `worko` website
             after 3 months 4 are used
                he left with 9 months with 0 recruiters
                   2 rec × ₹1500 × 9 = 27k
-      Jan 1st 2027 to Jan1st 2028: 99k with 6 rec
+      Jan 1st 2027 to Jan1st 2028: 6x12x1500=108000
       
    2. Upgrade Plan
       Jan 1st 2026 to March 31st 2026 bought 2 rec x 1500 x 3 = 9000
