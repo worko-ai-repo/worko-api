@@ -248,8 +248,10 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
    1. Quarterly(3 months): for `quarterly` plan 2000rs/recruiter
       1. `First time buying subscription`
          At very first time `corporate-admin` will choose `Quarterly` plan, let's say with `2` recruiters count from `Jan 1st 2026 to March 31st 2026` i.e `2000 x 2 x 3 = 12000`, so `12000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto deduct the amount from `corporate-admin` bank account from razorpay(refer `razorpayPayment.library.ts`) like april 1st 2026 with 12000rs and next ..so on untill `corporate-admin` cancels the auto-debit
-      2. Let's say this `corporate-admin` has `2` recruiters from `April 1st 2026 to June 31st 2026`
-         
+      2. Let's say this `corporate-admin` has `2` recruiters from `Jan 1st 2026 to March 31st 2026`
+         1. `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `corporate-recruiter` using his `rohith@amazon.com` email then we should deduct one recruiter count from `subscription` and `corporate-admin` will left with `1` which can able to invite another recruiter till `March 31st 2026`
+            1. 
+
    2. Anually(12 months)
 
 # Corporate Evaluator Subscription by `corporate-admin` Flow
