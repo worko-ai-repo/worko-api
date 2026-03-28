@@ -246,7 +246,6 @@ We have `corporate-users` for a particular company in `worko` website
 
 
 # Corporate Evaluator Subscription by `corporate-admin`, `corporate-recruiter` Requirement Flow
-@todo: discuss about `corporate-recruiter` also can send job application to an evaluator
 We have `corporate-users` for a particular company in `worko` website
 1. The `corporat-users` who have `corporat-admin` account we will show the `subscription` page in the `ui`
 2. The `corporat-admin/recruiter` will send job application to an `evaluator` freely as of now on `prod worko website` and as of now only few active corporate users are present on prod
