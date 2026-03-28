@@ -239,13 +239,20 @@ https://dev.worko.work/v1/corporate/recruiterRecharge
 
 
 
-# Corporate Recruiter Subscription by `corporate-admin` Requirement Flow
-We have `corporate-users` for a particular company in `worko` website
+# Corporate Recruiter Subscription by `corporate-admin` Flow
+We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `company` in `worko` website
 1. The `corporat-users` who have `corporat-admin` account we will show the `subscription` page in the `ui`
 2. The `corporat-users` will invite `corporate-recruiters` freely as of now on `prod worko website` and as of now only few active corporate users are present on prod
+3. Only `corporat-admin` can invite another `corporate-recruiter`, so we will give `1` free `corporate-recruiter` invite to the `corporate-admin`
+4. Subsrciption Page for `corporate-admin`:
+   1. Quarterly(3 months): for `quarterly` plan 2000rs/recruiter
+      1. `First time buying subscription`
+         At very first time `corporate-admin` will choose `Quarterly` plan, let's say with `2` recruiters count from `Jan 1st 2026 to March 31st 2026` i.e `2000 x 2 x 3 = 12000`, so `12000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto deduct the amount from `corporate-admin` bank account from razorpay(refer `razorpayPayment.library.ts`) like april 1st 2026 with 12000rs and next ..so on untill `corporate-admin` cancels the auto-debit
+      2. Let's say this `corporate-admin` has `2` recruiters from `April 1st 2026 to June 31st 2026`
+         
+   2. Anually(12 months)
 
-
-# Corporate Evaluator Subscription by `corporate-admin`, `corporate-recruiter` Requirement Flow
+# Corporate Evaluator Subscription by `corporate-admin` Flow
 We have `corporate-users` for a particular company in `worko` website
 1. The `corporat-users` who have `corporat-admin` account we will show the `subscription` page in the `ui`
 2. The `corporat-admin/recruiter` will send job application to an `evaluator` freely as of now on `prod worko website` and as of now only few active corporate users are present on prod
@@ -253,7 +260,7 @@ We have `corporate-users` for a particular company in `worko` website
 
 
 
-# High level flow
+# Add Recruiter and Upgrade Plan flow
    1. Add Recruiter Flow
       Jan 1st 2026 to Jan 1st 2027:72k:- 
          12 month plan - 4 rec x 1500 x 12 = 72k
