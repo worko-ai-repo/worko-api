@@ -246,9 +246,9 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
 3. for a `company` only one `corporate-admin` will present and this `corporate-admin` will be invited by `worko-admin`
 4. Only `corporat-admin` can invite another `corporate-recruiter`, so we will give `1` free `corporate-recruiter` invite to the `corporate-admin`
 5. Subsrciption Page for `corporate-admin`:
-   1. Quarterly(3 months): for `quarterly` plan 2000rs/recruiter
+   1. Quarterly(3 months): for `quarterly` plan 2000rs/month
       1. `First time buying subscription`
-         At very first time lets's say a `corporate-admin` will choose `Quarterly` plan, let's say with `2` recruiters count from `Jan 1st 2026 to March 31st 2026` i.e `2000 x 2 x 3 = 12000`, so `12000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto debit the amount from `corporate-admin` bank account(only credit cards are allowed) from razorpay(
+         At very first time lets's say a `corporate-admin` will choose `Quarterly` plan, let's say with `2` recruiters count from `Jan 1st 2026 to March 31st 2026` i.e `2000/month x 2 rec x 3 months = 12000`, so `12000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto debit the amount from `corporate-admin` bank account(only credit cards are allowed) from razorpay(
             refer `razorpayPayment.library.ts`(https://razorpay.com/docs/api/payments/subscriptions/#plans)
             ) like april 1st 2026 with 12000rs and next ..so on untill `corporate-admin` cancels the auto-debit
       2. Let's say this `corporate-admin` has `2` recruiters from `Jan 1st 2026 to March 31st 2026`
@@ -260,21 +260,20 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
          3. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `sarvesh@amazon.com` as `corporate-recruiter` then we will check `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` was left with `0` which can't invite another recruiter till `March 31st 2026` and we throw the same error in the ui and `corporat-admin` may choose any one of below ways `Add Recruiters` or `Upgrade Plan` or `Cancel Auto-Renew`:-
             1. If `rohith@amazon.com` as `corporate-admin` chooses `Add Recruiters` button
                1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` given `3` recruiter count in add recruiters button input then calculate like below:
-                  1. 3 recruiter × 2000rs(because quarterly) × 2(two months left) = 12000rs
+                  1. 3 recruiter × 2000rs/month(because quarterly) × 2(two months left) = 12000rs
                      1. so `12000rs` should be shown in the ui and `rohith@amazon.com` as `corporate-admin` will pay it and for this payment we may use (https://razorpay.com/docs/api/payments/subscriptions/#plans) subscription api or `razorpay order api`
                      2. now we need to update the subscription so that every three months it should debit with `2+3=5` recruiters amount for this `quarterly subscription` of `rohith@amazon.com` as `corporate-admin` like below:
-                        1. Auto debit amount from April 1st 2026: 5 recruiter × 2000rs(because quarterly) × 3 = 30000rs
-                        2. Auto debit amount from July 1st 2026: 5 recruiter × 2000rs(because quarterly) × 3 = 30000rs
+                        1. Auto debit amount from April 1st 2026: 5 recruiter × 2000rs/month(because quarterly) × 3 = 30000rs
+                        2. Auto debit amount from July 1st 2026: 5 recruiter × 2000rs/month(because quarterly) × 3 = 30000rs
                         .
                         . so..on
             2. If `rohith@amazon.com` as `corporate-admin` chooses `Upgrade Plan`
-               1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` clicks upgrade to `Anually(12 months)` plan and for `12` month plan `1500rs/recruiter`, so it should calculate like below:
+               1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` clicks upgrade to `Anually(12 months)` plan and for `12` month plan `1500rs/month`, so it should calculate like below:
                   1. we have two scenarios:-
                      1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 recruiters:-
-                        1. 8 rec x 1500 x 12 = 144000 -> `12` month plan with `8` rec 
+                        1. 8 rec x 1500/month x 12 = 144000 -> `12` month plan with `8` rec 
                            1. We deduct unused value of current quarterly plan (₹8000) from the new annual plan cost (₹144000), so payable is ₹136000.
-                              1. 144000 - (Unused Credit = Remaining Months × Recruiters × Price per Recruiter (old plan))
-                                 1. i.e 144000 - (2 remaining months x 2 recruiters × 2000/rec) = 136000
+                              1. i.e 144000 - (2 remaining months × 2000/month x 2 recruiters) = 136000
                         2. so we will update the subscription to deduct from `April 1st 2026` to `Jan 1st 2027`and every year it will deduct `144000`
                      2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 1 recruiter whereas `2` rec count was bought in `3` months plan:
                         1. we will show a warning message saying you are selecting less `recruiter` in this plan 
@@ -284,7 +283,7 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
                2. two recruiter count scenarios in this:
                   1. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 8 recruiters
                      1. we should show below amount:
-                        1. `8 rec x 1500rs/rec x 12(months) = 144000rs
+                        1. `8 rec x 1500rs/month x 12(months) = 144000rs
                            1. so `144000rs` auto debit every month like below:
                               1. April 1st 2027
                               2. April 1st 2028 ... so on
@@ -296,7 +295,7 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
 
    2. Anually(12 months)
       1. `First time buying subscription`
-         At very first time lets's say a `corporate-admin` will choose `Anually` plan, let's say with `8` recruiters count from `Jan 1st 2026 to Jan 1st 2027` i.e `1500/rec x 8 rec x 12 months = 144000`, so `144000rs` will be shown to `corporate-admin` to pay and once he pay, every 12 months it should auto debit the amount from `corporate-admin` bank account(only credit cards are allowed) from razorpay(
+         At very first time lets's say a `corporate-admin` will choose `Anually` plan, let's say with `8` recruiters count from `Jan 1st 2026 to Jan 1st 2027` i.e `1500/month x 8 rec x 12 months = 144000`, so `144000rs` will be shown to `corporate-admin` to pay and once he pay, every 12 months it should auto debit the amount from `corporate-admin` bank account(only credit cards are allowed) from razorpay(
             refer `razorpayPayment.library.ts`(https://razorpay.com/docs/api/payments/subscriptions/#plans)
             ) like jan 1st 2027 with 144000rs and next ..so on untill `corporate-admin` cancels the auto-debit
       2 If all the `8` recs are used for invite then if `9`th invite tried by `corporate-admin` then below scenarios may happen
@@ -350,7 +349,7 @@ so these 2 corporat-recruiters at amazon company can only send job applications
                         1. 8 evals x 1500 x 12 = 144000 -> `12` month plan with `8` evals 
                            1. We deduct unused value of current quarterly plan (₹8000) from the new annual plan cost (₹144000), so payable is ₹136000.
                               1. 144000 - (Unused Credit = Remaining Months × Evaluator × Price per Evaluator (old plan))
-                                 1. i.e 144000 - (2 remaining months x 2 evaluators × 2000/eval) = 136000
+                                 1. i.e 144000 - (2 remaining months x 2 evaluators × 2000/month) = 136000
                         2. so we will update the subscription to deduct from `April 1st 2026` to `Jan 1st 2027`and every year it will deduct `144000`
                      2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 1 evaluator whereas `2` evals count was bought in `3` months plan:
                         1. we will show a warning message saying you are selecting less `evaluator` in this plan 
@@ -360,7 +359,7 @@ so these 2 corporat-recruiters at amazon company can only send job applications
                2. two evaluator count scenarios in this:
                   1. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 8 evaluators
                      1. we should show below amount:
-                        1. `8 eval x 1500rs/eval x 12(months) = 144000rs
+                        1. `8 eval x 1500rs/month x 12(months) = 144000rs
                            1. so `144000rs` auto debit every month like below:
                               1. April 1st 2027
                               2. April 1st 2028 ... so on
@@ -372,7 +371,7 @@ so these 2 corporat-recruiters at amazon company can only send job applications
 
    2. Anually(12 months)
       1. `First time buying subscription`
-         At very first time lets's say a `corporate-admin` will choose `Anually` plan, let's say with `8` evaluators count from `Jan 1st 2026 to Jan 1st 2027` i.e `1500/eval x 8 eval x 12 months = 144000`, so `144000rs` will be shown to `corporate-admin` to pay and once he pay, every 12 months it should auto debit the amount from `corporate-admin` bank account(only credit cards are allowed) from razorpay(
+         At very first time lets's say a `corporate-admin` will choose `Anually` plan, let's say with `8` evaluators count from `Jan 1st 2026 to Jan 1st 2027` i.e `1500/month x 8 eval x 12 months = 144000`, so `144000rs` will be shown to `corporate-admin` to pay and once he pay, every 12 months it should auto debit the amount from `corporate-admin` bank account(only credit cards are allowed) from razorpay(
             refer `razorpayPayment.library.ts`(https://razorpay.com/docs/api/payments/subscriptions/#plans)
             ) like jan 1st 2027 with 144000rs and next ..so on untill `corporate-admin` cancels the auto-debit
       2 If all the `8` evals are used for send for evaluations then if `9`th invite tried by `corporate-admin/recruiter` then below scenarios may happen
@@ -388,3 +387,4 @@ so these 2 corporat-recruiters at amazon company can only send job applications
             2. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
                1. then auto debit should off like from `jan 1st 2027` the payment should be off
                2. all the `evlautors` who are being loggedin should be `turn off` on `jan 1st 2027` if no active subscription is present with aligned evaluators count and when they `login/register` it should throw error by saying `inactive` subscription.
+
