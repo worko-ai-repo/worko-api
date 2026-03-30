@@ -277,9 +277,22 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
                                  1. i.e 144000 - (2 remaining months x 2 recruiters × 2000/rec) = 136000
                         2. so we will update the subscription to deduct from `April 1st 2026` to `Jan 1st 2027`and every year it will deduct `144000`
                      2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 1 recruiter whereas `2` rec count was bought in `3` months plan:
-                        1. we will show a warning message saying you are selecting less `recruiter` in this plan
+                        1. we will show a warning message saying you are selecting less `recruiter` in this plan 
+                        and give option to disable one recuiter to not login 
             3. If `rohith@amazon.com` as `corporate-admin` chooses `Renew Plan`
+               1. Trigger: 7 days before expiry: like from `March 25th 2026 to March 31st 2026` or On expiry: March 31st 2026
+               2. two recruiter count scenarios in this:
+                  1. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 8 recruiters
+                     1. we should show below amount:
+                        1. `8 rec x 1500rs/rec x 12(months) = 144000rs
+                           1. so `144000rs` auto debit every month like below:
+                              1. April 1st 2027
+                              2. April 1st 2028 ... so on
+                     2. the old `3` month plan will be cancelled internally
+                  2. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 1 recruiters and give option to disable one recuiter to not login 
             4. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
+               1. then auto debit should off like from `april 1st 2026` the payment should be off
+               2. all the `corporate-recruiters` who are being invited should be `turn off` and when they `login` it should throw error by saying `inactive` subscription
 
    2. Anually(12 months)
 
