@@ -401,3 +401,34 @@ so these 2 corporat-recruiters at amazon company can only send job applications
                1. then auto debit should off like from `jan 1st 2027` the payment should be off
                2. all the `evlautors` who are being loggedin should be `turn off` on `jan 1st 2027` if no active subscription is present with aligned evaluators count and when they `login/register` it should throw error by saying `inactive` subscription.
 
+
+
+
+
+
+# Quarterly to Annual Upgrade with more recruiters than Quarterly
+see it has `Jan 1st 2026 to March 31st 2026` with `2` rec count with `2000/month` with 3 months plan i.e he paid 2000 x 3 x 2= 12000
+
+he used `2` recs in `jan 2026` month only 
+
+on `feb 1st 2026` corp-admin clicks upgrade plan
+ 1. `8` recs with `12 month plan upgrade`
+   10 recs x 11 months x 1500/month = 165000 
+   2 recs x 2 unused months x 2000/month = 8000rs -> Already paid for `Feb 1st 2026 to March 31st 2026`
+   165000 - 8000rs = 157000
+ 2. `jan 1st 2027`: `10 x 12 x 1500 = 1,80,000`
+
+
+# Quarterly to Annual Upgrade with less recruiters than Quarterly
+see it has `Jan 1st 2026 to March 31st 2026` with `7` rec count with `2000/month` with 3 months plan i.e he paid 2000 x 3 x 7= 42000
+he used `7` recs in `jan 2026` month only 
+
+on `feb 1st 2026` corp-admin clicks upgrade plan to annual
+ 1. `5` recs with `12 month plan upgrade`
+   12 recs × 11 months x 1500/month = ₹198000
+   7 recs × 2 unused months x 2000 = ₹28000 
+   198000 - 28000 = ₹170000 
+ 2. `jan 1st 2027`: `12 x 12 x 1500 = 216000`
+
+
+
