@@ -240,17 +240,36 @@ https://dev.worko.work/v1/corporate/recruiterRecharge
 
 
 # Corporate Recruiter Subscription by `corporate-admin` Flow
-We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `company` in `worko` website
+We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `company` in `worko` job platform website
 1. The `corporat-users` who have `corporat-admin` account we will show the `subscription` page in the `ui`
-2. The `corporat-users` will invite `corporate-recruiters` freely as of now on `prod worko website` and as of now only few active corporate users are present on prod
-3. Only `corporat-admin` can invite another `corporate-recruiter`, so we will give `1` free `corporate-recruiter` invite to the `corporate-admin`
-4. Subsrciption Page for `corporate-admin`:
+2. The `corporat-admin` will invite `corporate-recruiters` freely as of now on `prod worko website` and as of now only few active corporate users are present on prod
+3. for a `company` only one `corporate-admin` will present and this `corporate-admin` will be invited by `worko-admin`
+4. Only `corporat-admin` can invite another `corporate-recruiter`, so we will give `1` free `corporate-recruiter` invite to the `corporate-admin`
+5. Subsrciption Page for `corporate-admin`:
    1. Quarterly(3 months): for `quarterly` plan 2000rs/recruiter
       1. `First time buying subscription`
-         At very first time `corporate-admin` will choose `Quarterly` plan, let's say with `2` recruiters count from `Jan 1st 2026 to March 31st 2026` i.e `2000 x 2 x 3 = 12000`, so `12000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto deduct the amount from `corporate-admin` bank account from razorpay(refer `razorpayPayment.library.ts`) like april 1st 2026 with 12000rs and next ..so on untill `corporate-admin` cancels the auto-debit
+         At very first time lets's say a `corporate-admin` will choose `Quarterly` plan, let's say with `2` recruiters count from `Jan 1st 2026 to March 31st 2026` i.e `2000 x 2 x 3 = 12000`, so `12000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto debit the amount from `corporate-admin` bank account(only credit cards are allowed) from razorpay(
+            refer `razorpayPayment.library.ts`(https://razorpay.com/docs/api/payments/subscriptions/#plans)
+            ) like april 1st 2026 with 12000rs and next ..so on untill `corporate-admin` cancels the auto-debit
       2. Let's say this `corporate-admin` has `2` recruiters from `Jan 1st 2026 to March 31st 2026`
-         1. `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `corporate-recruiter` using his `rohith@amazon.com` email then we should deduct one recruiter count from `subscription` and `corporate-admin` will left with `1` which can able to invite another recruiter till `March 31st 2026`
-            1. 
+         1. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `raj@amazon.com` as `corporate-recruiter` then we should deduct one recruiter count from `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` will left with `1` which can able to invite another recruiter till `March 31st 2026`
+            1. If this `raj@amazon.com` register(refer CorporateUser.model.ts for registered details) and login then we should check whether `rohith@amazon.com` subscription auto debiting every month or not and allow `raj@amazon.com` to login accordingly,
+               1. allowed login for active `rohith@amazon.com` subscription
+               2. not allow login for in-active `rohith@amazon.com` subscription
+         2. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `ashutosh@amazon.com` as `corporate-recruiter` then we should deduct one recruiter count from `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` will left with `0` which can't invite another recruiter till `March 31st 2026`
+         3. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `sarvesh@amazon.com` as `corporate-recruiter` then we will check `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` was left with `0` which can't invite another recruiter till `March 31st 2026` and we throw the same error in the ui and `corporat-admin` may choose below two ways
+            1. Add Recruiters
+               1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` given `3` recruiter count in add recruiters button input then calculate like below:
+                  1. 3 recruiter × 2000rs(because quarterly) × 2(two months left) = 12000rs
+                     1. so `12000rs` should be shown in the ui and `rohith@amazon.com` as `corporate-admin` will pay it and for this payment we may use (https://razorpay.com/docs/api/payments/subscriptions/#plans) subscription api or `razorpay order api`
+                     2. now we need to update the subscription so that every three months it should debit with `2+3=5` recruiters amount for this `quarterly subscription` of `rohith@amazon.com` as `corporate-admin` like below:
+                        1. Auto debit amount from April 1st 2026: 5 recruiter × 2000rs(because quarterly) × 3 = 30000rs
+                        2. Auto debit amount from July 1st 2026: 5 recruiter × 2000rs(because quarterly) × 3 = 30000rs
+                        .
+                        . so..on
+            2. Upgrade Plan
+            3. Cancel Auto-Renew 
+            4. Renew Plan
 
    2. Anually(12 months)
 
