@@ -258,7 +258,7 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
                2. not allow login for in-active `rohith@amazon.com` subscription
          2. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `ashutosh@amazon.com` as `corporate-recruiter` then we should deduct one recruiter count from `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` will left with `0` which can't invite another recruiter till `March 31st 2026`
          3. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `sarvesh@amazon.com` as `corporate-recruiter` then we will check `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` was left with `0` which can't invite another recruiter till `March 31st 2026` and we throw the same error in the ui and `corporat-admin` may choose below two ways
-            1. Add Recruiters
+            1. If `rohith@amazon.com` as `corporate-admin` chooses `Add Recruiters` button
                1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` given `3` recruiter count in add recruiters button input then calculate like below:
                   1. 3 recruiter × 2000rs(because quarterly) × 2(two months left) = 12000rs
                      1. so `12000rs` should be shown in the ui and `rohith@amazon.com` as `corporate-admin` will pay it and for this payment we may use (https://razorpay.com/docs/api/payments/subscriptions/#plans) subscription api or `razorpay order api`
@@ -267,9 +267,18 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
                         2. Auto debit amount from July 1st 2026: 5 recruiter × 2000rs(because quarterly) × 3 = 30000rs
                         .
                         . so..on
-            2. Upgrade Plan
-            3. Cancel Auto-Renew 
-            4. Renew Plan
+            2. If `rohith@amazon.com` as `corporate-admin` chooses `Upgrade Plan`
+               1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` clicks upgrade to `Anually(12 months)` plan and for `12` month plan `1500rs/recruiter`, so it should calculate like below:
+                  1. we have two scenarios:-
+                     1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 recruiters
+                        1. 8 rec x 1500 x 12 = 144000
+                           1. We deduct unused value of current plan (₹8000) from the new annual plan cost (₹144000), so payable is ₹136000.
+                              1. 144000 - Unused Credit = Remaining Months × Recruiters × Price per Recruiter (old plan)
+                                 1. i.e 144000 - (2 remaining months x 2 recruiters × 2000/rec) = 136000
+                        2. so we will update the subscription to deduct from `April 1st 2026` to `Jan 1st 2027`
+                     2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 6 recruiters 
+            3. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew`
+            4. If `rohith@amazon.com` as `corporate-admin` chooses `Renew Plan`
 
    2. Anually(12 months)
 
@@ -290,9 +299,3 @@ We have `corporate-users` for a particular company in `worko` website
                   2 rec × ₹1500 × 9 = 27k
       Jan 1st 2027 to Jan1st 2028: 6x12x1500=108000
       
-   2. Upgrade Plan
-      Jan 1st 2026 to March 31st 2026 bought 2 rec x 1500 x 3 = 9000
-         on Feb 1st 2026 and selected 12 month with 6 rec x 1500 x 12 = 108000
-            11 months remaining amount should pay: 108000 - (2 rec x 3000) = 102000
-               update subscription that will ready to debit on march 31st 2026 with 9000 to jan 1st 2027 with 108000
-      Jan 1st 2027: 6 x 1500 x 12 = 108000
