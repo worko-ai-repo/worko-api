@@ -369,3 +369,22 @@ so these 2 corporat-recruiters at amazon company can only send job applications
             4. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
                1. then auto debit should off like from `april 1st 2026` the payment should be off
                2. all the `evaluators logins` who are being invited should be `turn off` on `april 1st 2026` if no active subscription is present with aligned evaluatos subscription count and when evaluator `login/register` it should throw error by saying `inactive` subscription.
+
+   2. Anually(12 months)
+      1. `First time buying subscription`
+         At very first time lets's say a `corporate-admin` will choose `Anually` plan, let's say with `8` evaluators count from `Jan 1st 2026 to Jan 1st 2027` i.e `1500/eval x 8 eval x 12 months = 144000`, so `144000rs` will be shown to `corporate-admin` to pay and once he pay, every 12 months it should auto debit the amount from `corporate-admin` bank account(only credit cards are allowed) from razorpay(
+            refer `razorpayPayment.library.ts`(https://razorpay.com/docs/api/payments/subscriptions/#plans)
+            ) like jan 1st 2027 with 144000rs and next ..so on untill `corporate-admin` cancels the auto-debit
+      2 If all the `8` evals are used for send for evaluations then if `9`th invite tried by `corporate-admin/recruiter` then below scenarios may happen
+         1. If `rohith@amazon.com` as `corporate-admin` chooses `Add Evaluators` button
+            1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` given `3` evaluator count in add evaluators button input then calculate like below:
+               1. 3 evaluators × 1500rs(because anually) × 11(eleven months left) = 49500rs
+                  1. so `49500rs` should be shown in the ui and `rohith@amazon.com` as `corporate-admin` will pay it and for this payment we may use (https://razorpay.com/docs/api/payments/subscriptions/#plans) subscription api or `razorpay order api` need to think
+                  2. now we need to update the subscription so that every 12 months it should debit with `8(previous)+3=11` evluators amount for this `anual subscription` of `rohith@amazon.com` as `corporate-admin` like below:
+                     1. Auto debit amount from April 1st 2026: 11 evaluator × 1500rs(because anual) × 12 = 198000rs
+                     2. Auto debit amount from July 1st 2026: 11 evaluator × 1500rs(because anual) × 12 = 198000rs
+                     .
+                     . so..on
+            2. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
+               1. then auto debit should off like from `jan 1st 2027` the payment should be off
+               2. all the `evlautors` who are being loggedin should be `turn off` on `jan 1st 2027` if no active subscription is present with aligned evaluators count and when they `login/register` it should throw error by saying `inactive` subscription.
