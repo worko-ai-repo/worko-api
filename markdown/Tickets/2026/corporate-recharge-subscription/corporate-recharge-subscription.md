@@ -257,7 +257,7 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
                1. allowed login for active `rohith@amazon.com` subscription
                2. not allow login for in-active `rohith@amazon.com` subscription
          2. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `ashutosh@amazon.com` as `corporate-recruiter` then we should deduct one recruiter count from `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` will left with `0` which can't invite another recruiter till `March 31st 2026`
-         3. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `sarvesh@amazon.com` as `corporate-recruiter` then we will check `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` was left with `0` which can't invite another recruiter till `March 31st 2026` and we throw the same error in the ui and `corporat-admin` may choose below two ways
+         3. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `sarvesh@amazon.com` as `corporate-recruiter` then we will check `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` was left with `0` which can't invite another recruiter till `March 31st 2026` and we throw the same error in the ui and `corporat-admin` may choose any one of below ways `Add Recruiters` or `Upgrade Plan` or `Cancel Auto-Renew`:-
             1. If `rohith@amazon.com` as `corporate-admin` chooses `Add Recruiters` button
                1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` given `3` recruiter count in add recruiters button input then calculate like below:
                   1. 3 recruiter × 2000rs(because quarterly) × 2(two months left) = 12000rs
@@ -270,15 +270,16 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
             2. If `rohith@amazon.com` as `corporate-admin` chooses `Upgrade Plan`
                1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` clicks upgrade to `Anually(12 months)` plan and for `12` month plan `1500rs/recruiter`, so it should calculate like below:
                   1. we have two scenarios:-
-                     1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 recruiters
-                        1. 8 rec x 1500 x 12 = 144000
-                           1. We deduct unused value of current plan (₹8000) from the new annual plan cost (₹144000), so payable is ₹136000.
-                              1. 144000 - Unused Credit = Remaining Months × Recruiters × Price per Recruiter (old plan)
+                     1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 recruiters:-
+                        1. 8 rec x 1500 x 12 = 144000 -> `12` month plan with `8` rec 
+                           1. We deduct unused value of current quarterly plan (₹8000) from the new annual plan cost (₹144000), so payable is ₹136000.
+                              1. 144000 - (Unused Credit = Remaining Months × Recruiters × Price per Recruiter (old plan))
                                  1. i.e 144000 - (2 remaining months x 2 recruiters × 2000/rec) = 136000
-                        2. so we will update the subscription to deduct from `April 1st 2026` to `Jan 1st 2027`
-                     2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 6 recruiters 
-            3. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew`
-            4. If `rohith@amazon.com` as `corporate-admin` chooses `Renew Plan`
+                        2. so we will update the subscription to deduct from `April 1st 2026` to `Jan 1st 2027`and every year it will deduct `144000`
+                     2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 1 recruiter whereas `2` rec count was bought in `3` months plan:
+                        1. we will show a warning message saying you are selecting less `recruiter` in this plan
+            3. If `rohith@amazon.com` as `corporate-admin` chooses `Renew Plan`
+            4. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
 
    2. Anually(12 months)
 
@@ -298,4 +299,3 @@ We have `corporate-users` for a particular company in `worko` website
                he left with 9 months with 0 recruiters
                   2 rec × ₹1500 × 9 = 27k
       Jan 1st 2027 to Jan1st 2028: 6x12x1500=108000
-      
