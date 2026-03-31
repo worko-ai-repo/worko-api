@@ -42,6 +42,10 @@ class CorporateSubscriptionPricingConfigService {
          pricePerEntityPerMonth,
       })
    }
+
+   async getCorporateSubscriptionPricingConfigByEntityTypeAndPlanType(entityType: CorporateSubscriptionEntityTypeEnum, planType: CorporateSubscriptionPlanTypeEnum) {
+      return corporateSubscriptionPricingConfigDao.getCandidateParsedCvById(`${entityType}#${planType}`);
+   }
 }
 
 const corporateSubscriptionPricingConfigServiceObj = new CorporateSubscriptionPricingConfigService();

@@ -5,6 +5,9 @@ import { Request, Response, NextFunction } from "express";
 // Import DTOs
 import { CorporateSubscriptionPricingConfigCreateApiDto } from "../dtos/CorporateSubscriptionPricingConfig.dto";
 
+// Import Enums
+import { CorporateSubscriptionEntityTypeEnum, CorporateSubscriptionPlanTypeEnum } from "../enums/Common.enum";
+
 // Import Schemas
 import { corporateSubscriptionPricingConfigCreateApiDtoValidation } from "../schemas/CorporateSubscriptionPricingConfig.schema";
 
@@ -45,6 +48,21 @@ class CorporateSubscriptionPricingConfig {
       next(error);
     }
   };
+
+  getCorporateSubscriptionPricingConfigByEntityTypeAndPlanType = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const entityType = req.params.entityType as CorporateSubscriptionEntityTypeEnum;
+      const planType = req.params.planType as CorporateSubscriptionPlanTypeEnum;
+      const result = await corporateSubscriptionPricingConfigServiceObj.getCorporateSubscriptionPricingConfigByEntityTypeAndPlanType(entityType, planType);
+      if(!result) throw new BaseError("Failed to get Corporate Subscription Pricing Config");
+      return res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error) {
+      global.logger.error("Error in getCorporateSubscriptionPricingConfigByEntityTypeAndPlanType [controller]",{
+         error
+      });
+      next(error);
+    }
+  }
 }
 
 export default CorporateSubscriptionPricingConfig;

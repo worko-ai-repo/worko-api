@@ -15,4 +15,9 @@ const CorporateSubscriptionPricingConfigRouter = Router();
  */
 CorporateSubscriptionPricingConfigRouter.post('/', corporateSubscriptionPricingConfigController.createCorporateSubscriptionPricingConfig);
 
+/**
+ * @authorisedRoles ["admin","corporate-admin"]
+ */
+CorporateSubscriptionPricingConfigRouter.get('/entityType/:entityType/planType/:planType',corporateSubscriptionPricingConfigController.getCorporateSubscriptionPricingConfigByEntityTypeAndPlanType);
+
 export default CorporateSubscriptionPricingConfigRouter;
