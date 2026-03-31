@@ -250,10 +250,9 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
 5. Subsrciption Page for `corporate-admin`:
    1. Quarterly(3 months): for `quarterly` plan 2000rs/month
       1. `First time buying subscription`
-         At very first time lets's say a `corporate-admin` will choose `Quarterly` plan, let's say with `2` recruiters count from `Jan 1st 2026 to March 31st 2026` i.e `2000/month x 2 rec x 3 months = 12000`, so `12000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto debit the amount from `corporate-admin` bank account(prefer credit cards and whatever ways we have, we should allow) from razorpay(
+         At very first time lets's say a `corporate-admin` will choose `Quarterly` plan, let's say with `2` recruiters count from `Jan 1st 2026 to March 31st 2026` i.e `2000/month x 2 rec x 3 months = 12000`, so `12000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto debit the amount from `corporate-admin` bank account(whatever possible payment allow) from razorpay(
             refer `razorpayPayment.library.ts`(https://razorpay.com/docs/api/payments/subscriptions/#plans)
             ) like april 1st 2026 with 12000rs and next ..so on untill `corporate-admin` cancels the auto-debit
-         1. send notify by razorpay
       2. Let's say this `corporate-admin` has `2` recruiters from `Jan 1st 2026 to March 31st 2026`
          1. `rohith@amazon.com` as `corporate-admin` will invite(refer `CorporateUserInvite.model.ts`) a `raj@amazon.com` as `corporate-recruiter` then we should deduct one recruiter count from `rohith@amazon.com` in `subscription` and `rohith@amazon.com` as `corporate-admin` will left with `1` which can able to invite another recruiter till `March 31st 2026`
             1. If this `raj@amazon.com` register(refer CorporateUser.model.ts for registered details) and login then we should check whether `rohith@amazon.com` subscription auto debiting every month or not and allow `raj@amazon.com` to login accordingly,
@@ -265,34 +264,38 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
                1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` given `3` recruiter count in add recruiters button input then calculate like below:
                   1. 3 recruiter × 2000rs/month(because quarterly) × 2(two months left) = 12000rs
                      1. so `12000rs` should be shown in the ui and `rohith@amazon.com` as `corporate-admin` will pay it and for this payment we may use (https://razorpay.com/docs/api/payments/subscriptions/#plans) subscription api or `razorpay order api`
-                     2. now we need to update the subscription so that every three months it should debit with `2+3=5` recruiters amount for this `quarterly subscription` of `rohith@amazon.com` as `corporate-admin` like below:
+                     2. now we need to update the subscription so that every three months it should auto debit with `2+3=5` recruiters amount for this `quarterly subscription` of `rohith@amazon.com` as `corporate-admin` like below:
                         1. Auto debit amount from April 1st 2026: 5 recruiter × 2000rs/month(because quarterly) × 3 = 30000rs
                         2. Auto debit amount from July 1st 2026: 5 recruiter × 2000rs/month(because quarterly) × 3 = 30000rs
                         .
                         . so..on
             2. If `rohith@amazon.com` as `corporate-admin` chooses `Upgrade Plan`
                1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` clicks upgrade to `Anually(12 months)` plan and for `12` month plan `1500rs/month`, so it should calculate like below:
-                  1. we have two scenarios:-
-                     1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 recruiters:-
-
-                     2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 1 recruiter whereas `2` rec count was bought in `3` months plan:
+                  1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 recruiters:-
+                     see it has `Jan 1st 2026 to March 31st 2026` with `2` rec count with `2000/month` with 3 months plan i.e he paid 2000 x 3 x 2= 12000;
+                     he used `2` recs in `jan 2026` month only ;
+                     on `feb 1st 2026` corp-admin clicks upgrade plan
+                     1. by selecting `8` recs with `12 month plan upgrade`
+                        (2+8) recs x 11 months x 1500/month = 165000rs
+                        2 recs x 2 unused months x 2000/month = 8000rs -> Already paid for `Feb 1st 2026 to March 31st 2026`
+                        165000 - 8000rs = 157000 -> corporate admin will pay it and he can use `8` recs till december 31st because `2` recs already used
+                     2. update subscription from `April 1st 2026` to `jan 1st 2027`: `10 recs x 12 months x 1500/month = 1,80,000`, so 1,80,000rs will debit `jan 1st 2027`, `jan 1st 2028` .. so..on.
 
             3. If `rohith@amazon.com` as `corporate-admin` chooses `Renew Plan`
-               1. Trigger: 15 days(every 7 days email) before expiry: like from `March 15th 2026 to March 31st 2026` or On expiry: March 31st 2026
+               1. Ui will show `Renew Plan` button to `corporate-admin` only last 15 days(every 7 days email) before expiry: like from `March 15th 2026 to March 31st 2026` or On expiry: March 31st 2026
                2. two recruiter count scenarios in this:
                   1. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 8 recruiters
                      1. we should show below amount:
-                        1. `8 rec x 1500rs/month x 12(months) = 144000rs
+                        1. `8 rec x 1500rs/month x 12(months) = 144000rs -> for `april 1st 2026 to april 1st 2027`
                            1. so `144000rs` auto debit every month like below:
-                              1. April 1st 2027
-                              2. April 1st 2028 ... so on
+                              1. April 1st 2028 ... so on every year
                      2. the old `3` month plan will be cancelled internally
                   2. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 1 recruiters and give option to disable one recuiter to not login 
                      1. After removing `1` recruiter we should show below amount to pay:
-                        1. `1 rec x 12 x 1500/month = 18000`
+                        1. `1 rec x 12 months x 1500/month = 18000`
             4. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
                1. then auto debit should off like from `april 1st 2026` the payment should be off
-               2. all the `corporate-recruiters` who are being invited should be `turn off` on `april 1st 2026` if no active subscription is present with aligned recruiters count and when they `login/register` it should throw error by saying `inactive` subscription.(your acct has been deactivated for corp-rec)
+               2. all the `corporate-recruiters` who are being invited should be `turn off` on `april 1st 2026` if no active subscription is present with aligned recruiters count and when they `login/register` it should throw error by saying `inactive` subscription.(your acct has been deactivated for corp-rec send email)
 
    2. Anually(12 months)
       1. `First time buying subscription`
@@ -309,9 +312,19 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
                      2. Auto debit amount from July 1st 2026: 11 recruiter × 1500rs(because anual) × 12 = 198000rs
                      .
                      . so..on
-            2. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
-               1. then auto debit should off like from `jan 1st 2027` the payment should be off
-               2. all the `corporate-recruiters` who are being invited should be `turn off` on `jan 1st 2027` if no active subscription is present with aligned recruiters count and when they `login/register` it should throw error by saying `inactive` subscription.
+         2. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
+            1. then auto debit should off like from `jan 1st 2027` the payment should be off
+            2. all the `corporate-recruiters` who are being invited should be `turn off` on `jan 1st 2027` if no active subscription is present with aligned recruiters count and when they `login/register` it should throw error by saying `inactive` subscription.
+         3. `Renew plan` button will be shown only last `15` days of current subscription like `dec 15 2026 to dec 31 2026`:
+            1. If `corp-admin` selected `quarterly` plan with `14` recs:
+               1. `14 recs x 3 months x 2000rs/month` = 84000rs
+               2. once `84000rs` paid and we will create a new plan and every 3 month auto debit will happen
+               3. cancel the `12 month` plan internally
+            2. If `corp-admin` selected `quarterly` plan with `8` recs i.e less recs than previous plan:
+               1. so list the recruiters he already invited and tell him to turnoff to match `8` recs
+               2. `8 recs x 3 months x 2000rs/month` = 48000rs
+               3. once `48000rs` paid and we will create a new plan and every 3 month auto debit will happen
+               4. cancel the `12 month` plan internally
 
 # Corporate Evaluator Subscription by `corporate-admin` Flow
 We have `corporate-users` for a particular company in `worko` website
@@ -324,7 +337,7 @@ so these 2 corporat-recruiters at amazon company can only send job applications
 5. Subsrciption Page for `corporate-admin`:
    1. Quarterly(3 months): for `quarterly` plan 2000rs/quarter
       1. `First time buying subscription`
-         At very first time lets's say a `corporate-admin` will choose `Quarterly` plan, let's say with `2` evaluators count from `Jan 1st 2026 to March 31st 2026` i.e `2000(Quarterly) x 2 evals = 4000`, so `4000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto debit the amount from `corporate-admin` bank account for this evaluator subscription(only credit cards are allowed) from razorpay(
+         At very first time lets's say a `corporate-admin` will choose `Quarterly` plan, let's say with `2` evaluators count from `Jan 1st 2026 to March 31st 2026` i.e `2000(for 3 months) x 2 evals = 4000`, so `4000rs` will be shown to `corporate-admin` to pay and once he pay, every 3 months it should auto debit the amount from `corporate-admin` bank account for this evaluator subscription(only credit cards are allowed) from razorpay(
             refer `razorpayPayment.library.ts`(https://razorpay.com/docs/api/payments/subscriptions/#plans)
             ) like april 1st 2026 with 4000rs and next ..so on untill `corporate-admin` cancels the auto-debit
        2. Let's say this `corporate-admin` has `2` evaluators from `Jan 1st 2026 to March 31st 2026`
@@ -345,12 +358,27 @@ so these 2 corporat-recruiters at amazon company can only send job applications
                         . so..on
             2. If `rohith@amazon.com` as `corporate-admin` chooses `Upgrade Plan`
                1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` clicks upgrade to `Anually(12 months)` plan and for `12` month plan `500rs/evaluator`, so it should calculate like below:
-                  1. we have two scenarios:-
-
+                  1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 evaluators:-
+                     see it has `Jan 1st 2026 to March 31st 2026` with `2` evals count with `2000/3months` with 3 months plan i.e he paid 2000 x 2= 4000rs already paid;
+                     he used `2` recs in `jan 2026` month only ;
+                     on `feb 1st 2026` corp-admin clicks upgrade plan
+                     1. by selecting `8` evals with `12 month plan upgrade`
+                        (2+8) recs x 11 months x 500/month = 55000rs
+                        2 recs x 2 unused months x 666.6/month = 2666.6rs -> Already paid for `Feb 1st 2026 to March 31st 2026`
+                        55000rs - 2666.6rs = 52333.4 -> corporate admin will pay it and he can use `8` evals till december 31st because `2` evals already used
+                     2. update subscription from `April 1st 2026` to `jan 1st 2027`: `10 evals x 12 months x 500/month = 60000`, so 60000rs will debit `jan 1st 2027`, `jan 1st 2028` .. so..on.
             3. If `rohith@amazon.com` as `corporate-admin` chooses `Renew Plan`
-               1. Trigger: 15 days before expiry: like from `March 25th 2026 to March 31st 2026` or On expiry: March 31st 2026
-               2. two evaluator count scenarios in this:
-
+               1. Ui will show `Renew Plan` button to `corporate-admin` only last 15 days(every 7 days email) before expiry: like from `March 15th 2026 to March 31st 2026` or On expiry: March 31st 2026
+               2. two evals count scenarios in this:
+                  1. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 8 evals
+                     1. we should show below amount:
+                        1. `8 rec x 500rs/month x 12(months) = 48000rs -> for `april 1st 2026 to april 1st 2027`
+                           1. so `48000rs` auto debit every month like below:
+                              1. April 1st 2028 ... so on every year
+                     2. the old `3` month plan will be cancelled internally
+                  2. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 1 evaluator count and give option to disable one evaluator to not login 
+                     1. After removing `1` evaluator we should show below amount to pay:
+                        1. `1 eval x 12 months x 500/month = 6000` -> so every year 6000rs will be auto debited
             4. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
                1. then auto debit should off like from `april 1st 2026` the payment should be off
                2. all the `evaluators logins` who are being invited should be `turn off` on `april 1st 2026` if no active subscription is present with aligned evaluatos subscription count and when evaluator `login/register` it should throw error by saying `inactive` subscription.
@@ -373,35 +401,15 @@ so these 2 corporat-recruiters at amazon company can only send job applications
          2. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
             1. then auto debit should off like from `jan 1st 2027` the payment should be off
             2. all the `evlautors` who are being loggedin should be `turn off` on `jan 1st 2027` if no active subscription is present with aligned evaluators count and when they `login/register` it should throw error by saying `inactive` subscription.
-
-
-
-
-
-
-# Quarterly to Annual Upgrade with more recruiters than Quarterly
-see it has `Jan 1st 2026 to March 31st 2026` with `2` rec count with `2000/month` with 3 months plan i.e he paid 2000 x 3 x 2= 12000
-
-he used `2` recs in `jan 2026` month only 
-
-on `feb 1st 2026` corp-admin clicks upgrade plan
- 1. `8` recs with `12 month plan upgrade`
-   10 recs x 11 months x 1500/month = 165000 
-   2 recs x 2 unused months x 2000/month = 8000rs -> Already paid for `Feb 1st 2026 to March 31st 2026`
-   165000 - 8000rs = 157000
- 2. `jan 1st 2027`: `10 x 12 x 1500 = 1,80,000`
-
-
-# Quarterly to Annual Upgrade with less recruiters than Quarterly
-see it has `Jan 1st 2026 to March 31st 2026` with `7` rec count with `2000/month` with 3 months plan i.e he paid 2000 x 3 x 7= 42000
-he used `7` recs in `jan 2026` month only 
-
-on `feb 1st 2026` corp-admin clicks upgrade plan to annual
- 1. `5` recs with `12 month plan upgrade`
-   12 recs × 11 months x 1500/month = ₹198000
-   7 recs × 2 unused months x 2000 = ₹28000 
-   198000 - 28000 = ₹170000 
- 2. `jan 1st 2027`: `12 x 12 x 1500 = 216000`
-
+         3. `Renew plan` button will be shown only last `15` days of current subscription like `dec 15 2026 to dec 31 2026`:
+            1. If `corp-admin` selected `quarterly` plan with `14` evals:
+               1. `14 evals x 2000rs/3 months` = 28000rs
+               2. once `28000rs` paid and we will create a new plan and every 3 month auto debit will happen
+               3. cancel the `12 month` plan internally
+            2. If `corp-admin` selected `quarterly` plan with `8` evals i.e less evals than previous plan:
+               1. so list the evaluators he already invited and tell him to turnoff to match `8` evals
+               2. `8 recs x 2000rs/3months` = 16000rs
+               3. once `16000rs` paid and we will create a new plan and every 3 month auto debit will happen
+               4. cancel the `12 month` plan internally
 
 
