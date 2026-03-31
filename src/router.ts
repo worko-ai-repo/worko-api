@@ -59,6 +59,7 @@ import BlogRouter from "./routers/Blog.router";
 import UserGuidanceRequestRouter from "./routers/UserGuidanceRequest.router";
 import UserInterviewRouter from "./routers/UserInterview.router";
 import ReferralSourceTypeActivationRouter from "./routers/ReferralSourceTypeActivation.router";
+import CorporateSubscriptionPricingConfigRouter from "./routers/CorporateSubscriptionPricingConfig.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -142,6 +143,11 @@ router.use("/corporate-user", CorporateUserRouter);
  * @authorisedRoles ["admin","corporate-recruiter","corporate-admin"]
  */
 router.use("/corporate-invite", CorporateUserInviteRouter);
+
+/**
+ * @authorisedRoles ["admin"]
+ */
+router.use("/corporate-subs-pricing-config", CorporateSubscriptionPricingConfigRouter);
 
 /**
  * EMAIL TEMPLATE ROUTERS

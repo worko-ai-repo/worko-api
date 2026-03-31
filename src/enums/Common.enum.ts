@@ -78,3 +78,13 @@ export enum HiringEligibilityStatusEnum {
   */
   BLACK_LISTED = "BLACK_LISTED",
 }
+
+export enum CorporateSubscriptionEntityTypeEnum {
+  RECRUITER = "RECRUITER",
+  EVALUATOR = "EVALUATOR",
+}
+
+export enum CorporateSubscriptionPlanTypeEnum {
+  QUARTERLY = "QUARTERLY",  // 3 months
+  ANNUALLY  = "ANNUALLY",   // 12 months
+}
