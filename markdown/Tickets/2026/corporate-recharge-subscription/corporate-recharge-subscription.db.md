@@ -186,7 +186,7 @@ interface DbCorporateSubscriptionTransactionDto {
   updatedAt: string; // ISO
 
   /** @reference id of DbCorporateSubscriptionDto */
-  subscriptionId: string;
+  corporateSubscriptionId: string;
 
   /** @reference id of CorporateUser.model.ts (corporate-admin) */
   corporateAdminId: string;
@@ -259,20 +259,10 @@ interface DbCorporateEntitySubscriptionWalletDto {
    * Current cycle remaining recruiter slots.
    * Mirrors DbCorporateSubscriptionDto.remainingEntityCount for RECRUITER.
    */
-  totalAvailableRecruiterCount?: number;
+  totalAvailableEntityCount: number;
 
   /** Lifetime total recruiter invites sent across all cycles */
-  totalUsedRecruiterCount?: number;
-
-  // ── EVALUATOR fields (entityType = EVALUATOR) ──────────────────────────
-  /**
-   * Current cycle remaining evaluator slots.
-   * Mirrors DbCorporateSubscriptionDto.remainingEntityCount for EVALUATOR.
-   */
-  totalAvailableEvaluatorCount?: number;
-
-  /** Lifetime total evaluator sends across all cycles */
-  totalUsedEvaluatorCount?: number;
+  totalUsedEntityCount: number;
 
   // ── Common ─────────────────────────────────────────────────────────────
   /** Lifetime total amount paid (INR) across all successful transactions */
@@ -295,7 +285,7 @@ interface DbCorporateSubscriptionPendingDeactivationDto {
   updatedAt: string; // ISO
 
   /** @reference id of DbCorporateSubscriptionDto */
-  subscriptionId: string;
+  corporateSubscriptionId: string;
 
   corporateAdminId: string;
   companyId: string;
