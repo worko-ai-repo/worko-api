@@ -274,10 +274,7 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
                1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` clicks upgrade to `Anually(12 months)` plan and for `12` month plan `1500rs/month`, so it should calculate like below:
                   1. we have two scenarios:-
                      1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 recruiters:-
-                        1. 10 rec x 1500/month x 12 = 180000 -> annual amount for 10 recruiters
-                        2. 2 rec x 1500/month x 3 = 9000 -> 3 months amount paid for 2 recruiters
-                        3. 180000 - 9000 = 171000rs - should paid by `corporate-admin`
-                        3. so we will update the subscription to deduct from `April 1st 2026` to `Jan 1st 2027`and every year it will deduct `10 rec x 12 x 1500/month`= 180000
+
                      2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 1 recruiter whereas `2` rec count was bought in `3` months plan:
                         1. we will show a warning message saying you are selecting less `recruiter` in this plan 
                            1. `Jan 1st 2026 to March 31st 2026` he bought 5 recs
@@ -358,26 +355,11 @@ so these 2 corporat-recruiters at amazon company can only send job applications
             2. If `rohith@amazon.com` as `corporate-admin` chooses `Upgrade Plan`
                1. Let's say on `Feb 1st, 2026` the `rohith@amazon.com` as `corporate-admin` clicks upgrade to `Anually(12 months)` plan and for `12` month plan `500rs/evaluator`, so it should calculate like below:
                   1. we have two scenarios:-
-                     1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 evaluators:-
-                        1. 8 evals x 500 x 12 = 48k -> `12` month plan with `8` evals 
-                           1. i.e 48k - (2 remaining months x 2 evaluators × 500/month) = 46000
-                        2. so we will update the subscription to deduct from `April 1st 2026` to `Jan 1st 2027`and every year it will deduct `48k`
-                     2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 1 evaluator whereas `2` evals count was bought in `3` months plan:
-                        1. we will show a warning message saying you are selecting less `evaluator` in this plan 
-                        and give option to disable one evaluator to not login 
+
             3. If `rohith@amazon.com` as `corporate-admin` chooses `Renew Plan`
-               1. Trigger: 7 days before expiry: like from `March 25th 2026 to March 31st 2026` or On expiry: March 31st 2026
+               1. Trigger: 15 days before expiry: like from `March 25th 2026 to March 31st 2026` or On expiry: March 31st 2026
                2. two evaluator count scenarios in this:
-                  1. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 8 evaluators
-                     1. we should show below amount:
-                        1. `8 eval x 500rs/month x 12(months) = 48000
-                           1. so `48000rs` auto debit every month like below:
-                              1. April 1st 2027
-                              2. April 1st 2028 ... so on
-                     2. the old `3` month plan will be cancelled internally
-                  2. Let's say on March 27th 2026 the user selects `renew plan` i.e `12 month plan` with 1 evaluator and give option to disable one evaluator to not login 
-                     1. After removing `1` evaluator we should show below amount to pay:
-                        1. `1 evaluator x 12 x 500/month = 6000`
+
             4. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
                1. then auto debit should off like from `april 1st 2026` the payment should be off
                2. all the `evaluators logins` who are being invited should be `turn off` on `april 1st 2026` if no active subscription is present with aligned evaluatos subscription count and when evaluator `login/register` it should throw error by saying `inactive` subscription.
@@ -397,9 +379,9 @@ so these 2 corporat-recruiters at amazon company can only send job applications
                      2. Auto debit amount from July 1st 2026: 11 evaluator × 500rs(because anual) × 12
                      .
                      . so..on
-            2. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
-               1. then auto debit should off like from `jan 1st 2027` the payment should be off
-               2. all the `evlautors` who are being loggedin should be `turn off` on `jan 1st 2027` if no active subscription is present with aligned evaluators count and when they `login/register` it should throw error by saying `inactive` subscription.
+         2. If `rohith@amazon.com` as `corporate-admin` chooses `Cancel Auto-Renew` 
+            1. then auto debit should off like from `jan 1st 2027` the payment should be off
+            2. all the `evlautors` who are being loggedin should be `turn off` on `jan 1st 2027` if no active subscription is present with aligned evaluators count and when they `login/register` it should throw error by saying `inactive` subscription.
 
 
 
