@@ -413,3 +413,19 @@ so these 2 corporat-recruiters at amazon company can only send job applications
                4. cancel the `12 month` plan internally
 
 
+# List of Recruiter Subscription Transaction History
+   1. how much amount deducted for how many recruiters
+
+# List of Evaluator Subscription Transaction History
+   1. how much amount deducted for how many evaluators
+
+# Corporate-admin wallet for Recruiter Subscription (`corporateEntitySubsriptionWallets` firestore collection `Entity` means `RECRUITER` refer in `DbCorporateEntitySubsrciptionWalletDto` in `corporate-recharge-subscription.db.md`)
+   1. Total how many recruiters count does `corporate-admin` can send invite
+   2. Total how many recruiters count does `corporate-admin` can already used
+   3. Total life time amount paid till now
+
+# Corporate-admin wallet for Evaluator Subscription (`corporateEntitySubsriptionWallets` firestore collection `Entity` means `RECRUITER` refer in `DbCorporateEntitySubsrciptionWalletDto` in `corporate-recharge-subscription.db.md`)
+   1. Total how many evaluators count does `corporate-admin` can send for evaluation
+   2. Total how many evaluators count does `corporate-admin` can already used
+   3. Total life time amount paid till now
+
