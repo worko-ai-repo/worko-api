@@ -276,15 +276,6 @@ We have `corporate-users`(Refer `CorporateUser.model.ts`) for a particular `comp
                      1. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 8 recruiters:-
 
                      2. Let's say `rohith@amazon.com` as `corporate-admin` chooses `12month plan` with 1 recruiter whereas `2` rec count was bought in `3` months plan:
-                        1. we will show a warning message saying you are selecting less `recruiter` in this plan 
-                           1. `Jan 1st 2026 to March 31st 2026` he bought 5 recs
-                              1. now on `feb 1st 2026` he is trying `3` recs:
-                                 1. 3 x 1500 x 12 = 54000
-                                       54k -> 3 rec for 12 month need to pay
-                                       22500 -> 3 month amount already paid for 5 rec
-                                       2x3x1500=9k -> excess amount for 2 rec
-                                       final price = 54k + 9k - 22.5k = 40500
-                           2. 3 x 1500 x 12 = 54000
 
             3. If `rohith@amazon.com` as `corporate-admin` chooses `Renew Plan`
                1. Trigger: 15 days(every 7 days email) before expiry: like from `March 15th 2026 to March 31st 2026` or On expiry: March 31st 2026
