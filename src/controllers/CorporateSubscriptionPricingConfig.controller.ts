@@ -3,13 +3,16 @@
 import { Request, Response, NextFunction } from "express";
 
 // Import DTOs
-import { CorporateSubscriptionPricingConfigCreateApiDto } from "../dtos/CorporateSubscriptionPricingConfig.dto";
+import { CorporateSubscriptionPricingConfigCreateApiDto, CorporateSubscriptionPricingConfigListingFilterOptions, CorporateSubscriptionPricingConfigListingFilterRequestDTO } from "../dtos/CorporateSubscriptionPricingConfig.dto";
 
 // Import Enums
 import { CorporateSubscriptionEntityTypeEnum, CorporateSubscriptionPlanTypeEnum } from "../enums/Common.enum";
 
+// Import Helpers
+import { GcpFirestoreRequestHelper } from "../helpers/request.gcp-firestore.helper";
+
 // Import Schemas
-import { corporateSubscriptionPricingConfigCreateApiDtoValidation } from "../schemas/CorporateSubscriptionPricingConfig.schema";
+import { corporateSubscriptionPricingConfigCreateApiDtoValidation, corporateSubscriptionPricingConfigFilterDtoValidation } from "../schemas/CorporateSubscriptionPricingConfig.schema";
 
 // Import Services
 import { corporateSubscriptionPricingConfigServiceObj } from "../services/CorporateSubscriptionPricingConfig.service";
@@ -58,6 +61,36 @@ class CorporateSubscriptionPricingConfig {
       return res.status(HttpStatusCode.OK_200).json(result);
     } catch (error) {
       global.logger.error("Error in getCorporateSubscriptionPricingConfigByEntityTypeAndPlanType [controller]",{
+         error
+      });
+      next(error);
+    }
+  }
+
+  getAllCorporateSubscriptionPricingConfigByFilterOptions = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filterRequest: CorporateSubscriptionPricingConfigListingFilterOptions =
+        GcpFirestoreRequestHelper.parseFilterOptions<
+          CorporateSubscriptionPricingConfigListingFilterRequestDTO,
+          CorporateSubscriptionPricingConfigListingFilterOptions
+        >(
+          req.query as unknown as CorporateSubscriptionPricingConfigListingFilterRequestDTO
+        );
+
+      let { error, value: validatedRequestBody } =
+        corporateSubscriptionPricingConfigFilterDtoValidation.validate(
+          filterRequest,
+          { abortEarly: false }
+        );
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+      const result = await corporateSubscriptionPricingConfigServiceObj.getAllCorporateSubscriptionPricingConfigByFilterOptions(
+        validatedRequestBody
+      );
+      return res.status(HttpStatusCode.OK_200).json(result);
+    } catch (error) {
+      global.logger.error("Error in getAllCorporateSubscriptionPricingConfigByFilterOptions [controller]",{
          error
       });
       next(error);

@@ -20,4 +20,9 @@ CorporateSubscriptionPricingConfigRouter.post('/', corporateSubscriptionPricingC
  */
 CorporateSubscriptionPricingConfigRouter.get('/entityType/:entityType/planType/:planType',corporateSubscriptionPricingConfigController.getCorporateSubscriptionPricingConfigByEntityTypeAndPlanType);
 
+/**
+ * @authorisedRoles ["admin","corporate-admin"]
+ */
+CorporateSubscriptionPricingConfigRouter.get("/", corporateSubscriptionPricingConfigController.getAllCorporateSubscriptionPricingConfigByFilterOptions);
+
 export default CorporateSubscriptionPricingConfigRouter;

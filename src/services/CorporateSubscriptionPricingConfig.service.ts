@@ -3,7 +3,7 @@
 import { corporateSubscriptionPricingConfigDao } from "../daos/CorporateSubscriptionPricingConfig.dao";
 
 // Import DTOs
-import { CorporateSubscriptionPricingConfigCreateApiDto } from "../dtos/CorporateSubscriptionPricingConfig.dto";
+import { CorporateSubscriptionPricingConfigCreateApiDto, CorporateSubscriptionPricingConfigListingFilterOptions } from "../dtos/CorporateSubscriptionPricingConfig.dto";
 
 // Import Enums
 import { CorporateSubscriptionEntityTypeEnum, CorporateSubscriptionPlanTypeEnum } from "../enums/Common.enum";
@@ -45,6 +45,14 @@ class CorporateSubscriptionPricingConfigService {
 
    async getCorporateSubscriptionPricingConfigByEntityTypeAndPlanType(entityType: CorporateSubscriptionEntityTypeEnum, planType: CorporateSubscriptionPlanTypeEnum) {
       return corporateSubscriptionPricingConfigDao.getCandidateParsedCvById(`${entityType}#${planType}`);
+   }
+
+   async getAllCorporateSubscriptionPricingConfigByFilterOptions(
+      filterRequest: CorporateSubscriptionPricingConfigListingFilterOptions
+   ) {
+      return corporateSubscriptionPricingConfigDao.getAllCorporateSubscriptionPricingConfigByFilterOptions(
+         filterRequest
+      );
    }
 }
 

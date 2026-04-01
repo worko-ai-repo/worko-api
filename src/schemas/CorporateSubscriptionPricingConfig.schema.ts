@@ -4,6 +4,9 @@ import Joi from "joi";
 // Import enums
 import { CorporateSubscriptionEntityTypeEnum, CorporateSubscriptionPlanTypeEnum } from "../enums/Common.enum";
 
+// Import common schema
+import { gcpFirestoreCommonSchema } from "./Common.gcp-firestore.schema";
+
 export const corporateSubscriptionPricingConfigCreateApiDtoValidation = Joi.object({
   entityType: Joi.string()
     .valid(...Object.values(CorporateSubscriptionEntityTypeEnum))
@@ -26,3 +29,5 @@ export const corporateSubscriptionPricingConfigCreateApiDtoValidation = Joi.obje
     "number.base": "pricePerEntityPerMonth must be a number",
   }),
 });
+
+export const corporateSubscriptionPricingConfigFilterDtoValidation = gcpFirestoreCommonSchema;

@@ -848,7 +848,7 @@ var isCorporateAdminUrl = function (url, httpMethod) {
     { path: "/referral-sourcetype-activation/company/:companyId", method: HttpMethodsConstants.GET },
 
     // Corporate subscription Pricing config routers
-    { path: "/corporate-subscription-pricing-config/entityType/:entityType/planType/:planType", method: HttpMethodsConstants.GET },
+    { path: "/corporate-subscription-pricing-config/*", method: HttpMethodsConstants.GET },
   ];
 
   const result = checkMatchingPattern(url, urlList, httpMethod);
