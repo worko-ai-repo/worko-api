@@ -118,6 +118,7 @@ class DbUserDetailDto extends BaseDbDto {
    *     to them.
    */
   isUserCreatedInternally?: boolean;
+  icalFreeBusyUrl?: string;
 }
 
 // Define the schema for the User Details model using DynamoDB
@@ -375,6 +376,10 @@ const UserDetailSchema = new dynamoose.Schema(
     },
     isUserCreatedInternally: {
       type: Boolean,
+      required: false,
+    },
+    icalFreeBusyUrl: {
+      type: String,
       required: false,
     },
   },

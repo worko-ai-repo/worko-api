@@ -101,6 +101,7 @@ class DbCorporateUserInviteDto extends BaseDbDto {
    * if this flag is set to true then we will allow the invited corporate-admin/recruiter to give "cv duplicacy management" on job applications
    */
   cvDuplicacyAccess?: boolean;
+  icalFreeBusyUrl?: string;
 }
 
 const CorporateUserInviteSchema = new dynamoose.Schema(
@@ -211,6 +212,10 @@ const CorporateUserInviteSchema = new dynamoose.Schema(
         },
         cvDuplicacyAccess: {
             type: Boolean,
+            required: false
+        },
+        icalFreeBusyUrl: {
+            type: String,
             required: false
         }
     },

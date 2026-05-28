@@ -63,6 +63,8 @@ class DbCorporateUserDto extends BaseDbDto {
      */
     cvDuplicacyAccess?: boolean;
 
+    icalFreeBusyUrl?: string;
+
     isDeleted!: boolean;
 }
 
@@ -149,6 +151,10 @@ const CorporateUserSchema = new dynamoose.Schema(
         },
         cvDuplicacyAccess: {
             type: Boolean,
+            required: false,
+        },
+        icalFreeBusyUrl: {
+            type: String,
             required: false,
         },
         isDeleted: {

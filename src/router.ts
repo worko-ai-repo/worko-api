@@ -59,6 +59,7 @@ import BlogRouter from "./routers/Blog.router";
 import UserGuidanceRequestRouter from "./routers/UserGuidanceRequest.router";
 import UserInterviewRouter from "./routers/UserInterview.router";
 import ReferralSourceTypeActivationRouter from "./routers/ReferralSourceTypeActivation.router";
+import UserCalendarFreeBusyRouter from "./routers/UserCalendarFreeBusy.router";
 
 // Router that contains all the routes/endpoints in the application
 const router = Router();
@@ -435,6 +436,16 @@ router.use("/user", UserSkillRouter);
  * @authorisedRoles ["admin", "loggedInUser"]
  */
 router.use("/user", UserSubscriptionRouter);
+
+/**
+ * USER FREE-BUSY CALENDAR ROUTERS
+ * 
+ * Regitser the "User Free-Busy Calendar" routers
+ * 
+ * @authorisedRoles ["admin", "Corporate Recruiter" , "Corporate Admin" , "Evaluator"]
+ * @todo add required authorizations after discussing with team lead
+ */
+router.use("/user", UserCalendarFreeBusyRouter);
 
 /**
  * USER SUPPORT ROUTERS
