@@ -17,6 +17,7 @@ class UserCalendarFreeBusyController {
       global.logger.info("Processing request to add calendar iCal link [CONTROLLER]");
 
       const icalUrl = String(req.body?.icalUrl ?? "").trim();
+      const userEmail = String(req.body?.email ?? "").trim(); // Optional email for better matching in service layer
       if (!icalUrl) {
         res.status(HttpStatusCode.BAD_REQUEST_400).json({
           success: false,
@@ -25,12 +26,11 @@ class UserCalendarFreeBusyController {
         return;
       }
       global.logger.info("Request local context [CONTROLLER]",{
-        userId: global.requestLocalContext?.userId,
-        userEmail: global.requestLocalContext?.userEmail,
+        reqBody:req.body, 
         global:global.requestLocalContext
       } );
-      const { userId, userEmail } = global.requestLocalContext;
-      if (!userId || !userEmail) {
+      const { userId } = global.requestLocalContext;
+      if (!userId) {
         res.status(HttpStatusCode.UNAUTHORIZED_401).json({
           success: false,
           message: "Unauthorized",
@@ -59,6 +59,7 @@ class UserCalendarFreeBusyController {
       global.logger.info("Processing request to update calendar iCal link [CONTROLLER]");
 
       const icalUrl = String(req.body?.icalUrl ?? "").trim();
+        const userEmail = String(req.body?.email ?? "").trim(); // Optional email for better matching in service layer
       if (!icalUrl) {
         res.status(HttpStatusCode.BAD_REQUEST_400).json({
           success: false,
@@ -67,8 +68,8 @@ class UserCalendarFreeBusyController {
         return;
       }
 
-      const { userId, userEmail } = global.requestLocalContext;
-      if (!userId || !userEmail) {
+      const { userId } = global.requestLocalContext;
+      if (!userId) {
         res.status(HttpStatusCode.UNAUTHORIZED_401).json({
           success: false,
           message: "Unauthorized",
