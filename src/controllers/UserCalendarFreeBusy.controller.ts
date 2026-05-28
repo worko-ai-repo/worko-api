@@ -1,6 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import HttpStatusCode from "../utils/http-codes.util";
 import { userCalendarFreeBusyServiceObj } from "../services/UserCalendarFreeBusy.service";
+import {
+  FreeBusyAttendeeDto,
+  FreeBusyBatchQueryItem,
+  SaveIcalUrlApiDto,
+} from "../dtos/UserCalendarFreeBusy.dto";
+import {
+  freeBusyBatchQueryDtoValidation,
+  getSingleUserFreeBusyQueryValidation,
+  saveIcalUrlDtoValidation,
+} from "../schemas/UserCalendarFreeBusy.schema";
+import { RequestValidationError } from "../utils/errors.util";
 
 /**
  * UserCalendarFreeBusyController
@@ -16,19 +27,15 @@ class UserCalendarFreeBusyController {
     try {
       global.logger.info("Processing request to add calendar iCal link [CONTROLLER]");
 
-      const icalUrl = String(req.body?.icalUrl ?? "").trim();
-      const userEmail = String(req.body?.email ?? "").trim(); // Optional email for better matching in service layer
-      if (!icalUrl) {
-        res.status(HttpStatusCode.BAD_REQUEST_400).json({
-          success: false,
-          message: "icalUrl is required",
-        });
-        return;
+      const { error, value: validatedBody } = saveIcalUrlDtoValidation.validate(req.body, {
+        abortEarly: false,
+      });
+      if (error) {
+        throw new RequestValidationError(error);
       }
-      global.logger.info("Request local context [CONTROLLER]",{
-        reqBody:req.body, 
-        global:global.requestLocalContext
-      } );
+
+      const { icalUrl, email: userEmail = "" }: SaveIcalUrlApiDto = validatedBody;
+
       const { userId } = global.requestLocalContext;
       if (!userId) {
         res.status(HttpStatusCode.UNAUTHORIZED_401).json({
@@ -58,15 +65,14 @@ class UserCalendarFreeBusyController {
     try {
       global.logger.info("Processing request to update calendar iCal link [CONTROLLER]");
 
-      const icalUrl = String(req.body?.icalUrl ?? "").trim();
-        const userEmail = String(req.body?.email ?? "").trim(); // Optional email for better matching in service layer
-      if (!icalUrl) {
-        res.status(HttpStatusCode.BAD_REQUEST_400).json({
-          success: false,
-          message: "icalUrl is required",
-        });
-        return;
+      const { error, value: validatedBody } = saveIcalUrlDtoValidation.validate(req.body, {
+        abortEarly: false,
+      });
+      if (error) {
+        throw new RequestValidationError(error);
       }
+
+      const { icalUrl, email: userEmail = "" }: SaveIcalUrlApiDto = validatedBody;
 
       const { userId } = global.requestLocalContext;
       if (!userId) {
@@ -97,25 +103,19 @@ class UserCalendarFreeBusyController {
     try {
       global.logger.info("Processing request to get batch free-busy slots [CONTROLLER]");
 
-      const usersPayload = req.body;
-      if (!Array.isArray(usersPayload)) {
-        res.status(HttpStatusCode.BAD_REQUEST_400).json({
-          success: false,
-          message: "Request body must be an array of users",
-        });
-        return;
+      const { error, value: validatedPayload } = freeBusyBatchQueryDtoValidation.validate(
+        req.body,
+        { abortEarly: false }
+      );
+      if (error) {
+        throw new RequestValidationError(error);
       }
 
-      // Validate each user object in payload
-      for (const user of usersPayload) {
-        if (!user.userId || !user.userEmail) {
-          res.status(HttpStatusCode.BAD_REQUEST_400).json({
-            success: false,
-            message: "Each user object must contain a userId and userEmail",
-          });
-          return;
-        }
-      }
+      const usersPayload: FreeBusyBatchQueryItem[] = (
+        validatedPayload as Array<string | FreeBusyAttendeeDto>
+      ).map((item) =>
+        typeof item === "string" ? item : { userEmail: item.userEmail, userName: item.userName }
+      );
 
       const response = await userCalendarFreeBusyServiceObj.getBatchFreeBusy(usersPayload);
       res.status(HttpStatusCode.OK_200).json(response);
@@ -133,8 +133,16 @@ class UserCalendarFreeBusyController {
     try {
       global.logger.info("Processing request to get single user free-busy slots [CONTROLLER]");
 
+      const { error, value: validatedQuery } = getSingleUserFreeBusyQueryValidation.validate(
+        { email: req.query.email },
+        { abortEarly: false }
+      );
+      if (error) {
+        throw new RequestValidationError(error);
+      }
+
       const { userId } = req.params;
-      const email = String(req.query.email ?? "");
+      const { email } = validatedQuery;
 
       const icalUrl = await userCalendarFreeBusyServiceObj.getIcalUrl(userId, email);
       if (!icalUrl) {
