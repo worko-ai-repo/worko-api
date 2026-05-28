@@ -24,7 +24,11 @@ class UserCalendarFreeBusyController {
         });
         return;
       }
-
+      global.logger.info("Request local context [CONTROLLER]",{
+        userId: global.requestLocalContext?.userId,
+        userEmail: global.requestLocalContext?.userEmail,
+        global:global.requestLocalContext
+      } );
       const { userId, userEmail } = global.requestLocalContext;
       if (!userId || !userEmail) {
         res.status(HttpStatusCode.UNAUTHORIZED_401).json({
