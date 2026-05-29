@@ -186,25 +186,37 @@ class UserCalendarFreeBusyService {
   /**
    * Parses busy slots from an ical URL.
    */
-  async getBusySlots(icalUrl: string): Promise<BusySlot[]> {
-    const busySlots: BusySlot[] = [];
-    try {
-      const data = await ical.async.fromURL(icalUrl);
-      for (const key in data) {
-        const event = data[key];
-        if (event && event.type === "VEVENT") {
-          busySlots.push({
-            start: event.start,
-            end: event?.end || event.start,
-          });
-        }
-      }
-      busySlots.sort((a, b) => a.start.getTime() - b.start.getTime());
-    } catch (error) {
-      global.logger.error(`Failed to parse ICS URL: ${icalUrl}`, error);
+async getBusySlots(icalUrl: string, rangeStart: Date, rangeEnd: Date): Promise<BusySlot[]> {
+  const busySlots: BusySlot[] = [];
+  try {
+    const data = await ical.async.fromURL(icalUrl);
+    
+    for (const key in data) {
+      const event = data[key];
+      if (!event || event.type !== 'VEVENT') continue;
+
+      // Skip events outside your query range
+      const start = new Date(event.start);
+      const end = new Date(event.end || event.start);
+
+      if (end < rangeStart || start > rangeEnd) continue;
+
+      // Deduplicate: skip if this exact slot is already recorded
+      const isDuplicate = busySlots.some(
+        s => s.start.getTime() === start.getTime() && s.end.getTime() === end.getTime()
+      );
+      if (isDuplicate) continue;
+
+      busySlots.push({ start, end });
     }
-    return busySlots;
+
+    busySlots.sort((a, b) => a.start.getTime() - b.start.getTime());
+  } catch (error) {
+    global.logger.error(`Failed to parse ICS URL: ${icalUrl}`, error);
   }
+  return busySlots;
+}
+
 
   private async getCorporateInvitesByEmail(
     userEmail: string
@@ -317,7 +329,7 @@ class UserCalendarFreeBusyService {
 
       let busySlots: BusySlot[] = [];
       if (dbDetails.icalUrl) {
-        busySlots = await this.getBusySlots(dbDetails.icalUrl);
+        busySlots = await this.getBusySlots(dbDetails.icalUrl || "", new Date(), new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)); // Look 6 months ahead for busy slots by default, can be adjusted as needed
       }
 
       return {

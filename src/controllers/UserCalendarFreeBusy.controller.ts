@@ -153,7 +153,7 @@ class UserCalendarFreeBusyController {
         return;
       }
 
-      const busySlots = await userCalendarFreeBusyServiceObj.getBusySlots(icalUrl);
+      const busySlots = await userCalendarFreeBusyServiceObj.getBusySlots(icalUrl , new Date(), new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)); // Look 6 months ahead for busy slots by default, can be adjusted as needed
 
       res.status(HttpStatusCode.OK_200).json({
         success: true,
