@@ -232,6 +232,7 @@ class CorporateUserDao implements BaseDao {
         .beginsWith("CORP#USR#REG#");
     } else {
       // If the company ID is not provided, then get the list of corporate user from the database
+     console.log("Company ID not provided in filter options for getAllCorpUsers DAO method. Fetching corporate users without company ID filter. ", { filterOptions });
       query = CorporateUserModel.query("GSI1PK")
         .eq(this.GSI1PK)
         .where("GSI1SK")
@@ -278,6 +279,15 @@ class CorporateUserDao implements BaseDao {
 
         return condition;
       });
+    }
+
+    if(filterOptions.email){
+      console.log("Applying email filter in getAllCorpUsers DAO method with value: ", {
+        email:filterOptions.email,
+        methodName: this.getAllCorpUsers.name,
+      });
+      
+      query = query.where("email").eq(filterOptions.email);
     }
 
     // When you use the sort() method in Dynamoose, it sorts the items based on the sort key of the index you're querying.

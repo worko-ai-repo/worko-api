@@ -36,6 +36,7 @@ export interface FreeBusyResponse {
   success: boolean;
   totalBusySlots: number;
   users: UserBusy[];
+  notFoundEmails?: string[];
 }
 
 interface ResolvedUserCalendarDetails {
@@ -44,7 +45,7 @@ interface ResolvedUserCalendarDetails {
   userName: string;
 }
 
-const FREE_BUSY_LOOKUP_PAGE_SIZE = 10;
+const FREE_BUSY_LOOKUP_PAGE_SIZE = 200;
 
 class UserCalendarFreeBusyService {
   private extractRecordsFromPaginatedResponse<T>(
@@ -58,8 +59,8 @@ class UserCalendarFreeBusyService {
     records: T[],
     userEmail: string
   ): T | undefined {
-    const normalizedEmail = userEmail.toLowerCase();
-    return records.find((record) => record.email?.toLowerCase() === normalizedEmail);
+    const trimmedEmail = userEmail.trim();
+    return records.find((record) => record.email?.trim() === trimmedEmail);
   }
 
   /**
@@ -153,34 +154,47 @@ class UserCalendarFreeBusyService {
   /**
    * Retrieves the icalFreeBusyUrl for a user by userId and/or email.
    */
-  async getIcalUrl(userId: string, userEmail: string): Promise<string | null> {
-    if (userEmail) {
-      const details = await this.getUserDetailsByEmail(userEmail);
-      if (details.icalUrl) {
-        return details.icalUrl;
+  async getIcalUrl(userEmail: string): Promise<string | null> {
+    const hasEmail = !!userEmail && userEmail.trim() !== "";
+
+    let userFound = false;
+    let resolvedIcalUrl: string | null = null;
+
+  if (hasEmail) {
+      // Type 2: Only email is present (no cognito ID)
+      // 1. Search in CorporateUser with email filter
+      try {
+        const corporateUser = await this.getCorporateUserByEmail(userEmail.trim());
+        if (corporateUser) {
+          userFound = true;
+          resolvedIcalUrl = corporateUser.icalFreeBusyUrl || null;
+        }
+      } catch (err) {
+        global.logger.error("Error fetching CorporateUser by email: ", err);
+      }
+
+      // 2. If not found in CorporateUser, search in UserDetails
+      if (!userFound) {
+        try {
+          const userDetails = await userServiceObj.getUserDetailByEmail(userEmail.trim());
+          if (userDetails.count && userDetails[0]) {
+            userFound = true;
+            resolvedIcalUrl = userDetails[0].icalFreeBusyUrl || null;
+          }
+        } catch (err) {
+          global.logger.error("Error fetching admin user details by email: ", err);
+        }
       }
     }
 
-    try {
-      const corporateUserUlid = uuidToULID(userId);
-      const corpUserQuery = await corporateUserDaoObj.getById(corporateUserUlid);
-      if (corpUserQuery.count && corpUserQuery[0]?.icalFreeBusyUrl) {
-        return corpUserQuery[0].icalFreeBusyUrl;
-      }
-    } catch (err) {
-      global.logger.error("Error fetching icalUrl from CorporateUser: ", err);
+    if (!userFound) {
+      throw new BaseError(
+        "User not found in the database.",
+        HttpStatusCode.NOT_FOUND_404
+      );
     }
 
-    try {
-      const userDetails = await userDetailDao.getUserById(userId);
-      if (userDetails.count && userDetails[0]?.icalFreeBusyUrl) {
-        return userDetails[0].icalFreeBusyUrl;
-      }
-    } catch (err) {
-      global.logger.error("Error fetching icalUrl from UserDetail: ", err);
-    }
-
-    return null;
+    return resolvedIcalUrl;
   }
 
   /**
@@ -222,7 +236,7 @@ async getBusySlots(icalUrl: string, rangeStart: Date, rangeEnd: Date): Promise<B
     userEmail: string
   ): Promise<DbCorporateUserInviteDto[]> {
     const inviteResponse = await corporateUserInviteServiceObj.getAllInvites({
-      searchText: userEmail.toLowerCase(),
+      searchText: userEmail.trim(),
       pageSize: FREE_BUSY_LOOKUP_PAGE_SIZE,
       sortOrder: SortOrderTypeEnum.DESCENDING,
     });
@@ -236,7 +250,7 @@ async getBusySlots(icalUrl: string, rangeStart: Date, rangeEnd: Date): Promise<B
     userEmail: string
   ): Promise<DbCorporateUserDto | undefined> {
     const corporateUserResponse = await corporateUserServiceObj.getAllCorpUsers({
-      searchText: userEmail.toLowerCase(),
+      email: userEmail.trim(),
       pageSize: FREE_BUSY_LOOKUP_PAGE_SIZE,
       sortOrder: SortOrderTypeEnum.DESCENDING,
     });
@@ -263,33 +277,14 @@ async getBusySlots(icalUrl: string, rangeStart: Date, rangeEnd: Date): Promise<B
     };
   }
 
-  private mapCorporateInviteToCalendarDetails(
-    invite: DbCorporateUserInviteDto
-  ): ResolvedUserCalendarDetails {
-    return {
-      icalUrl: invite.icalFreeBusyUrl || null,
-      userId: invite.evaluatorCognitoUserId || invite.id || "",
-      userName: `${invite.firstName || ""} ${invite.lastName || ""}`.trim(),
-    };
-  }
-
   /**
    * Retrieves user details (icalFreeBusyUrl, userId, userName) by email.
    */
   async getUserDetailsByEmail(userEmail: string): Promise<ResolvedUserCalendarDetails> {
-    const normalizedEmail = userEmail.toLowerCase().trim();
+    const trimmedEmail = userEmail.trim();
 
     try {
-      const userDetails = await userServiceObj.getUserDetailByEmail(normalizedEmail);
-      if (userDetails.count && userDetails[0]) {
-        return this.mapUserDetailToCalendarDetails(userDetails[0]);
-      }
-    } catch (err) {
-      global.logger.error("Error fetching admin user details by email: ", err);
-    }
-
-    try {
-      const corporateUser = await this.getCorporateUserByEmail(normalizedEmail);
+      const corporateUser = await this.getCorporateUserByEmail(trimmedEmail);
       if (corporateUser) {
         return this.mapCorporateUserToCalendarDetails(corporateUser);
       }
@@ -298,12 +293,12 @@ async getBusySlots(icalUrl: string, rangeStart: Date, rangeEnd: Date): Promise<B
     }
 
     try {
-      const invites = await this.getCorporateInvitesByEmail(normalizedEmail);
-      if (invites.length > 0) {
-        return this.mapCorporateInviteToCalendarDetails(invites[0]);
+      const userDetails = await userServiceObj.getUserDetailByEmail(trimmedEmail);
+      if (userDetails.count && userDetails[0]) {
+        return this.mapUserDetailToCalendarDetails(userDetails[0]);
       }
     } catch (err) {
-      global.logger.error("Error fetching CorporateUserInvite by email: ", err);
+      global.logger.error("Error fetching admin user details by email: ", err);
     }
 
     return { icalUrl: null, userId: "", userName: "" };
@@ -314,22 +309,29 @@ async getBusySlots(icalUrl: string, rangeStart: Date, rangeEnd: Date): Promise<B
    */
   async getBatchFreeBusy(usersPayload: FreeBusyBatchQueryItem[]): Promise<FreeBusyResponse> {
     const users: UserBusy[] = [];
+    const notFoundEmails: string[] = [];
     let totalBusySlots = 0;
 
     const userPromises = usersPayload.map(async (item) => {
       const email =
-        typeof item === "string" ? item.trim().toLowerCase() : item.userEmail.trim().toLowerCase();
+        typeof item === "string" ? item.trim() : item.userEmail.trim();
       const payloadName =
         typeof item === "string" ? "" : String(item.userName ?? "").trim();
 
       const dbDetails = await this.getUserDetailsByEmail(email);
 
-      const userId = dbDetails.userId || email;
+      // If user details are not found in the DB at all
+      if (!dbDetails.userId) {
+        notFoundEmails.push(email);
+        return null;
+      }
+
+      const userId = dbDetails.userId;
       const userName = payloadName || dbDetails.userName || email.split("@")[0] || "";
 
       let busySlots: BusySlot[] = [];
       if (dbDetails.icalUrl) {
-        busySlots = await this.getBusySlots(dbDetails.icalUrl || "", new Date(), new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)); // Look 6 months ahead for busy slots by default, can be adjusted as needed
+        busySlots = await this.getBusySlots(dbDetails.icalUrl, new Date(), new Date(Date.now() + 180 * 24 * 60 * 60 * 1000));
       }
 
       return {
@@ -342,14 +344,17 @@ async getBusySlots(icalUrl: string, rangeStart: Date, rangeEnd: Date): Promise<B
 
     const resolvedUsers = await Promise.all(userPromises);
     resolvedUsers.forEach((u) => {
-      users.push(u);
-      totalBusySlots += u.busySlots.length;
+      if (u) {
+        users.push(u);
+        totalBusySlots += u.busySlots.length;
+      }
     });
 
     return {
       success: true,
       totalBusySlots,
       users,
+      notFoundEmails,
     };
   }
 }

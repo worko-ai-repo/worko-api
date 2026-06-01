@@ -3,7 +3,6 @@ import Joi from "joi";
 const emailFieldValidation = Joi.string()
   .email()
   .required()
-  .lowercase()
   .trim()
   .messages({
     "any.required": "Email is required.",
@@ -19,7 +18,7 @@ export const saveIcalUrlDtoValidation = Joi.object({
     "any.required": "icalUrl is required.",
     "string.empty": "icalUrl cannot be empty.",
   }),
-  email: Joi.string().email().optional().lowercase().trim().allow("").messages({
+  email: Joi.string().email().optional().trim().allow("").messages({
     "string.email": "Please provide a valid email address.",
   }),
 }).options({ stripUnknown: true });
@@ -40,7 +39,7 @@ export const freeBusyAttendeeDtoValidation = Joi.object({
 export const freeBusyBatchQueryDtoValidation = Joi.array()
   .items(
     Joi.alternatives().try(
-      Joi.string().email().required().lowercase().trim().messages({
+      Joi.string().email().required().trim().messages({
         "string.email": "Please provide a valid email address.",
         "string.empty": "Email strings in the payload must not be empty.",
       }),

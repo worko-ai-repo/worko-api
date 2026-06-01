@@ -141,10 +141,17 @@ class UserCalendarFreeBusyController {
         throw new RequestValidationError(error);
       }
 
-      const { userId } = req.params;
+      const { userId } = global.requestLocalContext;
+      if (!userId) {
+        res.status(HttpStatusCode.UNAUTHORIZED_401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+        return;
+      }
       const { email } = validatedQuery;
 
-      const icalUrl = await userCalendarFreeBusyServiceObj.getIcalUrl(userId, email);
+      const icalUrl = await userCalendarFreeBusyServiceObj.getIcalUrl(email);
       if (!icalUrl) {
         res.status(HttpStatusCode.NOT_FOUND_404).json({
           success: false,
