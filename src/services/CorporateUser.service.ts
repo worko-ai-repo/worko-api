@@ -378,11 +378,7 @@ class CorporateUserService {
         methodName: this.getAllCorpUsers.name,
       }
     );
-    console.log("Filter options for getting all corporate users:[service] ", { filterOptions });
-    // Get all the Corporate Users
-    const x = await corporateUserDaoObj.getAllCorpUsers(filterOptions);
-    console.log("Fetched corporate users:[calendar service] ", { x });
-    return x;
+    return corporateUserDaoObj.getAllCorpUsers(filterOptions);;
   }
 
   /**
